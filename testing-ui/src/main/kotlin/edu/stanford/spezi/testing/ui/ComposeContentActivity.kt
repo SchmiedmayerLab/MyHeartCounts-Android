@@ -1,0 +1,33 @@
+package edu.stanford.spezi.testing.ui
+
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.annotation.CallSuper
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import edu.stanford.spezi.ui.ComposableBlock
+import edu.stanford.spezi.ui.theme.SpeziTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+
+class ComposeContentActivity : AppCompatActivity() {
+
+    private val content = MutableStateFlow<ComposableBlock?>(null)
+
+    @CallSuper
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            SpeziTheme {
+                val content by content.collectAsState()
+                content?.invoke()
+            }
+        }
+    }
+
+    fun setScreen(content: ComposableBlock) {
+        this.content.update { content }
+    }
+}

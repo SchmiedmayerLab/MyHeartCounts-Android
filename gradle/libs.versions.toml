@@ -1,0 +1,136 @@
+# Please keep [versions] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
+[versions]
+activityCompose = "1.11.0"
+agp = "8.13.0"
+androidTools = "31.13.0"
+appcompat = "1.7.1"
+coilComposeVersion = "3.3.0"
+compileSdk = "36"
+composeBom = "2025.10.01"
+composeNavigation = "2.9.5"
+coreDesugaringVersion = "2.1.5"
+coreI18n = "1.0.0"
+coreKtx = "1.17.0"
+coreTestingVersion = "2.2.0"
+coroutinesVersion = "1.10.2"
+credentialsPlayServicesAuth = "1.5.0"
+detekt = "1.23.8" # please adjust github action version as well in case of version change
+dokka = "1.9.20"
+espressoCore = "3.7.0"
+fhirDataCapture = "1.3.0"
+firebaseAuthKtx = "23.2.1"
+firebaseFirestoreKtx = "25.1.4"
+firebaseFunctionsKtx = "21.2.1"
+firebaseMessagingKtx = "24.1.2"
+firebaseStorageKtx = "21.0.2"
+foundation = "1.9.4"
+fragmentCompose = "1.8.9"
+fragmentKtxVersion = "1.8.6"
+googleGmsGoogleServices = "4.4.4"
+googleid = "1.1.1"
+guava = "32.1.3-android" # is a fixed version which works with all other dependencies
+healthConnectClient = "1.1.0"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+kotlin = "2.1.21" # latest kotlin version that we can support due to this ksp issue: https://github.com/google/ksp/issues/2463
+kotlinxSerializationJson = "1.9.0"
+kspVersion = "2.1.21-2.0.1" # should align version with kotlin, see kotlin = "2.1.21"
+lifecycleKtx = "2.9.4"
+minSdk = "31"
+paparazziVersion = "2.0.0-alpha02"
+playServicesAuth = "21.4.0"
+rulesVersion = "1.7.0"
+runnerVersion = "1.7.0"
+securityCryptoKtx = "1.1.0"
+testCoreVersion = "1.7.0"
+targetSdk = "35"
+timberVersion = "5.0.1"
+truth = "1.4.5"
+
+# Please keep [libraries] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
+[libraries]
+android-desugaring = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "coreDesugaringVersion" }
+android-fhir-data-capture = { module = "com.google.android.fhir:data-capture", version.ref = "fhirDataCapture" }
+android-gradle = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+android-tools-common = { group = "com.android.tools", name = "common", version.ref = "androidTools" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-core-i18n = { group = "androidx.core", name = "core-i18n", version.ref = "coreI18n" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "coreTestingVersion" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtxVersion" }
+androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "fragmentCompose" }
+androidx-health-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "healthConnectClient" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleKtx" }
+androidx-lifecycle-view-model-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleKtx" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleKtx" }
+androidx-lifecycle-viewmodel-savedstate = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-savedstate", version.ref = "lifecycleKtx" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleKtx" }
+androidx-security-crypto-ktx = { group = "androidx.security", name = "security-crypto-ktx", version.ref = "securityCryptoKtx" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "testCoreVersion" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "rulesVersion" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "runnerVersion" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
+coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilComposeVersion" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutinesVersion" }
+coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesVersion" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-functions-ktx", version.ref = "firebaseFunctionsKtx" }
+firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+google-truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlin-gradle = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
+paparazzi = { module = "app.cash.paparazzi:paparazzi", version.ref = "paparazziVersion" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timberVersion" }
+
+# Please keep [plugins] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazziVersion" }
+spezi-application = { id = "spezi.application", version = "unspecified" }
+spezi-base = { id = "spezi.base", version = "unspecified" }
+spezi-compose = { id = "spezi.compose", version = "unspecified" }
+spezi-desugaring = { id = "spezi.desugaring", version = "unspecified" }
+spezi-library = { id = "spezi.library", version = "unspecified" }
+spezi-serialization = { id = "spezi.serialization", version = "unspecified" }
+
+# Please keep [bundles] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
+[bundles]
+
+integration-testing = ["androidx-espresso-core", "google-truth", "coroutines-test"]
+ktx-coroutines = ["coroutines-core", "coroutines-android"]
+unit-testing = ["junit", "google-truth", "coroutines-test", "androidx-core-testing", "androidx-test-rules"]

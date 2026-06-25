@@ -1,0 +1,21 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2024 Stanford University
+#
+# SPDX-License-Identifier: MIT
+#
+
+default_platform(:android)
+
+platform :android do
+  desc "Runs all unit tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Runs all UI tests"
+  lane :connectedCheck do
+    gradle(task: "connectedCheck")
+  end
+end
