@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import edu.stanford.spezi.core.logging.speziLogger
 import edu.stanford.spezi.foundation.UUID
 import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.DefaultElevatedCard
+import edu.stanford.spezi.ui.SpeziCard
 import edu.stanford.spezi.ui.StringResource
 import edu.stanford.spezi.ui.theme.Colors
 import edu.stanford.spezi.ui.theme.Spacings
@@ -45,7 +45,7 @@ data class ContactOption(
     @Composable
     override fun Content(modifier: Modifier) {
         val context = LocalContext.current
-        DefaultElevatedCard(
+        SpeziCard(
             modifier = modifier
                 .defaultMinSize(80.dp)
                 .fillMaxWidth()
@@ -56,7 +56,7 @@ data class ContactOption(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(Spacings.small)
+                    .padding(Spacings.medium)
                     .fillMaxWidth()
             ) {
                 Icon(

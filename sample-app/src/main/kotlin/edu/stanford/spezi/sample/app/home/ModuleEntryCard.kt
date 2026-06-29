@@ -9,7 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.DefaultElevatedCard
+import edu.stanford.spezi.ui.SpeziCard
 import edu.stanford.spezi.ui.StringResource
 import edu.stanford.spezi.ui.theme.Spacings
 import edu.stanford.spezi.ui.theme.SpeziTheme
@@ -24,13 +24,13 @@ data class ModuleEntryCard(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        DefaultElevatedCard(
+        SpeziCard(
             modifier = modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
         ) {
             Column(
-                modifier = Modifier.padding(Spacings.small),
+                modifier = Modifier.padding(Spacings.medium),
                 verticalArrangement = Arrangement.spacedBy(Spacings.extraSmall)
             ) {
                 Text(

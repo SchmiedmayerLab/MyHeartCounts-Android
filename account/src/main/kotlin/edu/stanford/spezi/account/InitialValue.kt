@@ -1,5 +1,7 @@
 package edu.stanford.spezi.account
 
+import java.time.Instant
+
 /**
  * Represents the initial value state of an account-related value.
  *
@@ -56,6 +58,11 @@ sealed interface InitialValue<T> {
          * Empty float initial value.
          */
         val float = empty(value = 0f)
+
+        /**
+         * Empty instant initial value
+         */
+        val instant = empty(value = Instant.MIN)
 
         /**
          * Empty list initial value.

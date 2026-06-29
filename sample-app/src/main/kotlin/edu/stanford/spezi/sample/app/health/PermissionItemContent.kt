@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.DefaultElevatedCard
+import edu.stanford.spezi.ui.SpeziCard
 import edu.stanford.spezi.ui.theme.Spacings
 import edu.stanford.spezi.ui.theme.SpeziTheme
 import edu.stanford.spezi.ui.theme.TextStyles
@@ -27,10 +27,11 @@ data class PermissionItemContent(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        DefaultElevatedCard {
+        SpeziCard {
             Row(
-                modifier = modifier.fillMaxWidth()
-                    .padding(Spacings.small),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(Spacings.medium),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacings.small)) {

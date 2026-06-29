@@ -23,11 +23,10 @@ import edu.stanford.spezi.sample.app.Navigator
 import edu.stanford.spezi.ui.ComposableContent
 import edu.stanford.spezi.ui.DisplayedEffect
 import edu.stanford.spezi.ui.LoadingLayout
-import edu.stanford.spezi.ui.MutableSpeziScaffoldState
 import edu.stanford.spezi.ui.SpeziScaffold
 import edu.stanford.spezi.ui.SpeziScaffoldState
 import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.coroutinesLauncher
+import edu.stanford.spezi.ui.mutableScaffoldState
 import edu.stanford.spezi.ui.speziAppBar
 import edu.stanford.spezi.ui.theme.Spacings
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,8 +43,7 @@ class HealthViewModel(
     private val navigator: Navigator,
     private val health: Health,
 ) : ViewModel() {
-    private val scaffoldState = MutableSpeziScaffoldState(
-        coroutinesLauncher = coroutinesLauncher,
+    private val scaffoldState = mutableScaffoldState(
         appBar = speziAppBar {
             title("Health")
             back { navigator.navigateTo(NavigationEvent.PopBackStack) }

@@ -110,7 +110,7 @@ fun SpeziErrorLayoutComposable(
             Text(
                 text = message.text(),
                 modifier = Modifier.fillMaxWidth(),
-                color = Colors.secondary,
+                color = Colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 style = TextStyles.bodyMedium,
             )

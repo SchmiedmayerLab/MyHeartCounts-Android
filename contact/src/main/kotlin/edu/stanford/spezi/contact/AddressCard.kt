@@ -20,7 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import edu.stanford.spezi.core.logging.SpeziLogger
-import edu.stanford.spezi.ui.DefaultElevatedCard
+import edu.stanford.spezi.resources.Strings
+import edu.stanford.spezi.ui.SpeziCard
 import edu.stanford.spezi.ui.theme.Colors
 import edu.stanford.spezi.ui.theme.Spacings
 import edu.stanford.spezi.ui.theme.SpeziTheme
@@ -32,14 +33,14 @@ import java.util.Locale
 
 @Composable
 internal fun AddressCard(address: Address, modifier: Modifier = Modifier) {
-    DefaultElevatedCard(
+    SpeziCard(
         modifier = modifier
             .fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(Spacings.medium)
+                .fillMaxWidth()
                 .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -67,7 +68,7 @@ internal fun AddressCard(address: Address, modifier: Modifier = Modifier) {
             ) {
                 Icon(
                     Icons.Default.Place,
-                    contentDescription = stringResource(R.string.contact_address),
+                    contentDescription = stringResource(Strings.contact_address),
                     tint = Colors.primary,
                 )
             }

@@ -14,7 +14,7 @@ import edu.stanford.spezi.ui.theme.Spacings
 import edu.stanford.spezi.ui.theme.SpeziTheme
 import edu.stanford.spezi.ui.theme.TextStyles
 import edu.stanford.spezi.ui.theme.ThemePreviews
-import edu.stanford.spezi.ui.theme.bold
+import edu.stanford.spezi.ui.theme.medium
 
 /**
  * Renders an entry in the Sign up form
@@ -41,7 +41,8 @@ data class SignUpFormEntry<Value>(
             Text(
                 modifier = Modifier.padding(top = Spacings.small),
                 text = title.text(),
-                style = TextStyles.bodyMedium.bold()
+                style = TextStyles.bodyMedium.medium(),
+                color = Colors.onSurfaceVariant,
             )
             entry.Content(
                 value = value,
@@ -51,6 +52,7 @@ data class SignUpFormEntry<Value>(
             validationMessage?.let {
                 Text(
                     text = it.text(),
+                    style = TextStyles.bodySmall,
                     color = Colors.error,
                 )
             }
