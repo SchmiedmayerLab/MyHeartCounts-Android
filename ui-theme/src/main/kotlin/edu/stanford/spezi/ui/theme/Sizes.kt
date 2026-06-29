@@ -26,6 +26,11 @@ object Sizes {
             @Composable
             @ReadOnlyComposable
             get() = 64.dp
+
+        val extraLarge: Dp
+            @Composable
+            @ReadOnlyComposable
+            get() = 96.dp
     }
 
     object Border {
@@ -38,40 +43,6 @@ object Sizes {
             @Composable
             @ReadOnlyComposable
             get() = 2.dp
-    }
-
-    object RoundedCorner {
-        val small: Dp
-            @Composable
-            @ReadOnlyComposable
-            get() = 2.dp
-
-        val medium: Dp
-            @Composable
-            @ReadOnlyComposable
-            get() = 4.dp
-
-        val large: Dp
-            @Composable
-            @ReadOnlyComposable
-            get() = 8.dp
-
-        val extraLarge: Dp
-            @Composable
-            @ReadOnlyComposable
-            get() = 24.dp
-    }
-
-    object Elevation {
-        val medium: Dp
-            @Composable
-            @ReadOnlyComposable
-            get() = 4.dp
-
-        val large: Dp
-            @Composable
-            @ReadOnlyComposable
-            get() = 16.dp
     }
 
     object Content {

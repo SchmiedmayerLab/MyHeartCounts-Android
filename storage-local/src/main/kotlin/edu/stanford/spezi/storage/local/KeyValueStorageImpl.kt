@@ -5,7 +5,8 @@ import android.util.Base64
 import androidx.core.content.edit
 
 @Suppress("TooManyFunctions")
-class KeyValueStorageImpl(
+@PublishedApi
+internal class KeyValueStorageImpl(
     preferences: Lazy<SharedPreferences>,
 ) : KeyValueStorage {
 

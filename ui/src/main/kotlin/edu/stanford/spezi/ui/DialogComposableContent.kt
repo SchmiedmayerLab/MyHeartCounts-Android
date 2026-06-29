@@ -3,13 +3,13 @@ package edu.stanford.spezi.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import edu.stanford.spezi.ui.theme.Spacings
+import edu.stanford.spezi.ui.theme.SpeziShapes
 
 /**
  * A [ComposableContent] with additional capability to render itself in as a model dialog
@@ -26,7 +26,7 @@ interface DialogComposableContent : ComposableContent {
             properties = dialogProperties,
         ) {
             Surface(
-                shape = MaterialTheme.shapes.medium,
+                shape = SpeziShapes.medium,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(modifier = Modifier.padding(Spacings.medium)) {

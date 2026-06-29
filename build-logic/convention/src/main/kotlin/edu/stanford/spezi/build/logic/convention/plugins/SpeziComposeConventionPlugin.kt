@@ -61,7 +61,7 @@ class SpeziComposeConventionPlugin : Plugin<Project> {
     }
 
     private companion object {
-        const val NEW_MODULE = ":ui"
+        const val NEW_MODULE = ":onboarding"
         const val SCREENSHOT_TESTING_MODULE = ":testing-screenshot"
     }
 }

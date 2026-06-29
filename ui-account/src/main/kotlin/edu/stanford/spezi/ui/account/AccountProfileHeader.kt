@@ -25,12 +25,12 @@ import edu.stanford.spezi.ui.theme.bold
  *
  * @param initials Optional initials of the user.
  * @param name Name of the user.
- * @param email Email of the user.
+ * @param description Description text of the user
  */
 data class AccountProfileHeader(
     val initials: String?,
     val name: String,
-    val email: String,
+    val description: String,
 ) : ComposableContent {
     @Composable
     override fun Content(modifier: Modifier) {
@@ -43,12 +43,13 @@ data class AccountProfileHeader(
                 Box(
                     modifier = Modifier
                         .size(88.dp)
-                        .background(Colors.surface, SpeziShapes.circle),
+                        .background(Colors.primaryContainer, SpeziShapes.circle),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = it,
                         style = TextStyles.headlineLarge.bold(),
+                        color = Colors.onPrimaryContainer,
                     )
                 }
             }
@@ -59,9 +60,9 @@ data class AccountProfileHeader(
             )
 
             Text(
-                text = email,
+                text = description,
                 style = TextStyles.bodyMedium,
-                color = Colors.secondary,
+                color = Colors.onSurfaceVariant,
             )
         }
     }
@@ -73,7 +74,7 @@ private fun Preview() {
     val header = AccountProfileHeader(
         initials = "LS",
         name = "Leland Stanford",
-        email = "lelandstanford@stanford.edu"
+        description = "lelandstanford@stanford.edu"
     )
 
     SpeziTheme {

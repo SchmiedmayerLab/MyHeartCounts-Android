@@ -19,6 +19,6 @@ fun AccountValueText(
     Text(
         text = text,
         modifier = modifier,
-        color = Colors.secondary,
+        color = Colors.onSurfaceVariant,
     )
 }

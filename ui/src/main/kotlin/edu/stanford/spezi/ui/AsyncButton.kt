@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -22,12 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 import edu.stanford.spezi.ui.theme.Colors
 import edu.stanford.spezi.ui.theme.Sizes
 import edu.stanford.spezi.ui.theme.Spacings
 import edu.stanford.spezi.ui.theme.SpeziShapes
 import edu.stanford.spezi.ui.theme.SpeziTheme
 import edu.stanford.spezi.ui.theme.ThemePreviews
+import edu.stanford.spezi.ui.theme.bold
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -60,7 +64,9 @@ fun AsyncButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.testIdentifier(AsyncButtonTestIdentifier.ROOT),
+        modifier = modifier
+            .heightIn(min = 44.dp)
+            .testIdentifier(AsyncButtonTestIdentifier.ROOT),
         enabled = enabled && isLoading.not(),
         shape = shape,
         colors = ButtonDefaults.buttonColors(
@@ -135,8 +141,12 @@ fun AsyncTextButton(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacings.small)
             ) {
-                leadingIcon?.Content(modifier = Modifier.size(Sizes.Icon.small))
-                Text(text = text, color = textColor)
+                leadingIcon?.tinted(tint = textColor)?.Content(modifier = Modifier.size(Sizes.Icon.small))
+                Text(
+                    text = text,
+                    color = textColor,
+                    style = LocalTextStyle.current.bold(),
+                )
             }
         }
     )
@@ -151,7 +161,7 @@ data class AsyncTextButton(
     val textColor: ComposeValue<Color> = { ButtonDefaults.buttonColors().contentColor },
     val contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     val coroutineScope: ComposeValue<CoroutineScope> = { rememberCoroutineScope() },
-    val action: OnAwaitActionVoid = {},
+    val action: OnAwaitActionVoid,
 ) : ComposableContent {
 
     @Composable

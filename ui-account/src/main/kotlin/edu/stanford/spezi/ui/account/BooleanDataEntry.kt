@@ -29,7 +29,7 @@ data class BooleanDataEntry(val description: StringResource) : DataEntryComposab
         ) {
             Text(
                 text = description.text(),
-                color = Colors.secondary,
+                color = Colors.onSurfaceVariant,
             )
 
             Switch(
