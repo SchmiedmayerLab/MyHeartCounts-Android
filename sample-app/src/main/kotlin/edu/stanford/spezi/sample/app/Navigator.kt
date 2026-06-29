@@ -1,5 +1,6 @@
 package edu.stanford.spezi.sample.app
 
+import androidx.navigation3.runtime.NavKey
 import edu.stanford.spezi.ui.EventSink
 import kotlinx.serialization.Serializable
 
@@ -22,16 +23,16 @@ sealed interface NavigationEvent {
 }
 
 @Serializable
-sealed class Routes {
+sealed interface Routes : NavKey {
     @Serializable
-    data object Home : Routes()
+    data object Home : Routes
 
     @Serializable
-    data object Health : Routes()
+    data object Health : Routes
 
     @Serializable
-    data object AccountLogin : Routes()
+    data object AccountLogin : Routes
 
     @Serializable
-    data object AccountOverview : Routes()
+    data object AccountOverview : Routes
 }

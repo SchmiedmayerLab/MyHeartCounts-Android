@@ -1,5 +1,8 @@
 package edu.stanford.spezi.markdown
 
+import androidx.compose.runtime.compositionLocalOf
+import kotlin.reflect.KClass
+
 /**
  * A typed link discovered within markdown text.
  */
@@ -35,7 +38,21 @@ sealed interface LinkClickStrategy {
      * Routes every tapped [MarkdownLink] to [onClick] instead of opening it with the platform handler.
      */
     data class OnClick(val onClick: (MarkdownLink) -> Unit) : LinkClickStrategy
+
+    /**
+     * Routes tapped links whose type is included in [links] to [onClick]. Other link types keep the
+     * platform handler from [Default].
+     */
+    data class Custom(
+        val links: Set<KClass<out MarkdownLink>>,
+        val onClick: (MarkdownLink) -> Unit,
+    ) : LinkClickStrategy
 }
+
+/**
+ * Default [LinkClickStrategy] used by markdown rendering composables.
+ */
+val LocalLinkClickStrategy = compositionLocalOf<LinkClickStrategy> { LinkClickStrategy.Default }
 
 /**
  * The canonical, openable URL for this link.

@@ -1,0 +1,49 @@
+package edu.stanford.myheartcounts.onboarding
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import edu.stanford.spezi.ui.ComposableContent
+import edu.stanford.spezi.ui.StringResource
+import edu.stanford.spezi.ui.noRippleClickable
+import edu.stanford.spezi.ui.theme.Colors
+
+/**
+ * A tappable row that opens an external destination, showing [text] with a trailing
+ * open-in-new icon. Taps are reported through [onClicked].
+ */
+data class OnboardingLink(
+    val text: StringResource,
+    val onClicked: () -> Unit,
+) : ComposableContent {
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .noRippleClickable(onClick = onClicked),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            val text = text.text()
+            Text(
+                text = text,
+                color = Colors.primary,
+            )
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                contentDescription = text,
+                tint = Colors.primary,
+            )
+        }
+    }
+}

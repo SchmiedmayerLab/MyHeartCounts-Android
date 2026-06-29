@@ -40,5 +40,8 @@ dependencies {
     implementation(project(":health"))
     implementation(project(":ui"))
     implementation(project(":account"))
+
+    implementation(libs.bundles.navigation3)
+
     androidTestImplementation(project(":testing-ui"))
 }

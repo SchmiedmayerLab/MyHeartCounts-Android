@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">My Heart Counts</string>
+
+    <!-- Home tabs -->
+    <string name="home_tab_home">Home</string>
+    <string name="home_tab_upcoming">Upcoming</string>
+    <string name="home_tab_heart_health">Heart Health</string>
+
+    <!-- Shared onboarding actions -->
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_start">Start</string>
+    <string name="onboarding_learn_more">Learn More</string>
+    <string name="onboarding_skip">Skip</string>
+
+    <!-- Shared answers -->
+    <string name="answer_yes">Yes</string>
+    <string name="answer_no">No</string>
+    <string name="answer_true">True</string>
+    <string name="answer_false">False</string>
+
+    <!-- Eligibility -->
+    <string name="eligibility_title">Eligibility</string>
+    <string name="eligibility_subtitle">Before you begin, we’ll ask you a few quick questions to ensure the study is a good fit for you.</string>
+    <string name="eligibility_age_title">Age</string>
+    <string name="eligibility_age_question">Are you 18 years old or older?</string>
+    <string name="eligibility_region_title">Region</string>
+    <string name="eligibility_region_question">What country do you currently live in?</string>
+    <string name="eligibility_country_selection_title">Select a Region</string>
+    <string name="eligibility_country_selection_search_placeholder">Search</string>
+    <string name="eligibility_language_title">Language</string>
+    <string name="eligibility_language_question">Can you read and understand English in order to provide informed consent and follow instructions?</string>
+    <string name="eligibility_account_sharing_title">Google Account Sharing</string>
+    <string name="eligibility_account_sharing_question">Are you using a shared Google account?</string>
+    <string name="eligibility_account_sharing_explanation">My Heart Counts does not access your Google account in any way; but using a shared account might cause inaccuracies in health data collection.</string>
+    <string name="eligibility_save">Save</string>
+    <string name="eligibility_ineligible_title">Ineligible for Participation</string>
+    <string name="eligibility_ineligible_subtitle">You are not eligible to participate in this study because you did not meet the eligibility criteria.</string>
+    <string name="eligibility_learn_more">Learn more about My Heart Counts</string>
+    <string name="eligibility_region_coming_soon_title">Coming Soon</string>
+    <string name="eligibility_region_unsupported_title">Region Not Yet Supported</string>
+    <string name="eligibility_region_unavailable_description">The My Heart Counts study isn’t yet available in your region (%1$s).\n\nAdd your email below and we’ll update you when it launches there.</string>
+    <string name="eligibility_region_notify_email_hint">Email…</string>
+    <string name="eligibility_region_notify_button">Notify Me</string>
+
+    <!-- Welcome -->
+    <string name="onboarding_welcome_title">My Heart Counts</string>
+    <string name="onboarding_welcome_subtitle">Welcome to the My Heart Counts Cardiovascular Health Study</string>
+    <string name="onboarding_welcome_area_involvement">Your involvement helps Stanford researchers understand how personalized digital coaching can improve physical activity and your overall health today and in the future.</string>
+    <string name="onboarding_welcome_area_redesign">Experience the re-designed version of one of the largest research study applications ever.</string>
+    <string name="onboarding_welcome_area_online">Participate entirely online, securely sharing your activity data directly from your phone and connected wearable devices.</string>
+
+    <!-- Study Overview & Participation -->
+    <string name="onboarding_study_overview_title">Study Overview &amp; Participation</string>
+    <string name="onboarding_study_overview_subtitle">You’re invited to join a Stanford research study that tracks physical activity through your smartphone to improve heart health knowledge. You’ll complete brief health surveys and perform simple fitness assessments like the 6-minute walk test using your phone.</string>
+    <string name="onboarding_study_overview_learn_more">This research study is conducted by Stanford University School of Medicine researchers to understand how physical activity relates to cardiovascular health. The app will guide you through various assessments including the 6-minute walk test. Your participation is flexible meaning you can engage with the study as much or as little as you choose. The smartphone-based approach allows us to collect data in your natural environment rather than requiring visits to a clinical facility.</string>
+
+    <!-- Trial Component -->
+    <string name="onboarding_trial_component_title">Trial Component</string>
+    <string name="onboarding_trial_component_subtitle">You have the option to enroll in a 2-week physical activity coaching trial. If you choose to join, you’ll experience both personalized and standard coaching messages for 7 days each, helping us learn which approaches better motivate healthy behaviors.</string>
+    <string name="onboarding_trial_component_learn_more">The optional trial uses a \"randomized crossover\" design where you\'ll experience both types of coaching interventions - personalized activity prompts and standard activity prompts - for 7 days each (total of 14 days). This will begin after the baseline monitoring week. The order in which you receive these interventions will be randomly assigned, similar to flipping a coin. This design allows researchers to compare how the different coaching approaches affect your activity levels while controlling for individual differences, as each participant serves as their own control. You can choose not to participate in this trial component and still be part of the main My Heart Counts study.</string>
+
+    <!-- Data Collection & Privacy -->
+    <string name="onboarding_data_collection_title">Data Collection &amp; Privacy</string>
+    <string name="onboarding_data_collection_subtitle">We will collect data from the Health app on your phone which will be protected through encryption. Your personal information is stored separately from health data, and you control what sensor and health data you share with us.\n\nBy agreeing to this consent, your data will be combined with data from other participants for analysis by Stanford researchers and its research partners.</string>
+    <string name="onboarding_data_collection_learn_more">The study collects data through your phone\'s sensors, including accelerometer data for movement and heart rate if available through connected devices. All data transmission uses encryption technology to protect your information. We separate your identifying information from your health data in our secure databases. You\'ll have options within the app to control what information is shared. We follow strict protocols approved by Stanford\'s Institutional Review Board to maintain your privacy.</string>
+
+    <!-- Risks, Benefits & Your Rights -->
+    <string name="onboarding_risks_benefits_title">Risks, Benefits &amp; Your Rights</string>
+    <string name="onboarding_risks_benefits_subtitle">Participation is completely voluntary with minimal risks. Benefits include gaining insights about your heart health and contributing to cardiovascular research. You can withdraw from the study at any time and request to have your identifying data forgotten.</string>
+    <string name="onboarding_risks_benefits_learn_more">Physical risks are minimal but could include temporary muscle soreness or strain from fitness activities. There\'s also a small risk related to data privacy despite our security measures. Benefits include access to your own activity data and the knowledge that you\'re contributing to research that may help improve heart health recommendations. Your participation is entirely voluntary, and you can stop participating at any time without penalty by contacting the research team. This research has been reviewed by Stanford\'s Institutional Review Board to ensure participant protection.</string>
+
+    <!-- Health Access & Data Sharing -->
+    <string name="onboarding_health_access_title">Health Access &amp; Data Sharing</string>
+    <string name="onboarding_health_access_subtitle">The My Heart Counts Study uses Health Data collected on your phone to further research. Granting access to all fields (or as many as you are comfortable with) ensures the most well powered study possible.</string>
+    <string name="onboarding_health_access_learn_more">My Heart Counts needs read-access to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. Further, granting write-access will give the best user experience with the application for dashboard features. To enhance research and optimize user experience, select **“Turn On All”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
+
+    <!-- Consent Survey -->
+    <string name="consent_survey_title">Consent Survey</string>
+    <string name="consent_survey_header">Please answer a few review questions to ensure you understand the consent form.</string>
+    <string name="consent_survey_question_seek_help">If at any point during this study I do not feel well, I should immediately contact my healthcare provider.</string>
+    <string name="consent_survey_question_voluntary">I am not required to complete all or any parts of this study if I don\'t want to.</string>
+    <string name="consent_survey_question_withdraw">Once I start participating in this study, I can choose to not continue at any time with no repercussions to me.</string>
+
+    <!-- Consent -->
+    <string name="onboarding_consent_title">Consent</string>
+
+    <!-- Notifications -->
+    <string name="onboarding_notifications_title">Allow Notifications</string>
+    <string name="onboarding_notifications_subtitle">Allowing Notifications for My Heart Counts is important because this is where you will be sent prompts from the physical activity promoting trial. In order to carry out research goals, this is an important step that we ask participants to grant access to. \n\nParticipants will also be sent notifications about new surveys, activities, etc. We will do our best to keep the notifications to a minimum.</string>
+
+    <!-- Final Enrollment -->
+    <string name="onboarding_final_enrollment_title">Welcome to My Heart Counts</string>
+    <string name="onboarding_final_enrollment_subtitle">What happens next:</string>
+    <string name="onboarding_final_enrollment_area_activities">Over the next 7 days, you’ll be guided through several short activities:\n• Completing surveys about your health, lifestyle, and well-being.\n• Recording your baseline physical activity through the app.\n• Performing optimal fitness assessments if appropriate for your health status.</string>
+    <string name="onboarding_final_enrollment_area_tasks">Each day, you’ll see a personalized list of tasks in your dashboard. These typically take just 5–10 minutes to complete.</string>
+    <string name="onboarding_final_enrollment_area_collection">The app will begin collecting activity data from your phone and any connected wearable devices you’ve authorized.</string>
+    <string name="onboarding_final_enrollment_area_trial">After your baseline week, you\'ll begin the 2-week trial comparing different types of physical activity coaching. You\'ll receive notifications when this phase begins.</string>
+    <string name="onboarding_final_enrollment_area_contribution">By joining this study, you’re contributing to important research that may help improve our understanding of heart health for people across diverse communities.</string>
+</resources>

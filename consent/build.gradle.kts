@@ -9,10 +9,11 @@ android {
 
 dependencies {
     api(project(":core"))
+    api(project(":markdown"))
     api(project(":ui"))
+
     implementation(project(":core-time"))
     implementation(project(":core-viewmodel"))
-    implementation(project(":markdown"))
 
     testImplementation(project(":testing-core"))
     testImplementation(project(":testing-screenshot"))

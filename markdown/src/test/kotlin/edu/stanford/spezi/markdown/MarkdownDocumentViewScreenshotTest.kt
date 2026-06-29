@@ -38,7 +38,7 @@ class MarkdownDocumentViewScreenshotTest : ScreenshotTest() {
                         - A nested bullet item
                             - A deeply nested bullet item
                     * Another bullet item with support@example.org
-                    + A final bullet item with tel:+123456789
+                    + A final bullet item with +1 234 567 89
 
                     ### Ordered steps
                     1. Read the study information
