@@ -10,12 +10,12 @@
         android:usesCleartextTraffic="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Sample.App.Content">
+        android:theme="@style/Theme.Spezi.CardinalRed">
         <activity
             android:name=".SampleActivity"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.Sample.App.Content"
+            android:theme="@style/Theme.Spezi.CardinalRed"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -183,18 +184,22 @@ internal data class ConsentSignatureSection(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(Spacings.medium),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = fullName,
+                        modifier = Modifier.weight(1f),
                         style = TextStyles.labelMedium,
                         color = Colors.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = dateText,
                         style = TextStyles.labelMedium,
                         color = Colors.onSurfaceVariant,
+                        maxLines = 1,
                     )
                 }
             }

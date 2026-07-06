@@ -26,7 +26,7 @@ fun MarkdownDocumentView(
     document: MarkdownDocument,
     modifier: Modifier = Modifier,
     contentPaddingValues: PaddingValues = PaddingValues(Spacings.medium),
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
     elementContent: @Composable (MarkdownBlock.Element) -> Unit = {},
 ) {
     LazyColumn(
@@ -60,7 +60,7 @@ fun MarkdownDocumentView(
 fun MarkdownBlockView(
     block: MarkdownBlock,
     modifier: Modifier = Modifier,
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
     elementContent: @Composable (MarkdownBlock.Element) -> Unit = {},
 ) {
     when (block) {

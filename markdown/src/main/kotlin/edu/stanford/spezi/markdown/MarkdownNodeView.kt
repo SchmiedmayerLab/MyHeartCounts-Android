@@ -37,7 +37,7 @@ import edu.stanford.spezi.ui.theme.medium
 fun MarkdownTextBlock(
     block: MarkdownBlock.Markdown,
     modifier: Modifier = Modifier,
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
 ) {
     MarkdownTextBlock(
         text = block.rawContents,
@@ -50,7 +50,7 @@ fun MarkdownTextBlock(
 fun MarkdownTextBlock(
     text: String,
     modifier: Modifier = Modifier,
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
 ) {
     val nodes = remember(text) { parseNodes(text) }
     val counters = remember(nodes) { ListCounters() }
@@ -75,7 +75,7 @@ fun MarkdownNodeView(
     node: MarkdownNode,
     modifier: Modifier = Modifier,
     counters: ListCounters = remember { ListCounters() },
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
 ) {
     when (node) {
         is MarkdownNode.Heading -> HeadingText(node = node, linkClickStrategy = linkClickStrategy, modifier = modifier)
@@ -104,7 +104,7 @@ fun MarkdownListItemView(
     item: MarkdownNode.ListItem,
     marker: String,
     modifier: Modifier = Modifier,
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
 ) {
     Row(
         modifier = modifier.padding(start = Spacings.small * (item.nestingLevel + 1)),
@@ -169,10 +169,10 @@ private fun ParagraphText(
 @Composable
 fun rememberMarkdownAnnotatedString(
     text: String,
-    linkClickStrategy: LinkClickStrategy = LinkClickStrategy.Default,
+    linkClickStrategy: LinkClickStrategy = LocalLinkClickStrategy.current,
 ): AnnotatedString {
     val linkColor = Colors.primary
-    return remember(text) {
+    return remember(text, linkClickStrategy) {
         val emphasis = parseEmphasis(text)
         buildAnnotatedString {
             append(emphasis.text)
@@ -184,6 +184,10 @@ fun rememberMarkdownAnnotatedString(
                 val listener = when (linkClickStrategy) {
                     LinkClickStrategy.Default -> null
                     is LinkClickStrategy.OnClick -> LinkInteractionListener { linkClickStrategy.onClick(detected.link) }
+                    is LinkClickStrategy.Custom -> customLinkInteractionListener(
+                        strategy = linkClickStrategy,
+                        link = detected.link,
+                    )
                 }
                 addLink(
                     url = LinkAnnotation.Url(
@@ -198,6 +202,17 @@ fun rememberMarkdownAnnotatedString(
                 )
             }
         }
+    }
+}
+
+private fun customLinkInteractionListener(
+    strategy: LinkClickStrategy.Custom,
+    link: MarkdownLink,
+): LinkInteractionListener? {
+    return if (link::class in strategy.links) {
+        LinkInteractionListener { strategy.onClick(link) }
+    } else {
+        null
     }
 }
 

@@ -132,7 +132,7 @@ spezi-serialization = { id = "spezi.serialization", version = "unspecified" }
 
 # Please keep [bundles] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [bundles]
-
 integration-testing = ["androidx-espresso-core", "google-truth", "coroutines-test"]
 ktx-coroutines = ["coroutines-core", "coroutines-android"]
+navigation3 = ["navigation3-runtime", "navigation3-ui", "androidx-lifecycle-viewmodel-navigation3"]
 unit-testing = ["junit", "google-truth", "coroutines-test", "androidx-core-testing", "androidx-test-rules"]
