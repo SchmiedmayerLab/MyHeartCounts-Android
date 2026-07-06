@@ -1,30 +1,42 @@
 package edu.stanford.spezi.account
 
+import java.util.concurrent.ConcurrentHashMap
+
 /**
- * An [AccountStorageProvider] implementation that does not persist any data and always returns null for load operations.
+ * An in-memory [AccountStorageProvider] that caches the account values an [AccountService] cannot
+ * store itself (its unsupported keys), keyed by `accountId`.
  *
- * This can be used for testing or in scenarios where account data persistence is not required.
+ * Data is held only in memory and is not persisted across app restarts, but it does survive a
+ * [disassociate] (logout) so that re-logging into the same account restores the externally stored
+ * values — mirroring how a real provider (e.g. Firestore) persists them. [delete] clears the record.
+ *
+ * Intended for testing and demo purposes (e.g. with [InMemoryAccountService]).
  */
 class InMemoryAccountStorageProvider : AccountStorageProvider {
+
+    private val storage = ConcurrentHashMap<String, AccountDetails>()
+
     override suspend fun load(
         accountId: String,
         keys: Set<AnyAccountKey>,
-    ): Result<AccountDetails> {
-        return Result.success(AccountDetails())
-    }
+    ): Result<AccountDetails> = Result.success(storage[accountId] ?: AccountDetails())
 
     override suspend fun store(
         accountId: String,
         modifications: AccountModifications,
     ): Result<Unit> {
+        val details = storage.getOrPut(accountId) { AccountDetails() }
+        details.addContents(modifications.modifiedDetails)
+        details.removeAll(modifications.removedAccountKeys)
         return Result.success(Unit)
     }
 
     override suspend fun disassociate(accountId: String): Result<Unit> {
-        return Result.success(Unit)
+        return delete(accountId)
     }
 
     override suspend fun delete(accountId: String): Result<Unit> {
+        storage.remove(accountId)
         return Result.success(Unit)
     }
 }

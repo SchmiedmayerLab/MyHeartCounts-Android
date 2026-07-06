@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package edu.stanford.spezi.ui
 
 import androidx.annotation.StringRes
@@ -21,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import edu.stanford.spezi.ui.theme.Colors
 import edu.stanford.spezi.ui.theme.SpeziTheme
+import edu.stanford.spezi.ui.theme.TextStyles
 import edu.stanford.spezi.ui.theme.ThemePreviews
+import edu.stanford.spezi.ui.theme.medium
 
 /**
  * A data class representing the top app bar configuration for Spezi screens.
@@ -49,6 +52,13 @@ data class SpeziAppBar(
             centerAlign = centerAlign,
         )
     }
+
+    companion object {
+        /**
+         * A default empty app bar with no title, navigation, or actions.
+         */
+        val Empty = SpeziAppBar()
+    }
 }
 
 /**
@@ -73,11 +83,11 @@ fun SpeziAppBarComposable(
     centerAlign: Boolean = true,
 ) {
     val colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = Colors.surface,
-        scrolledContainerColor = Colors.surface,
-        navigationIconContentColor = Colors.onSurface,
-        titleContentColor = Colors.onSurface,
-        actionIconContentColor = Colors.onSurface,
+        containerColor = Colors.background,
+        scrolledContainerColor = Colors.background,
+        navigationIconContentColor = Colors.onBackground,
+        titleContentColor = Colors.onBackground,
+        actionIconContentColor = Colors.onBackground,
     )
     if (centerAlign) {
         CenterAlignedTopAppBar(
@@ -272,6 +282,20 @@ class SpeziAppBarBuilderScope internal constructor() {
     }
 
     /**
+     * Sets the navigation icon based on the given [DismissStyle].
+     *
+     * @param style The dismiss style determining the navigation icon.
+     * @param onClick Callback invoked when the navigation icon is tapped.
+     */
+    fun dismiss(style: DismissStyle, onClick: OnActionVoid) {
+        when (style) {
+            DismissStyle.CLOSE -> close(onClick)
+            DismissStyle.BACK -> back(onClick)
+            DismissStyle.NONE -> navigation = null
+        }
+    }
+
+    /**
      * Sets whether a center aligned app bar will be built.
      */
     fun centerAlign(value: Boolean) {
@@ -454,6 +478,7 @@ private data class TextTitle(private val text: StringResource) : SpeziAppBarTitl
             modifier = modifier,
             textAlign = TextAlign.Center,
             text = text.text(),
+            style = TextStyles.bodyLarge.medium(),
         )
     }
 }
@@ -464,7 +489,7 @@ private fun Preview() {
     val item = speziAppBar {
         title("Title")
         back { }
-        action(ImageResource(Icons.Default.Favorite))
+        action(ImageResource(Icons.Default.Favorite)) { }
     }
 
     SpeziTheme {

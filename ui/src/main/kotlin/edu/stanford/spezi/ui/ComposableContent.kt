@@ -12,6 +12,6 @@ interface ComposableContent {
 
     @Composable
     fun Content() {
-        Content(Modifier)
+        Content(modifier = Modifier)
     }
 }

@@ -1,5 +1,6 @@
 package edu.stanford.spezi.ui.account
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import edu.stanford.spezi.ui.StringResource
@@ -31,6 +32,9 @@ private fun Preview() {
     }
 
     SpeziTheme {
-        display.Content(value = false)
+        Column {
+            display.Content(value = true)
+            display.Content(value = false)
+        }
     }
 }

@@ -1,26 +1,27 @@
 package edu.stanford.spezi.core.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import edu.stanford.spezi.core.DependenciesGraph
 
 /**
- * The receiver scope for ViewModel factory lambdas registered via [ViewModelsBuilderScope.viewModel].
+ * The receiver scope for ViewModel factory lambdas registered via
+ * [edu.stanford.spezi.core.viewmodel.viewModel].
  *
- * This scope exposes three resolution methods that can be used to construct a [ViewModel]:
+ * This scope exposes resolution methods that can be used to construct a [ViewModel]:
  * - [dependency] – resolves any registered type from the dependency graph (modules, singletons,
  *   or factory-produced values).
  * - [optionalDependency] – same as [dependency] but returns `null` instead of throwing.
  * - [savedStateHandle] – retrieves the [SavedStateHandle] associated with the ViewModel's
  *   [androidx.lifecycle.ViewModelStoreOwner] (e.g. a navigation back-stack entry or Activity).
+ * - [appContext] – retrieves the application [android.content.Context].
  *
  * Example:
  * ```kotlin
- * viewModels {
- *     viewModel { HomeViewModel(dependency(), dependency()) }
- *     viewModel { DetailViewModel(savedStateHandle(), dependency()) }
- *     viewModel { FeatureViewModel(optionalDependency(), dependency()) }
- * }
+ * viewModel { HomeViewModel(dependency(), dependency()) }
+ * viewModel { DetailViewModel(savedStateHandle(), dependency()) }
+ * viewModel { FeatureViewModel(optionalDependency(), dependency()) }
  * ```
  */
 class ViewModelFactoryScope internal constructor(
@@ -57,4 +58,10 @@ class ViewModelFactoryScope internal constructor(
      * Use this when the ViewModel needs to read or write navigation arguments or persisted state.
      */
     fun savedStateHandle(): SavedStateHandle = handle
+
+    /**
+     * Returns the application [Context] of the [SpeziApplication][edu.stanford.spezi.core.SpeziApplication]
+     * backing the dependency graph.
+     */
+    fun appContext(): Context = graph.appContext()
 }

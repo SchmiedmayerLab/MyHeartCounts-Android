@@ -1,7 +1,12 @@
 package edu.stanford.spezi.account
 
 import edu.stanford.spezi.core.Module
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 /**
  * The central [Account] module component.
@@ -43,3 +48,29 @@ interface Account : Module {
      */
     fun removeUserDetails()
 }
+
+/**
+ * Observes whether a user is currently signed in to the account.
+ */
+fun Account.observeIsSignedIn(): Flow<Boolean> =
+    details
+        .map { it != null }
+        .distinctUntilChanged()
+
+/**
+ * Observes sign-in events, i.e. when a user signs in to the account.
+ */
+fun Account.observeSignInEvents(): Flow<Unit> =
+    observeIsSignedIn()
+        .drop(1)
+        .filter { it }
+        .map { }
+
+/**
+ * Observes sign-out events, i.e. when a user signs out of the account.
+ */
+fun Account.observeSignOutEvents(): Flow<Unit> =
+    observeIsSignedIn()
+        .drop(1)
+        .filter { !it }
+        .map { }

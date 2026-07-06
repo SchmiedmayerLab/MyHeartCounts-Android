@@ -4,15 +4,16 @@ import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import edu.stanford.spezi.ui.theme.Colors
 import edu.stanford.spezi.ui.theme.SpeziTheme
 import edu.stanford.spezi.ui.theme.ThemePreviews
 
@@ -31,13 +32,13 @@ sealed interface ImageResource : ComposableContent {
     data class Vector(
         val image: ImageVector,
         override val contentDescription: StringResource? = null,
-        override val tint: ComposeValue<Color> = { LocalContentColor.current },
+        override val tint: ComposeValue<Color> = { Colors.primary },
     ) : ImageResource
 
     data class Drawable(
         @DrawableRes val resId: Int,
         override val contentDescription: StringResource? = null,
-        override val tint: ComposeValue<Color> = { LocalContentColor.current },
+        override val tint: ComposeValue<Color> = { Colors.primary },
     ) : ImageResource
 
     @Composable
@@ -67,14 +68,22 @@ sealed interface ImageResource : ComposableContent {
         operator fun invoke(
             image: ImageVector,
             contentDescription: StringResource? = null,
-            tint: ComposeValue<Color> = { LocalContentColor.current },
+            tint: ComposeValue<Color> = { Colors.primary },
         ) = Vector(image, contentDescription, tint)
 
         operator fun invoke(
             @DrawableRes resId: Int,
             contentDescription: StringResource? = null,
-            tint: ComposeValue<Color> = { LocalContentColor.current },
+            tint: ComposeValue<Color> = { Colors.primary },
         ) = Drawable(resId = resId, contentDescription = contentDescription, tint = tint)
+    }
+}
+
+@Composable
+fun ImageResource.tinted(tint: Color): ImageResource = remember(this) {
+    when (this) {
+        is ImageResource.Vector -> copy(tint = { tint })
+        is ImageResource.Drawable -> copy(tint = { tint })
     }
 }
 

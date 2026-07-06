@@ -2,15 +2,27 @@ package edu.stanford.spezi.account
 
 import edu.stanford.spezi.account.AccountKeys.accountId
 import edu.stanford.spezi.account.AccountKeys.userId
+import edu.stanford.spezi.account.internal.screen.PersonNameDataEntry
 import edu.stanford.spezi.foundation.ComputedKnowledgeSource
 import edu.stanford.spezi.foundation.ComputedKnowledgeSourceStoragePolicy
 import edu.stanford.spezi.foundation.OptionalComputedKnowledgeSource
 import edu.stanford.spezi.foundation.ValueRepository
+import edu.stanford.spezi.resources.Strings
+import edu.stanford.spezi.ui.ChoicesFormFieldItem
 import edu.stanford.spezi.ui.StringResource
+import edu.stanford.spezi.ui.account.ChoicesDataEntry
 import edu.stanford.spezi.ui.account.DataDisplayComposable
 import edu.stanford.spezi.ui.account.DataEntryComposable
+import edu.stanford.spezi.ui.account.InstantDataEntry
+import edu.stanford.spezi.ui.account.StringDataDisplay
+import edu.stanford.spezi.ui.account.StringDataEntry
+import edu.stanford.spezi.ui.account.ValueTextDisplay
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import kotlin.reflect.KClass
 
 /**
@@ -55,6 +67,11 @@ object AccountKeys {
      * Reference to the [GenderIdentityKey]
      */
     val genderIdentity = GenderIdentityKey
+
+    /**
+     * Reference to the [DateOfBirthKey]
+     */
+    val dateOfBirth = DateOfBirthKey
 }
 
 /**
@@ -64,7 +81,7 @@ object AccountKeys {
  */
 data object AccountIdKey : AccountKey<String> {
     override val identifier: String = "accountId"
-    override val name: StringResource = StringResource("Account ID")
+    override val name: StringResource = StringResource(Strings.account_key_account_id)
     override val serializer: KSerializer<String> = String.serializer()
     override val category: AccountKeyCategory = AccountKeyCategory.Credentials
     override val initialValue = InitialValue.string
@@ -82,12 +99,12 @@ data object UserIdKey : AccountKey<String>, ComputedKnowledgeSource<AccountAncho
     override val storagePolicy: ComputedKnowledgeSourceStoragePolicy = ComputedKnowledgeSourceStoragePolicy.AlwaysCompute
 
     override val identifier: String = "userId"
-    override val name: StringResource = StringResource("User ID")
+    override val name: StringResource = StringResource(Strings.account_key_user_id)
     override val serializer: KSerializer<String> = String.serializer()
     override val initialValue: InitialValue<String> = InitialValue.string
     override val category: AccountKeyCategory = AccountKeyCategory.Credentials
-    override val display: DataDisplayComposable<String>? = null
-    override val entry: DataEntryComposable<String>? = null
+    override val display: DataDisplayComposable<String> = StringDataDisplay()
+    override val entry: DataEntryComposable<String> = StringDataEntry(placeholder = name)
     override val valueType: KClass<String> = String::class
 
     override fun compute(repository: ValueRepository<AccountAnchor>): String {
@@ -106,12 +123,12 @@ data object EmailKey : AccountKey<String>, OptionalComputedKnowledgeSource<Accou
     override val storagePolicy: ComputedKnowledgeSourceStoragePolicy = ComputedKnowledgeSourceStoragePolicy.AlwaysCompute
 
     override val identifier: String = "email"
-    override val name: StringResource = StringResource("Email")
+    override val name: StringResource = StringResource(Strings.account_key_email)
     override val serializer: KSerializer<String> = String.serializer()
     override val initialValue: InitialValue<String> = InitialValue.string
     override val category: AccountKeyCategory = AccountKeyCategory.ContactDetails
-    override val display: DataDisplayComposable<String>? = null
-    override val entry: DataEntryComposable<String>? = null
+    override val display: DataDisplayComposable<String> = StringDataDisplay()
+    override val entry: DataEntryComposable<String> = StringDataEntry(placeholder = name)
     override val valueType: KClass<String> = String::class
 
     override fun compute(repository: ValueRepository<AccountAnchor>): String? {
@@ -129,15 +146,17 @@ data object EmailKey : AccountKey<String>, OptionalComputedKnowledgeSource<Accou
  * The name key, which is an optional key that can be used to store the user's name if needed.
  * This key is not required for all accounts and can be used at your discretion to store additional information about the user.
  */
-data object NameKey : AccountKey<String> {
+data object NameKey : AccountKey<PersonName> {
     override val identifier: String = "name"
-    override val name: StringResource = StringResource("Name")
-    override val serializer: KSerializer<String> = String.serializer()
-    override val initialValue: InitialValue<String> = InitialValue.string
-    override val category: AccountKeyCategory = AccountKeyCategory.ContactDetails
-    override val display: DataDisplayComposable<String>? = null
-    override val entry: DataEntryComposable<String>? = null
-    override val valueType: KClass<String> = String::class
+    override val name: StringResource = StringResource(Strings.account_key_name)
+    override val serializer: KSerializer<PersonName> = PersonName.serializer()
+    override val initialValue: InitialValue<PersonName> = InitialValue.Empty(value = PersonName(fullName = ""))
+    override val category: AccountKeyCategory = AccountKeyCategory.Name
+    override val display: DataDisplayComposable<PersonName> = ValueTextDisplay {
+        StringResource(it.fullName)
+    }
+    override val entry: DataEntryComposable<PersonName> = PersonNameDataEntry()
+    override val valueType: KClass<PersonName> = PersonName::class
 }
 
 /**
@@ -146,12 +165,15 @@ data object NameKey : AccountKey<String> {
  */
 data object PasswordKey : AccountKey<String> {
     override val identifier: String = "password"
-    override val name: StringResource = StringResource("Password")
+    override val name: StringResource = StringResource(Strings.account_key_password)
     override val serializer: KSerializer<String> = String.serializer()
     override val initialValue: InitialValue<String> = InitialValue.string
     override val category: AccountKeyCategory = AccountKeyCategory.Credentials
     override val display: DataDisplayComposable<String>? = null
-    override val entry: DataEntryComposable<String>? = null
+    override val entry: DataEntryComposable<String> = StringDataEntry(
+        placeholder = name,
+        hideContent = true,
+    )
     override val valueType: KClass<String> = String::class
 }
 
@@ -160,11 +182,52 @@ data object PasswordKey : AccountKey<String> {
  */
 data object GenderIdentityKey : AccountKey<GenderIdentity> {
     override val identifier: String = "genderIdentity"
-    override val name: StringResource = StringResource("Gender")
+    override val name: StringResource = StringResource(Strings.account_key_gender)
     override val serializer: KSerializer<GenderIdentity> = GenderIdentity.serializer()
     override val initialValue: InitialValue<GenderIdentity> = InitialValue.default(GenderIdentity.PREFER_NOT_TO_STATE)
     override val category: AccountKeyCategory = AccountKeyCategory.PersonalDetails
-    override val display: DataDisplayComposable<GenderIdentity>? = null
-    override val entry: DataEntryComposable<GenderIdentity>? = null
+    override val display: DataDisplayComposable<GenderIdentity> = ValueTextDisplay { it.title }
+    override val entry: DataEntryComposable<GenderIdentity> = ChoicesDataEntry(
+        choices = GenderIdentity.entries,
+        optionTransformer = { identity ->
+            ChoicesFormFieldItem.Option(id = identity.name, label = identity.title)
+        },
+        valueTransformer = { id -> GenderIdentity.valueOf(id) },
+    )
     override val valueType: KClass<GenderIdentity> = GenderIdentity::class
 }
+
+/**
+ * The date of birth key, storing the user's birthdate as a [java.time.Instant].
+ */
+data object DateOfBirthKey : AccountKey<Instant> {
+    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+
+    override val identifier: String = "dateOfBirth"
+    override val name: StringResource = StringResource(Strings.account_key_date_of_birth)
+    override val serializer: KSerializer<Instant> = InstantSerializer
+    override val initialValue: InitialValue<Instant> = InitialValue.instant
+    override val category: AccountKeyCategory = AccountKeyCategory.PersonalDetails
+    override val display: DataDisplayComposable<Instant> = ValueTextDisplay { format(it) }
+    override val entry: DataEntryComposable<Instant> = InstantDataEntry(
+        placeholder = StringResource(Strings.account_key_date_of_birth_placeholder),
+        formatter = ::format,
+    )
+    override val valueType: KClass<Instant> = Instant::class
+
+    private fun format(instant: Instant): StringResource {
+        return if (instant == initialValue.value) {
+            StringResource(Strings.account_key_date_of_birth_unspecified)
+        } else {
+            StringResource(dateFormatter.format(instant.atZone(ZoneId.systemDefault()).toLocalDate()))
+        }
+    }
+}
+
+val AccountDetails.accountId: String? get() = this[AccountIdKey::class]
+val AccountDetails.userId: String get() = this[UserIdKey::class]
+val AccountDetails.email: String? get() = this[EmailKey::class]
+val AccountDetails.name: PersonName? get() = this[NameKey::class]
+val AccountDetails.password: String? get() = this[PasswordKey::class]
+val AccountDetails.genderIdentity: GenderIdentity? get() = this[GenderIdentityKey::class]
+val AccountDetails.dateOfBirth: Instant? get() = this[DateOfBirthKey::class]

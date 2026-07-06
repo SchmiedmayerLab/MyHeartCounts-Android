@@ -1,11 +1,17 @@
 package edu.stanford.spezi.ui.account
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import edu.stanford.spezi.ui.ComposableContent
+import edu.stanford.spezi.ui.SpeziCard
 import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.account.internal.AccountSectionContent
+import edu.stanford.spezi.ui.VerticalSpacer
+import edu.stanford.spezi.ui.account.internal.AccountSectionTitle
+import edu.stanford.spezi.ui.theme.Spacings
 import edu.stanford.spezi.ui.theme.SpeziTheme
 import edu.stanford.spezi.ui.theme.ThemePreviews
 
@@ -22,11 +28,24 @@ data class AccountOverviewSection(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        AccountSectionContent(
-            title = title,
-            entries = items,
-            modifier = modifier,
-        )
+        Column(modifier = modifier) {
+            title?.let {
+                AccountSectionTitle(title = it)
+                VerticalSpacer(height = Spacings.extraSmall)
+            }
+            SpeziCard {
+                items.forEachIndexed { index, item ->
+                    item.Content(modifier = Modifier.fillMaxWidth())
+                    if (index < items.size - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacings.medium),
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

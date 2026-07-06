@@ -61,6 +61,15 @@ class DependenciesGraph internal constructor(
         optionalDependency<T>(identifier) ?: createDependencyOrThrow(DependencyKey<T>(identifier), T::class)
 
     /**
+     * Returns the application [Context] of the [SpeziApplication] backing this graph.
+     *
+     * Convenience for factory scopes that need an application [Context] without resolving the
+     * [ApplicationModule] manually.
+     */
+    fun appContext(): Context =
+        dependency<ApplicationModule>().application.requireApplicationContext()
+
+    /**
      * Attempts to instantiate a type [T] via reflection fallback strategies when no factory was
      * explicitly registered (no-arg constructor → Context constructor → [DefaultInitializer]
      * companion object).

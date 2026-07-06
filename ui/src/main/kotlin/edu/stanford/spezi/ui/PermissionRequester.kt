@@ -1,21 +1,78 @@
 package edu.stanford.spezi.ui
 
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
+
+interface PermissionRequester {
+    fun request(permission: String, onResult: (PermissionResult) -> Unit)
+}
+
+/**
+ * Represents the result of a permission request.
+ */
+sealed interface PermissionResult {
+    /**
+     * The permission that was requested.
+     */
+    val permission: String
+
+    /**
+     * Indicates that the permission was granted.
+     */
+    data class Granted(override val permission: String) : PermissionResult
+
+    /**
+     * Indicates that the permission was denied.
+     *
+     * @param shouldShowRationale Indicates whether the user should be shown a rationale for why the permission is needed.
+     */
+    data class Denied(override val permission: String, val shouldShowRationale: Boolean) : PermissionResult
+}
 
 @Composable
-fun PermissionRequester(
-    missingPermissions: Set<String>,
-    onResult: (Boolean, String) -> Unit,
-) {
-    val permission = missingPermissions.firstOrNull() ?: return
+fun rememberPermissionRequester(): PermissionRequester {
+    val activity = LocalActivity.current
+
+    var currentPermission by remember { mutableStateOf<String?>(null) }
+    var currentOnResult by remember {
+        mutableStateOf<(PermissionResult) -> Unit>({})
+    }
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { granted -> onResult(granted, permission) }
+    ) { granted ->
+        val permission = currentPermission ?: return@rememberLauncherForActivityResult
+        val result = if (granted) {
+            PermissionResult.Granted(permission)
+        } else {
+            val shouldShowRationale = activity?.let {
+                ActivityCompat.shouldShowRequestPermissionRationale(it, permission)
+            } ?: false
+            PermissionResult.Denied(
+                permission = permission,
+                shouldShowRationale = shouldShowRationale,
+            )
+        }
+        currentOnResult(result)
+    }
 
-    LaunchedEffect(key1 = permission) {
-        launcher.launch(permission)
+    return remember {
+        object : PermissionRequester {
+            override fun request(
+                permission: String,
+                onResult: (PermissionResult) -> Unit,
+            ) {
+                currentPermission = permission
+                currentOnResult = onResult
+                launcher.launch(permission)
+            }
+        }
     }
 }

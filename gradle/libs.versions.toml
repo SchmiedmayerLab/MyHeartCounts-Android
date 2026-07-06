@@ -6,7 +6,7 @@ androidTools = "31.13.0"
 appcompat = "1.7.1"
 coilComposeVersion = "3.3.0"
 compileSdk = "36"
-composeBom = "2025.10.01"
+composeBom = "2025.10.00"
 composeNavigation = "2.9.5"
 coreDesugaringVersion = "2.1.5"
 coreI18n = "1.0.0"
@@ -23,7 +23,6 @@ firebaseFirestoreKtx = "25.1.4"
 firebaseFunctionsKtx = "21.2.1"
 firebaseMessagingKtx = "24.1.2"
 firebaseStorageKtx = "21.0.2"
-foundation = "1.9.4"
 fragmentCompose = "1.8.9"
 fragmentKtxVersion = "1.8.6"
 googleGmsGoogleServices = "4.4.4"
@@ -35,8 +34,9 @@ junitVersion = "1.3.0"
 kotlin = "2.1.21" # latest kotlin version that we can support due to this ksp issue: https://github.com/google/ksp/issues/2463
 kotlinxSerializationJson = "1.9.0"
 kspVersion = "2.1.21-2.0.1" # should align version with kotlin, see kotlin = "2.1.21"
-lifecycleKtx = "2.9.4"
+lifecycleKtx = "2.10.0"
 minSdk = "31"
+navigation3 = "1.1.2"
 paparazziVersion = "2.0.0-alpha02"
 playServicesAuth = "21.4.0"
 rulesVersion = "1.7.0"
@@ -61,7 +61,6 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "coreTestingVersion" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtxVersion" }
 androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "fragmentCompose" }
 androidx-health-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "healthConnectClient" }
@@ -71,6 +70,7 @@ androidx-lifecycle-view-model-ktx = { group = "androidx.lifecycle", name = "life
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleKtx" }
 androidx-lifecycle-viewmodel-savedstate = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-savedstate", version.ref = "lifecycleKtx" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleKtx" }
+androidx-lifecycle-viewmodel-navigation3 = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-navigation3", version.ref = "lifecycleKtx" }
 androidx-security-crypto-ktx = { group = "androidx.security", name = "security-crypto-ktx", version.ref = "securityCryptoKtx" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "testCoreVersion" }
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "rulesVersion" }
@@ -104,6 +104,8 @@ kotlin-gradle = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin",
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
+navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 paparazzi = { module = "app.cash.paparazzi:paparazzi", version.ref = "paparazziVersion" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timberVersion" }

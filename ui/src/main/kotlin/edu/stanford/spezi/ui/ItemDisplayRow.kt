@@ -1,6 +1,5 @@
 package edu.stanford.spezi.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -16,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import edu.stanford.spezi.ui.theme.Colors
 import edu.stanford.spezi.ui.theme.Sizes
 import edu.stanford.spezi.ui.theme.Spacings
@@ -35,11 +36,15 @@ data class ItemDisplayRow(
             modifier = modifier,
             leadingImage = leadingImage,
             label = label.text(),
-            valueContent = {
-                value?.let {
+            valueContent = value?.let { resource ->
+                {
                     Text(
-                        text = it.text(),
-                        color = Colors.secondary,
+                        modifier = Modifier.weight(1f),
+                        text = resource.text(),
+                        color = Colors.onSurfaceVariant,
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             },
@@ -59,17 +64,16 @@ fun ItemDisplayRowComposable(
     onClick: (() -> Unit)? = null,
 ) {
     val rowModifier = if (onClick != null) {
-        modifier.clickable(onClick = onClick)
+        modifier.noRippleClickable(onClick = onClick)
     } else {
         modifier
     }
     Row(
-        modifier = rowModifier
-            .padding(Spacings.small),
-        horizontalArrangement = Arrangement.spacedBy(Spacings.extraSmall),
+        modifier = rowModifier.padding(Spacings.medium),
+        horizontalArrangement = Arrangement.spacedBy(Spacings.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        leadingImage?.Content()
+        leadingImage?.Content(modifier = Modifier.size(Sizes.Icon.small))
         Text(text = label)
         Spacer(modifier = Modifier.weight(1f))
         valueContent?.invoke(this)
@@ -77,7 +81,7 @@ fun ItemDisplayRowComposable(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 modifier = Modifier.size(Sizes.Icon.extraSmall),
-                tint = Colors.secondary,
+                tint = Colors.onSurfaceVariant,
                 contentDescription = null,
             )
         }

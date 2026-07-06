@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalInspectionMode
-import edu.stanford.spezi.ui.theme.Colors
 import kotlinx.coroutines.launch
 
 /**
@@ -126,7 +125,6 @@ interface BottomSheetComposableContent : ComposableContent {
             modifier = modifier,
             sheetState = state,
             onDismissRequest = onDismiss,
-            containerColor = Colors.surface,
             dragHandle = dragHandle,
         ) {
             Box(

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.stanford.spezi.core.coroutines.CoroutinesLauncher
 import edu.stanford.spezi.ui.MutableSpeziScaffoldState.Companion.invoke
@@ -74,7 +77,7 @@ fun SpeziScaffold(
  *     )
  *
  *     fun onLoadError() {
- *         scaffoldState.showToast(message = StringResource(R.string.error_loading))
+ *         scaffoldState.showToast(message = StringResource(Strings.error_loading))
  *     }
  * }
  *
@@ -145,6 +148,27 @@ fun SpeziScaffold(
 }
 
 /**
+ * Convenience overload of [SpeziScaffold] for static use-cases,
+ *
+ * Constructs an immutable [SpeziScaffoldState] from the given parameters and passes it to the main
+ * scaffold implementation. For dynamic runtime usage, construct a [MutableSpeziScaffoldState]
+ * and pass it directly
+ */
+@Composable
+fun StaticSpeziScaffold(
+    appBar: SpeziAppBar? = null,
+    ignoreAppBarPadding: Boolean = false,
+    backgroundContent: @Composable BoxScope.() -> Unit = {},
+    content: @Composable BoxScope.() -> Unit,
+) {
+    SpeziScaffold(
+        state = rememberMutableSpeziScaffoldState(appBar = appBar, ignoreAppBarPadding = ignoreAppBarPadding),
+        backgroundContent = backgroundContent,
+        content = content,
+    )
+}
+
+/**
  * Read-only state interface for [SpeziScaffold].
  *
  * Exposes a [StateFlow] of [SpeziScaffoldWidgets] that the scaffold observes to update its
@@ -206,6 +230,9 @@ interface SpeziScaffoldState {
  * so calls from any thread are safe.
  */
 interface MutableSpeziScaffoldState : SpeziScaffoldState {
+
+    /** Sets the app bar to display, or `null` to hide it. */
+    fun setAppBar(appBar: SpeziAppBar?)
 
     /** Presents [sheet] as a modal bottom sheet, replacing any currently shown sheet. */
     fun showBottomSheet(sheet: BottomSheetComposableContent)
@@ -275,6 +302,38 @@ interface MutableSpeziScaffoldState : SpeziScaffoldState {
         )
     }
 }
+
+/**
+ * Shows a [Warning] toast with the given [message].
+ */
+fun MutableSpeziScaffoldState.showErrorToast(
+    message: StringResource,
+    displayStyle: SpeziToastDisplayStyle = SpeziToastDisplayStyle.DefaultShort,
+) = showToast(
+    imageResource = ImageResource(Icons.Default.Warning),
+    message = message,
+    displayStyle = displayStyle,
+)
+
+/**
+ * Creates a [MutableSpeziScaffoldState] with the given parameters, using [coroutinesLauncher] from the receiver [ViewModel].
+ *
+ * This is a convenience function for quickly creating scaffold state inside a ViewModel without needing to
+ * pass the coroutines launcher explicitly. For more complex scenarios (e.g. when you need to customize
+ * the initial state or manage multiple scaffold states), consider constructing a [MutableSpeziScaffoldState]
+ * instance directly using its companion factory.
+ *
+ * @param appBar Optional initial app bar configuration.
+ * @param ignoreAppBarPadding Initial value for the app bar padding flag.
+ */
+fun ViewModel.mutableScaffoldState(
+    appBar: SpeziAppBar? = null,
+    ignoreAppBarPadding: Boolean = false,
+): MutableSpeziScaffoldState = MutableSpeziScaffoldState(
+    coroutinesLauncher = coroutinesLauncher,
+    appBar = appBar,
+    ignoreAppBarPadding = ignoreAppBarPadding,
+)
 
 /**
  * Creates and remembers a [MutableSpeziScaffoldState] scoped to the current composition.
@@ -351,6 +410,10 @@ private class MutableSpeziScaffoldStateImpl(
         )
     )
     override val widgets: StateFlow<SpeziScaffoldWidgets> = _widgets.asStateFlow()
+
+    override fun setAppBar(appBar: SpeziAppBar?) {
+        _widgets.update { it.copy(appBar = appBar) }
+    }
 
     override fun hideToast() {
         autoDismissToastJob?.cancel()
