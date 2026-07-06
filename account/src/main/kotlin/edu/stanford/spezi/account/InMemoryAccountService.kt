@@ -96,7 +96,7 @@ class InMemoryAccountService(
         return Result.success(Unit)
     }
 
-    override suspend fun onPasswordForgotten(userId: String): Result<Unit> {
+    override suspend fun resetPassword(userId: String): Result<Unit> {
         // No-op for in-memory: there is no external reset mechanism
         return Result.success(Unit)
     }
@@ -132,7 +132,7 @@ class InMemoryAccountService(
             .getOrElse { AccountDetails() }
         details.addContents(externalDetails)
         account.supplyUserDetails(details)
-        delay(1.seconds)
+        delay(1.seconds) // Simulate some delay for account operations
     }
 
     private companion object {

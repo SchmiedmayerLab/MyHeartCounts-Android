@@ -54,14 +54,14 @@ interface AccountService : Module {
     suspend fun login(credential: UserIdPasswordCredential): Result<Unit>
 
     /**
-     * Invoked when user forgets their password [userId].
+     * Resets the password for the user identified by [userId].
      *
      * Use this api to e.g. send a password reset email to the user.
      *
      * @param userId The user identifier for which to reset the password.
      * @return A [Result] indicating whether the password reset request succeeded.
      */
-    suspend fun onPasswordForgotten(userId: String): Result<Unit>
+    suspend fun resetPassword(userId: String): Result<Unit>
 
     /**
      * Signs in the user with the provided [provider].
