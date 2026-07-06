@@ -180,7 +180,7 @@ internal class FirebaseAccountServiceImpl(
         }
     }
 
-    override suspend fun onPasswordForgotten(userId: String): Result<Unit> =
+    override suspend fun resetPassword(userId: String): Result<Unit> =
         execute { auth.sendPasswordResetEmail(userId).awaitVoid() }
 
     override suspend fun logout(): Result<Unit> = execute {

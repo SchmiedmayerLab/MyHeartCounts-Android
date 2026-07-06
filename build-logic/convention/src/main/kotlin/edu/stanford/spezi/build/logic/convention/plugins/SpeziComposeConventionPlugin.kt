@@ -61,6 +61,8 @@ class SpeziComposeConventionPlugin : Plugin<Project> {
     }
 
     private companion object {
+        // Module bootstrapped with Paparazzi even before it has a src/test/snapshots/ directory,
+        // so its very first screenshot tests can generate their baseline snapshots.
         const val NEW_MODULE = ":onboarding"
         const val SCREENSHOT_TESTING_MODULE = ":testing-screenshot"
     }
