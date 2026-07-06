@@ -145,7 +145,7 @@ internal class AccountLoginViewModel(
                 showErrorToast(message = StringResource(Strings.account_login_invalid_user_id_prefix) + userIdLabel())
                 return@launch
             }
-            accountService.onPasswordForgotten(userId)
+            accountService.resetPassword(userId)
                 .onSuccess {
                     scaffoldState.showToast(
                         imageResource = ImageResource(Icons.Default.Check),

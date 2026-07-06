@@ -1,11 +1,11 @@
 package edu.stanford.spezi.ui.account
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import edu.stanford.spezi.ui.StringResource
 import edu.stanford.spezi.ui.theme.SpeziTheme
 import edu.stanford.spezi.ui.theme.ThemePreviews
-import kotlin.random.Random
 
 /**
  * A DataDisplayComposable for any value type.
@@ -32,6 +32,9 @@ private fun Preview() {
     }
 
     SpeziTheme {
-        display.Content(value = Random.nextBoolean())
+        Column {
+            display.Content(value = true)
+            display.Content(value = false)
+        }
     }
 }
