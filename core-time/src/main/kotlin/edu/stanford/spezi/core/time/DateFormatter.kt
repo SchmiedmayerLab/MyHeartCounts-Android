@@ -1,7 +1,7 @@
 package edu.stanford.spezi.core.time
 
-import edu.stanford.spezi.core.Module
-import edu.stanford.spezi.core.time.DateFormatter.format
+import android.content.Context
+import edu.stanford.spezi.core.DefaultInitializer
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -9,49 +9,68 @@ import java.time.temporal.TemporalAccessor
 import java.util.Date
 
 /**
- * A utility class for formatting [TemporalAccessor]s
+ * Provides date and time formatting utilities.
  */
-object DateFormatter : Module {
+interface DateFormatter {
 
     /**
-     * Formats the given [date] using the given [format]
+     * Formats the given [date] using the given [format].
      *
-     * @param date the [TemporalAccessor] to format
-     * @param format the [DateFormat] to use for formatting
+     * @param date The [TemporalAccessor] to format.
+     * @param format The [DateFormat] to use for formatting.
      */
-    fun <T : TemporalAccessor> format(date: T, format: DateFormat): String {
+    fun <T : TemporalAccessor> format(date: T, format: DateFormat): String
+
+    /**
+     * Formats the given [instant] using the given [format] in UTC.
+     *
+     * @param instant The [Instant] to format.
+     * @param format The [DateFormat] to use for formatting.
+     */
+    fun formatUTC(instant: Instant, format: DateFormat): String
+
+    /**
+     * Formats the given [instant] using the given [format] and the system default [ZoneId].
+     */
+    fun formatDefaultZoneId(instant: Instant, format: DateFormat): String
+
+    /**
+     * Formats the given [date] using the given [format].
+     */
+    fun format(date: Date, format: DateFormat): String
+
+    /**
+     * Formats the given [instant] using the given [format] and [zoneId].
+     */
+    fun format(instant: Instant, format: DateFormat, zoneId: ZoneId): String
+
+    /**
+     * Creates the default [DateFormatter] implementation.
+     */
+    companion object : DefaultInitializer<DateFormatter> {
+        override fun create(context: Context): DateFormatter {
+            return DateFormatterImpl()
+        }
+    }
+}
+
+internal class DateFormatterImpl : DateFormatter {
+    override fun <T : TemporalAccessor> format(date: T, format: DateFormat): String {
         if (date is Instant) return formatDefaultZoneId(date, format)
         return DateTimeFormatter.ofPattern(format.pattern).format(date)
     }
 
-    /**
-     * Formats the given [instant] using the given [format]
-     *
-     * @param instant the [Instant] to format
-     * @param format the [DateFormat] to use for formatting
-     */
-    fun formatUTC(instant: Instant, format: DateFormat): String {
+    override fun formatUTC(instant: Instant, format: DateFormat): String {
         return format(instant, format, ZoneId.of("UTC"))
     }
 
-    /**
-     * Formats the given [instant] using the given [format] and the system default [ZoneId]
-     */
-    fun formatDefaultZoneId(instant: Instant, format: DateFormat): String {
+    override fun formatDefaultZoneId(instant: Instant, format: DateFormat): String {
         return format(instant, format, ZoneId.systemDefault())
     }
 
-    /**
-     * Formats the given [date] using the given [format]
-     *
-     */
-    fun format(date: Date, format: DateFormat) = format(date.toInstant(), format)
+    override fun format(date: Date, format: DateFormat): String = format(date.toInstant(), format)
 
-    /**
-     * Formats the given [instant] using the given [format] and [zoneId]
-     *
-     */
-    fun format(instant: Instant, format: DateFormat, zoneId: ZoneId): String {
+    override fun format(instant: Instant, format: DateFormat, zoneId: ZoneId): String {
         return DateTimeFormatter.ofPattern(format.pattern).format(instant.atZone(zoneId))
     }
 }

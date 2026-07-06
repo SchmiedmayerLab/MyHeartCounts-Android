@@ -1,0 +1,23 @@
+package edu.stanford.spezi.consent.internal
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import edu.stanford.spezi.markdown.MarkdownBlock
+import edu.stanford.spezi.markdown.MarkdownTextBlock
+import edu.stanford.spezi.ui.ComposableContent
+
+/**
+ * Renders a plain markdown block within the consent form.
+ */
+internal data class ConsentMarkdownContent(
+    private val block: MarkdownBlock.Markdown,
+) : ComposableContent {
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        MarkdownTextBlock(
+            modifier = modifier,
+            block = block,
+        )
+    }
+}
