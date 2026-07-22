@@ -12,6 +12,7 @@ import edu.stanford.spezi.account.AccountKeys.userId
 import edu.stanford.spezi.account.internal.screen.PersonNameDataEntry
 import edu.stanford.spezi.foundation.ComputedKnowledgeSource
 import edu.stanford.spezi.foundation.ComputedKnowledgeSourceStoragePolicy
+import edu.stanford.spezi.foundation.InstantSerializer
 import edu.stanford.spezi.foundation.OptionalComputedKnowledgeSource
 import edu.stanford.spezi.foundation.ValueRepository
 import edu.stanford.spezi.resources.Strings

@@ -16,7 +16,7 @@ import edu.stanford.spezi.account.AnyAccountKey
 import edu.stanford.spezi.account.keys
 import edu.stanford.spezi.core.Module
 import edu.stanford.spezi.core.dependency
-import kotlinx.serialization.json.Json
+import edu.stanford.spezi.foundation.JsonSerializer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -30,10 +30,6 @@ import java.time.Instant
 @Suppress("UNCHECKED_CAST")
 internal class FirestoreAccountDetailsCodec : Module {
     private val codecConfig by dependency<AccountDetailsCodecConfig>()
-    private val json: Json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
 
     fun encode(details: AccountDetails): Map<String, Any?> {
         return buildMap {
@@ -67,7 +63,7 @@ internal class FirestoreAccountDetailsCodec : Module {
      */
     private fun encodeValue(key: AccountKey<Any>, value: Any): Any? = when (value) {
         is Instant -> Timestamp(value.epochSecond, value.nano)
-        else -> json.encodeToJsonElement(key.serializer, value).toFirestoreValue()
+        else -> JsonSerializer.encodeToElement(value, key.serializer).toFirestoreValue()
     }
 
     /**
@@ -82,7 +78,7 @@ internal class FirestoreAccountDetailsCodec : Module {
                 else -> null
             }
         } else {
-            json.decodeFromJsonElement(key.serializer, rawValue.toJsonElement())
+            JsonSerializer.decodeFromElement(rawValue.toJsonElement(), key.serializer)
         }
 
     /**

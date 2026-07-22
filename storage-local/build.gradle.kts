@@ -16,6 +16,7 @@ android {
 
 dependencies {
     api(project(":core"))
+    implementation(project(":foundation"))
     implementation(project(":core-coroutines"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.security.crypto.ktx)

@@ -7,8 +7,8 @@
 
 package edu.stanford.spezi.storage.local
 
+import edu.stanford.spezi.foundation.JsonSerializer
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
 @Suppress("TooManyFunctions")
@@ -43,23 +43,14 @@ sealed interface KeyValueStorage {
 
 inline fun <reified T : Any> KeyValueStorage.getSerializable(key: String): T? =
     when (this) {
-        is KeyValueStorageImpl -> {
-            val jsonString = getString(key, "")
-            runCatching {
-                Json.decodeFromString(serializer<T>(), jsonString)
-            }.getOrNull()
-        }
-
+        is KeyValueStorageImpl -> JsonSerializer.decodeOrNull(getString(key, ""), serializer<T>())
         is InMemoryKeyValueStorage -> getValue(key) as? T
     }
 
 inline fun <reified T : Any> KeyValueStorage.putSerializable(key: String, value: T) {
     when (this) {
-        is KeyValueStorageImpl -> {
-            runCatching {
-                putString(key = key, Json.encodeToString(value))
-            }
-        }
+        is KeyValueStorageImpl ->
+            JsonSerializer.encodeCatching(value, serializer<T>()).onSuccess { putString(key = key, value = it) }
         is InMemoryKeyValueStorage -> putValue(key, value)
     }
 }
@@ -71,12 +62,7 @@ inline fun <reified T : Any> KeyValueStorage.getSerializableList(
     key: String,
 ): List<T> =
     when (this) {
-        is KeyValueStorageImpl -> {
-            val jsonString = getString(key, "")
-            runCatching {
-                Json.decodeFromString(ListSerializer(serializer<T>()), jsonString)
-            }.getOrNull() ?: emptyList()
-        }
-
+        is KeyValueStorageImpl ->
+            JsonSerializer.decodeOrNull(getString(key, ""), ListSerializer(serializer<T>())) ?: emptyList()
         is InMemoryKeyValueStorage -> getSerializable<List<T>>(key, emptyList())
     }

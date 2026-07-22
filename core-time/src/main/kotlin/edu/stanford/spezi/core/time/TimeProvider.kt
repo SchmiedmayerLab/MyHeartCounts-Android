@@ -12,6 +12,7 @@ import edu.stanford.spezi.core.DefaultInitializer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -53,6 +54,11 @@ interface TimeProvider {
     fun currentOffset(): ZoneOffset
 
     /**
+     * Returns the time zone used to derive local date and time values.
+     */
+    fun currentZone(): ZoneId
+
+    /**
      * Creates the default [TimeProvider] implementation.
      */
     companion object : DefaultInitializer<TimeProvider> {
@@ -69,4 +75,5 @@ internal class TimeProviderImpl : TimeProvider {
     override fun nowLocalDate(): LocalDate = LocalDate.now()
     override fun nowZonedDateTime(): ZonedDateTime = ZonedDateTime.now()
     override fun currentOffset(): ZoneOffset = ZonedDateTime.now().offset
+    override fun currentZone(): ZoneId = ZoneId.systemDefault()
 }

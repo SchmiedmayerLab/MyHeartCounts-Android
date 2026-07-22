@@ -13,6 +13,8 @@ import edu.stanford.spezi.storage.local.KeyValueStorage
 
 /**
  * Determines whether the user has granted permission to post notifications.
+ * This permission is required for the :scheduler module to
+ * deliver task-reminder notifications.
  */
 interface NotificationPermissionHandler {
     /**

@@ -13,7 +13,7 @@ import edu.stanford.myheartcounts.model.workout.WorkoutTypes
 import edu.stanford.spezi.account.AccountDetails
 import edu.stanford.spezi.account.AccountKeys
 import edu.stanford.spezi.account.InitialValue
-import edu.stanford.spezi.account.InstantSerializer
+import edu.stanford.spezi.foundation.InstantSerializer
 import kotlinx.serialization.builtins.serializer
 import java.time.Instant
 
