@@ -22,7 +22,6 @@ abstract class SpeziAbstractConfigPlugin(private val modulePlugin: PluginId) : P
 
     override fun apply(project: Project) = with(project) {
         apply(modulePlugin)
-        apply(PluginId.JETBRAINS_KOTLIN_ANDROID)
 
         defaultConfig.apply(this)
 

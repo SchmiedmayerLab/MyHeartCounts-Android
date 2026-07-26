@@ -52,7 +52,7 @@ fun Project.setupDokka() {
             skipDeprecated.set(true)
             skipEmptyPackages.set(true)
             includeNonPublic.set(false)
-            jdkVersion.set(JavaVersion.VERSION_17.majorVersion.toInt())
+            jdkVersion.set(JavaVersion.VERSION_21.majorVersion.toInt())
             if (file("README.md").exists()) {
                 includes.from("README.md")
             }
@@ -91,7 +91,7 @@ fun Project.setupDetekt() {
     }
 
     tasks.withType<Detekt> {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = JavaVersion.VERSION_21.toString()
         reports {
             xml.required.set(true)
             html.required.set(true)
