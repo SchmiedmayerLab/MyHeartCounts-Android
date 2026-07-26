@@ -1,3 +1,10 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+
 # Please keep [versions] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [versions]
 activityCompose = "1.11.0"
@@ -43,7 +50,7 @@ rulesVersion = "1.7.0"
 runnerVersion = "1.7.0"
 securityCryptoKtx = "1.1.0"
 testCoreVersion = "1.7.0"
-targetSdk = "35"
+targetSdk = "36"
 timberVersion = "5.0.1"
 truth = "1.4.5"
 

@@ -1,3 +1,10 @@
+//
+// This source file is part of the My Heart Counts open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
 plugins {
     alias(libs.plugins.paparazzi)
     alias(libs.plugins.spezi.application)
@@ -13,9 +20,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "edu.stanford.myheartcounts"
-        versionCode = 1
-        versionName = "1.0.0"
+        applicationId =
+            (project.findProperty("android.injected.application.id") as? String)
+                ?: "edu.stanford.myheartcounts"
+        versionCode =
+            (project.findProperty("android.injected.version.code") as? String)?.toInt() ?: 1
+        versionName =
+            (project.findProperty("android.injected.version.name") as? String) ?: "1.0.0"
         targetSdk = libs.versions.targetSdk.get().toInt()
 
         vectorDrawables {

@@ -1,0 +1,32 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Google Play Release
+
+on:
+  release:
+    types:
+      - published
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deployment:
+    name: Production Deployment
+    uses: ./.github/workflows/deployment.yml
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
+    secrets: inherit
+    with:
+      environment: production
+      version: ${{ github.event.release.tag_name }}
