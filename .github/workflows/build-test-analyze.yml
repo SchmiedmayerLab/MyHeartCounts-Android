@@ -87,6 +87,8 @@ jobs:
     name: Instrumented Tests (API ${{ matrix.api-level }}, ${{ matrix.target }})
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:

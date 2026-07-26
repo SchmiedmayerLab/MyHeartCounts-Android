@@ -46,6 +46,8 @@ jobs:
   configuration:
     name: Deployment Configuration
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       environment: ${{ steps.configuration.outputs.environment }}
       track: ${{ steps.configuration.outputs.track }}
