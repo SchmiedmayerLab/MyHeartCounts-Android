@@ -1,0 +1,29 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+version = 1
+
+# The Gradle wrapper scripts are generated third-party files. Preserve their
+# upstream copyright and Apache-2.0 notice instead of relabeling them as MIT.
+[[annotations]]
+path = [
+    "gradlew",
+    "gradlew.bat",
+]
+precedence = "aggregate"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Android's resource merger rejects adjacent .license sidecars in res/.
+[[annotations]]
+path = [
+    "myheartcounts/src/main/res/mipmap-*/*.png",
+    "sample-app/src/main/res/mipmap-*/*.webp",
+    "ui-theme/src/main/res/font/*.ttf",
+]
+SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"

@@ -1,12 +1,34 @@
 #
 # This source file is part of the My Heart Counts open-source project
 #
-# SPDX-FileCopyrightText: 2024 Stanford University
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
 #
 
 default_platform(:android)
+
+APP_CONFIG = {
+  default_environment: "internal",
+  default_application_id: "edu.stanford.myheartcounts",
+  default_version_name: "1.0.0",
+  aab_path: File.expand_path(
+    "../myheartcounts/build/outputs/bundle/release/myheartcounts-release.aab",
+    __dir__
+  ),
+  mapping_path: File.expand_path(
+    "../myheartcounts/build/outputs/mapping/release/mapping.txt",
+    __dir__
+  ),
+  metadata_path: File.expand_path("metadata/android", __dir__),
+  signing: {
+    store_file: File.expand_path("../deployment/secrets/upload-keystore.jks", __dir__),
+    store_password: ENV["KEY_PASSWORD"],
+    key_alias: ENV["KEY_ALIAS"],
+    key_password: ENV["KEY_PASSWORD"]
+  },
+  json_key_data: ENV["SERVICE_ACCOUNT_JSON_KEY"]
+}.freeze
 
 platform :android do
   desc "Runs all unit tests"
@@ -17,5 +39,169 @@ platform :android do
   desc "Runs all UI tests"
   lane :connectedCheck do
     gradle(task: "connectedCheck")
+  end
+
+  desc "Builds the first signed bundle for manual Google Play bootstrap"
+  lane :bootstrap_bundle do |options|
+    application_id = options[:applicationid].to_s.strip
+    application_id = APP_CONFIG[:default_application_id] if application_id.empty?
+    version_name = options[:versionname].to_s.strip
+    version_name = APP_CONFIG[:default_version_name] if version_name.empty?
+    version_code = options[:versioncode].to_s.strip
+    version_code = "1" if version_code.empty?
+
+    unless version_name.match?(/\A\d+\.\d+\.\d+\z/)
+      UI.user_error!("Version name '#{version_name}' must use semantic versioning, for example 1.2.3")
+    end
+
+    unless version_code.match?(/\A[1-9]\d*\z/)
+      UI.user_error!("Version code '#{version_code}' must be a positive integer")
+    end
+
+    required_environment_variables = %w[
+      KEY_ALIAS
+      KEY_PASSWORD
+    ]
+    missing_environment_variables = required_environment_variables.select do |name|
+      ENV[name].to_s.strip.empty?
+    end
+    unless missing_environment_variables.empty?
+      UI.user_error!(
+        "Missing required environment variables: #{missing_environment_variables.join(', ')}"
+      )
+    end
+
+    unless File.file?(APP_CONFIG[:signing][:store_file])
+      UI.user_error!("Upload keystore not found at #{APP_CONFIG[:signing][:store_file]}")
+    end
+
+    gradle(
+      task: ":myheartcounts:bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.application.id" => application_id,
+        "android.injected.version.code" => version_code.to_i,
+        "android.injected.version.name" => version_name,
+        "android.injected.signing.store.file" => APP_CONFIG[:signing][:store_file],
+        "android.injected.signing.store.password" => APP_CONFIG[:signing][:store_password],
+        "android.injected.signing.key.alias" => APP_CONFIG[:signing][:key_alias],
+        "android.injected.signing.key.password" => APP_CONFIG[:signing][:key_password]
+      }
+    )
+
+    unless File.file?(APP_CONFIG[:aab_path])
+      UI.user_error!("Release bundle was not created at #{APP_CONFIG[:aab_path]}")
+    end
+  end
+
+  desc "Validates read access to the My Heart Counts Google Play tracks"
+  lane :validate_play_access do |options|
+    application_id = options[:applicationid].to_s.strip
+    application_id = APP_CONFIG[:default_application_id] if application_id.empty?
+
+    if ENV["SERVICE_ACCOUNT_JSON_KEY"].to_s.strip.empty?
+      UI.user_error!("Missing required environment variable: SERVICE_ACCOUNT_JSON_KEY")
+    end
+
+    valid_environments = %w[production beta alpha internal]
+    valid_environments.each do |track|
+      version_codes = google_play_track_version_codes(
+        package_name: application_id,
+        track: track,
+        json_key_data: APP_CONFIG[:json_key_data]
+      ) || []
+      UI.message("#{track}: #{version_codes.length} version code(s) visible")
+    end
+
+    UI.success!("Google Play access validated for #{application_id}")
+  end
+
+  desc "Builds and deploys My Heart Counts to a Google Play track"
+  lane :deployment do |options|
+    environment = options[:environment].to_s.strip
+    environment = APP_CONFIG[:default_environment] if environment.empty?
+    application_id = options[:applicationid].to_s.strip
+    application_id = APP_CONFIG[:default_application_id] if application_id.empty?
+    version_name = options[:versionname].to_s.strip
+    version_name = APP_CONFIG[:default_version_name] if version_name.empty?
+
+    valid_environments = %w[production beta alpha internal]
+    unless valid_environments.include?(environment)
+      UI.user_error!(
+        "Invalid environment '#{environment}'. Must be one of: #{valid_environments.join(', ')}"
+      )
+    end
+
+    unless version_name.match?(/\A\d+\.\d+\.\d+\z/)
+      UI.user_error!("Version name '#{version_name}' must use semantic versioning, for example 1.2.3")
+    end
+
+    required_environment_variables = %w[
+      KEY_ALIAS
+      KEY_PASSWORD
+      SERVICE_ACCOUNT_JSON_KEY
+    ]
+    missing_environment_variables = required_environment_variables.select do |name|
+      ENV[name].to_s.strip.empty?
+    end
+    unless missing_environment_variables.empty?
+      UI.user_error!(
+        "Missing required environment variables: #{missing_environment_variables.join(', ')}"
+      )
+    end
+
+    unless File.file?(APP_CONFIG[:signing][:store_file])
+      UI.user_error!("Upload keystore not found at #{APP_CONFIG[:signing][:store_file]}")
+    end
+
+    UI.message("Using Google Play track: #{environment}")
+    UI.message("Using application id: #{application_id}")
+    UI.message("Using version name: #{version_name}")
+
+    version_codes = valid_environments.flat_map do |track|
+      google_play_track_version_codes(
+        package_name: application_id,
+        track: track,
+        json_key_data: APP_CONFIG[:json_key_data]
+      ) || []
+    end
+    current_version_code = (version_codes.max || 0) + 1
+    UI.message("Using version code: #{current_version_code}")
+
+    gradle(
+      task: ":myheartcounts:bundle",
+      build_type: "Release",
+      properties: {
+        "android.injected.application.id" => application_id,
+        "android.injected.version.code" => current_version_code,
+        "android.injected.version.name" => version_name,
+        "android.injected.signing.store.file" => APP_CONFIG[:signing][:store_file],
+        "android.injected.signing.store.password" => APP_CONFIG[:signing][:store_password],
+        "android.injected.signing.key.alias" => APP_CONFIG[:signing][:key_alias],
+        "android.injected.signing.key.password" => APP_CONFIG[:signing][:key_password]
+      }
+    )
+
+    unless File.file?(APP_CONFIG[:aab_path])
+      UI.user_error!("Release bundle was not created at #{APP_CONFIG[:aab_path]}")
+    end
+
+    upload_options = {
+      package_name: application_id,
+      track: environment,
+      aab: APP_CONFIG[:aab_path],
+      metadata_path: APP_CONFIG[:metadata_path],
+      json_key_data: APP_CONFIG[:json_key_data],
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    }
+    if File.file?(APP_CONFIG[:mapping_path])
+      upload_options[:mapping] = APP_CONFIG[:mapping_path]
+    end
+
+    upload_to_play_store(**upload_options)
   end
 end

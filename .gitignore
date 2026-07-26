@@ -1,3 +1,10 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+
 # Compiled class file
 *.class
 *.dex
@@ -57,6 +64,8 @@ build/
 # built application files
 *.apk
 *.ap_
+*.aab
+*.jks
 
 # Other files
 .DS_Store
@@ -66,6 +75,9 @@ play-store-credentials.json
 keystore.jks
 app/release/*
 app/debug/*
+gha-creds-*.json
 
 # services and secrets
 modules/account/src/main/res/values/secrets.xml
+deployment/secrets/*
+!deployment/secrets/README.md

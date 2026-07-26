@@ -1,0 +1,49 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Static Analysis
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: GitHub Actions Workflows
+    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.3
+    permissions:
+      contents: read
+
+  dependency_review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+      - name: Review Dependency Changes
+        uses: actions/dependency-review-action@v5
+
+  reuse:
+    name: REUSE Compliance
+    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.3
+    permissions:
+      contents: read
+
+  markdown_links:
+    name: Markdown Links
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3
+    permissions:
+      contents: read
+      pull-requests: read
