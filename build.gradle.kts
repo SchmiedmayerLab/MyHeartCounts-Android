@@ -14,7 +14,6 @@ plugins {
     alias(libs.plugins.compose.compiler) version libs.versions.kotlin apply false
     alias(libs.plugins.detekt) version libs.versions.detekt
     alias(libs.plugins.dokka) version libs.versions.dokka
-    alias(libs.plugins.google.devtools.ksp) version libs.versions.kspVersion apply false
     jacoco
     alias(libs.plugins.jetbrains.kotlin.android) apply false
     alias(libs.plugins.google.gms.google.services) apply false

@@ -22,6 +22,11 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: dependencies
+    ignore:
+      # The CodeQL Kotlin extractor supports Kotlin up to 2.4.0 and fails the Kotlin
+      # compilation on anything newer. Lift this cap once CodeQL catches up.
+      - dependency-name: "org.jetbrains.kotlin*"
+        versions: [">2.4.0"]
 
   - package-ecosystem: bundler
     directory: /
