@@ -7,9 +7,9 @@
 
 package edu.stanford.spezi.build.logic.convention.extensions
 
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.api.dsl.LibraryExtension
 import edu.stanford.spezi.build.logic.convention.model.PluginId
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
@@ -38,9 +38,9 @@ inline fun <reified T : Any> Project.extension(configBlock: T.() -> Unit) {
     extensions.getByType<T>().apply(configBlock)
 }
 
-internal fun Project.android(configBlock: CommonExtension<*, *, *, *, *, *>.() -> Unit) {
+internal fun Project.android(configBlock: CommonExtension.() -> Unit) {
     when {
-        isApp() -> extension<BaseAppModuleExtension>(configBlock)
+        isApp() -> extension<ApplicationExtension>(configBlock)
         isLibrary() -> extension<LibraryExtension>(configBlock)
         else -> error("commonExtensions was called before setting the module type plugin")
     }

@@ -21,37 +21,33 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 class SpeziBaseConfigConventionPlugin : Plugin<Project> {
-    private val java = JavaVersion.VERSION_17
+    private val java = JavaVersion.VERSION_21
 
     override fun apply(target: Project) = with(target) {
         android {
             compileSdk = findVersion("compileSdk").toInt()
 
-            defaultConfig {
+            defaultConfig.apply {
                 minSdk = findVersion("minSdk").toInt()
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             }
 
-            compileOptions {
+            compileOptions.apply {
                 sourceCompatibility = java
                 targetCompatibility = java
             }
 
-            buildTypes {
-                getByName("debug").enableAndroidTestCoverage = hasAndroidTests()
-            }
+            buildTypes.getByName("debug").enableAndroidTestCoverage = hasAndroidTests()
 
-            packaging {
-                resources {
-                    excludes += "/META-INF/**"
-                }
+            packaging.resources.apply {
+                excludes += "/META-INF/**"
             }
         }
 
         extensions.configure(KotlinAndroidProjectExtension::class.java) {
             jvmToolchain(java.majorVersion.toInt())
             compilerOptions {
-                jvmTarget.set(JvmTarget.JVM_17)
+                jvmTarget.set(JvmTarget.JVM_21)
                 languageVersion.set(KotlinVersion.KOTLIN_2_1)
                 freeCompilerArgs.addAll(
                     "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",

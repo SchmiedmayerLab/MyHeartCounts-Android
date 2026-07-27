@@ -28,7 +28,7 @@ class SpeziComposeConventionPlugin : Plugin<Project> {
         if (includePaparazzi) apply(PluginId.PAPARAZZI)
 
         android {
-            buildFeatures {
+            buildFeatures.apply {
                 compose = true
             }
 

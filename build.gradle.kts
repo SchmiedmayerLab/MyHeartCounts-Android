@@ -14,7 +14,6 @@ plugins {
     alias(libs.plugins.compose.compiler) version libs.versions.kotlin apply false
     alias(libs.plugins.detekt) version libs.versions.detekt
     alias(libs.plugins.dokka) version libs.versions.dokka
-    alias(libs.plugins.google.devtools.ksp) version libs.versions.kspVersion apply false
     jacoco
     alias(libs.plugins.jetbrains.kotlin.android) apply false
     alias(libs.plugins.google.gms.google.services) apply false
@@ -52,7 +51,7 @@ fun Project.setupDokka() {
             skipDeprecated.set(true)
             skipEmptyPackages.set(true)
             includeNonPublic.set(false)
-            jdkVersion.set(JavaVersion.VERSION_17.majorVersion.toInt())
+            jdkVersion.set(JavaVersion.VERSION_21.majorVersion.toInt())
             if (file("README.md").exists()) {
                 includes.from("README.md")
             }
@@ -91,7 +90,7 @@ fun Project.setupDetekt() {
     }
 
     tasks.withType<Detekt> {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = JavaVersion.VERSION_21.toString()
         reports {
             xml.required.set(true)
             html.required.set(true)
