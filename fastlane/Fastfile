@@ -31,9 +31,14 @@ APP_CONFIG = {
 }.freeze
 
 platform :android do
-  desc "Runs all unit tests, verifying screenshots against their recorded baselines"
+  desc "Runs all unit tests"
   lane :test do
-    gradle(tasks: ["test", "verifyPaparazziDebug"])
+    gradle(task: "test")
+  end
+
+  desc "Verifies screenshots against their recorded baselines"
+  lane :screenshotTests do
+    gradle(task: "verifyPaparazziDebug")
   end
 
   desc "Runs all UI tests"
