@@ -16,8 +16,8 @@ import java.time.Duration
  * delivered at [allDayNotificationTime].
  */
 data class SchedulerNotificationsConfiguration(
-    val limit: Int = DEFAULT_LIMIT,
-    val window: Duration = Duration.ofDays(DEFAULT_WINDOW_DAYS),
+    val limit: Int,
+    val window: Duration,
     val allDayNotificationTime: NotificationTime = NotificationTime(hour = DEFAULT_ALL_DAY_HOUR),
 ) {
     init {
@@ -26,8 +26,14 @@ data class SchedulerNotificationsConfiguration(
     }
 
     companion object {
-        const val DEFAULT_LIMIT = 30
-        const val DEFAULT_WINDOW_DAYS = 28L
-        const val DEFAULT_ALL_DAY_HOUR = 9
+        private const val DEFAULT_LIMIT = 30
+        private const val DEFAULT_WINDOW_DAYS = 28L
+        private const val DEFAULT_ALL_DAY_HOUR = 9
+
+        val DEFAULT = SchedulerNotificationsConfiguration(
+            limit = DEFAULT_LIMIT,
+            window = Duration.ofDays(DEFAULT_WINDOW_DAYS),
+            allDayNotificationTime = NotificationTime(hour = DEFAULT_ALL_DAY_HOUR)
+        )
     }
 }
