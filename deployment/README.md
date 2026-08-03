@@ -142,8 +142,9 @@ Publishing a GitHub release reuses the organization's `format-release-notes.yml`
 with My Heart Counts for iOS. Fastlane writes the formatted notes to a temporary, version-specific
 changelog file for every locale in the metadata tree and uploads them with the AAB. Google Play
 limits release notes to 500 Unicode characters per locale; longer notes are shortened to that limit.
-Staging and manually dispatched deployments use `Bug fixes and performance improvements.` unless
-the manual workflow run provides different release notes.
+Staging deployments use the latest commit title, which is the pull-request title for squash merges.
+Manually dispatched workflows can provide different release notes. Production uses
+`Bug fixes and performance improvements.` only if no formatted release notes are available.
 
 ## Local Deployment
 

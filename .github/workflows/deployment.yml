@@ -29,7 +29,6 @@ on:
       releasenotes:
         description: The release notes to publish on Google Play.
         required: false
-        default: Bug fixes and performance improvements.
         type: string
   workflow_call:
     inputs:
@@ -46,7 +45,6 @@ on:
         description: The release notes to publish on Google Play.
         required: false
         type: string
-        default: Bug fixes and performance improvements.
 
 concurrency:
   group: deployment-${{ inputs.environment || 'staging' }}
@@ -162,7 +160,7 @@ jobs:
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          RELEASE_NOTES: ${{ inputs.releasenotes || 'Bug fixes and performance improvements.' }}
+          RELEASE_NOTES: ${{ inputs.releasenotes }}
           SERVICE_ACCOUNT_JSON_KEY: ${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}
         run: >-
           bundle exec fastlane deployment

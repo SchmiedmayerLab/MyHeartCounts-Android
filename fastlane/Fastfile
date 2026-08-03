@@ -216,6 +216,11 @@ platform :android do
     current_version_code = (version_codes.max || 0) + 1
     UI.message("Using version code: #{current_version_code}")
 
+    release_notes = ENV["RELEASE_NOTES"].to_s.strip
+    if release_notes.empty? && environment != "production"
+      release_notes = last_git_commit[:message].to_s.lines.first.to_s.strip
+    end
+
     gradle(
       task: ":myheartcounts:bundle",
       build_type: "Release",
@@ -236,7 +241,7 @@ platform :android do
 
     metadata_path = prepare_google_play_metadata(
       version_code: current_version_code,
-      release_notes: ENV["RELEASE_NOTES"]
+      release_notes: release_notes
     )
 
     begin
