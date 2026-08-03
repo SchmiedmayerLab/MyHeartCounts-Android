@@ -86,7 +86,7 @@ jobs:
               exit 1
             fi
 
-            latest_tag="$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)"
+            latest_tag="$(git tag --list | awk '/^[0-9]+\.[0-9]+\.[0-9]+$/' | sort -V | tail -n 1)"
             if [[ -z "$latest_tag" ]]; then
               version="$declared_version"
             else
