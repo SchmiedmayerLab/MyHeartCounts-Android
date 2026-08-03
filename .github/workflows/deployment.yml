@@ -26,6 +26,10 @@ on:
         description: The semantic version to deploy, for example 1.2.3.
         required: true
         type: string
+      releasenotes:
+        description: The release notes to publish on Google Play.
+        required: false
+        type: string
   workflow_call:
     inputs:
       environment:
@@ -36,6 +40,10 @@ on:
       version:
         description: The semantic version to deploy.
         required: true
+        type: string
+      releasenotes:
+        description: The release notes to publish on Google Play.
+        required: false
         type: string
 
 concurrency:
@@ -152,6 +160,7 @@ jobs:
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          RELEASE_NOTES: ${{ inputs.releasenotes }}
           SERVICE_ACCOUNT_JSON_KEY: ${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}
         run: >-
           bundle exec fastlane deployment

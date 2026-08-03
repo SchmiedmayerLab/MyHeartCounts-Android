@@ -6,7 +6,13 @@
 # SPDX-License-Identifier: MIT
 #
 
+require "fileutils"
+require "tmpdir"
+
 default_platform(:android)
+
+DEFAULT_RELEASE_NOTES = "Bug fixes and performance improvements."
+GOOGLE_PLAY_RELEASE_NOTES_LIMIT = 500
 
 APP_CONFIG = {
   default_environment: "internal",
@@ -29,6 +35,43 @@ APP_CONFIG = {
   },
   json_key_data: ENV["SERVICE_ACCOUNT_JSON_KEY"]
 }.freeze
+
+def prepare_google_play_metadata(version_code:, release_notes:)
+  normalized_release_notes = release_notes.to_s.strip
+  normalized_release_notes = DEFAULT_RELEASE_NOTES if normalized_release_notes.empty?
+
+  if normalized_release_notes.length > GOOGLE_PLAY_RELEASE_NOTES_LIMIT
+    normalized_release_notes = normalized_release_notes.each_char
+      .take(GOOGLE_PLAY_RELEASE_NOTES_LIMIT - 1)
+      .join
+      .rstrip + "…"
+    UI.important(
+      "Google Play release notes were shortened to #{GOOGLE_PLAY_RELEASE_NOTES_LIMIT} characters"
+    )
+  end
+
+  metadata_path = Dir.mktmpdir("my-heart-counts-google-play-metadata-")
+  FileUtils.cp_r("#{APP_CONFIG[:metadata_path]}/.", metadata_path)
+
+  locale_paths = Dir.children(metadata_path)
+    .map { |entry| File.join(metadata_path, entry) }
+    .select { |path| File.directory?(path) }
+  if locale_paths.empty?
+    UI.user_error!("No Google Play metadata locales found at #{APP_CONFIG[:metadata_path]}")
+  end
+
+  locale_paths.each do |locale_path|
+    changelog_path = File.join(locale_path, "changelogs")
+    FileUtils.mkdir_p(changelog_path)
+    File.write(
+      File.join(changelog_path, "#{version_code}.txt"),
+      normalized_release_notes
+    )
+  end
+
+  UI.message("Prepared Google Play release notes for #{locale_paths.length} locale(s)")
+  metadata_path
+end
 
 platform :android do
   desc "Runs all unit tests"
@@ -173,6 +216,11 @@ platform :android do
     current_version_code = (version_codes.max || 0) + 1
     UI.message("Using version code: #{current_version_code}")
 
+    release_notes = ENV["RELEASE_NOTES"].to_s.strip
+    if release_notes.empty? && environment != "production"
+      release_notes = last_git_commit[:message].to_s.lines.first.to_s.strip
+    end
+
     gradle(
       task: ":myheartcounts:bundle",
       build_type: "Release",
@@ -191,22 +239,32 @@ platform :android do
       UI.user_error!("Release bundle was not created at #{APP_CONFIG[:aab_path]}")
     end
 
-    upload_options = {
-      package_name: application_id,
-      track: environment,
-      aab: APP_CONFIG[:aab_path],
-      metadata_path: APP_CONFIG[:metadata_path],
-      json_key_data: APP_CONFIG[:json_key_data],
-      skip_upload_apk: true,
-      skip_upload_metadata: false,
-      skip_upload_changelogs: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    }
-    if File.file?(APP_CONFIG[:mapping_path])
-      upload_options[:mapping] = APP_CONFIG[:mapping_path]
-    end
+    metadata_path = prepare_google_play_metadata(
+      version_code: current_version_code,
+      release_notes: release_notes
+    )
 
-    upload_to_play_store(**upload_options)
+    begin
+      upload_options = {
+        package_name: application_id,
+        track: environment,
+        version_code: current_version_code,
+        aab: APP_CONFIG[:aab_path],
+        metadata_path: metadata_path,
+        json_key_data: APP_CONFIG[:json_key_data],
+        skip_upload_apk: true,
+        skip_upload_metadata: false,
+        skip_upload_changelogs: false,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+      }
+      if File.file?(APP_CONFIG[:mapping_path])
+        upload_options[:mapping] = APP_CONFIG[:mapping_path]
+      end
+
+      upload_to_play_store(**upload_options)
+    ensure
+      FileUtils.remove_entry(metadata_path) if metadata_path && Dir.exist?(metadata_path)
+    end
   end
 end
