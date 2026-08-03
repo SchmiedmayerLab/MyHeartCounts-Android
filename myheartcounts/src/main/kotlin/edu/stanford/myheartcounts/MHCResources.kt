@@ -15,6 +15,13 @@ package edu.stanford.myheartcounts
 typealias MHCStrings = R.string
 
 /**
+ * Centralised entry point for the app's quantity-dependent string resource IDs.
+ *
+ * Resolve plural resources through this alias rather than referencing [R.plurals] directly.
+ */
+typealias MHCPlurals = R.plurals
+
+/**
  * Centralised entry point for the app's drawable resource IDs.
  *
  * Resolve drawable resources through this alias rather than referencing [R.drawable] directly.

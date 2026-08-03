@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package edu.stanford.myheartcounts.onboarding
+package edu.stanford.myheartcounts.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -21,12 +21,14 @@ import edu.stanford.spezi.ui.ComposableContent
 import edu.stanford.spezi.ui.StringResource
 import edu.stanford.spezi.ui.noRippleClickable
 import edu.stanford.spezi.ui.theme.Colors
+import edu.stanford.spezi.ui.theme.SpeziTheme
+import edu.stanford.spezi.ui.theme.ThemePreviews
 
 /**
  * A tappable row that opens an external destination, showing [text] with a trailing
  * open-in-new icon. Taps are reported through [onClicked].
  */
-data class OnboardingLink(
+data class ExternalLink(
     val text: StringResource,
     val onClicked: () -> Unit,
 ) : ComposableContent {
@@ -52,5 +54,16 @@ data class OnboardingLink(
                 tint = Colors.primary,
             )
         }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun Preview() {
+    SpeziTheme {
+        ExternalLink(
+            text = StringResource("About the My Heart Counts Study"),
+            onClicked = {},
+        ).Content()
     }
 }

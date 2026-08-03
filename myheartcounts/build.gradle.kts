@@ -47,13 +47,25 @@ android {
 dependencies {
     implementation(project(":consent"))
     implementation(project(":core"))
+    implementation(project(":core-coroutines"))
+    implementation(project(":core-time"))
     implementation(project(":core-viewmodel"))
+    implementation(project(":markdown"))
     implementation(project(":ui"))
+    implementation(project(":ui-scheduler"))
     implementation(project(":onboarding"))
     implementation(project(":account"))
+    implementation(project(":scheduler"))
     implementation(project(":storage-local"))
+    implementation(project(":study"))
+    implementation(project(":study-definition"))
 
     implementation(libs.bundles.navigation3)
 
     testImplementation(project(":testing-screenshot"))
+    testImplementation(testFixtures(project(":scheduler")))
+    testImplementation(testFixtures(project(":foundation")))
+    testImplementation(testFixtures(project(":core-time")))
+    testImplementation(testFixtures(project(":study")))
+    testImplementation(testFixtures(project(":study-definition")))
 }
