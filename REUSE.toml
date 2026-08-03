@@ -18,6 +18,15 @@ path = [
 precedence = "aggregate"
 SPDX-License-Identifier = "Apache-2.0"
 
+# The study bundle is generated from the study definitions and copied in verbatim;
+# sidecar files would become part of the bundle's contents.
+[[annotations]]
+path = [
+    "myheartcounts/src/main/assets/mhcStudyBundle.spezistudybundle/**",
+]
+SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"
+
 # Android's resource merger rejects adjacent .license sidecars in res/.
 [[annotations]]
 path = [

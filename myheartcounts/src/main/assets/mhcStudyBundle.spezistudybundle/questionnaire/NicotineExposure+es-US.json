@@ -1,0 +1,106 @@
+{
+  "resourceType": "Questionnaire",
+  "language": "es-US",
+  "id": "9D384C8A-897C-440C-8B04-B2BD622D3423",
+  "title": "Panel - Tabaquismo",
+  "status": "draft",
+  "meta": {
+    "profile": [
+      "http://spezi.health/fhir/StructureDefinition/sdf-Questionnaire"
+    ],
+    "tag": [
+      {
+        "system": "urn:ietf:bcp:47",
+        "code": "es-US",
+        "display": "Spanish"
+      }
+    ]
+  },
+  "useContext": [
+    {
+      "code": {
+        "system": "http://hl7.org/fhir/ValueSet/usage-context-type",
+        "code": "focus",
+        "display": "Enfoque Clínico"
+      },
+      "valueCodeableConcept": {
+        "coding": [
+          {
+            "system": "urn:oid:2.16.578.1.12.4.1.1.8655",
+            "display": "Panel - Tabaquismo"
+          }
+        ]
+      }
+    }
+  ],
+  "subjectType": [
+    "Patient"
+  ],
+  "url": "https://myheartcounts.stanford.edu/fhir/survey/nicotineExposure",
+  "item": [
+    {
+      "linkId": "dcb2277e-fe96-4f45-844a-ef58a9516380",
+      "type": "choice",
+      "text": "¿Cuál es su estado de tabaquismo?",
+      "required": false,
+      "answerOption": [
+        {
+          "valueCoding": {
+            "id": "755922cb-2533-4e17-c647-7e7741605c9a",
+            "code": "never-smoked/vaped",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Nunca he fumado/vapeado"
+          }
+        },
+        {
+          "valueCoding": {
+            "id": "d9b7beba-9778-4270-8988-d6a442c7c64f",
+            "code": "quit->5-years-ago",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Dejé hace más de 5 años"
+          }
+        },
+        {
+          "valueCoding": {
+            "id": "75853d93-8165-4309-c4b6-1e1fbcab493d",
+            "code": "quit-1-5-years-ago",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Dejé hace 1-5 años"
+          }
+        },
+        {
+          "valueCoding": {
+            "id": "682757ef-61fb-4fc9-e72b-82d7969c3245",
+            "code": "quit-<1-year-ago",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Dejé hace menos de 1 año"
+          }
+        },
+        {
+          "valueCoding": {
+            "id": "67c56c6e-d9d0-4f7a-937c-3b2f0f52b79a",
+            "code": "light-smoker/vaper-(<10/day)",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Fumador/vapeador ligero (menos de 10 al día)"
+          }
+        },
+        {
+          "valueCoding": {
+            "id": "bfb9b19f-65b1-4d5f-ee19-5e3fc3237374",
+            "code": "moderate-smoker/vaper-(10-to-19/day)",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Fumador/vapeador moderado (de 10 a 19 al día)"
+          }
+        },
+        {
+          "valueCoding": {
+            "id": "4066feb5-cc99-411b-9fd9-f38bd66666dd",
+            "code": "heavy-smoker/vaper-(>20/day)",
+            "system": "urn:uuid:049cbbd0-02fa-4fcd-83a7-65a112c1f607",
+            "display": "Fumador/vapeador intenso (más de 20 al día)"
+          }
+        }
+      ]
+    }
+  ]
+}

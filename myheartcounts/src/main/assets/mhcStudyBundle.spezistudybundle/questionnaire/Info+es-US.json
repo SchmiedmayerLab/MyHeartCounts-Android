@@ -1,0 +1,163 @@
+{
+  "resourceType": "Questionnaire",
+  "language": "es-US",
+  "title": "Comience Aquí",
+  "status": "draft",
+  "id": "FCB840EB-D08A-4DDE-8E26-6611369E2C3C",
+  "meta": {
+    "profile": [
+      "http://spezi.health/fhir/StructureDefinition/sdf-Questionnaire"
+    ],
+    "tag": [
+      {
+        "system": "urn:ietf:bcp:47",
+        "code": "es-US",
+        "display": "Spanish"
+      }
+    ]
+  },
+  "useContext": [
+    {
+      "code": {
+        "system": "http://hl7.org/fhir/ValueSet/usage-context-type",
+        "code": "focus",
+        "display": "Clinical Focus"
+      },
+      "valueCodeableConcept": {
+        "coding": [
+          {
+            "system": "urn:oid:2.16.578.1.12.4.1.1.8655",
+            "display": "Comience Aquí"
+          }
+        ]
+      }
+    }
+  ],
+  "subjectType": [
+    "Patient"
+  ],
+  "item": [
+    {
+      "linkId": "2446d581-7a02-46da-831f-8ad568e6c471",
+      "type": "group",
+      "text": "¡Bienvenido!",
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                "code": "page",
+                "display": "Page"
+              }
+            ],
+            "text": "Page"
+          }
+        }
+      ],
+      "required": false,
+      "item": [
+        {
+          "linkId": "90a33c57-d3e4-470e-83c4-9175a7edbec2",
+          "type": "display",
+          "text": "¡Bienvenido a nuestro estudio! Estamos encantados de tenerle a bordo. Sus contribuciones serán fundamentales para avanzar en nuestra comprensión de la salud cardiovascular y la investigación. Los conocimientos que obtengamos de este estudio informarán cómo avanzamos con futuros estudios de investigación centrados en optimizar la salud.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "linkId": "b3baf5ee-9bf3-4079-88eb-9388b5f3533d",
+      "type": "group",
+      "text": "Información de la Encuesta",
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                "code": "page",
+                "display": "Page"
+              }
+            ],
+            "text": "Page"
+          }
+        }
+      ],
+      "required": false,
+      "item": [
+        {
+          "linkId": "48d601f0-77e3-4c31-f88e-756942002e21",
+          "type": "display",
+          "text": "Entendemos que su tiempo es valioso, por lo que haremos todo lo posible para mantener el compromiso de tiempo diario al mínimo.\nLe animamos a completar las encuestas disponibles diariamente, pero si eso no es posible en un día determinado, las encuestas permanecerán activas para que pueda completarlas más tarde cuando tenga un momento libre. O si desea completarlas todas de una vez con anticipación, también puede hacerlo.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "linkId": "395874c6-d272-468a-856a-27774dc201a5",
+      "type": "group",
+      "text": "Información de Actividades",
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                "code": "page",
+                "display": "Page"
+              }
+            ],
+            "text": "Page"
+          }
+        }
+      ],
+      "required": false,
+      "item": [
+        {
+          "linkId": "dba9f196-2c23-4254-fa38-b1e753be4c8c",
+          "type": "display",
+          "text": "Por favor, complete cada una de las actividades/tareas al menos una vez, si es físicamente capaz. Para fines de investigación, tener más de un punto de datos en cada una de estas es ideal, por lo que agradeceríamos si pudiera completar cada tarea más de una vez. Si encuentra una de las actividades que disfruta, siéntase libre de hacer esa tarea tantas veces como desee.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "linkId": "ee2703a1-2ebd-45a3-ffda-f06d37ebb3f9",
+      "type": "group",
+      "text": "Panel de Salud",
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/ValueSet/questionnaire-item-control",
+                "code": "page",
+                "display": "Page"
+              }
+            ],
+            "text": "Page"
+          }
+        }
+      ],
+      "required": false,
+      "item": [
+        {
+          "linkId": "18d251f8-08c3-49bb-eb06-655f27399697",
+          "type": "display",
+          "text": "El Panel de Salud combina muchas áreas que contribuyen a la salud general en una \"puntuación de salud\". Aunque 100 no significa que usted sea la persona más saludable del mundo, y 0 no significa lo contrario, las puntuaciones más altas generalmente significan una mejor salud. Esta es una herramienta que puede usar para hacer un seguimiento a lo largo del tiempo y ver cómo cambia su salud a medida que cambia sus hábitos.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "linkId": "4bc4a7c2-330e-4c45-82a3-17c88baa11ae",
+      "type": "display",
+      "text": "Siéntase libre de consultar esta información en cualquier momento mientras avanza en este estudio. ¡Esperamos que se sienta preparado y confiado para ayudarnos a avanzar en la investigación!\n\nSi tiene alguna pregunta o comentario, por favor envíenos un correo electrónico a myheartcounts@stanford.edu. ¡Le responderemos lo más rápido posible!\n\nFinalmente, queremos agradecerle por participar en nuestro estudio.\n\nEl Equipo de My Heart Counts",
+      "required": false
+    }
+  ]
+}

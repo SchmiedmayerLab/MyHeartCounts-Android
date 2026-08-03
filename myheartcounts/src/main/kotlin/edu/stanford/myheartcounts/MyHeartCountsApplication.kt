@@ -22,6 +22,11 @@ import edu.stanford.spezi.core.dependency
 import edu.stanford.spezi.core.logging.SpeziLogger
 
 /**
+ * The consent document within the study bundle shipped in the app's assets.
+ */
+private const val CONSENT_ASSET = "mhcStudyBundle.spezistudybundle/consent/Consent+en-US.md"
+
+/**
  * The application entry point. Declares the app's dependency graph and consent document, and enables
  * logging in debug builds.
  */
@@ -34,7 +39,9 @@ class MyHeartCountsApplication : Application(), SpeziApplication {
 
         consent {
             document {
-                ConsentDocument.Asset(filename = "Consent+en-US.md")
+                // TODO: Resolve the consent text from the study bundle for the device locale,
+                //  keeping this asset as the fallback.
+                ConsentDocument.Asset(filename = CONSENT_ASSET)
             }
             initialSignatureMetadata {
                 val account by dependency<Account>()
