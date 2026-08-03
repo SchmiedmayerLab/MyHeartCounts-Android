@@ -16,7 +16,7 @@ import org.gradle.kotlin.dsl.dependencies
 class DesugaringConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) = with(project) {
         android {
-            compileOptions {
+            compileOptions.apply {
                 isCoreLibraryDesugaringEnabled = true
             }
         }

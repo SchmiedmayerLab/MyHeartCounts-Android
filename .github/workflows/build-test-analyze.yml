@@ -21,14 +21,14 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
-      - name: Set Up JDK 17
+      - name: Set Up JDK 21
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: gradle
       - name: Configure Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v6.2.0
       - name: Run Detekt
         run: ./gradlew detekt --no-daemon
       - name: Upload Detekt Reports
@@ -51,11 +51,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
-      - name: Set Up JDK 17
+      - name: Set Up JDK 21
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: gradle
       - name: Set Up Ruby
         uses: ruby/setup-ruby@v1
@@ -63,16 +63,26 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@v4.37.4
         with:
           languages: java-kotlin
           build-mode: manual
       - name: Run Unit Tests
         run: bundle exec fastlane test
+      - name: Upload Test Reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-reports
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            **/build/reports/tests/**
+            **/build/test-results/**
       - name: Stop Gradle Daemon
         run: ./gradlew --stop
       - name: Analyze with CodeQL
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@v4.37.4
         with:
           category: "/language:java-kotlin"
       - name: Upload Unit Test Coverage
@@ -83,6 +93,43 @@ jobs:
           name: codecov-coverage
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+  screenshot_tests:
+    name: Screenshot Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          # Baselines are stored in git LFS; without this the checkout yields pointer
+          # files and verification fails while reading them.
+          lfs: true
+      - name: Set Up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: gradle
+      - name: Set Up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Verify Screenshots
+        run: bundle exec fastlane screenshotTests
+      - name: Upload Screenshot Failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot-failures
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            **/build/paparazzi/failures/**
+            **/build/reports/tests/**
+            **/build/test-results/**
+      - name: Stop Gradle Daemon
+        run: ./gradlew --stop
   instrumented_tests:
     name: Instrumented Tests (API ${{ matrix.api-level }}, ${{ matrix.target }})
     runs-on: ubuntu-latest
@@ -98,11 +145,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
-      - name: Set Up JDK 17
+      - name: Set Up JDK 21
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: gradle
       - name: Set Up Ruby
         uses: ruby/setup-ruby@v1
@@ -115,7 +162,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Configure Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v6.2.0
       - name: Restore AVD Cache
         uses: actions/cache@v6
         id: avd-cache
