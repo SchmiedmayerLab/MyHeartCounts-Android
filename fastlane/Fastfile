@@ -118,7 +118,7 @@ platform :android do
       UI.message("#{track}: #{version_codes.length} version code(s) visible")
     end
 
-    UI.success!("Google Play access validated for #{application_id}")
+    UI.success("Google Play access validated for #{application_id}")
   end
 
   desc "Builds and deploys My Heart Counts to a Google Play track"

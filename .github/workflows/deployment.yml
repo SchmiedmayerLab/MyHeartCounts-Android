@@ -80,12 +80,19 @@ jobs:
           esac
 
           if [[ -z "$version" ]]; then
-            latest_tag="$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)"
+            declared_version="$(sed -n 's/^myHeartCounts\.versionName=//p' gradle.properties)"
+            if [[ ! "$declared_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "myHeartCounts.versionName must use semantic versioning." >&2
+              exit 1
+            fi
+
+            latest_tag="$(git tag --list | awk '/^[0-9]+\.[0-9]+\.[0-9]+$/' | sort -V | tail -n 1)"
             if [[ -z "$latest_tag" ]]; then
-              version="1.0.0"
+              version="$declared_version"
             else
               IFS='.' read -r major minor patch <<< "$latest_tag"
-              version="${major}.${minor}.$((patch + 1))"
+              tag_version="${major}.${minor}.$((patch + 1))"
+              version="$(printf '%s\n%s\n' "$declared_version" "$tag_version" | sort -V | tail -n 1)"
             fi
           fi
 

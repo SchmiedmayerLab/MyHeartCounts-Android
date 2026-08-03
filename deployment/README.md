@@ -68,8 +68,11 @@ Create the `staging` and `production` environments.
 
 Repository variable:
 
-- `PLAY_DEPLOYMENT_ENABLED=false` during setup; change it to `true` only after the first manual
-  internal release and credential validation.
+- `PLAY_DEPLOYMENT_ENABLED=false` is the one-time bootstrap guard. It prevents pushes to `main`
+  and manual deployment runs from uploading before Google Play has accepted the first signed AAB.
+  Change it to `true` only after the first manual internal release and the read-only credential
+  validation have succeeded. Keep it `true` for normal automatic staging and production
+  deployments.
 
 Environment variable in both environments:
 
@@ -106,6 +109,12 @@ Fastlane cannot bootstrap a Play app before its first bundle exists. Keep
 10. Set `PLAY_DEPLOYMENT_ENABLED=true`.
 11. Manually run `Deployment` against `staging` with version `1.0.0` to validate the first
     automated internal-track upload.
+
+For automatic staging deployments, the canonical application version is
+`myHeartCounts.versionName` in `gradle.properties`. With no release tag, that declared version is
+used unchanged. Once releases exist, staging uses the greater of the declared version and one patch
+increment above the latest semantic-version tag. Fastlane independently increments the numeric
+Google Play version code for every upload.
 
 The upload key belongs to the project team. Google Play holds the separate app-signing key used
 for APKs delivered to users.
