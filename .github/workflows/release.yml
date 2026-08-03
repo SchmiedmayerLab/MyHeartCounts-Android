@@ -18,9 +18,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  format_release_notes:
+    name: Format Release Notes
+    uses: SchmiedmayerLab/.github/.github/workflows/format-release-notes.yml@v0.3
+    permissions:
+      contents: read
+    with:
+      release-tag: ${{ github.event.release.tag_name }}
+      repository: ${{ github.repository }}
+
   deployment:
     name: Production Deployment
     uses: ./.github/workflows/deployment.yml
+    needs:
+      - format_release_notes
     permissions:
       actions: read
       contents: read
@@ -30,3 +41,4 @@ jobs:
     with:
       environment: production
       version: ${{ github.event.release.tag_name }}
+      releasenotes: ${{ needs.format_release_notes.outputs.releasenotes }}

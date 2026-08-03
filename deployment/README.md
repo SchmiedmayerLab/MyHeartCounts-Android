@@ -13,7 +13,8 @@ My Heart Counts uses the same deployment model as ENGAGE-HF:
 
 - A push to `main` uses the `staging` environment and deploys to Google Play internal testing
   after the deployment gate is enabled.
-- Publishing a semantic-version GitHub release, such as `1.0.0`, deploys to production.
+- Publishing a semantic-version GitHub release, such as `1.0.0`, formats the GitHub release body
+  and deploys it with the app to production.
 - A manual workflow run can target `staging` or `production`.
 
 The permanent Android application ID is `edu.stanford.myheartcounts`.
@@ -137,6 +138,13 @@ Add reviewed `short_description.txt` and `full_description.txt` files to each lo
 Fastlane as the source of truth for those fields. Images and screenshots remain explicitly skipped
 until their final assets are added to the metadata tree.
 
+Publishing a GitHub release reuses the organization's `format-release-notes.yml` workflow, shared
+with My Heart Counts for iOS. Fastlane writes the formatted notes to a temporary, version-specific
+changelog file for every locale in the metadata tree and uploads them with the AAB. Google Play
+limits release notes to 500 Unicode characters per locale; longer notes are shortened to that limit.
+Staging and manually dispatched deployments use `Bug fixes and performance improvements.` unless
+the manual workflow run provides different release notes.
+
 ## Local Deployment
 
 Create `deployment/secrets/signing.env` without committing it:
@@ -166,4 +174,5 @@ The lane:
 - builds only the `myheartcounts` application module;
 - signs and uploads the AAB and its R8 mapping file;
 - uploads version-controlled localized text metadata;
+- uploads release notes for every configured metadata locale;
 - does not upload images or screenshots until final assets are added and enabled.
