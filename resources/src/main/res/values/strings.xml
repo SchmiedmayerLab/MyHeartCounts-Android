@@ -119,4 +119,5 @@ SPDX-License-Identifier: MIT
     <!-- onboarding -->
     <string name="onboarding_next">Next</string>
     <string name="onboarding_waitlist_success">We\'ve saved your email and will notify you when My Heart Counts becomes available in your region.</string>
+    <string name="task_completed">Completed</string>
 </resources>
