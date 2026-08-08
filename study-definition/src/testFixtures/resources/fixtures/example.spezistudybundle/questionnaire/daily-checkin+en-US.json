@@ -1,0 +1,24 @@
+{
+  "resourceType": "Questionnaire",
+  "id": "daily-checkin",
+  "title": "Daily Check-In",
+  "purpose": "A short daily check-in about how you're feeling.",
+  "status": "active",
+  "item": [
+    {
+      "linkId": "1",
+      "text": "How would you rate your energy today?",
+      "type": "choice",
+      "answerOption": [
+        { "valueCoding": { "code": "low", "display": "Low" } },
+        { "valueCoding": { "code": "medium", "display": "Medium" } },
+        { "valueCoding": { "code": "high", "display": "High" } }
+      ]
+    },
+    {
+      "linkId": "2",
+      "text": "Did you experience any unusual symptoms today?",
+      "type": "boolean"
+    }
+  ]
+}
