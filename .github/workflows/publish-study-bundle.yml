@@ -1,0 +1,140 @@
+#
+# This source file is part of the My Heart Counts open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Publish Study Bundle
+
+# Exports the study bundle from MyHeartCounts-StudyDefinitions, publishes it as a release asset,
+# and opens the pull request that repoints myheartcounts/study-bundle.pin.json at it.
+#
+# The export compiles Swift, so this is the one workflow that needs macOS. Everything that
+# assembles the app consumes the published archive and runs on Linux.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag, branch or commit of MyHeartCounts-StudyDefinitions to export'
+        required: true
+        default: 'main'
+        type: string
+
+concurrency:
+  group: publish-study-bundle
+  cancel-in-progress: false
+
+env:
+  SOURCE_REPOSITORY: SchmiedmayerLab/MyHeartCounts-StudyDefinitions
+  BUNDLE_NAME: mhcStudyBundle.spezistudybundle
+  REF: ${{ inputs.ref }}
+
+jobs:
+  export:
+    name: Export and Publish
+    runs-on: macos-15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Checkout Study Definitions
+        run: |
+          git init --quiet study-definitions
+          git -C study-definitions remote add origin "https://github.com/${SOURCE_REPOSITORY}.git"
+          git -C study-definitions fetch --quiet --depth 1 origin "$REF"
+          git -C study-definitions checkout --quiet FETCH_HEAD
+          echo "SOURCE_COMMIT=$(git -C study-definitions rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Export Study Bundle
+        working-directory: study-definitions
+        run: |
+          mkdir -p "$RUNNER_TEMP/export"
+          swift run MHCStudyDefinitionExporterCLI export --format package "$RUNNER_TEMP/export"
+
+      - name: Archive Study Bundle
+        run: |
+          cd "$RUNNER_TEMP/export"
+          zip -qr "$GITHUB_WORKSPACE/$BUNDLE_NAME.zip" "$BUNDLE_NAME"
+
+      - name: Describe the Archive
+        run: |
+          definition="$RUNNER_TEMP/export/$BUNDLE_NAME/definition.json"
+          {
+            echo "STUDY_REVISION=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['studyRevision'])" "$definition")"
+            echo "SCHEMA_VERSION=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['schemaVersion'])" "$definition")"
+            echo "RELEASE_TAG=study-bundle-${SOURCE_COMMIT:0:12}"
+          } >> "$GITHUB_ENV"
+
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "::notice::$RELEASE_TAG already exists; reusing its archive."
+            rm -f "$BUNDLE_NAME.zip"
+            gh release download "$RELEASE_TAG" --pattern "$BUNDLE_NAME.zip"
+          else
+            gh release create "$RELEASE_TAG" "$BUNDLE_NAME.zip" \
+              --title "Study bundle $REF" \
+              --notes "Study revision \`$STUDY_REVISION\`, schema \`$SCHEMA_VERSION\`, exported from ${SOURCE_REPOSITORY}@\`$SOURCE_COMMIT\`."
+          fi
+          echo "SHA256=$(shasum -a 256 "$BUNDLE_NAME.zip" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Update the Pin
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          pin = {
+              "comment": (
+                  "Pins the study bundle the app packages. Produced by "
+                  ".github/workflows/publish-study-bundle.yml; update by running that workflow, "
+                  "which publishes a release and opens the pull request that updates this file."
+              ),
+              "source": {
+                  "repository": f"https://github.com/{os.environ['SOURCE_REPOSITORY']}",
+                  "ref": os.environ["REF"],
+                  "commit": os.environ["SOURCE_COMMIT"],
+              },
+              "bundle": {
+                  "schemaVersion": os.environ["SCHEMA_VERSION"],
+                  "studyRevision": int(os.environ["STUDY_REVISION"]),
+                  "url": (
+                      f"https://github.com/{repository}/releases/download/"
+                      f"{os.environ['RELEASE_TAG']}/{os.environ['BUNDLE_NAME']}.zip"
+                  ),
+                  "sha256": os.environ["SHA256"],
+              },
+          }
+          with open("myheartcounts/study-bundle.pin.json", "w") as file:
+              json.dump(pin, file, indent=2)
+              file.write("\n")
+          PYTHON
+
+      - name: Open Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: study-bundle/${{ env.RELEASE_TAG }}
+          title: 'Update the study bundle to ${{ env.REF }}'
+          commit-message: 'Update the study bundle to ${{ env.REF }}'
+          body: |
+            Repoints the study bundle pin at `${{ env.RELEASE_TAG }}`.
+
+            - study revision `${{ env.STUDY_REVISION }}`, schema `${{ env.SCHEMA_VERSION }}`
+            - exported from `${{ env.SOURCE_REPOSITORY }}@${{ env.SOURCE_COMMIT }}`
+          add-paths: myheartcounts/study-bundle.pin.json
