@@ -25,7 +25,7 @@ on:
       xcode_version:
         description: 'Xcode version on the runner image to export with'
         required: false
-        default: '26.0.1'
+        default: '26.4'
         type: string
 
 concurrency:
@@ -40,7 +40,7 @@ env:
 jobs:
   export:
     name: Export and Publish
-    runs-on: macos-15
+    runs-on: macos-26
     permissions:
       contents: write
       pull-requests: write
