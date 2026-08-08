@@ -7,10 +7,12 @@
 
 plugins {
     alias(libs.plugins.spezi.library)
+    alias(libs.plugins.spezi.serialization)
 }
 
 android {
     namespace = "edu.stanford.spezi.foundation"
+    testFixtures { enable = true }
 }
 
 dependencies {

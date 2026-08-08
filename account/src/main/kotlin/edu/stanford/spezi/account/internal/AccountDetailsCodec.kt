@@ -15,15 +15,11 @@ import edu.stanford.spezi.account.AnyAccountKey
 import edu.stanford.spezi.account.keys
 import edu.stanford.spezi.core.Module
 import edu.stanford.spezi.core.dependency
-import kotlinx.serialization.json.Json
+import edu.stanford.spezi.foundation.JsonSerializer
 
 @Suppress("UNCHECKED_CAST")
 internal class AccountDetailsCodec : Module {
     private val codecConfig by dependency<AccountDetailsCodecConfig>()
-    private val json: Json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
 
     fun encode(
         accountId: String,
@@ -37,10 +33,7 @@ internal class AccountDetailsCodec : Module {
 
                 put(
                     key = codecConfig.encodingIdentifier(typedKey),
-                    value = json.encodeToJsonElement(
-                        serializer = typedKey.serializer,
-                        value = value,
-                    )
+                    value = JsonSerializer.encodeToElement(value, typedKey.serializer),
                 )
             }
         }
@@ -58,12 +51,8 @@ internal class AccountDetailsCodec : Module {
             val key = codecConfig.resolveDecodingKey(storedIdentifier = keyId, requestedKeys = keys) ?: return@forEach
             val typedKey = key as AccountKey<Any>
 
-            val value = runCatching {
-                json.decodeFromJsonElement(
-                    deserializer = typedKey.serializer,
-                    element = jsonElement,
-                )
-            }.getOrNull() ?: return@forEach
+            val value = JsonSerializer.decodeFromElementOrNull(jsonElement, typedKey.serializer)
+                ?: return@forEach
 
             details.setAny(typedKey::class, value)
         }

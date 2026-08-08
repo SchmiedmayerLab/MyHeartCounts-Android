@@ -11,8 +11,12 @@ plugins {
 
 android {
     namespace = "edu.stanford.spezi.core.time"
+    testFixtures { enable = true }
 }
 
 dependencies {
     api(project(":core"))
+
+    testFixturesImplementation(project(":foundation"))
+    testFixturesImplementation(testFixtures(project(":foundation")))
 }

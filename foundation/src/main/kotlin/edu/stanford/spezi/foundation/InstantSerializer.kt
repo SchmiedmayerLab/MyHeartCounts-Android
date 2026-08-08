@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package edu.stanford.spezi.account
+package edu.stanford.spezi.foundation
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -15,10 +15,13 @@ import kotlinx.serialization.encoding.Encoder
 import java.time.Instant
 
 /**
- * A [KSerializer] for [java.time.Instant] that encodes the value as the epoch milliseconds [Long].
+ * A [KSerializer] for [Instant] that encodes the value as its epoch-millisecond [Long].
  */
 object InstantSerializer : KSerializer<Instant> {
-    override val descriptor = PrimitiveSerialDescriptor("Instant", PrimitiveKind.LONG)
+    override val descriptor =
+        PrimitiveSerialDescriptor("edu.stanford.spezi.foundation.Instant", PrimitiveKind.LONG)
+
     override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeLong(value.toEpochMilli())
+
     override fun deserialize(decoder: Decoder): Instant = Instant.ofEpochMilli(decoder.decodeLong())
 }
