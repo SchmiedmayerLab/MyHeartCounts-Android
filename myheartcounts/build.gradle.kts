@@ -6,10 +6,11 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.paparazzi)
     alias(libs.plugins.spezi.application)
     alias(libs.plugins.spezi.compose)
     alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.mhc.studybundle)
+    alias(libs.plugins.paparazzi)
 }
 
 android {
@@ -37,10 +38,14 @@ android {
 
     buildTypes {
         release {
+            isShrinkResources = true
             isMinifyEnabled = true
         }
         debug {
             isMinifyEnabled = false
+            // Offline-instrumented classes cannot be read back by the Jacoco report task, which
+            // reads the same class directories.
+            enableAndroidTestCoverage = false
         }
     }
 }
@@ -48,13 +53,28 @@ android {
 dependencies {
     implementation(project(":consent"))
     implementation(project(":core"))
+    implementation(project(":core-coroutines"))
+    implementation(project(":core-time"))
     implementation(project(":core-viewmodel"))
+    implementation(project(":markdown"))
     implementation(project(":ui"))
+    implementation(project(":ui-scheduler"))
     implementation(project(":onboarding"))
     implementation(project(":account"))
+    implementation(project(":scheduler"))
     implementation(project(":storage-local"))
+    implementation(project(":study"))
+    implementation(project(":study-definition"))
 
     implementation(libs.bundles.navigation3)
 
+    androidTestImplementation(libs.bundles.integration.testing)
+    androidTestImplementation(testFixtures(project(":study")))
+
     testImplementation(project(":testing-screenshot"))
+    testImplementation(testFixtures(project(":scheduler")))
+    testImplementation(testFixtures(project(":foundation")))
+    testImplementation(testFixtures(project(":core-time")))
+    testImplementation(testFixtures(project(":study")))
+    testImplementation(testFixtures(project(":study-definition")))
 }

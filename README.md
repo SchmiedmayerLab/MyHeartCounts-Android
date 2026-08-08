@@ -21,6 +21,47 @@ Kotlin &amp; Android Version of the My Heart Counts ecosystem.
   application. [View the module](./onboarding/)
 - **Contact**: Provides Contact screens. [View the module](./contact/)
 
+### Study Bundle
+
+The app packages the study it runs — definition, consent, questionnaires, articles, explainers. The
+files are **not checked in**: a pin names a published archive and its checksum, and the build fetches
+and unpacks it into the app's assets.
+
+`definition.json` is compiled from Swift, so exporting it needs macOS with Xcode while the Android CI
+runs on Linux. The export therefore happens once, in its own workflow, and everything downstream
+consumes the archive it publishes.
+
+| File | Role |
+|------|------|
+| [`gradle.properties`](./gradle.properties) | `myHeartCounts.studyBundle.*`: bundle name, pin path, source repository, release tag prefix — read by the build, the app and the workflow |
+| [`myheartcounts/study-bundle.pin.json`](./myheartcounts/study-bundle.pin.json) | The pinned archive: source ref and commit, study revision, schema version, URL and SHA-256 |
+| [`.github/workflows/publish-study-bundle.yml`](./.github/workflows/publish-study-bundle.yml) | Exports a bundle and publishes it as a release, with the pin snippet to copy |
+| [`MHCStudyBundleConventionPlugin`](./build-logic/convention/src/main/kotlin/edu/stanford/myheartcounts/build/logic/convention/plugins/MHCStudyBundleConventionPlugin.kt) | The `mhc.studybundle` plugin and its `fetch<Variant>StudyBundle` task |
+
+#### Updating
+
+1. Run **Publish Study Bundle** with the `ref` to export — a tag such as `0.2.3`, a branch such as
+   `main`, or a commit SHA. Prefer a tag: it is what the iOS app pins.
+2. It publishes an `mhc-study-bundle-<ref>` release whose notes carry the study revision, schema
+   version, source commit and checksum.
+3. Merge the pull request it opens, or copy the snippet from the release into the pin yourself.
+
+Never hand-write the pin, and never delete a release a pin still names — an export is not
+byte-reproducible, so the checksum only ever matches one published archive.
+
+#### Building
+
+`fetch<Variant>StudyBundle` runs with `assembleDebug` and the tests: it downloads the pinned archive,
+rejects it on a checksum mismatch, and unpacks it under `myheartcounts/build/generated/assets/`. A
+cold build needs network access; to avoid that, point it at a local archive, which is checked just as
+strictly:
+
+```bash
+./gradlew assembleDebug -PstudyBundleArchive=/path/to/mhcStudyBundle.spezistudybundle.zip
+```
+
+Set `studyBundleArchive` in `~/.gradle/gradle.properties` to have Android Studio pick it up too.
+
 ### Continuous Integration and Delivery Setup
 
 #### Google Play Internal Deployment

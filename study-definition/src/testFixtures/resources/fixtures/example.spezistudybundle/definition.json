@@ -1,30 +1,57 @@
 {
-  "schemaVersion": "0.12.1",
+  "schemaVersion": "0.13.0",
   "studyRevision": 1,
   "metadata": {
     "id": "11111111-1111-1111-1111-111111111111",
-    "title": "Example Study",
-    "shortTitle": "Example",
-    "icon": { "systemSymbol": { "_0": "star.fill" } },
-    "explanationText": "An example study demonstrating each component and schedule type.",
-    "shortExplanationText": "An example study.",
+    "title": {
+      "en-US": "Example Study"
+    },
+    "shortTitle": {
+      "en-US": "Example"
+    },
+    "icon": {
+      "systemSymbol": {
+        "_0": "star.fill"
+      }
+    },
+    "explanationText": {
+      "en-US": "An example study demonstrating each component and schedule type."
+    },
+    "shortExplanationText": {
+      "en-US": "An example study."
+    },
     "participationCriterion": {
       "all": {
         "_0": [
-          { "ageAtLeast": { "_0": 18 } },
-          { "speaksLanguage": { "_0": "en" } }
+          {
+            "ageAtLeast": {
+              "_0": 18
+            }
+          },
+          {
+            "speaksLanguage": {
+              "_0": "en"
+            }
+          }
         ]
       }
     },
-    "enrollmentConditions": { "none": {} },
-    "consentFileRef": { "category": "consent", "filename": "consent", "fileExtension": "md" }
+    "consentFileRef": {
+      "category": "consent",
+      "filename": "consent",
+      "fileExtension": "md"
+    }
   },
   "components": [
     {
       "informational": {
         "_0": {
           "id": "22222222-2222-2222-2222-222222222222",
-          "fileRef": { "category": "article", "filename": "welcome", "fileExtension": "md" }
+          "fileRef": {
+            "category": "article",
+            "filename": "welcome",
+            "fileExtension": "md"
+          }
         }
       }
     },
@@ -32,7 +59,11 @@
       "questionnaire": {
         "_0": {
           "id": "33333333-3333-3333-3333-333333333333",
-          "fileRef": { "category": "questionnaire", "filename": "daily-checkin", "fileExtension": "json" }
+          "fileRef": {
+            "category": "questionnaire",
+            "filename": "daily-checkin",
+            "fileExtension": "json"
+          }
         }
       }
     },
@@ -40,7 +71,13 @@
       "timedWalkingTest": {
         "_0": {
           "id": "44444444-4444-4444-4444-444444444444",
-          "test": { "duration": [19, 9511862599518519296], "kind": 0 }
+          "test": {
+            "duration": [
+              19,
+              9511862599518519296
+            ],
+            "kind": 0
+          }
         }
       }
     },
@@ -50,9 +87,18 @@
           "id": "55555555-5555-5555-5555-555555555555",
           "activeTask": {
             "identifier": "tapping",
-            "title": { "defaultValue": { "key": "Tapping Test", "arguments": [] }, "key": "Tapping Test" },
+            "title": {
+              "defaultValue": {
+                "key": "Tapping Test",
+                "arguments": []
+              },
+              "key": "Tapping Test"
+            },
             "subtitle": {
-              "defaultValue": { "key": "Tap the screen as quickly as you can for ten seconds.", "arguments": [] },
+              "defaultValue": {
+                "key": "Tap the screen as quickly as you can for ten seconds.",
+                "arguments": []
+              },
               "key": "Tap the screen as quickly as you can for ten seconds."
             }
           }
@@ -64,12 +110,19 @@
         "_0": {
           "id": "66666666-6666-6666-6666-666666666666",
           "sampleTypes": {
-            "storage": ["HKQuantityTypeIdentifierHeartRate", "HKQuantityTypeIdentifierStepCount"]
+            "storage": [
+              "HKQuantityTypeIdentifierHeartRate",
+              "HKQuantityTypeIdentifierStepCount"
+            ]
           },
           "optionalSampleTypes": {
-            "storage": ["HKQuantityTypeIdentifierActiveEnergyBurned"]
+            "storage": [
+              "HKQuantityTypeIdentifierActiveEnergyBurned"
+            ]
           },
-          "historicalDataCollection": { "disabled": {} }
+          "historicalDataCollection": {
+            "disabled": {}
+          }
         }
       }
     }
@@ -79,25 +132,55 @@
       "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "componentId": "22222222-2222-2222-2222-222222222222",
       "scheduleDefinition": {
-        "once": { "_0": { "event": { "_0": { "enrollment": {} }, "offsetInDays": 0 } } }
+        "once": {
+          "_0": {
+            "event": {
+              "_0": {
+                "enrollment": {}
+              },
+              "offsetInDays": 0
+            }
+          }
+        }
       },
-      "completionPolicy": { "anytime": {} },
-      "notifications": { "disabled": {} }
+      "completionPolicy": {
+        "anytime": {}
+      },
+      "notifications": {
+        "disabled": {}
+      }
     },
     {
       "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
       "componentId": "33333333-3333-3333-3333-333333333333",
       "scheduleDefinition": {
         "repeated": {
-          "_0": { "daily": { "interval": 1, "hour": 9, "minute": 0, "second": 0 } },
+          "_0": {
+            "daily": {
+              "interval": 1,
+              "hour": 9,
+              "minute": 0,
+              "second": 0
+            }
+          },
           "offset": {}
         }
       },
-      "completionPolicy": { "sameDay": {} },
+      "completionPolicy": {
+        "sameDay": {}
+      },
       "notifications": {
         "enabled": {
-          "thread": { "custom": { "_0": "daily-checkin" } },
-          "time": { "hour": 9, "minute": 0, "second": 0 }
+          "thread": {
+            "custom": {
+              "_0": "daily-checkin"
+            }
+          },
+          "time": {
+            "hour": 9,
+            "minute": 0,
+            "second": 0
+          }
         }
       }
     },
@@ -106,12 +189,24 @@
       "componentId": "44444444-4444-4444-4444-444444444444",
       "scheduleDefinition": {
         "repeated": {
-          "_0": { "weekly": { "interval": 1, "weekday": "monday", "hour": 10, "minute": 0, "second": 0 } },
+          "_0": {
+            "weekly": {
+              "interval": 1,
+              "weekday": "monday",
+              "hour": 10,
+              "minute": 0,
+              "second": 0
+            }
+          },
           "offset": {}
         }
       },
-      "completionPolicy": { "sameDay": {} },
-      "notifications": { "disabled": {} }
+      "completionPolicy": {
+        "sameDay": {}
+      },
+      "notifications": {
+        "disabled": {}
+      }
     },
     {
       "id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
@@ -120,15 +215,25 @@
         "once": {
           "_0": {
             "event": {
-              "_0": { "enrollment": {} },
+              "_0": {
+                "enrollment": {}
+              },
               "offsetInDays": 7,
-              "time": { "hour": 9, "minute": 0, "second": 0 }
+              "time": {
+                "hour": 9,
+                "minute": 0,
+                "second": 0
+              }
             }
           }
         }
       },
-      "completionPolicy": { "anytime": {} },
-      "notifications": { "disabled": {} }
+      "completionPolicy": {
+        "anytime": {}
+      },
+      "notifications": {
+        "disabled": {}
+      }
     }
   ]
 }

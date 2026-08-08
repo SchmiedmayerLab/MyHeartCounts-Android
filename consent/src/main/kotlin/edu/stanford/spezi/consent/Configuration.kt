@@ -70,13 +70,15 @@ fun ConfigurationBuilder.consent(
  * pre-populates signature fields.
  */
 class ConsentConfigurationBuilder {
-    private var document: (() -> ConsentDocument)? = null
+    private var document: (suspend () -> ConsentDocument)? = null
     private var initialSignatureMetadata: () -> SignatureMetadata = { SignatureMetadata.Empty }
 
     /**
      * The source from which a consent document is loaded.
+     *
+     * Resolved when the document is first shown, so it may wait on content that is still loading.
      */
-    fun document(document: () -> ConsentDocument) {
+    fun document(document: suspend () -> ConsentDocument) {
         this.document = document
     }
 
@@ -96,6 +98,6 @@ class ConsentConfigurationBuilder {
 }
 
 internal data class ConsentConfiguration(
-    val document: () -> ConsentDocument,
+    val document: suspend () -> ConsentDocument,
     val initialSignatureMetadata: () -> SignatureMetadata,
 )

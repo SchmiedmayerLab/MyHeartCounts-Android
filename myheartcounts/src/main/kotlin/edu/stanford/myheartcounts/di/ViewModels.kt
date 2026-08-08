@@ -34,6 +34,7 @@ fun ConfigurationBuilder.appViewModels() {
             onboardingStepProvider = dependency(),
             onboardingStepLayoutMapper = dependency(),
             notificationPermissionHandler = dependency(),
+            studyEnroller = dependency(),
         )
     }
     viewModel {
@@ -44,6 +45,12 @@ fun ConfigurationBuilder.appViewModels() {
     viewModel {
         HomeViewModel(
             studyAppBarProvider = dependency(),
+            navigator = dependency(),
+            tasksSource = dependency(),
+            mapper = dependency(),
+            timeProvider = dependency(),
+            suggestionsSource = dependency(),
+            articleSource = dependency(),
         )
     }
     viewModel {

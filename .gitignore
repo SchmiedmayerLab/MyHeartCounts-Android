@@ -62,6 +62,7 @@ build/
 
 # track build-logic module
 !**/edu/stanford/spezi/build
+!**/edu/stanford/myheartcounts/build
 
 # built application files
 *.apk

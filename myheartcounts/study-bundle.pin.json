@@ -1,0 +1,14 @@
+{
+  "comment": "Pins the study bundle the app packages. Produced by .github/workflows/publish-study-bundle.yml; update by running that workflow, which publishes a release and opens the pull request that updates this file.",
+  "source": {
+    "repository": "https://github.com/SchmiedmayerLab/MyHeartCounts-StudyDefinitions",
+    "ref": "0.2.3",
+    "commit": "93cc43abca414a1b1675b2829044eb410052212b"
+  },
+  "bundle": {
+    "schemaVersion": "0.13.0",
+    "studyRevision": 42,
+    "url": "https://github.com/SchmiedmayerLab/MyHeartCounts-Android/releases/download/study-bundle-93cc43abca41/mhcStudyBundle.spezistudybundle.zip",
+    "sha256": "ba8d30800a2cb7c7d598954d63d066260d798bbca34d7c2a909dbf4b7d79e284"
+  }
+}

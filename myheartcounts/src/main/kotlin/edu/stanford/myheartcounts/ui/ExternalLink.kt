@@ -1,0 +1,69 @@
+//
+// This source file is part of the My Heart Counts open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package edu.stanford.myheartcounts.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import edu.stanford.spezi.ui.ComposableContent
+import edu.stanford.spezi.ui.StringResource
+import edu.stanford.spezi.ui.noRippleClickable
+import edu.stanford.spezi.ui.theme.Colors
+import edu.stanford.spezi.ui.theme.SpeziTheme
+import edu.stanford.spezi.ui.theme.ThemePreviews
+
+/**
+ * A tappable row that opens an external destination, showing [text] with a trailing
+ * open-in-new icon. Taps are reported through [onClicked].
+ */
+data class ExternalLink(
+    val text: StringResource,
+    val onClicked: () -> Unit,
+) : ComposableContent {
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .noRippleClickable(onClick = onClicked),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            val text = text.text()
+            Text(
+                text = text,
+                color = Colors.primary,
+            )
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                contentDescription = text,
+                tint = Colors.primary,
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun Preview() {
+    SpeziTheme {
+        ExternalLink(
+            text = StringResource("About the My Heart Counts Study"),
+            onClicked = {},
+        ).Content()
+    }
+}
