@@ -22,6 +22,11 @@ on:
         required: true
         default: 'main'
         type: string
+      xcode_version:
+        description: 'Xcode version on the runner image to export with'
+        required: false
+        default: '26.0.1'
+        type: string
 
 concurrency:
   group: publish-study-bundle
@@ -56,7 +61,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: ${{ inputs.xcode_version }}
 
       - name: Export Study Bundle
         working-directory: study-definitions
