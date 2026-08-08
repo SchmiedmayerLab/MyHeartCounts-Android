@@ -50,16 +50,7 @@ class StudyBundle(
         val matches = candidates.mapNotNull { file ->
             parseLocalization(file.name, fileRef)?.let { localization -> file to localization }
         }
-        if (matches.isEmpty()) return null
-
-        val language = locale.language.lowercase()
-        val region = locale.country.uppercase()
-        val exact = "$language-$region"
-
-        return matches.firstOrNull { it.second.equals(exact, ignoreCase = true) }?.first
-            ?: matches.firstOrNull { it.second.substringBefore('-').equals(language, ignoreCase = true) }?.first
-            ?: fallback?.let { fb -> matches.firstOrNull { it.second.equals(fb, ignoreCase = true) }?.first }
-            ?: matches.first().first
+        return selectLocalization(matches, locale, fallback)
     }
 
     /**

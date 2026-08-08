@@ -45,7 +45,7 @@ class NotificationPlannerTest {
         // when
         val planned = planner().plan(eventsByTask = listOf(listOf(event)))
 
-        // then — 9:00 in the zone, not midnight; not time-sensitive
+        // then
         assertThat(planned.single().fireTimeMillis).isEqualTo(at(2026, 6, 15, 9).toEpochMilli())
         assertThat(planned.single().timeSensitive).isFalse()
     }
@@ -64,7 +64,7 @@ class NotificationPlannerTest {
 
     @Test
     fun `drops events whose fire time is not in the future`() {
-        // given — an occurrence earlier today, before now
+        // given
         val past = timedEvent(taskId = "t", start = at(2026, 6, 14, 7))
         val future = timedEvent(taskId = "t", start = at(2026, 6, 15, 9))
 
@@ -77,14 +77,14 @@ class NotificationPlannerTest {
 
     @Test
     fun `respects the limit, taking events round-robin across tasks`() {
-        // given — two tasks, three future events each; limit of 4
+        // given
         val taskA = (1..3).map { timedEvent(taskId = "a", start = at(2026, 6, 14 + it, 9)) }
         val taskB = (1..3).map { timedEvent(taskId = "b", start = at(2026, 6, 14 + it, 10)) }
 
         // when
         val planned = planner(limit = 4).plan(eventsByTask = listOf(taskA, taskB))
 
-        // then — 4 total, alternating a, b, a, b
+        // then
         assertThat(planned).hasSize(4)
         assertThat(planned.map { it.taskId }).containsExactly("a", "b", "a", "b").inOrder()
     }
@@ -103,7 +103,7 @@ class NotificationPlannerTest {
         return planner().plan(eventsByTask = listOf(listOf(event))).single().threadId
     }
 
-    private fun planner(limit: Int = SchedulerNotificationsConfiguration.DEFAULT_LIMIT) = NotificationPlanner(
+    private fun planner(limit: Int = 30) = NotificationPlanner(
         timeProvider = FakeTimeProvider().apply {
             setNow(instant = now)
             setZone(zone = zone)

@@ -13,6 +13,7 @@ import edu.stanford.spezi.foundation.fixtures.UUIDFixtures
 import edu.stanford.spezi.scheduler.AllowedCompletionPolicy
 import edu.stanford.spezi.studydefinition.fixtures.StudyBundleFixtures
 import org.junit.Test
+import java.util.Locale
 
 class StudyDefinitionDecodingTest {
 
@@ -27,7 +28,7 @@ class StudyDefinitionDecodingTest {
         // then
         assertThat(definition.studyRevision).isEqualTo(1u)
         assertThat(definition.id).isEqualTo(UUIDFixtures.repeating('1'))
-        assertThat(definition.metadata.title).isEqualTo("Example Study")
+        assertThat(definition.metadata.title.resolve(Locale.US)).isEqualTo("Example Study")
         assertThat(definition.components).hasSize(5)
         assertThat(definition.componentSchedules).hasSize(4)
     }
@@ -115,7 +116,7 @@ class StudyDefinitionDecodingTest {
     @Test(expected = IncompatibleSchemaException::class)
     fun `rejects an incompatible schema version`() {
         // given
-        val json = StudyBundleFixtures.exampleDefinitionJson().replace("\"0.12.1\"", "\"0.11.0\"")
+        val json = StudyBundleFixtures.exampleDefinitionJson().replace("\"0.13.0\"", "\"0.11.0\"")
 
         // when / then
         StudyDefinitionJson.decode(json)

@@ -107,4 +107,44 @@ SPDX-License-Identifier: MIT
     <string name="onboarding_final_enrollment_area_collection">The app will begin collecting activity data from your phone and any connected wearable devices you’ve authorized.</string>
     <string name="onboarding_final_enrollment_area_trial">After your baseline week, you\'ll begin the 2-week trial comparing different types of physical activity coaching. You\'ll receive notifications when this phase begins.</string>
     <string name="onboarding_final_enrollment_area_contribution">By joining this study, you’re contributing to important research that may help improve our understanding of heart health for people across diverse communities.</string>
+    <!-- Home -->
+    <string name="home_todays_tasks">Today\'s Tasks</string>
+    <string name="home_no_tasks_title">You\'re All Set</string>
+    <string name="home_missed_tasks_title">Missed Tasks</string>
+    <plurals name="home_missed_tasks_subtitle">
+        <item quantity="one">%1$d missed task in the past 2 weeks</item>
+        <item quantity="other">%1$d missed tasks in the past 2 weeks</item>
+    </plurals>
+    <string name="home_prompted_actions_title">Finish setting up</string>
+    <plurals name="home_prompted_actions_subtitle">
+        <item quantity="one">%1$d step remaining</item>
+        <item quantity="other">%1$d steps remaining</item>
+    </plurals>
+    <string name="home_learn_more">About the My Heart Counts Study</string>
+    <string name="home_error_title">Unable to load your tasks</string>
+    <string name="home_error_message">Something went wrong while loading the study. Please try again.</string>
+    <string name="home_error_retry">Try Again</string>
+    <string name="home_article_error">Unable to open this article. Please try again.</string>
+
+    <!-- Always-available tasks -->
+    <string name="home_other_tasks_title">Other Tasks</string>
+    <string name="home_other_tasks_subtitle">Always Available</string>
+    <string name="always_available_ecg_title">ECG</string>
+    <string name="always_available_ecg_subtitle">Electrocardiogram</string>
+    <string name="always_available_six_minute_walk_title">6-Minute Walk Test</string>
+    <string name="always_available_twelve_minute_run_title">12-Minute Run Test</string>
+
+    <!-- Task categories -->
+    <string name="task_category_informational">Informational</string>
+    <string name="task_category_questionnaire">Questionnaire</string>
+    <string name="task_category_active_task">Active Task</string>
+
+    <!-- Task actions -->
+    <string name="task_action_read_article">Read Article</string>
+    <string name="task_action_read_article_again">Read Article Again</string>
+    <string name="task_action_answer_survey">Answer Survey</string>
+    <string name="task_action_answer_survey_again">Answer Survey Again</string>
+    <string name="task_action_take_test">Take Test</string>
+    <string name="task_action_take_test_again">Take Test Again</string>
+    <string name="task_action_take_ecg">Take ECG</string>
 </resources>

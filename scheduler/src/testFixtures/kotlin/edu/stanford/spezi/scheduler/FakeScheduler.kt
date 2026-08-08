@@ -9,17 +9,19 @@ package edu.stanford.spezi.scheduler
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.util.UUID
 
 /**
  * An in-memory [Scheduler] for tests, keeping the latest version of each task by id.
  *
- * It fully supports task creation, lookup, prefix-based queries, completion, and deletion. Event
- * expansion ([queryEvents] / [queryMissedEvents]) is not modelled and returns empty streams; tests
- * that need real occurrence math should drive the production scheduler instead.
+ * It fully supports task creation, lookup, prefix-based queries, completion, and deletion. Occurrence
+ * math is not modelled: the events returned by [queryEvents] and [queryMissedEvents] are the ones
+ * supplied through [setEvents] and [setMissedEvents], narrowed to the queried range. Tests that need
+ * real occurrence math should drive the production scheduler instead.
  */
 class FakeScheduler : Scheduler {
 
@@ -36,8 +38,25 @@ class FakeScheduler : Scheduler {
     private val taskStore = linkedMapOf<String, Task>()
     private val outcomeStore = mutableListOf<Outcome>()
 
+    private val eventStore = MutableStateFlow<List<Event>>(emptyList())
+    private val missedEventStore = MutableStateFlow<List<Event>>(emptyList())
+
     private val outcomesFlow = MutableSharedFlow<Outcome>(extraBufferCapacity = OUTCOME_BUFFER)
     override val newOutcomes: Flow<Outcome> = outcomesFlow.asSharedFlow()
+
+    /**
+     * Sets the events [queryEvents] draws from.
+     */
+    fun setEvents(events: List<Event>) {
+        eventStore.value = events
+    }
+
+    /**
+     * Sets the events [queryMissedEvents] draws from.
+     */
+    fun setMissedEvents(events: List<Event>) {
+        missedEventStore.value = events
+    }
 
     override suspend fun createOrUpdateTask(
         draft: TaskDraft,
@@ -77,14 +96,19 @@ class FakeScheduler : Scheduler {
         return fetchLimit?.let { sorted.take(it) } ?: sorted
     }
 
-    override fun queryEvents(range: InstantRange, predicate: (Task) -> Boolean): Flow<List<Event>> = emptyFlow()
+    override fun queryEvents(range: InstantRange, predicate: (Task) -> Boolean): Flow<List<Event>> =
+        eventStore.map { events -> events.filter { it.matches(range) && predicate(it.task) } }
 
     override fun queryMissedEvents(range: InstantRange, predicate: (Task) -> Boolean): Flow<List<Event>> =
-        emptyFlow()
+        missedEventStore.map { events -> events.filter { it.matches(range) && predicate(it.task) } }
 
-    override fun queryEvents(taskId: String, range: InstantRange): Flow<List<Event>> = emptyFlow()
+    override fun queryEvents(taskId: String, range: InstantRange): Flow<List<Event>> =
+        queryEvents(range = range, predicate = { it.id == taskId })
 
-    override fun queryEvents(task: Task, range: InstantRange): Flow<List<Event>> = emptyFlow()
+    override fun queryEvents(task: Task, range: InstantRange): Flow<List<Event>> =
+        queryEvents(taskId = task.id, range = range)
+
+    private fun Event.matches(range: InstantRange) = occurrence.start in range
 
     override suspend fun latestVersion(taskId: String): Task? = taskStore[taskId]
 

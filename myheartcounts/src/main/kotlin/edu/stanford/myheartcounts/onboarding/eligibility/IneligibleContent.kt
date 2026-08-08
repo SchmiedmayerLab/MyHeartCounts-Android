@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.stanford.myheartcounts.onboarding.OnboardingLink
+import edu.stanford.myheartcounts.ui.ExternalLink
 import edu.stanford.spezi.ui.AsyncTextButton
 import edu.stanford.spezi.ui.ComposableContent
 import edu.stanford.spezi.ui.SpeziInputFieldComposable
@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.Flow
 data class IneligibleContent(
     val email: EmailField?,
     val actionButton: AsyncTextButton?,
-    val link: OnboardingLink,
+    val link: ExternalLink,
 ) : ComposableContent {
 
     @Composable
