@@ -30,12 +30,11 @@ concurrency:
 env:
   SOURCE_REPOSITORY: SchmiedmayerLab/MyHeartCounts-StudyDefinitions
   BUNDLE_NAME: mhcStudyBundle.spezistudybundle
+  REF: ${{ inputs.ref }}
 
 jobs:
   export:
     name: Export and Publish
-    # Pinned rather than macos-latest: the study definitions do not build under every Xcode, and a
-    # runner image bump must be a deliberate change rather than a surprise failure.
     runs-on: macos-15
     permissions:
       contents: write
@@ -43,13 +42,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Checkout Study Definitions
-        env:
-          REF: ${{ inputs.ref }}
         run: |
-          # Fetched rather than cloned with --branch, which accepts only branch and tag names.
-          # Fetching the ref directly also resolves a full commit SHA.
           git init --quiet study-definitions
           git -C study-definitions remote add origin "https://github.com/${SOURCE_REPOSITORY}.git"
           git -C study-definitions fetch --quiet --depth 1 origin "$REF"
@@ -59,12 +56,11 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: '16.4'
 
       - name: Export Study Bundle
         working-directory: study-definitions
         run: |
-          # The exporter requires its output directory to already exist.
           mkdir -p "$RUNNER_TEMP/export"
           swift run MHCStudyDefinitionExporterCLI export --format package "$RUNNER_TEMP/export"
 
@@ -76,8 +72,6 @@ jobs:
       - name: Describe the Archive
         run: |
           definition="$RUNNER_TEMP/export/$BUNDLE_NAME/definition.json"
-          # Tagged by source commit rather than by the requested ref, so a release is immutable: a
-          # mutable ref like `main` would otherwise republish under a tag existing pins rely on.
           {
             echo "STUDY_REVISION=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['studyRevision'])" "$definition")"
             echo "SCHEMA_VERSION=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['schemaVersion'])" "$definition")"
@@ -88,15 +82,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # An export is not byte-reproducible, so a commit that was already published keeps the
-          # archive it was published with. Re-uploading would invalidate every pin naming this tag.
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             echo "::notice::$RELEASE_TAG already exists; reusing its archive."
             rm -f "$BUNDLE_NAME.zip"
             gh release download "$RELEASE_TAG" --pattern "$BUNDLE_NAME.zip"
           else
             gh release create "$RELEASE_TAG" "$BUNDLE_NAME.zip" \
-              --title "Study bundle ${{ inputs.ref }}" \
+              --title "Study bundle $REF" \
               --notes "Study revision \`$STUDY_REVISION\`, schema \`$SCHEMA_VERSION\`, exported from ${SOURCE_REPOSITORY}@\`$SOURCE_COMMIT\`."
           fi
           echo "SHA256=$(shasum -a 256 "$BUNDLE_NAME.zip" | cut -d' ' -f1)" >> "$GITHUB_ENV"
@@ -116,7 +108,7 @@ jobs:
               ),
               "source": {
                   "repository": f"https://github.com/{os.environ['SOURCE_REPOSITORY']}",
-                  "ref": os.environ["INPUT_REF"],
+                  "ref": os.environ["REF"],
                   "commit": os.environ["SOURCE_COMMIT"],
               },
               "bundle": {
@@ -133,15 +125,13 @@ jobs:
               json.dump(pin, file, indent=2)
               file.write("\n")
           PYTHON
-        env:
-          INPUT_REF: ${{ inputs.ref }}
 
       - name: Open Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           branch: study-bundle/${{ env.RELEASE_TAG }}
-          title: 'Update the study bundle to ${{ inputs.ref }}'
-          commit-message: 'Update the study bundle to ${{ inputs.ref }}'
+          title: 'Update the study bundle to ${{ env.REF }}'
+          commit-message: 'Update the study bundle to ${{ env.REF }}'
           body: |
             Repoints the study bundle pin at `${{ env.RELEASE_TAG }}`.
 
