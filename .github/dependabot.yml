@@ -1,5 +1,5 @@
 #
-# This source file is part of the My Heart Counts open-source project
+# This source file is part of the My Heart Counts Android open-source project
 #
 # SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
@@ -9,7 +9,7 @@
 version: 2
 
 multi-ecosystem-groups:
-  dependencies:
+  weekly-dependencies:
     schedule:
       interval: weekly
       day: monday
@@ -21,7 +21,7 @@ updates:
     directory: /
     patterns:
       - "*"
-    multi-ecosystem-group: dependencies
+    multi-ecosystem-group: "weekly-dependencies"
     ignore:
       # The CodeQL Kotlin extractor supports Kotlin up to 2.4.0 and fails the Kotlin
       # compilation on anything newer. Lift this cap once CodeQL catches up.
@@ -32,10 +32,10 @@ updates:
     directory: /
     patterns:
       - "*"
-    multi-ecosystem-group: dependencies
+    multi-ecosystem-group: "weekly-dependencies"
 
   - package-ecosystem: github-actions
     directory: /
     patterns:
       - "*"
-    multi-ecosystem-group: dependencies
+    multi-ecosystem-group: "weekly-dependencies"

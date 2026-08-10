@@ -1,5 +1,5 @@
 #
-# This source file is part of the My Heart Counts open-source project
+# This source file is part of the My Heart Counts Android open-source project
 #
 # SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   actionlint:
     name: GitHub Actions Workflows
-    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.5
     permissions:
       contents: read
 
@@ -37,13 +37,13 @@ jobs:
 
   reuse:
     name: REUSE Compliance
-    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.5
     permissions:
       contents: read
 
   markdown_links:
     name: Markdown Links
-    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.5
     permissions:
       contents: read
       pull-requests: read
