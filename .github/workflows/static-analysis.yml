@@ -19,7 +19,7 @@ concurrency:
 jobs:
   actionlint:
     name: GitHub Actions Workflows
-    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@feature/shared-android-workflows-and-caller-permissions
+    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.5
     permissions:
       contents: read
 
@@ -37,13 +37,13 @@ jobs:
 
   reuse:
     name: REUSE Compliance
-    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@feature/shared-android-workflows-and-caller-permissions
+    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.5
     permissions:
       contents: read
 
   markdown_links:
     name: Markdown Links
-    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@feature/shared-android-workflows-and-caller-permissions
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.5
     permissions:
       contents: read
       pull-requests: read

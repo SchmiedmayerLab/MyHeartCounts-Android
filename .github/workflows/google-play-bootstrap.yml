@@ -35,7 +35,7 @@ jobs:
   signed_bundle:
     name: Signed Bootstrap Bundle
     needs: android
-    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play-bootstrap.yml@feature/shared-android-workflows-and-caller-permissions
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play-bootstrap.yml@v0.5
     permissions:
       contents: read
     secrets: inherit

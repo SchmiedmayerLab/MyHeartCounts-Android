@@ -15,7 +15,7 @@ on:
 jobs:
   android:
     name: Android
-    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@feature/shared-android-workflows-and-caller-permissions
+    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@v0.5
     permissions:
       actions: read
       contents: read
