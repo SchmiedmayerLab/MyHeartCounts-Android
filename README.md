@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 [![Build and Test](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/actions/workflows/build-test-analyze.yml/badge.svg)](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/actions/workflows/build-test-analyze.yml)
 [![Deployment](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/actions/workflows/deployment.yml/badge.svg)](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/actions/workflows/deployment.yml)
 [![REUSE status](https://api.reuse.software/badge/github.com/SchmiedmayerLab/MyHeartCounts-Android)](https://api.reuse.software/info/github.com/SchmiedmayerLab/MyHeartCounts-Android)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
 Kotlin &amp; Android Version of the My Heart Counts ecosystem.
 

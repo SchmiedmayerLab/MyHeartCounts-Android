@@ -16,8 +16,7 @@ android {
 
     buildTypes {
         debug {
-            // Disabling coverage due to: https://github.com/hapifhir/org.hl7.fhir.core/issues/1688
-            enableAndroidTestCoverage = false
+            enableAndroidTestCoverage = true
         }
     }
 }

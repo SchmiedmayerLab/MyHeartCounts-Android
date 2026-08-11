@@ -129,7 +129,10 @@ fun Project.setupJacoco() {
         sourceDirectories.setFrom(files("$projectDir/src/main"))
 
         executionData.setFrom(
-            files("$buildDir/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+            files("$buildDir/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec") +
+                fileTree("$buildDir/outputs/code_coverage/debugAndroidTest/connected") {
+                    include("**/*.ec")
+                }
         )
         doLast {
             println("Jacoco report generated in: ${reports.html.outputLocation.get()}")

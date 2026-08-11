@@ -27,7 +27,7 @@ android {
             (project.findProperty("android.injected.version.code") as? String)?.toInt() ?: 1
         versionName =
             (project.findProperty("android.injected.version.name") as? String)
-                ?: providers.gradleProperty("myHeartCounts.versionName").get()
+                ?: providers.gradleProperty("app.versionName").get()
         targetSdk = libs.versions.targetSdk.get().toInt()
 
         vectorDrawables {

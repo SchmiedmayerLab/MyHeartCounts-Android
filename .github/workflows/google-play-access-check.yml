@@ -14,21 +14,7 @@ on:
 jobs:
   google_play_access:
     name: Google Play Access
-    environment: staging
-    runs-on: ubuntu-latest
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play-access.yml@v0.5
     permissions:
       contents: read
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v7
-      - name: Set Up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-          bundler-cache: true
-      - name: Validate My Heart Counts Access
-        env:
-          SERVICE_ACCOUNT_JSON_KEY: ${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}
-        run: >-
-          bundle exec fastlane validate_play_access
-          applicationid:"${{ vars.APP_IDENTIFIER }}"
+    secrets: inherit
