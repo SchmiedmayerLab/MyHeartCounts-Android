@@ -1,0 +1,21 @@
+#
+# This source file is part of the My Heart Counts Android open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+coverage:
+  status:
+    # Never let overall coverage slip; the project is at 29.20% today.
+    project:
+      default:
+        target: auto
+        threshold: 0.5%
+    # New code is held above the current project average so coverage climbs.
+    patch:
+      default:
+        target: 45%
+
+comment: false

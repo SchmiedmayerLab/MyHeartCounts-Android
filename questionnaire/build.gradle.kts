@@ -1,5 +1,5 @@
 //
-// This source file is part of the My Heart Counts open-source project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -16,7 +16,8 @@ android {
 
     buildTypes {
         debug {
-            // Disabling coverage due to: https://github.com/hapifhir/org.hl7.fhir.core/issues/1688
+            // JaCoCo cannot instrument the HAPI FHIR 6.0.22 jars: mergeExtDex fails with
+            // "Execution failed for JacocoTransform". Re-enable once HAPI FHIR is upgraded.
             enableAndroidTestCoverage = false
         }
     }

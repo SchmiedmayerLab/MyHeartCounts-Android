@@ -1,12 +1,12 @@
 //
-// This source file is part of the My Heart Counts open-source project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 
 import io.gitlab.arturbosch.detekt.Detekt
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -31,40 +31,41 @@ subprojects {
 
 installCustomTasks()
 
-tasks.dokkaHtmlMultiModule {
+dokka {
     moduleName.set("Spezi Documentation")
-    includes.from("README.md")
+    dokkaPublications.html {
+        includes.from("README.md")
+    }
+}
+
+// Dokka v2 aggregates by depending on each module rather than by wiring partial tasks together.
+dependencies {
+    subprojects.forEach { dokka(project(it.path)) }
+}
+
+tasks.named("dokkaGeneratePublicationHtml") {
     dependsOn("copyDocumentationImages")
 }
 
 fun Project.setupDokka() {
     apply(plugin = rootProject.libs.plugins.dokka.get().pluginId)
 
-    if (this != rootProject) {
-        rootProject.tasks.named("dokkaHtmlMultiModule") {
-            dependsOn("${project.path}:dokkaHtml")
+    dokka {
+        // Dokka v2 registers source sets from the Kotlin plugin, which the Android plugin does not
+        // provide; without this the modules document nothing.
+        if (file("src/main/kotlin").exists()) {
+            dokkaSourceSets.maybeCreate("main").sourceRoots.from(file("src/main/kotlin"))
         }
-    }
-
-    tasks.withType<DokkaTaskPartial>().configureEach {
         dokkaSourceSets.configureEach {
-            noAndroidSdkLink.set(false)
+            enableAndroidDocumentationLink.set(true)
             skipDeprecated.set(true)
             skipEmptyPackages.set(true)
-            includeNonPublic.set(false)
+            documentedVisibilities.set(setOf(VisibilityModifier.Public))
             jdkVersion.set(JavaVersion.VERSION_21.majorVersion.toInt())
             if (file("README.md").exists()) {
                 includes.from("README.md")
             }
         }
-    }
-
-    val dokkaHtmlMultiModule = tasks.findByName("dokkaHtmlMultiModule") ?: tasks.create(
-        "dokkaHtmlMultiModule",
-        DokkaTaskPartial::class.java
-    )
-    rootProject.tasks.named("dokkaHtmlMultiModule") {
-        dependsOn(dokkaHtmlMultiModule)
     }
 }
 
@@ -101,8 +102,25 @@ fun Project.setupDetekt() {
     }
 }
 
+fun Project.enableAndroidTestCoverage() {
+    plugins.withId("com.android.library") {
+        extensions.configure<com.android.build.api.dsl.LibraryExtension>("android") {
+            buildTypes.getByName("debug").enableAndroidTestCoverage = true
+        }
+    }
+    plugins.withId("com.android.application") {
+        extensions.configure<com.android.build.api.dsl.ApplicationExtension>("android") {
+            buildTypes.getByName("debug").enableAndroidTestCoverage = true
+        }
+    }
+}
+
 fun Project.setupJacoco() {
     apply(plugin = "jacoco")
+
+    // Instrumented coverage is on by default. A module whose dependencies JaCoCo cannot instrument
+    // turns it off in its own build file and says why.
+    enableAndroidTestCoverage()
     val buildDir = layout.buildDirectory.get()
     val coverageExclusions = listOf(
         // Android
@@ -129,7 +147,10 @@ fun Project.setupJacoco() {
         sourceDirectories.setFrom(files("$projectDir/src/main"))
 
         executionData.setFrom(
-            files("$buildDir/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+            files("$buildDir/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec") +
+                fileTree("$buildDir/outputs/code_coverage/debugAndroidTest/connected") {
+                    include("**/*.ec")
+                }
         )
         doLast {
             println("Jacoco report generated in: ${reports.html.outputLocation.get()}")

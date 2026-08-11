@@ -1,5 +1,5 @@
 #
-# This source file is part of the My Heart Counts open-source project
+# This source file is part of the My Heart Counts Android open-source project
 #
 # SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
@@ -20,7 +20,7 @@ concurrency:
 jobs:
   format_release_notes:
     name: Format Release Notes
-    uses: SchmiedmayerLab/.github/.github/workflows/format-release-notes.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/format-release-notes.yml@v0.5
     permissions:
       contents: read
     with:
@@ -34,7 +34,7 @@ jobs:
       - format_release_notes
     permissions:
       actions: read
-      contents: read
+      contents: write
       packages: read
       security-events: write
     secrets: inherit

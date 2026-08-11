@@ -1,5 +1,5 @@
 //
-// This source file is part of the My Heart Counts open-source project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -27,7 +27,7 @@ android {
             (project.findProperty("android.injected.version.code") as? String)?.toInt() ?: 1
         versionName =
             (project.findProperty("android.injected.version.name") as? String)
-                ?: providers.gradleProperty("myHeartCounts.versionName").get()
+                ?: providers.gradleProperty("app.versionName").get()
         targetSdk = libs.versions.targetSdk.get().toInt()
 
         vectorDrawables {
