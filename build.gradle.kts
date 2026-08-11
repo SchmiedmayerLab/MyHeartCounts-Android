@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 
 import io.gitlab.arturbosch.detekt.Detekt
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -31,40 +31,41 @@ subprojects {
 
 installCustomTasks()
 
-tasks.dokkaHtmlMultiModule {
+dokka {
     moduleName.set("Spezi Documentation")
-    includes.from("README.md")
+    dokkaPublications.html {
+        includes.from("README.md")
+    }
+}
+
+// Dokka v2 aggregates by depending on each module rather than by wiring partial tasks together.
+dependencies {
+    subprojects.forEach { dokka(project(it.path)) }
+}
+
+tasks.named("dokkaGeneratePublicationHtml") {
     dependsOn("copyDocumentationImages")
 }
 
 fun Project.setupDokka() {
     apply(plugin = rootProject.libs.plugins.dokka.get().pluginId)
 
-    if (this != rootProject) {
-        rootProject.tasks.named("dokkaHtmlMultiModule") {
-            dependsOn("${project.path}:dokkaHtml")
+    dokka {
+        // Dokka v2 registers source sets from the Kotlin plugin, which the Android plugin does not
+        // provide; without this the modules document nothing.
+        if (file("src/main/kotlin").exists()) {
+            dokkaSourceSets.maybeCreate("main").sourceRoots.from(file("src/main/kotlin"))
         }
-    }
-
-    tasks.withType<DokkaTaskPartial>().configureEach {
         dokkaSourceSets.configureEach {
-            noAndroidSdkLink.set(false)
+            enableAndroidDocumentationLink.set(true)
             skipDeprecated.set(true)
             skipEmptyPackages.set(true)
-            includeNonPublic.set(false)
+            documentedVisibilities.set(setOf(VisibilityModifier.Public))
             jdkVersion.set(JavaVersion.VERSION_21.majorVersion.toInt())
             if (file("README.md").exists()) {
                 includes.from("README.md")
             }
         }
-    }
-
-    val dokkaHtmlMultiModule = tasks.findByName("dokkaHtmlMultiModule") ?: tasks.create(
-        "dokkaHtmlMultiModule",
-        DokkaTaskPartial::class.java
-    )
-    rootProject.tasks.named("dokkaHtmlMultiModule") {
-        dependsOn(dokkaHtmlMultiModule)
     }
 }
 
