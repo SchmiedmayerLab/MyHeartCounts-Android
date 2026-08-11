@@ -101,8 +101,25 @@ fun Project.setupDetekt() {
     }
 }
 
+fun Project.enableAndroidTestCoverage() {
+    plugins.withId("com.android.library") {
+        extensions.configure<com.android.build.api.dsl.LibraryExtension>("android") {
+            buildTypes.getByName("debug").enableAndroidTestCoverage = true
+        }
+    }
+    plugins.withId("com.android.application") {
+        extensions.configure<com.android.build.api.dsl.ApplicationExtension>("android") {
+            buildTypes.getByName("debug").enableAndroidTestCoverage = true
+        }
+    }
+}
+
 fun Project.setupJacoco() {
     apply(plugin = "jacoco")
+
+    // Instrumented coverage is on by default. A module whose dependencies JaCoCo cannot instrument
+    // turns it off in its own build file and says why.
+    enableAndroidTestCoverage()
     val buildDir = layout.buildDirectory.get()
     val coverageExclusions = listOf(
         // Android
