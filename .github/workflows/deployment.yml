@@ -65,7 +65,7 @@ jobs:
     name: Google Play Upload
     if: vars.PLAY_DEPLOYMENT_ENABLED == 'true'
     needs: android
-    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@v0.5
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@feature/shared-android-workflows-and-caller-permissions
     permissions:
       contents: write
     secrets: inherit

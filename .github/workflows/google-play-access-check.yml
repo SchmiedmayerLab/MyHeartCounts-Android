@@ -14,7 +14,7 @@ on:
 jobs:
   google_play_access:
     name: Google Play Access
-    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play-access.yml@v0.5
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play-access.yml@feature/shared-android-workflows-and-caller-permissions
     permissions:
       contents: read
     secrets: inherit

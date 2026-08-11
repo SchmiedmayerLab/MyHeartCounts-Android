@@ -21,4 +21,4 @@ permissions:
 jobs:
   standards:
     name: Standards
-    uses: SchmiedmayerLab/.github/.github/workflows/repository-standards.yml@v0.5
+    uses: SchmiedmayerLab/.github/.github/workflows/repository-standards.yml@feature/shared-android-workflows-and-caller-permissions

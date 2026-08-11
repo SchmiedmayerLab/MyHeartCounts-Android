@@ -20,7 +20,7 @@ concurrency:
 jobs:
   format_release_notes:
     name: Format Release Notes
-    uses: SchmiedmayerLab/.github/.github/workflows/format-release-notes.yml@v0.5
+    uses: SchmiedmayerLab/.github/.github/workflows/format-release-notes.yml@feature/shared-android-workflows-and-caller-permissions
     permissions:
       contents: read
     with:
