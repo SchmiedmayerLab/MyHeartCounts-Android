@@ -65,8 +65,8 @@ jobs:
     name: Google Play Upload
     if: vars.PLAY_DEPLOYMENT_ENABLED == 'true'
     needs: android
-    # Tracks the feature branch until the .github repository tags v0.6.
-    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@feature/android-swift-toolchain
+    # Pins the feature revision until the .github repository tags v0.6.
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@ec38544f6872d95105981440c79b28df7fe63486
     permissions:
       contents: write
     secrets: inherit

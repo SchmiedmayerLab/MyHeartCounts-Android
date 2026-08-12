@@ -20,6 +20,9 @@ import java.io.InputStream
 internal object TarReader {
     private const val BLOCK_SIZE = 512
     private const val COPY_BUFFER_SIZE = BLOCK_SIZE * 16
+
+    // Far beyond any real study bundle, but a bound on what a hostile archive can write.
+    private const val MAX_EXTRACTED_BYTES = 1L shl 30
     private const val NAME_OFFSET = 0
     private const val NAME_LENGTH = 100
     private const val SIZE_OFFSET = 124
@@ -39,11 +42,14 @@ internal object TarReader {
         into.mkdirs()
         val root = into.canonicalFile
         val header = ByteArray(BLOCK_SIZE)
+        var extractedBytes = 0L
         while (true) {
             if (!readBlock(input, header) || header.all { it == 0.toByte() }) return
             val name = string(header, NAME_OFFSET, NAME_LENGTH)
             val size = string(header, SIZE_OFFSET, SIZE_LENGTH).trim().toLong(radix = 8)
             require(size >= 0) { "Malformed archive entry size: $size" }
+            extractedBytes += size
+            require(extractedBytes <= MAX_EXTRACTED_BYTES) { "Archive exceeds the permitted size" }
             val target = File(root, name).canonicalFile
             require(target.path == root.path || target.path.startsWith(root.path + File.separator)) {
                 "Archive entry escapes the bundle: $name"

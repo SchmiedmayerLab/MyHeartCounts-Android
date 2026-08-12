@@ -15,6 +15,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
+import java.util.UUID
 
 /**
  * A handle for reading a study definition bundle from disk.
@@ -153,8 +154,16 @@ class StudyBundle(
             require(bundleDir.extension == FILE_EXTENSION) {
                 "Not a study bundle directory name: $bundleDir"
             }
-            if (bundleDir.exists()) bundleDir.deleteRecursively()
-            ZstdInputStream(archive).use { input -> TarReader.extract(input, bundleDir) }
+            // Extract into a staging sibling first, so a malformed archive cannot destroy a
+            // previously unpacked bundle.
+            val staging = File(bundleDir.parentFile, "${bundleDir.name}.staging-${UUID.randomUUID()}")
+            try {
+                ZstdInputStream(archive).use { input -> TarReader.extract(input, staging) }
+                if (bundleDir.exists()) bundleDir.deleteRecursively()
+                check(staging.renameTo(bundleDir)) { "Unable to move the unpacked bundle into place" }
+            } finally {
+                staging.deleteRecursively()
+            }
             return bundleDir
         }
 

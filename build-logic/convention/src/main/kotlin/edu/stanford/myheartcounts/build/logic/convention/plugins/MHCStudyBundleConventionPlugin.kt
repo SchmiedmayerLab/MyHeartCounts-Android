@@ -151,7 +151,7 @@ abstract class MHCExportStudyBundle : DefaultTask() {
     /**
      * Which toolchain to export with: `auto`, `swift` or `docker`.
      */
-    @get:Internal
+    @get:Input
     abstract val toolchain: Property<String>
 
     @get:Internal

@@ -15,8 +15,8 @@ on:
 jobs:
   android:
     name: Android
-    # Tracks the feature branch until the .github repository tags v0.6.
-    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@feature/android-swift-toolchain
+    # Pins the feature revision until the .github repository tags v0.6.
+    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@ec38544f6872d95105981440c79b28df7fe63486
     permissions:
       actions: read
       contents: read
