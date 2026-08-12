@@ -19,8 +19,7 @@ concurrency:
 jobs:
   android:
     name: Android
-    # Pins the feature revision until the .github repository tags v0.6.
-    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@128c59fd37f941cb0d411d4a8231fb80525e47b8
+    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@v0.5
     permissions:
       actions: read
       contents: read

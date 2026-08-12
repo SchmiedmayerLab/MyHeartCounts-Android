@@ -65,8 +65,7 @@ jobs:
     name: Google Play Upload
     if: vars.PLAY_DEPLOYMENT_ENABLED == 'true'
     needs: android
-    # Pins the feature revision until the .github repository tags v0.6.
-    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@128c59fd37f941cb0d411d4a8231fb80525e47b8
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@v0.5
     permissions:
       contents: write
     secrets: inherit
