@@ -44,7 +44,14 @@ internal object TarReader {
         val header = ByteArray(BLOCK_SIZE)
         var extractedBytes = 0L
         while (true) {
-            if (!readBlock(input, header) || header.all { it == 0.toByte() }) return
+            if (!readBlock(input, header)) throw EOFException("Missing tar end-of-archive marker")
+            if (header.all { it == 0.toByte() }) {
+                // The end-of-archive marker is two consecutive zero blocks.
+                if (!readBlock(input, header) || header.any { it != 0.toByte() }) {
+                    throw EOFException("Malformed tar end-of-archive marker")
+                }
+                return
+            }
             val name = string(header, NAME_OFFSET, NAME_LENGTH)
             val size = string(header, SIZE_OFFSET, SIZE_LENGTH).trim().toLong(radix = 8)
             require(size >= 0) { "Malformed archive entry size: $size" }

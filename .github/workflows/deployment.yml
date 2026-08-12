@@ -66,7 +66,7 @@ jobs:
     if: vars.PLAY_DEPLOYMENT_ENABLED == 'true'
     needs: android
     # Pins the feature revision until the .github repository tags v0.6.
-    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@ec38544f6872d95105981440c79b28df7fe63486
+    uses: SchmiedmayerLab/.github/.github/workflows/android-google-play.yml@128c59fd37f941cb0d411d4a8231fb80525e47b8
     permissions:
       contents: write
     secrets: inherit
@@ -76,3 +76,4 @@ jobs:
       releasenotes: ${{ inputs.releasenotes }}
       submodules: 'true'
       swiftversion: 'latest'
+      swiftcachepaths: '**/build/studyBundle*'
