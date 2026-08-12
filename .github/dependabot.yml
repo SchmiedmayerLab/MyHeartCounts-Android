@@ -39,3 +39,11 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: "weekly-dependencies"
+
+  # Moves the study definitions submodule to the head of the branch it tracks, so the study
+  # bundle the app exports advances through a reviewable commit rather than a manual sync.
+  - package-ecosystem: gitsubmodule
+    directory: /
+    patterns:
+      - "*"
+    multi-ecosystem-group: "weekly-dependencies"

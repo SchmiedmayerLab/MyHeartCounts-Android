@@ -1,0 +1,4 @@
+[submodule "MyHeartCounts-StudyDefinitions"]
+	path = MyHeartCounts-StudyDefinitions
+	url = https://github.com/SchmiedmayerLab/MyHeartCounts-StudyDefinitions.git
+	branch = main

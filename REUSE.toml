@@ -18,14 +18,6 @@ path = [
 precedence = "aggregate"
 SPDX-License-Identifier = "Apache-2.0"
 
-# JSON carries no comments, so the study bundle pin cannot hold a license header.
-[[annotations]]
-path = [
-    "myheartcounts/study-bundle.pin.json",
-]
-SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
-SPDX-License-Identifier = "MIT"
-
 # Android's resource merger rejects adjacent .license sidecars in res/.
 [[annotations]]
 path = [

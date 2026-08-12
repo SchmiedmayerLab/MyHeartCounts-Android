@@ -7,6 +7,9 @@
 
 dirs:
   - .
+excludedDirs:
+  # The study definitions submodule is checked by its own repository.
+  - MyHeartCounts-StudyDefinitions
 useGitIgnore: true
 ignorePatterns:
   - pattern: '^doc:.*$'
