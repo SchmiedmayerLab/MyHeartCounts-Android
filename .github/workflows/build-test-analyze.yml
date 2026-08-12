@@ -15,10 +15,14 @@ on:
 jobs:
   android:
     name: Android
-    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@v0.5
+    # Tracks the feature branch until the .github repository tags v0.6.
+    uses: SchmiedmayerLab/.github/.github/workflows/android.yml@feature/android-swift-toolchain
     permissions:
       actions: read
       contents: read
       packages: read
       security-events: write
     secrets: inherit
+    with:
+      submodules: 'true'
+      swiftversion: 'latest'

@@ -18,6 +18,14 @@ path = [
 precedence = "aggregate"
 SPDX-License-Identifier = "Apache-2.0"
 
+# .gitmodules carries no comment syntax git tooling universally preserves.
+[[annotations]]
+path = [
+    ".gitmodules",
+]
+SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"
+
 # Android's resource merger rejects adjacent .license sidecars in res/.
 [[annotations]]
 path = [

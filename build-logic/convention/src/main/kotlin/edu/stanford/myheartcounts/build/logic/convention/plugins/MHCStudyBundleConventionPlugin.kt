@@ -59,18 +59,7 @@ class MHCStudyBundleConventionPlugin : Plugin<Project> {
                     ) {
                         group = BUILD_SETUP_GROUP
                         description = "Exports the study bundle into the ${variant.name} assets."
-                        this.bundleName.set(bundleName)
-                        this.packageDirectory.set(packageDirectory)
-                        rootDirectory.set(rootProject.layout.projectDirectory)
-                        exporterSources.from(
-                            packageDirectory.file("Package.swift"),
-                            packageDirectory.dir("Sources")
-                        )
-                        toolchain.set(
-                            providers.gradleProperty(TOOLCHAIN_PROPERTY)
-                                .orElse(providers.gradleProperty(TOOLCHAIN_DEFAULT_PROPERTY))
-                        )
-                        swiftImage.set(providers.gradleProperty(SWIFT_IMAGE_PROPERTY))
+                        applyStudyBundleConventions(this@with)
                         scratchDirectory.set(layout.buildDirectory.dir("studyBundle/${variant.name}"))
                     }
                     variant.sources.assets?.addGeneratedSourceDirectory(
@@ -86,28 +75,52 @@ class MHCStudyBundleConventionPlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.gradleProperty(name: String): String =
-        requireNotNull(providers.gradleProperty(name).orNull) { "Missing gradle property: $name" }
-
     private companion object {
-        const val BUILD_SETUP_GROUP = "build setup"
-        const val BUNDLE_NAME_PROPERTY = "myHeartCounts.studyBundle.name"
-        const val PACKAGE_PATH_PROPERTY = "myHeartCounts.studyBundle.packagePath"
-        const val SWIFT_IMAGE_PROPERTY = "myHeartCounts.studyBundle.swiftImage"
-        const val TOOLCHAIN_DEFAULT_PROPERTY = "myHeartCounts.studyBundle.toolchain"
-        const val TOOLCHAIN_PROPERTY = "studyBundleToolchain"
         const val ASSET_PATH_FIELD = "STUDY_BUNDLE_ASSET_PATH"
-        const val ASSET_PATH_DOC = "Path of the study bundle within the app's assets."
+        const val ASSET_PATH_DOC = "Path of the study bundle archive within the app's assets."
     }
 }
 
+internal const val BUILD_SETUP_GROUP = "build setup"
+internal const val BUNDLE_NAME_PROPERTY = "myHeartCounts.studyBundle.name"
+internal const val PACKAGE_PATH_PROPERTY = "myHeartCounts.studyBundle.packagePath"
+internal const val SWIFT_IMAGE_PROPERTY = "myHeartCounts.studyBundle.swiftImage"
+internal const val TOOLCHAIN_DEFAULT_PROPERTY = "myHeartCounts.studyBundle.toolchain"
+internal const val TOOLCHAIN_PROPERTY = "studyBundleToolchain"
+
+internal fun Project.gradleProperty(name: String): String =
+    requireNotNull(providers.gradleProperty(name).orNull) { "Missing gradle property: $name" }
+
 /**
- * Exports the study bundle from the `MyHeartCounts-StudyDefinitions` submodule into a directory the
- * app packages as assets.
+ * Configures an export task from the study bundle gradle properties, leaving the scratch and
+ * output locations to the registration site.
+ */
+internal fun MHCExportStudyBundle.applyStudyBundleConventions(project: Project) {
+    val packageDirectory = project.rootProject.layout.projectDirectory.dir(project.gradleProperty(PACKAGE_PATH_PROPERTY))
+    bundleName.set(project.gradleProperty(BUNDLE_NAME_PROPERTY))
+    this.packageDirectory.set(packageDirectory)
+    rootDirectory.set(project.rootProject.layout.projectDirectory)
+    exporterSources.from(
+        packageDirectory.file("Package.swift"),
+        // Pins the dependency graph, so a Spezi bump re-runs the export even when the
+        // submodule's own sources are untouched.
+        packageDirectory.file("Package.resolved"),
+        packageDirectory.dir("Sources")
+    )
+    toolchain.set(
+        project.providers.gradleProperty(TOOLCHAIN_PROPERTY)
+            .orElse(project.providers.gradleProperty(TOOLCHAIN_DEFAULT_PROPERTY))
+    )
+    swiftImage.set(project.providers.gradleProperty(SWIFT_IMAGE_PROPERTY))
+}
+
+/**
+ * Exports the study bundle archive from the `MyHeartCounts-StudyDefinitions` submodule into a
+ * directory the app packages as assets.
  *
- * The bundle is produced by the same Swift exporter the iOS app ships, so both platforms package the
- * bundle the study definitions describe at the commit the submodule pins — nothing generated from
- * them is committed here.
+ * The archive is produced by the same Swift exporter the iOS app ships and has the same format the
+ * app downloads at runtime, so both platforms package and unpack the bundle the study definitions
+ * describe at the commit the submodule pins — nothing generated from them is committed here.
  *
  * The exporter runs on a Swift toolchain found on `PATH`, or in a container built from
  * [swiftImage] when there is none, which is what lets a machine without Xcode and a Linux CI runner
@@ -172,9 +185,9 @@ abstract class MHCExportStudyBundle : DefaultTask() {
             else -> error("Unhandled toolchain: $toolchain")
         }
 
-        check(outputDirectory.resolve(bundleName.get()).isDirectory) {
+        check(outputDirectory.resolve(bundleName.get()).isFile) {
             "The exporter did not write '${bundleName.get()}' into $outputDirectory. " +
-                "Either the submodule renamed the bundle or $BUNDLE_NAME_PROPERTY is stale."
+                "Either the submodule renamed the bundle archive or $BUNDLE_NAME_PROPERTY is stale."
         }
     }
 
@@ -202,7 +215,7 @@ abstract class MHCExportStudyBundle : DefaultTask() {
                 "swift", "run",
                 "--package-path", packageDirectory.absolutePath,
                 "--scratch-path", scratchDirectory.absolutePath,
-                EXPORTER_PRODUCT, "export", "--format", "package", outputDirectory.absolutePath
+                EXPORTER_PRODUCT, "export", outputDirectory.absolutePath
             )
         }
     }
@@ -231,7 +244,7 @@ abstract class MHCExportStudyBundle : DefaultTask() {
                             "swift", "run",
                             "--package-path", CONTAINER_PACKAGE_PATH,
                             "--scratch-path", CONTAINER_SCRATCH_PATH,
-                            EXPORTER_PRODUCT, "export", "--format", "package", CONTAINER_OUTPUT_PATH
+                            EXPORTER_PRODUCT, "export", CONTAINER_OUTPUT_PATH
                         )
                     )
                 }

@@ -60,6 +60,7 @@ gradlePlugin {
     plugins {
         // Please keep plugins sorted. Select all method calls below and in Android Studio `Edit > Sort Lines`
         applicationPlugin(id = "studybundle", className = "MHCStudyBundleConventionPlugin")
+        applicationPlugin(id = "studybundlefixture", className = "MHCStudyBundleFixtureConventionPlugin")
         conventionPlugin(id = "application", className = "SpeziApplicationConventionPlugin")
         conventionPlugin(id = "base", className = "SpeziBaseConfigConventionPlugin")
         conventionPlugin(id = "compose", className = "SpeziComposeConventionPlugin")

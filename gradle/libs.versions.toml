@@ -54,6 +54,7 @@ testCoreVersion = "1.7.0"
 targetSdk = "36"
 timberVersion = "5.0.1"
 truth = "1.4.5"
+zstdJni = "1.5.7-13"
 
 # Please keep [libraries] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [libraries]
@@ -120,6 +121,7 @@ navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref =
 paparazzi = { module = "app.cash.paparazzi:paparazzi", version.ref = "paparazziVersion" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timberVersion" }
+zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni" }
 
 # Please keep [plugins] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [plugins]
@@ -134,6 +136,7 @@ jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = 
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 mhc-studybundle = { id = "mhc.studybundle", version = "unspecified" }
+mhc-studybundlefixture = { id = "mhc.studybundlefixture", version = "unspecified" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazziVersion" }
 spezi-application = { id = "spezi.application", version = "unspecified" }
 spezi-base = { id = "spezi.base", version = "unspecified" }

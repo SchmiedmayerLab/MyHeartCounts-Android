@@ -7,10 +7,13 @@
 
 package edu.stanford.spezi.studydefinition
 
+import com.github.luben.zstd.ZstdInputStream
 import edu.stanford.spezi.foundation.JsonSerializer
+import edu.stanford.spezi.studydefinition.internal.TarReader
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
+import java.io.InputStream
 import java.util.Locale
 
 /**
@@ -110,6 +113,11 @@ class StudyBundle(
         const val FILE_EXTENSION = "spezistudybundle"
 
         /**
+         * The file extension of a compressed study bundle archive.
+         */
+        const val ARCHIVE_FILE_EXTENSION = "$FILE_EXTENSION.tar.zst"
+
+        /**
          * The default localization used as a fallback during resolution.
          */
         const val DEFAULT_LOCALE = "en-US"
@@ -132,6 +140,22 @@ class StudyBundle(
                 bundleDir = bundleDir,
                 studyDefinition = definition,
             )
+        }
+
+        /**
+         * Extracts the zstd-compressed tar archive read from [archive] into [bundleDir],
+         * replacing any previous contents, and returns the extracted bundle directory.
+         *
+         * @throws IllegalArgumentException when [bundleDir] does not carry [FILE_EXTENSION] or an
+         *   archive entry would escape it.
+         */
+        fun unpack(archive: InputStream, bundleDir: File): File {
+            require(bundleDir.extension == FILE_EXTENSION) {
+                "Not a study bundle directory name: $bundleDir"
+            }
+            if (bundleDir.exists()) bundleDir.deleteRecursively()
+            ZstdInputStream(archive).use { input -> TarReader.extract(input, bundleDir) }
+            return bundleDir
         }
 
         /**
