@@ -26,6 +26,10 @@ jobs:
       packages: read
       security-events: write
     secrets: inherit
+    with:
+      submodules: 'true'
+      swiftversion: 'latest'
+      swiftcachepaths: '**/build/studyBundle*'
 
   release_bundle:
     name: Signed Release Bundle
@@ -37,6 +41,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
+        with:
+          submodules: true
       - name: Set Up JDK 21
         uses: actions/setup-java@v5
         with:
@@ -48,6 +54,23 @@ jobs:
         with:
           ruby-version: "3.3"
           bundler-cache: true
+      - name: Set Up Swift
+        uses: SwiftyLab/setup-swift@v1
+        with:
+          swift-version: latest
+      - name: Determine Swift Cache Key
+        id: swiftcache
+        shell: bash
+        run: echo "submodules=$(git submodule status --recursive | git hash-object --stdin | cut -c1-16)" >> "$GITHUB_OUTPUT"
+      - name: Cache Swift Build State
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/org.swift.swiftpm
+            **/build/studyBundle*
+          key: swiftpm-${{ runner.os }}-latest-${{ steps.swiftcache.outputs.submodules }}
+          restore-keys: |
+            swiftpm-${{ runner.os }}-latest-
       - name: Generate Disposable CI Signing Key
         env:
           KEY_ALIAS: ci-myheartcounts-upload

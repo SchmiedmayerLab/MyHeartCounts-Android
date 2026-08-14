@@ -27,6 +27,29 @@ Kotlin &amp; Android Version of the My Heart Counts ecosystem.
   application. [View the module](./onboarding/)
 - **Contact**: Provides Contact screens. [View the module](./contact/)
 
+### Study Bundle
+
+The app packages the My Heart Counts study bundle as a zstd-compressed archive — the same format the
+storage bucket serves in production — so a build has a study to run before it reaches the bucket, and
+bundled and downloaded bundles unpack through one code path. The bundle is not committed here: the
+[`MyHeartCounts-StudyDefinitions`](https://github.com/SchmiedmayerLab/MyHeartCounts-StudyDefinitions)
+submodule pins the study definitions, and Gradle exports the archive from them with the same Swift
+exporter the iOS application uses, so both platforms package what the pinned commit describes.
+
+```bash
+git submodule update --init
+```
+
+`./gradlew :myheartcounts:exportStudyBundle` refreshes the assets; any task that assembles the
+application runs the export itself, and re-runs it only once the submodule moves. The
+`:study-definition` unit tests export their archive fixture the same way instead of committing a
+generated artifact. The export needs a Swift toolchain: it uses the one on `PATH`, and otherwise
+runs in the container named by `myHeartCounts.studyBundle.swiftImage`. Force either with
+`-PstudyBundleToolchain=swift` or `-PstudyBundleToolchain=docker`.
+
+Dependabot advances the submodule to the head of `main` weekly, so the bundle moves forward through a
+reviewable commit.
+
 ### Continuous Integration and Delivery Setup
 
 #### Google Play Internal Deployment

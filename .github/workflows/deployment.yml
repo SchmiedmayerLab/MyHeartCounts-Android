@@ -73,4 +73,6 @@ jobs:
       environment: ${{ inputs.environment || 'internal' }}
       version: ${{ inputs.version }}
       releasenotes: ${{ inputs.releasenotes }}
-      recordversion: true
+      submodules: 'true'
+      swiftversion: 'latest'
+      swiftcachepaths: '**/build/studyBundle*'

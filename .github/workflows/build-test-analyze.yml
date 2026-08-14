@@ -22,3 +22,7 @@ jobs:
       packages: read
       security-events: write
     secrets: inherit
+    with:
+      submodules: 'true'
+      swiftversion: 'latest'
+      swiftcachepaths: '**/build/studyBundle*'

@@ -46,9 +46,21 @@ fun NamedDomainObjectContainer<PluginDeclaration>.conventionPlugin(id: String, c
     }
 }
 
+/**
+ * Plugins specific to the My Heart Counts application rather than to the Spezi framework modules.
+ */
+fun NamedDomainObjectContainer<PluginDeclaration>.applicationPlugin(id: String, className: String) {
+    register(className) {
+        this.id = "mhc.$id"
+        implementationClass = "edu.stanford.myheartcounts.build.logic.convention.plugins.$className"
+    }
+}
+
 gradlePlugin {
     plugins {
         // Please keep plugins sorted. Select all method calls below and in Android Studio `Edit > Sort Lines`
+        applicationPlugin(id = "studybundle", className = "MHCStudyBundleConventionPlugin")
+        applicationPlugin(id = "studybundlefixture", className = "MHCStudyBundleFixtureConventionPlugin")
         conventionPlugin(id = "application", className = "SpeziApplicationConventionPlugin")
         conventionPlugin(id = "base", className = "SpeziBaseConfigConventionPlugin")
         conventionPlugin(id = "compose", className = "SpeziComposeConventionPlugin")

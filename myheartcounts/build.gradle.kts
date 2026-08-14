@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
+    alias(libs.plugins.mhc.studybundle)
     alias(libs.plugins.paparazzi)
     alias(libs.plugins.spezi.application)
     alias(libs.plugins.spezi.compose)
