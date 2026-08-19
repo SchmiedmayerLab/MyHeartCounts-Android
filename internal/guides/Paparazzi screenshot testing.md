@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
 
 # Paparazzi Guide
 
-The Spezi project uses [Paparazzi](https://cashapp.github.io/paparazzi/) for screenshot testing of Compose UI.
+The Grove project uses [Paparazzi](https://cashapp.github.io/paparazzi/) for screenshot testing of Compose UI.
 
 ## Introduction
 
@@ -17,7 +17,7 @@ Paparazzi is set up in the `testing-screenshot` module via the shared `Screensho
 
 - Preconfigured `Paparazzi` rule (Pixel 6, Material theme)
 - `MainDispatcherRule`
-- `screenshot { ... }` helper wrapped in `SpeziTheme`
+- `screenshot { ... }` helper wrapped in `GroveTheme`
 - `LocalInspectionMode` enabled
 
 ## Usage
@@ -63,5 +63,5 @@ brew install git-lfs
 git lfs install
 ```
 
-Paparazzi is automatically configured in Spezi modules via `SpeziComposeConventionPlugin`.  
-When adding screenshot tests to a new module, ensure the module is included in `SpeziComposeConventionPlugin.NEW_MODULE` so that Paparazzi dependencies are applied.
+Paparazzi is automatically configured in Grove modules via `GroveComposeConventionPlugin`.  
+When adding screenshot tests to a new module, ensure the module is included in `GroveComposeConventionPlugin.NEW_MODULE` so that Paparazzi dependencies are applied.

@@ -10,10 +10,10 @@ package edu.stanford.myheartcounts.ui
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
-import edu.stanford.spezi.ui.theme.ColorPalette
-import edu.stanford.spezi.ui.theme.Figtree
-import edu.stanford.spezi.ui.theme.SpeziTheme
-import edu.stanford.spezi.ui.theme.speziTypography
+import org.grovealliance.ui.theme.ColorPalette
+import org.grovealliance.ui.theme.Figtree
+import org.grovealliance.ui.theme.GroveTheme
+import org.grovealliance.ui.theme.groveTypography
 
 /**
  * Applies the app's theme — the Cardinal Red palette and Figtree typography — to [content].
@@ -22,10 +22,10 @@ import edu.stanford.spezi.ui.theme.speziTypography
 fun MHCAppTheme(
     content: @Composable () -> Unit,
 ) {
-    SpeziTheme(
+    GroveTheme(
         darkTheme = isSystemInDarkTheme(),
         colorPalette = ColorPalette.CardinalRed,
-        typography = speziTypography(fontFamily = FontFamily.Figtree),
+        typography = groveTypography(fontFamily = FontFamily.Figtree),
         dynamicColor = false,
         content = content
     )

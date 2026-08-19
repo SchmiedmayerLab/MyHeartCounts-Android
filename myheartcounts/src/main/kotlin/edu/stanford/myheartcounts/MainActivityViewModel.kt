@@ -12,12 +12,12 @@ import androidx.lifecycle.viewModelScope
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
-import edu.stanford.spezi.account.Account
-import edu.stanford.spezi.account.observeSignOutEvents
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.grovealliance.account.Account
+import org.grovealliance.account.observeSignOutEvents
 import kotlin.time.Duration.Companion.seconds
 
 /**

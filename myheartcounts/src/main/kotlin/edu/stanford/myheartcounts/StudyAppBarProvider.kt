@@ -12,10 +12,10 @@ import androidx.compose.material.icons.filled.AccountCircle
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
-import edu.stanford.spezi.ui.ImageResource
-import edu.stanford.spezi.ui.SpeziAppBar
-import edu.stanford.spezi.ui.SpeziAppBarBuilderScope
-import edu.stanford.spezi.ui.speziAppBar
+import org.grovealliance.ui.GroveAppBar
+import org.grovealliance.ui.GroveAppBarBuilderScope
+import org.grovealliance.ui.ImageResource
+import org.grovealliance.ui.groveAppBar
 
 /**
  * Builds the app bar shared by the study tabs, pre-configured as leading-aligned with a trailing
@@ -23,7 +23,7 @@ import edu.stanford.spezi.ui.speziAppBar
  * override the defaults.
  */
 interface StudyAppBarProvider {
-    fun create(scope: SpeziAppBarBuilderScope.() -> Unit): SpeziAppBar
+    fun create(scope: GroveAppBarBuilderScope.() -> Unit): GroveAppBar
 }
 
 /**
@@ -32,7 +32,7 @@ interface StudyAppBarProvider {
 class StudyAppBarProviderImpl(
     private val navigator: Navigator,
 ) : StudyAppBarProvider {
-    override fun create(scope: SpeziAppBarBuilderScope.() -> Unit): SpeziAppBar = speziAppBar {
+    override fun create(scope: GroveAppBarBuilderScope.() -> Unit): GroveAppBar = groveAppBar {
         centerAlign(value = false)
         action(imageResource = ImageResource(Icons.Default.AccountCircle)) {
             navigator.push(event = NavigationEvent.NavigateTo(MHCRoute.AccountOverview))

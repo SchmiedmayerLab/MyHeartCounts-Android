@@ -17,10 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.noRippleClickable
-import edu.stanford.spezi.ui.theme.Colors
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.noRippleClickable
+import org.grovealliance.ui.theme.Colors
 
 /**
  * A tappable row that opens an external destination, showing [text] with a trailing

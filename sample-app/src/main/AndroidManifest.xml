@@ -20,12 +20,12 @@ SPDX-License-Identifier: MIT
         android:usesCleartextTraffic="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Spezi.CardinalRed">
+        android:theme="@style/Theme.Grove.CardinalRed">
         <activity
             android:name=".SampleActivity"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.Spezi.CardinalRed"
+            android:theme="@style/Theme.Grove.CardinalRed"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

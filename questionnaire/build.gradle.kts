@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
-    alias(libs.plugins.spezi.compose)
-    alias(libs.plugins.spezi.desugaring)
+    alias(libs.plugins.grove.library)
+    alias(libs.plugins.grove.compose)
+    alias(libs.plugins.grove.desugaring)
 }
 
 android {
-    namespace = "edu.stanford.spezi.questionnaire"
+    namespace = "org.grovealliance.questionnaire"
 
     buildTypes {
         debug {

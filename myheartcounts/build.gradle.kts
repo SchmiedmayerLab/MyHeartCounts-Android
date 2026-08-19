@@ -8,9 +8,9 @@
 plugins {
     alias(libs.plugins.mhc.studybundle)
     alias(libs.plugins.paparazzi)
-    alias(libs.plugins.spezi.application)
-    alias(libs.plugins.spezi.compose)
-    alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.grove.application)
+    alias(libs.plugins.grove.compose)
+    alias(libs.plugins.grove.serialization)
 }
 
 android {

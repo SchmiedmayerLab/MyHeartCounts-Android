@@ -14,22 +14,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.SpeziScaffold
-import edu.stanford.spezi.ui.SpeziScaffoldState
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.theme.Colors
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveScaffold
+import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.theme.Colors
 
 /**
  * A placeholder screen rendering [title] centered within the scaffold.
  */
 data class PlaceholderScreenContent(
-    val scaffoldState: SpeziScaffoldState,
+    val scaffoldState: GroveScaffoldState,
     val title: StringResource,
 ) : ComposableContent {
     @Composable
     override fun Content(modifier: Modifier) {
-        SpeziScaffold(
+        GroveScaffold(
             state = scaffoldState,
         ) {
             Box(

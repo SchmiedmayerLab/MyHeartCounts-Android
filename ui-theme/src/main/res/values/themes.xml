@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 -->
 
 <resources>
-    <style name="Theme.Spezi.CardinalRed" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.Grove.CardinalRed" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/cardinal_red_background</item>
         <item name="android:colorBackground">@color/cardinal_red_background</item>
     </style>

@@ -138,12 +138,12 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 mhc-studybundle = { id = "mhc.studybundle", version = "unspecified" }
 mhc-studybundlefixture = { id = "mhc.studybundlefixture", version = "unspecified" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazziVersion" }
-spezi-application = { id = "spezi.application", version = "unspecified" }
-spezi-base = { id = "spezi.base", version = "unspecified" }
-spezi-compose = { id = "spezi.compose", version = "unspecified" }
-spezi-desugaring = { id = "spezi.desugaring", version = "unspecified" }
-spezi-library = { id = "spezi.library", version = "unspecified" }
-spezi-serialization = { id = "spezi.serialization", version = "unspecified" }
+grove-application = { id = "grove.application", version = "unspecified" }
+grove-base = { id = "grove.base", version = "unspecified" }
+grove-compose = { id = "grove.compose", version = "unspecified" }
+grove-desugaring = { id = "grove.desugaring", version = "unspecified" }
+grove-library = { id = "grove.library", version = "unspecified" }
+grove-serialization = { id = "grove.serialization", version = "unspecified" }
 
 # Please keep [bundles] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [bundles]

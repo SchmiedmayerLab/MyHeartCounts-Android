@@ -11,8 +11,8 @@ import androidx.lifecycle.ViewModel
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.ui.PlaceholderScreenContent
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.mutableScaffoldState
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.mutableScaffoldState
 
 /**
  * Backs the Heart Health tab, exposing its placeholder screen content and app bar.

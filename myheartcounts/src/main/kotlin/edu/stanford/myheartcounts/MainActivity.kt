@@ -30,14 +30,14 @@ import edu.stanford.myheartcounts.onboarding.OnboardingScreen
 import edu.stanford.myheartcounts.splash.SplashScreen
 import edu.stanford.myheartcounts.study.StudyScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
-import edu.stanford.spezi.account.AccountOverviewScreen
-import edu.stanford.spezi.core.dependency
-import edu.stanford.spezi.core.viewmodel.speziViewModel
-import edu.stanford.spezi.ui.ConsumeEvents
-import edu.stanford.spezi.ui.crossFade
-import edu.stanford.spezi.ui.horizontalSlideBackward
-import edu.stanford.spezi.ui.horizontalSlideForward
-import edu.stanford.spezi.ui.verticalModalEnter
+import org.grovealliance.account.AccountOverviewScreen
+import org.grovealliance.core.dependency
+import org.grovealliance.core.viewmodel.groveViewModel
+import org.grovealliance.ui.ConsumeEvents
+import org.grovealliance.ui.crossFade
+import org.grovealliance.ui.horizontalSlideBackward
+import org.grovealliance.ui.horizontalSlideForward
+import org.grovealliance.ui.verticalModalEnter
 
 /**
  * The single activity hosting the app. It renders the active top-level route in a [NavDisplay] and
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     private fun AppContent() {
-        val viewModel = speziViewModel<MainActivityViewModel>()
+        val viewModel = groveViewModel<MainActivityViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val backStack = rememberNavBackStack(state.initialRoot)
         NavigationEvents(backStack = backStack)

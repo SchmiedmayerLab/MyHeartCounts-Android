@@ -17,12 +17,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.stanford.myheartcounts.onboarding.OnboardingLink
-import edu.stanford.spezi.ui.AsyncTextButton
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.SpeziInputFieldComposable
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.theme.Spacings
 import kotlinx.coroutines.flow.Flow
+import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveInputFieldComposable
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.theme.Spacings
 
 /**
  * The content shown below an ineligibility or country-unavailability title: an optional [email] field
@@ -60,7 +60,7 @@ data class EmailField(
     @Composable
     override fun Content(modifier: Modifier) {
         val text by value.collectAsStateWithLifecycle(initialValue = "")
-        SpeziInputFieldComposable(
+        GroveInputFieldComposable(
             modifier = modifier.fillMaxWidth(),
             value = text,
             placeholder = placeholder.text(),

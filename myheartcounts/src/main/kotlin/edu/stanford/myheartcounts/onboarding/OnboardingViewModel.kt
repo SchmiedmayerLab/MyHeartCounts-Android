@@ -24,40 +24,40 @@ import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
-import edu.stanford.spezi.account.AccountLoginScreen
-import edu.stanford.spezi.consent.ConsentResponses
-import edu.stanford.spezi.consent.ConsentScreen
-import edu.stanford.spezi.core.logging.speziLogger
-import edu.stanford.spezi.resources.Strings
-import edu.stanford.spezi.ui.ActionSink
-import edu.stanford.spezi.ui.ActionSource
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.ConsumeEvents
-import edu.stanford.spezi.ui.DismissStyle
-import edu.stanford.spezi.ui.DisplayedEffect
-import edu.stanford.spezi.ui.EventSink
-import edu.stanford.spezi.ui.EventSourceFlow
-import edu.stanford.spezi.ui.ImageResource
-import edu.stanford.spezi.ui.PermissionResult
-import edu.stanford.spezi.ui.SpeziAppBar
-import edu.stanford.spezi.ui.SpeziScaffold
-import edu.stanford.spezi.ui.SpeziScaffoldState
-import edu.stanford.spezi.ui.SpeziToastDisplayStyle
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.horizontalSlideBackward
-import edu.stanford.spezi.ui.horizontalSlideForward
-import edu.stanford.spezi.ui.mutableScaffoldState
-import edu.stanford.spezi.ui.rememberPermissionRequester
-import edu.stanford.spezi.ui.showErrorToast
-import edu.stanford.spezi.ui.speziAppBar
-import edu.stanford.spezi.ui.validation.ValidationRule
-import edu.stanford.spezi.ui.validation.minimalEmail
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.grovealliance.account.AccountLoginScreen
+import org.grovealliance.consent.ConsentResponses
+import org.grovealliance.consent.ConsentScreen
+import org.grovealliance.core.logging.groveLogger
+import org.grovealliance.resources.Strings
+import org.grovealliance.ui.ActionSink
+import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.ConsumeEvents
+import org.grovealliance.ui.DismissStyle
+import org.grovealliance.ui.DisplayedEffect
+import org.grovealliance.ui.EventSink
+import org.grovealliance.ui.EventSourceFlow
+import org.grovealliance.ui.GroveAppBar
+import org.grovealliance.ui.GroveScaffold
+import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.GroveToastDisplayStyle
+import org.grovealliance.ui.ImageResource
+import org.grovealliance.ui.PermissionResult
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.horizontalSlideBackward
+import org.grovealliance.ui.horizontalSlideForward
+import org.grovealliance.ui.mutableScaffoldState
+import org.grovealliance.ui.rememberPermissionRequester
+import org.grovealliance.ui.showErrorToast
+import org.grovealliance.ui.validation.ValidationRule
+import org.grovealliance.ui.validation.minimalEmail
 import kotlin.time.Duration.Companion.seconds
 
 private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
@@ -75,13 +75,13 @@ class OnboardingViewModel(
     private val onboardingStepLayoutMapper: OnboardingStepLayoutMapper,
     private val notificationPermissionHandler: NotificationPermissionHandler,
 ) : ViewModel() {
-    private val logger by speziLogger()
+    private val logger by groveLogger()
     private val actionSource = ActionSource(::onAction)
     private val actionSink = actionSource.sink<OnboardingAction>()
     private val eventSink = EventSink<OnboardingEvent>()
-    private val scaffoldState = mutableScaffoldState(appBar = SpeziAppBar.Empty)
+    private val scaffoldState = mutableScaffoldState(appBar = GroveAppBar.Empty)
     private var hadRequestedPermissionsBefore = false
-    private val defaultAppBar = speziAppBar {
+    private val defaultAppBar = groveAppBar {
         back(::previousStep)
     }
 
@@ -162,19 +162,19 @@ class OnboardingViewModel(
                 val step = result.step
                 currentStep.update { stepState(step = step) }
                 val appBar = when (step) {
-                    OnboardingStep.Welcome -> SpeziAppBar.Empty
+                    OnboardingStep.Welcome -> GroveAppBar.Empty
                     OnboardingStep.Login -> null
-                    OnboardingStep.Eligibility -> speziAppBar {
+                    OnboardingStep.Eligibility -> groveAppBar {
                         title(MHCStrings.eligibility_title)
                         back(::previousStep)
                     }
 
-                    OnboardingStep.Comprehension -> speziAppBar {
+                    OnboardingStep.Comprehension -> groveAppBar {
                         title(MHCStrings.consent_survey_title)
                         back(::previousStep)
                     }
 
-                    OnboardingStep.Consent -> speziAppBar {
+                    OnboardingStep.Consent -> groveAppBar {
                         title(MHCStrings.onboarding_consent_title)
                         back(::previousStep)
                     }
@@ -187,7 +187,7 @@ class OnboardingViewModel(
 
     private fun showLearnMoreSheet(title: StringResource, content: StringResource) {
         val sheet = LearnMoreSheet(
-            appBar = speziAppBar {
+            appBar = groveAppBar {
                 title(title)
                 close { scaffoldState.dismissBottomSheet() }
             },
@@ -199,7 +199,7 @@ class OnboardingViewModel(
     @Suppress("SameParameterValue")
     private fun showWebViewSheet(url: String) {
         val sheet = WebViewSheet(
-            appBar = speziAppBar {
+            appBar = groveAppBar {
                 close { scaffoldState.dismissBottomSheet() }
             },
             url = url,
@@ -216,7 +216,7 @@ class OnboardingViewModel(
         scaffoldState.showToast(
             imageResource = ImageResource(Icons.Outlined.Email),
             message = StringResource(Strings.onboarding_waitlist_success),
-            displayStyle = SpeziToastDisplayStyle.DefaultLong,
+            displayStyle = GroveToastDisplayStyle.DefaultLong,
 
         )
         // TODO: Submit waitlistEmail to the launch waitlist backend.
@@ -273,14 +273,14 @@ class OnboardingViewModel(
  * [events] to fulfil one-shot requests such as system permission prompts.
  */
 data class OnboardingScreenContent(
-    val scaffoldState: SpeziScaffoldState,
+    val scaffoldState: GroveScaffoldState,
     val actionSink: ActionSink<OnboardingAction>,
     val events: EventSourceFlow<OnboardingEvent>,
     val currentStep: StateFlow<OnboardingStepState>,
 ) : ComposableContent {
     @Composable
     override fun Content(modifier: Modifier) {
-        SpeziScaffold(state = scaffoldState) {
+        GroveScaffold(state = scaffoldState) {
             val step by currentStep.collectAsStateWithLifecycle()
             BackHandler(enabled = step.step != OnboardingStep.Welcome) {
                 actionSink.push(OnboardingAction.BackPressed)

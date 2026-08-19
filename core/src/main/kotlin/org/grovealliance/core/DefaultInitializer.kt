@@ -1,0 +1,34 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.core
+
+import android.content.Context
+
+/**
+ * An interface for providing a default instance of any type [T] to be used in the dependency
+ * graph when no explicit registration is found in the configuration block of the [GroveApplication].
+ *
+ * Grove will check whether the companion object of the requested type implements this interface
+ * and, if so, call [create] to produce an instance automatically.
+ *
+ * Example usage:
+ *
+ * ```kotlin
+ * class MyService(val packageName: String) {
+ *
+ *     companion object : DefaultInitializer<MyService> {
+ *         override fun create(context: Context): MyService {
+ *             return MyService(packageName = context.packageName)
+ *         }
+ *     }
+ * }
+ * ```
+ */
+interface DefaultInitializer<out T : Any> {
+    fun create(context: Context): T
+}

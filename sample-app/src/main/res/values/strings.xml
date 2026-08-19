@@ -10,5 +10,5 @@ SPDX-License-Identifier: MIT
 -->
 
 <resources>
-    <string name="app_name">Spezi Samples</string>
+    <string name="app_name">Grove Samples</string>
 </resources>

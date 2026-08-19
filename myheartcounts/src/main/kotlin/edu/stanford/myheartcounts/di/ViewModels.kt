@@ -13,14 +13,14 @@ import edu.stanford.myheartcounts.home.HomeViewModel
 import edu.stanford.myheartcounts.onboarding.OnboardingViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksViewModel
-import edu.stanford.spezi.core.ConfigurationBuilder
-import edu.stanford.spezi.core.SpeziDsl
-import edu.stanford.spezi.core.viewmodel.viewModel
+import org.grovealliance.core.ConfigurationBuilder
+import org.grovealliance.core.GroveDsl
+import org.grovealliance.core.viewmodel.viewModel
 
 /**
- * Registers the app's ViewModels in the Spezi dependency graph.
+ * Registers the app's ViewModels in the Grove dependency graph.
  */
-@SpeziDsl
+@GroveDsl
 fun ConfigurationBuilder.appViewModels() {
     viewModel {
         MainActivityViewModel(

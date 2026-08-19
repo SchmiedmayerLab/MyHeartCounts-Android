@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
-    alias(libs.plugins.spezi.compose)
-    alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.grove.library)
+    alias(libs.plugins.grove.compose)
+    alias(libs.plugins.grove.serialization)
 }
 
 android {
-    namespace = "edu.stanford.spezi.health"
+    namespace = "org.grovealliance.health"
 }
 
 dependencies {

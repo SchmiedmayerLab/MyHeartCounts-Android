@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
+    alias(libs.plugins.grove.library)
     alias(libs.plugins.compose.compiler)
 }
 
 android {
-    namespace = "edu.stanford.spezi.core.viewmodel"
+    namespace = "org.grovealliance.core.viewmodel"
 
     buildFeatures {
         compose = true

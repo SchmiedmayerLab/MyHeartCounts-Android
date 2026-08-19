@@ -7,18 +7,18 @@
 
 package edu.stanford.myheartcounts.account
 
-import edu.stanford.spezi.account.AccountKeys
-import edu.stanford.spezi.account.InMemoryAccountService
-import edu.stanford.spezi.account.InMemoryAccountStorageProvider
-import edu.stanford.spezi.account.accountConfiguration
-import edu.stanford.spezi.core.ConfigurationBuilder
-import edu.stanford.spezi.core.SpeziDsl
+import org.grovealliance.account.AccountKeys
+import org.grovealliance.account.InMemoryAccountService
+import org.grovealliance.account.InMemoryAccountStorageProvider
+import org.grovealliance.account.accountConfiguration
+import org.grovealliance.core.ConfigurationBuilder
+import org.grovealliance.core.GroveDsl
 
 /**
  * Registers account management: the account service, storage, the keys required and collected at
  * sign-up, and every app-managed manual key.
  */
-@SpeziDsl
+@GroveDsl
 fun ConfigurationBuilder.account() {
     accountConfiguration(
         service = InMemoryAccountService(),

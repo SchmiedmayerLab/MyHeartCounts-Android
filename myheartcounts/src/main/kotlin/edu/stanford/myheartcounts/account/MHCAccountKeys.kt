@@ -10,11 +10,11 @@ package edu.stanford.myheartcounts.account
 import edu.stanford.myheartcounts.model.OnboardingStep
 import edu.stanford.myheartcounts.model.workout.NotificationTime
 import edu.stanford.myheartcounts.model.workout.WorkoutTypes
-import edu.stanford.spezi.account.AccountDetails
-import edu.stanford.spezi.account.AccountKeys
-import edu.stanford.spezi.account.InitialValue
-import edu.stanford.spezi.foundation.InstantSerializer
 import kotlinx.serialization.builtins.serializer
+import org.grovealliance.account.AccountDetails
+import org.grovealliance.account.AccountKeys
+import org.grovealliance.account.InitialValue
+import org.grovealliance.foundation.InstantSerializer
 import java.time.Instant
 
 /**

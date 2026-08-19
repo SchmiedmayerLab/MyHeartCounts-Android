@@ -13,7 +13,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
- * A participant's gender identity. Distinct from [edu.stanford.spezi.account.GenderIdentity], which
+ * A participant's gender identity. Distinct from [org.grovealliance.account.GenderIdentity], which
  * has a different set of cases.
  */
 @Serializable(with = MHCGenderIdentity.Serializer::class)

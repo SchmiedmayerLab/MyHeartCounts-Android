@@ -8,13 +8,13 @@
 package edu.stanford.myheartcounts.onboarding
 
 import androidx.compose.runtime.Composable
-import edu.stanford.spezi.core.viewmodel.speziViewModel
+import org.grovealliance.core.viewmodel.groveViewModel
 
 /**
  * Entry point for the onboarding flow, rendering the content owned by the [OnboardingViewModel].
  */
 @Composable
 fun OnboardingScreen() {
-    val viewModel = speziViewModel<OnboardingViewModel>()
+    val viewModel = groveViewModel<OnboardingViewModel>()
     viewModel.content.Content()
 }

@@ -23,15 +23,15 @@ import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMa
 import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMapperImpl
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapperImpl
-import edu.stanford.spezi.core.ConfigurationBuilder
-import edu.stanford.spezi.core.SpeziDsl
-import edu.stanford.spezi.storage.local.KeyValueStorageFactory
-import edu.stanford.spezi.storage.local.KeyValueStorageType
+import org.grovealliance.core.ConfigurationBuilder
+import org.grovealliance.core.GroveDsl
+import org.grovealliance.storage.local.KeyValueStorageFactory
+import org.grovealliance.storage.local.KeyValueStorageType
 
 /**
  * Registers the app's services: navigation, notifications, onboarding, and storage.
  */
-@SpeziDsl
+@GroveDsl
 fun ConfigurationBuilder.appConfigurations() {
     singleton<Navigator> { NavigatorImpl() }
     singleton<StudyAppBarProvider> {

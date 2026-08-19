@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
+    alias(libs.plugins.grove.library)
 }
 
 android {
-    namespace = "edu.stanford.spezi.core.coroutines"
+    namespace = "org.grovealliance.core.coroutines"
 }
 
 dependencies {

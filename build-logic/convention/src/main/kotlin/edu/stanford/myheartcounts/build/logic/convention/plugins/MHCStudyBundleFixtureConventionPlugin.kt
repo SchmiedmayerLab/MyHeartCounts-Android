@@ -9,7 +9,7 @@ package edu.stanford.myheartcounts.build.logic.convention.plugins
 
 import com.android.build.api.variant.HostTestBuilder
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import edu.stanford.spezi.build.logic.convention.model.PluginId
+import org.grovealliance.build.logic.convention.model.PluginId
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure

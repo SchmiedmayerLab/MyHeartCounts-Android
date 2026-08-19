@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT
 
 ## Overview
 
-The `build-logic` folder contains Spezi specific convention plugins that are used for common
+The `build-logic` folder contains Grove specific convention plugins that are used for common
 module configurations.
 
 ## Features
@@ -42,8 +42,8 @@ To apply a convention plugin, add the following to your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-  alias(libs.plugins.spezi.application)
-  alias(libs.plugins.spezi.compose)
+  alias(libs.plugins.grove.application)
+  alias(libs.plugins.grove.compose)
 }
 ```
 
@@ -51,12 +51,12 @@ plugins {
 
 Current list of convention plugins:
 
-- [`spezi.application`](convention/src/main/kotlin/edu/stanford/spezi/build/logic/convention/plugins/SpeziApplicationConventionPlugin.kt)
-  - Convention plugin that applies by default `com.android.application` and `org.jetbrains.kotlin.android`. Additionally it applies the default project configuration of `spezi.base` plugin.
-- [`spezi.compose`](convention/src/main/kotlin/edu/stanford/spezi/build/logic/convention/plugins/SpeziComposeConventionPlugin.kt)
-  - - Convention plugin that applies the required configuration and dependencies needed for `Compose`. Note that you need to additionally apply either `spezi.application` or `spezi.library` plugins.
-- [`spezi.base`](convention/src/main/kotlin/edu/stanford/spezi/build/logic/convention/plugins/SpeziBaseConfigConventionPlugin.kt)
-  - Base convention plugin used by all modules of the project. It makes sure to configure consistently versions and compile options. This plugin is advisable to be used, for modules that are added as a dependency in one of the `spezi.application` or `spezi.library` plugins.
-- [`spezi.library`](convention/src/main/kotlin/edu/stanford/spezi/build/logic/convention/plugins/SpeziLibraryConventionPlugin.kt)
-  - Convention plugin that applies by default `com.android.library` and `org.jetbrains.kotlin.android`. Additionally it applies the default project configuration of `spezi.base` plugin.
+- [`grove.application`](convention/src/main/kotlin/org/grovealliance/build/logic/convention/plugins/GroveApplicationConventionPlugin.kt)
+  - Convention plugin that applies by default `com.android.application` and `org.jetbrains.kotlin.android`. Additionally it applies the default project configuration of `grove.base` plugin.
+- [`grove.compose`](convention/src/main/kotlin/org/grovealliance/build/logic/convention/plugins/GroveComposeConventionPlugin.kt)
+  - - Convention plugin that applies the required configuration and dependencies needed for `Compose`. Note that you need to additionally apply either `grove.application` or `grove.library` plugins.
+- [`grove.base`](convention/src/main/kotlin/org/grovealliance/build/logic/convention/plugins/GroveBaseConfigConventionPlugin.kt)
+  - Base convention plugin used by all modules of the project. It makes sure to configure consistently versions and compile options. This plugin is advisable to be used, for modules that are added as a dependency in one of the `grove.application` or `grove.library` plugins.
+- [`grove.library`](convention/src/main/kotlin/org/grovealliance/build/logic/convention/plugins/GroveLibraryConventionPlugin.kt)
+  - Convention plugin that applies by default `com.android.library` and `org.jetbrains.kotlin.android`. Additionally it applies the default project configuration of `grove.base` plugin.
 

@@ -61,7 +61,7 @@ out/
 build/
 
 # track build-logic module
-!**/edu/stanford/spezi/build
+!**/org/grovealliance/build
 !**/edu/stanford/myheartcounts/build
 
 # built application files

@@ -8,9 +8,9 @@
 package edu.stanford.myheartcounts.navigation
 
 import androidx.navigation3.runtime.NavKey
-import edu.stanford.spezi.ui.EventSink
-import edu.stanford.spezi.ui.EventSourceFlow
 import kotlinx.serialization.Serializable
+import org.grovealliance.ui.EventSink
+import org.grovealliance.ui.EventSourceFlow
 
 /**
  * App-wide navigation dispatcher. Producers call [push]; consumers collect [events] and apply
