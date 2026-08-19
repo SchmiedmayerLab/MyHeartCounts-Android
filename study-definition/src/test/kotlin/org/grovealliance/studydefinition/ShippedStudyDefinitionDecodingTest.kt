@@ -11,6 +11,7 @@ import com.google.common.truth.Truth.assertThat
 import org.grovealliance.scheduler.NotificationThread
 import org.junit.Test
 import java.time.Duration
+import java.util.Locale
 
 /**
  * Decodes the study definition the app ships, which is produced by the study authoring tooling rather
@@ -19,7 +20,7 @@ import java.time.Duration
 class ShippedStudyDefinitionDecodingTest {
     private companion object {
         const val RESOURCE = "/fixtures/mhcStudyDefinition.json"
-        const val EXPECTED_REVISION = 40u
+        const val EXPECTED_REVISION = 42u
         const val EXPECTED_COMPONENTS = 20
         const val EXPECTED_SCHEDULES = 18
         const val ECG_IDENTIFIER = "edu.stanford.MyHeartCounts.activeTask.ecg"
@@ -35,7 +36,7 @@ class ShippedStudyDefinitionDecodingTest {
         assertThat(definition.studyRevision).isEqualTo(EXPECTED_REVISION)
         assertThat(definition.components).hasSize(EXPECTED_COMPONENTS)
         assertThat(definition.componentSchedules).hasSize(EXPECTED_SCHEDULES)
-        assertThat(definition.metadata.title).isEqualTo("My Heart Counts")
+        assertThat(definition.metadata.title.resolve(Locale.US)).isEqualTo("My Heart Counts")
     }
 
     @Test
@@ -47,8 +48,8 @@ class ShippedStudyDefinitionDecodingTest {
             .activeTask
 
         // then
-        assertThat(activeTask.title).isEqualTo("ECG")
-        assertThat(activeTask.subtitle).isEqualTo("Record an ECG using your Apple Watch")
+        assertThat(activeTask.title.resolve(Locale.US)).isEqualTo("ECG")
+        assertThat(activeTask.subtitle?.resolve(Locale.US)).isEqualTo("Record an ECG using your Apple Watch")
     }
 
     @Test

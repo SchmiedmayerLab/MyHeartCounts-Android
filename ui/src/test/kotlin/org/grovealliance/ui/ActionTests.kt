@@ -46,7 +46,7 @@ class ActionTests {
         // given
         val source = ActionSource<TestAction>()
 
-        // when / then — no exception expected
+        // when / then
         source.sink<TestAction>().push(TestAction.Refresh)
     }
 
@@ -92,7 +92,7 @@ class ActionTests {
         source.clear()
         source.sink<TestAction>().push(TestAction.Dismiss)
 
-        // then — only the pre-clear push was delivered
+        // then
         assertThat(received).containsExactly(TestAction.Refresh)
     }
 

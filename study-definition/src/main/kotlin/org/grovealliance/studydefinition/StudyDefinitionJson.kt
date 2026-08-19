@@ -21,7 +21,7 @@ object StudyDefinitionJson {
     /**
      * The schema version this model decodes.
      */
-    const val SCHEMA_VERSION: String = "0.12.1"
+    const val SCHEMA_VERSION: String = "0.14.0"
 
     private const val SCHEMA_VERSION_KEY = "schemaVersion"
 

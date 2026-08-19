@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.stanford.myheartcounts.onboarding.OnboardingLink
+import edu.stanford.myheartcounts.ui.ExternalLink
 import kotlinx.coroutines.flow.Flow
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.ComposableContent
@@ -31,7 +31,7 @@ import org.grovealliance.ui.theme.Spacings
 data class IneligibleContent(
     val email: EmailField?,
     val actionButton: AsyncTextButton?,
-    val link: OnboardingLink,
+    val link: ExternalLink,
 ) : ComposableContent {
 
     @Composable

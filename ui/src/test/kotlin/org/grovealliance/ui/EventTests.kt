@@ -60,7 +60,7 @@ class EventTests {
         sink.push(TestEvent.ShowToast("old"))
         sink.push(TestEvent.Dismiss)
 
-        // when — push a new ShowToast; the old one should be removed, Dismiss stays
+        // when
         sink.push(TestEvent.ShowToast("new"))
 
         // then
@@ -88,7 +88,7 @@ class EventTests {
         // given
         val sink = EventSink<TestEvent>()
 
-        // when — two ShowToast events in same batch; only the last should survive
+        // when
         sink.pushAll(listOf(TestEvent.ShowToast("first"), TestEvent.ShowToast("second")))
 
         // then
@@ -105,7 +105,7 @@ class EventTests {
         // when
         sink.pushAll(listOf(TestEvent.NavigateHome, TestEvent.ShowToast("updated")))
 
-        // then — existing ShowToast replaced, NavigateHome added
+        // then
         assertThat(sink.source().consumeAll())
             .containsExactly(TestEvent.NavigateHome, TestEvent.ShowToast("updated"))
             .inOrder()

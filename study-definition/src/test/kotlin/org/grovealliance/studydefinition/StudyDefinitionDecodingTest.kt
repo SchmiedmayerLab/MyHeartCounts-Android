@@ -13,6 +13,7 @@ import org.grovealliance.foundation.fixtures.UUIDFixtures
 import org.grovealliance.scheduler.AllowedCompletionPolicy
 import org.grovealliance.studydefinition.fixtures.StudyBundleFixtures
 import org.junit.Test
+import java.util.Locale
 
 class StudyDefinitionDecodingTest {
 
@@ -27,7 +28,7 @@ class StudyDefinitionDecodingTest {
         // then
         assertThat(definition.studyRevision).isEqualTo(1u)
         assertThat(definition.id).isEqualTo(UUIDFixtures.repeating('1'))
-        assertThat(definition.metadata.title).isEqualTo("Example Study")
+        assertThat(definition.metadata.title.resolve(Locale.US)).isEqualTo("Example Study")
         assertThat(definition.components).hasSize(5)
         assertThat(definition.componentSchedules).hasSize(4)
     }
@@ -64,7 +65,6 @@ class StudyDefinitionDecodingTest {
 
         // then
         assertThat(task.activeTask.identifier).isEqualTo("tapping")
-        assertThat(task.activeTask.title).isEqualTo("Tapping Test")
     }
 
     @Test
@@ -115,7 +115,8 @@ class StudyDefinitionDecodingTest {
     @Test(expected = IncompatibleSchemaException::class)
     fun `rejects an incompatible schema version`() {
         // given
-        val json = StudyBundleFixtures.exampleDefinitionJson().replace("\"0.12.1\"", "\"0.11.0\"")
+        val json = StudyBundleFixtures.exampleDefinitionJson()
+            .replace("\"${StudyDefinitionJson.SCHEMA_VERSION}\"", "\"0.11.0\"")
 
         // when / then
         StudyDefinitionJson.decode(json)

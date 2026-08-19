@@ -26,6 +26,15 @@ path = [
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"
 
+# Screenshot baselines are generated per test, so they are covered by pattern rather than by a
+# sidecar each.
+[[annotations]]
+path = [
+    "**/src/test/snapshots/**/*.png",
+]
+SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"
+
 # Android's resource merger rejects adjacent .license sidecars in res/.
 [[annotations]]
 path = [

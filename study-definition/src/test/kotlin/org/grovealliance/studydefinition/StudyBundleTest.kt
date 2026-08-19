@@ -58,7 +58,7 @@ class StudyBundleTest {
     }
 
     @Test
-    fun `derives display title and subtitle from resources`() {
+    fun `derives display title and subtitle for every component kind`() {
         // given
         val bundle = openExample()
         val components = bundle.studyDefinition.components
@@ -78,6 +78,12 @@ class StudyBundleTest {
         // timed walking test derives its title
         val walk = components.filterIsInstance<Component.TimedWalkingTest>().single()
         assertThat(bundle.displayTitle(walk, enUs)).isEqualTo("6-Minute Walk Test")
+
+        // custom active task carries its own localized text
+        val activeTask = components.filterIsInstance<Component.CustomActiveTask>().single()
+        assertThat(bundle.displayTitle(activeTask, enUs)).isEqualTo("Tapping Test")
+        assertThat(bundle.displaySubtitle(activeTask, enUs))
+            .isEqualTo("Tap the screen as quickly as you can for ten seconds.")
 
         // health data collection has no title
         val health = components.filterIsInstance<Component.HealthDataCollection>().single()

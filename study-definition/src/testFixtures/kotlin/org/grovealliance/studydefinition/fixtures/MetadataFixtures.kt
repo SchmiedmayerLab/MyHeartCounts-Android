@@ -10,6 +10,7 @@ package org.grovealliance.studydefinition.fixtures
 import org.grovealliance.foundation.fixtures.UUIDFixtures
 import org.grovealliance.studydefinition.EnrollmentConditions
 import org.grovealliance.studydefinition.FileReference
+import org.grovealliance.studydefinition.LocalizedText
 import org.grovealliance.studydefinition.Metadata
 import org.grovealliance.studydefinition.ParticipationCriterion
 import java.util.UUID
@@ -20,14 +21,14 @@ import java.util.UUID
 object MetadataFixtures {
     fun create(
         id: UUID = UUIDFixtures.zero,
-        title: String = "",
-        shortTitle: String = "",
+        title: LocalizedText = LocalizedText.empty,
+        shortTitle: LocalizedText = LocalizedText.empty,
         icon: Metadata.Icon? = null,
-        explanationText: String = "",
-        shortExplanationText: String = "",
+        explanationText: LocalizedText = LocalizedText.empty,
+        shortExplanationText: LocalizedText = LocalizedText.empty,
         studyDependency: UUID? = null,
         participationCriterion: ParticipationCriterion = ParticipationCriterionFixtures.create(),
-        enrollmentConditions: EnrollmentConditions = EnrollmentConditionsFixtures.create(),
+        enrollmentConditions: EnrollmentConditions? = null,
         consentFileRef: FileReference? = null,
     ): Metadata = Metadata(
         id = id,

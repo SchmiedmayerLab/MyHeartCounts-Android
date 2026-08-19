@@ -15,12 +15,10 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.JsonUnquotedLiteral
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -117,36 +115,6 @@ internal object SparseDateComponentsSerializer : KSerializer<DateComponents> {
             if (value.second != 0) put("second", JsonPrimitive(value.second))
         }
         encoder.asJson().encodeJsonElement(JsonObject(fields))
-    }
-}
-
-/**
- * Reads display text that may be written either as a plain string or as a localizable value, of
- * which only the authored text is kept.
- */
-internal object DisplayTextSerializer : KSerializer<String> {
-    private const val DEFAULT_VALUE = "defaultValue"
-    private const val KEY = "key"
-
-    override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("org.grovealliance.studydefinition.DisplayText")
-
-    override fun deserialize(decoder: Decoder): String =
-        decoder.asJson().decodeJsonElement().authoredText()
-
-    override fun serialize(encoder: Encoder, value: String) {
-        encoder.asJson().encodeJsonElement(JsonPrimitive(value))
-    }
-
-    /**
-     * The authored text of [element], whether written plainly or as a localizable value.
-     */
-    private fun JsonElement.authoredText(): String {
-        (this as? JsonPrimitive)?.contentOrNull?.let { return it }
-        val fields = jsonObject
-        val text = fields[DEFAULT_VALUE]?.jsonObject?.get(KEY)?.jsonPrimitive?.contentOrNull
-            ?: fields[KEY]?.jsonPrimitive?.contentOrNull
-        return requireNotNull(text) { "Missing display text" }
     }
 }
 

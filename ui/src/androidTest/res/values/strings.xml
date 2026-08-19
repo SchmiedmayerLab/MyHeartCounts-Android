@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This source file is part of the My Heart Counts Android open-source project
+  ~
+  ~ SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+  ~
+  ~ SPDX-License-Identifier: MIT
+  -->
+<resources>
+    <plurals name="test_task_count">
+        <item quantity="one">%d task</item>
+        <item quantity="other">%d tasks</item>
+    </plurals>
+    <plurals name="test_named_count">
+        <item quantity="one">%s has one</item>
+        <item quantity="other">%s has many</item>
+    </plurals>
+</resources>

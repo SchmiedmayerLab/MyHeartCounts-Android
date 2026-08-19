@@ -30,12 +30,16 @@ import org.grovealliance.consent.ConsentConfiguration
 import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.consent.SignatureMetadata
 import org.grovealliance.consent.SignatureStroke
+import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.markdown.MarkdownDocument
+import org.grovealliance.resources.Strings
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveErrorLayout
 import org.grovealliance.ui.LoadingLayout
+import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Spacings
 
 /**
@@ -44,9 +48,11 @@ import org.grovealliance.ui.theme.Spacings
  */
 internal class ConsentViewModel(
     configuration: ConsentConfiguration,
-    mapper: ConsentLayoutMapper,
-    dataSource: ConsentDocumentDataSource,
+    private val mapper: ConsentLayoutMapper,
+    private val dataSource: ConsentDocumentDataSource,
 ) : ViewModel() {
+
+    private val logger by groveLogger()
 
     private var consentCallback: (suspend (ConsentResponses) -> Unit)? = null
 
@@ -64,20 +70,44 @@ internal class ConsentViewModel(
     )
 
     init {
+        load()
+    }
+
+    /**
+     * Loads the configured document and maps it into the form, replacing whatever is on screen.
+     */
+    private fun load() {
+        screenState.update { ConsentLayoutState.Loading }
         viewModelScope.launch {
-            val newState = mapper.map(
-                input = ConsentLayoutInput(
-                    document = dataSource.loadDocument(),
-                    initialMetadata = initialMetadata,
-                    responses = responses,
-                    actionSink = actionSink,
-                    mainActionEnabled = isCompleteFlow(),
-                    mainAction = ::onConsent,
-                ),
-            )
-            screenState.update { ConsentLayoutState.Content(newState) }
+            runCatching { dataSource.loadDocument() }
+                .onSuccess { document ->
+                    val layout = mapper.map(
+                        input = ConsentLayoutInput(
+                            document = document,
+                            initialMetadata = initialMetadata,
+                            responses = responses,
+                            actionSink = actionSink,
+                            mainActionEnabled = isCompleteFlow(),
+                            mainAction = ::onConsent,
+                        ),
+                    )
+                    screenState.update { ConsentLayoutState.Content(layout) }
+                }
+                .onFailure { failure ->
+                    logger.e(failure) { "Failed to load the consent document" }
+                    screenState.update { ConsentLayoutState.Error(errorLayout()) }
+                }
         }
     }
+
+    private fun errorLayout() = GroveErrorLayout(
+        title = StringResource(Strings.consent_error_title),
+        message = StringResource(Strings.consent_error_message),
+        primaryButton = AsyncTextButton(
+            title = StringResource(Strings.consent_error_retry),
+            action = { load() },
+        ),
+    )
 
     private fun onAction(action: ConsentAction) {
         when (action) {
@@ -159,7 +189,7 @@ internal data class ConsentScreenLayout(
 }
 
 /**
- * Represents the loading or ready state of the consent form layout.
+ * Represents the loading, failed, or ready state of the consent form layout.
  */
 internal sealed interface ConsentLayoutState {
     val layout: ComposableContent
@@ -167,6 +197,11 @@ internal sealed interface ConsentLayoutState {
     data object Loading : ConsentLayoutState {
         override val layout = LoadingLayout()
     }
+
+    /**
+     * The document could not be loaded; [layout] offers a retry.
+     */
+    data class Error(override val layout: GroveErrorLayout) : ConsentLayoutState
 
     data class Content(override val layout: ConsentContentLayout) : ConsentLayoutState
 }

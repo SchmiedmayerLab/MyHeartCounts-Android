@@ -10,6 +10,7 @@
 package org.grovealliance.ui
 
 import android.content.Context
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -34,6 +35,16 @@ sealed interface StringResource {
     }
 
     @Immutable
+    private data class QuantityStringResource(
+        @PluralsRes private val id: Int,
+        private val quantity: Int,
+        private val args: List<Any>,
+    ) : StringResource {
+        override fun get(context: Context): String =
+            context.resources.getQuantityString(id, quantity, *args.toTypedArray())
+    }
+
+    @Immutable
     private data class CompositeStringResource(
         private val lhs: StringResource,
         private val rhs: StringResource,
@@ -53,5 +64,16 @@ sealed interface StringResource {
 
         operator fun invoke(text: String): StringResource =
             TextStringResource(text)
+
+        /**
+         * A string selected by [quantity] from a plurals resource, which also supplies the first
+         * format argument unless [args] is given.
+         */
+        fun quantity(@PluralsRes id: Int, quantity: Int, vararg args: Any): StringResource =
+            QuantityStringResource(
+                id = id,
+                quantity = quantity,
+                args = args.toList().ifEmpty { listOf(quantity) },
+            )
     }
 }

@@ -22,6 +22,7 @@ import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
 import edu.stanford.myheartcounts.onboarding.eligibility.LinkRow
 import edu.stanford.myheartcounts.onboarding.eligibility.Section
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
+import edu.stanford.myheartcounts.ui.ExternalLink
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.onboarding.OnboardingInformation
 import org.grovealliance.onboarding.OnboardingLayout
@@ -247,7 +248,7 @@ class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
         onClose = { },
     )
 
-    private fun studyWebsiteLink() = OnboardingLink(
+    private fun studyWebsiteLink() = ExternalLink(
         text = StringResource(MHCStrings.eligibility_learn_more),
         onClicked = { },
     )

@@ -58,23 +58,6 @@ class SwiftCodableSerializersTest {
     }
 
     @Test
-    fun `decodes display text from a localizable value`() {
-        val text = json.decodeFromString(
-            DisplayTextSerializer,
-            """{"defaultValue":{"arguments":[],"key":"ECG"},"bundleURL":"file:///","key":"ECG"}""",
-        )
-
-        assertThat(text).isEqualTo("ECG")
-    }
-
-    @Test
-    fun `decodes display text from a plain string`() {
-        val text = json.decodeFromString(DisplayTextSerializer, "\"ECG\"")
-
-        assertThat(text).isEqualTo("ECG")
-    }
-
-    @Test
     fun `decodes sample types from their storage wrapper`() {
         val types = json.decodeFromString(
             SampleTypesSerializer,

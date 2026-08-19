@@ -24,6 +24,7 @@ import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
+import edu.stanford.myheartcounts.study.StudyEnroller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +75,7 @@ class OnboardingViewModel(
     private val onboardingStepProvider: OnboardingStepProvider,
     private val onboardingStepLayoutMapper: OnboardingStepLayoutMapper,
     private val notificationPermissionHandler: NotificationPermissionHandler,
+    private val studyEnroller: StudyEnroller,
 ) : ViewModel() {
     private val logger by groveLogger()
     private val actionSource = ActionSource(::onAction)
@@ -260,6 +262,10 @@ class OnboardingViewModel(
             else -> 0.seconds
         }
         delay(delay) // TODO: Demo purposes only, remove when real work is done in the step
+        if (step == OnboardingStep.FinalEnrollment) {
+            studyEnroller.enroll()
+                .onFailure { logger.e(it) { "Enrollment failed; continuing into the app." } }
+        }
         when (step) {
             OnboardingStep.CountryUnavailable -> joinWaitlist()
             else -> handle(result = onboardingStepProvider.getNext(step, answers.value))
