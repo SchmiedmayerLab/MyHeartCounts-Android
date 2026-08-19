@@ -13,11 +13,11 @@ import edu.stanford.myheartcounts.onboarding.OnboardingAnswers
 import edu.stanford.myheartcounts.onboarding.OnboardingStep
 import edu.stanford.myheartcounts.onboarding.OnboardingStepInput
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
-import edu.stanford.spezi.ui.AsyncTextButton
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.StringResource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.StringResource
 
 /**
  * Builds the [ComposableContent] for the eligibility step of the onboarding flow.

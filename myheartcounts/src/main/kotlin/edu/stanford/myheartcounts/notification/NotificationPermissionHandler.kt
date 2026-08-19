@@ -9,7 +9,7 @@ package edu.stanford.myheartcounts.notification
 
 import android.Manifest
 import android.os.Build
-import edu.stanford.spezi.storage.local.KeyValueStorage
+import org.grovealliance.storage.local.KeyValueStorage
 
 /**
  * Determines whether the user has granted permission to post notifications.

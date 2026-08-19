@@ -1,0 +1,50 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.ui
+
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import org.grovealliance.testing.ui.onAllNodes
+import org.grovealliance.testing.ui.onNodeWithIdentifier
+import org.junit.Rule
+import org.junit.Test
+
+class RepeatingLazyColumnTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    @Test
+    fun testRepeatingLazyColumn() {
+        val title = "#same"
+        val count = 3
+        val root = Identifier.ROOT
+        composeTestRule.setContent {
+            RepeatingLazyColumn(
+                modifier = Modifier.testIdentifier(root),
+                itemCount = count,
+                content = {
+                    Text(
+                        modifier = Modifier
+                            .testIdentifier(Identifier.CONTENT),
+                        text = title
+                    )
+                }
+            )
+        }
+
+        composeTestRule.onNodeWithIdentifier(root).assertIsDisplayed()
+        composeTestRule.onAllNodes(Identifier.CONTENT).assertCountEquals(count)
+    }
+
+    private enum class Identifier {
+        ROOT, CONTENT
+    }
+}

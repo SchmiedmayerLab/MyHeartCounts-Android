@@ -1,0 +1,81 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.ui
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import org.grovealliance.ui.theme.Colors
+import org.grovealliance.ui.theme.GroveTheme
+import org.grovealliance.ui.theme.Sizes
+import org.grovealliance.ui.theme.ThemePreviews
+
+@Composable
+fun AsyncSwitch(
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = isLoading.not(),
+) {
+    Box(
+        modifier = modifier.height(Sizes.Icon.medium)
+    ) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Colors.primary,
+                )
+            }
+        } else {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+}
+
+private class AsyncSwitchPreviewParameterProvider : PreviewParameterProvider<AsyncSwitchState> {
+    override val values = sequenceOf(
+        AsyncSwitchState(isLoading = true, checked = false),
+        AsyncSwitchState(isLoading = false, checked = true),
+        AsyncSwitchState(isLoading = false, checked = false)
+    )
+}
+
+private data class AsyncSwitchState(
+    val isLoading: Boolean,
+    val checked: Boolean,
+)
+
+@ThemePreviews
+@Composable
+private fun AsyncSwitchPreview(
+    @PreviewParameter(AsyncSwitchPreviewParameterProvider::class) state: AsyncSwitchState,
+) {
+    GroveTheme {
+        AsyncSwitch(
+            isLoading = state.isLoading,
+            checked = state.checked,
+            onCheckedChange = {},
+        )
+    }
+}

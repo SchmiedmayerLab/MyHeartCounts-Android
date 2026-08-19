@@ -7,13 +7,13 @@
 
 package edu.stanford.myheartcounts.account
 
-import edu.stanford.spezi.account.AccountKey
-import edu.stanford.spezi.account.AccountKeyOptions
-import edu.stanford.spezi.account.InitialValue
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.account.DataDisplayComposable
-import edu.stanford.spezi.ui.account.DataEntryComposable
 import kotlinx.serialization.KSerializer
+import org.grovealliance.account.AccountKey
+import org.grovealliance.account.AccountKeyOptions
+import org.grovealliance.account.InitialValue
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.account.DataDisplayComposable
+import org.grovealliance.ui.account.DataEntryComposable
 import kotlin.reflect.KClass
 
 /**

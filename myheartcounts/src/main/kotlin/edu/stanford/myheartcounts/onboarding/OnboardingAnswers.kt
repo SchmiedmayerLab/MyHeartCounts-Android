@@ -8,7 +8,7 @@
 package edu.stanford.myheartcounts.onboarding
 
 import edu.stanford.myheartcounts.model.Country
-import edu.stanford.spezi.consent.ConsentResponses
+import org.grovealliance.consent.ConsentResponses
 
 /**
  * The answers collected across the onboarding steps. Each yes/no field is `null` until answered.

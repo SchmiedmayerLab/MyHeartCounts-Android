@@ -9,7 +9,7 @@ package edu.stanford.myheartcounts.build.logic.convention.plugins
 
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.BuildConfigField
-import edu.stanford.spezi.build.logic.convention.model.PluginId
+import org.grovealliance.build.logic.convention.model.PluginId
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -102,7 +102,7 @@ internal fun MHCExportStudyBundle.applyStudyBundleConventions(project: Project) 
     rootDirectory.set(project.rootProject.layout.projectDirectory)
     exporterSources.from(
         packageDirectory.file("Package.swift"),
-        // Pins the dependency graph, so a Spezi bump re-runs the export even when the
+        // Pins the dependency graph, so a Grove bump re-runs the export even when the
         // submodule's own sources are untouched.
         packageDirectory.file("Package.resolved"),
         packageDirectory.dir("Sources")

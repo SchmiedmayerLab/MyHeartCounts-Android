@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
-    alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.grove.library)
+    alias(libs.plugins.grove.serialization)
 }
 
 android {
-    namespace = "edu.stanford.spezi.storage.credential"
+    namespace = "org.grovealliance.storage.credential"
 }
 
 dependencies {

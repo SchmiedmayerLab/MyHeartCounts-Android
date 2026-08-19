@@ -7,12 +7,12 @@
 
 plugins {
     alias(libs.plugins.mhc.studybundlefixture)
-    alias(libs.plugins.spezi.library)
-    alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.grove.library)
+    alias(libs.plugins.grove.serialization)
 }
 
 android {
-    namespace = "edu.stanford.spezi.studydefinition"
+    namespace = "org.grovealliance.studydefinition"
     testFixtures { enable = true }
 }
 

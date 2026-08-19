@@ -1,0 +1,214 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.sample.app.health
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.metadata.Metadata
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.grovealliance.health.AnyRecordType
+import org.grovealliance.health.Health
+import org.grovealliance.health.HealthQueryTimeRange
+import org.grovealliance.health.RecordType
+import org.grovealliance.sample.app.NavigationEvent
+import org.grovealliance.sample.app.Navigator
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.DisplayedEffect
+import org.grovealliance.ui.GroveScaffold
+import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.LoadingLayout
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.mutableScaffoldState
+import org.grovealliance.ui.theme.Spacings
+import java.time.Instant
+import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
+
+class HealthViewModel(
+    private val navigator: Navigator,
+    private val health: Health,
+) : ViewModel() {
+    private val scaffoldState = mutableScaffoldState(
+        appBar = groveAppBar {
+            title("Health")
+            back { navigator.navigateTo(NavigationEvent.PopBackStack) }
+        }
+    )
+    private val _uiState = MutableStateFlow<HealthUiState>(HealthUiState.Loading)
+
+    val content = HealthScreenContent(
+        scaffoldState = scaffoldState.asScaffoldState(),
+        onDisplayed = ::update,
+        state = _uiState.asStateFlow(),
+    )
+
+    init {
+        viewModelScope.launch {
+            health.isFullyAuthorizedState.collect {
+                update()
+            }
+        }
+    }
+
+    private fun update() {
+        viewModelScope.launch {
+            val dataAccessRequirements = health.dataAccessRequirements
+
+            val permissionSection = PermissionsSection(
+                title = "Permissions",
+                action = if (health.isFullyAuthorizedState.value) {
+                    null
+                } else {
+                    PermissionAction(
+                        onClick = {
+                            health.requestPermissionsIfNeeded(activity = it)
+                        }
+                    )
+                },
+                items = dataAccessRequirements.read.map { recordType ->
+                    buildPermissionItem(record = recordType, isRead = true)
+                } + dataAccessRequirements.write.map { recordType ->
+                    buildPermissionItem(record = recordType, isRead = false)
+                }
+            )
+            val queriesSection = QueriesSection(
+                title = "Today's Records",
+                queries = dataAccessRequirements.read.map {
+                    var totalRecords = 0
+                    QueriedRecordItem(
+                        title = StringResource(label(it)),
+                        description = health.continuousQuery(
+                            type = it,
+                            interval = 5.seconds,
+                            timeRange = HealthQueryTimeRange.today(),
+                        ).map { result ->
+                            val currentBatch = result.added.size
+                            totalRecords += currentBatch
+                            StringResource("Received records: (Total: $totalRecords, New: $currentBatch)")
+                        }
+                    )
+                }
+            )
+            val insertSection = InsertSection(
+                title = "Insert sample data",
+                description = "Insert a sample steps record and observe it under 'Today's Records' if read permission is granted.",
+                enabled = health.isAuthorizedToWrite(RecordType.steps),
+                onClick = ::insertSampleStepsRecord,
+            )
+            _uiState.update {
+                HealthUiState.Content(
+                    permission = permissionSection,
+                    queriesSection = queriesSection,
+                    insertSection = insertSection,
+                )
+            }
+        }
+    }
+
+    private suspend fun buildPermissionItem(record: AnyRecordType, isRead: Boolean): PermissionItemContent {
+        val hasPermission = if (isRead) {
+            health.isAuthorizedToRead(record)
+        } else {
+            health.isAuthorizedToWrite(record)
+        }
+        val recordName = label(recordType = record)
+        return PermissionItemContent(
+            title = "$recordName ${if (isRead) "(R)" else "(W)"}",
+            status = PermissionStatus(hasPermission),
+            action = if (!hasPermission) {
+                PermissionAction(
+                    onClick = {
+                        if (isRead) {
+                            health.requestReadPermission(type = record, activity = it)
+                        } else {
+                            health.requestWritePermission(type = record, activity = it)
+                        }
+                    }
+                )
+            } else {
+                null
+            }
+        )
+    }
+
+    private fun label(recordType: AnyRecordType): String {
+        return recordType.identifier
+            .removeSuffix("Record")
+            .replace(Regex("(?<!^)([A-Z])"), " $1")
+    }
+
+    @Suppress("MagicNumber")
+    private fun insertSampleStepsRecord() {
+        viewModelScope.launch {
+            val steps = StepsRecord(
+                count = Random.nextLong(100L, 10000L),
+                startTime = Instant.now().minusSeconds(3600L),
+                endTime = Instant.now(),
+                startZoneOffset = null,
+                endZoneOffset = null,
+                metadata = Metadata.manualEntry()
+            )
+            health.insert(steps)
+        }
+    }
+}
+
+data class HealthScreenContent(
+    val scaffoldState: GroveScaffoldState,
+    val onDisplayed: () -> Unit,
+    val state: StateFlow<HealthUiState>,
+) : ComposableContent {
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        DisplayedEffect(onDisplayed = onDisplayed)
+        GroveScaffold(state = scaffoldState) {
+            Box(modifier = Modifier.padding(Spacings.medium)) {
+                when (val uiState = state.collectAsStateWithLifecycle().value) {
+                    is HealthUiState.Loading -> LoadingLayout(modifier = Modifier.fillMaxSize())
+                    is HealthUiState.Content -> {
+                        Column(
+                            modifier = Modifier.verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(Spacings.medium)
+                        ) {
+                            uiState.permission.Content()
+                            uiState.queriesSection.Content()
+                            uiState.insertSection.Content()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+sealed interface HealthUiState {
+    data object Loading : HealthUiState
+    data class Content(
+        val permission: PermissionsSection,
+        val queriesSection: QueriesSection,
+        val insertSection: InsertSection,
+    ) : HealthUiState
+}

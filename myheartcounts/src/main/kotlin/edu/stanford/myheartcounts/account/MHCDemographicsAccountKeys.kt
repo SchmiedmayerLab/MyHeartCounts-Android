@@ -21,10 +21,10 @@ import edu.stanford.myheartcounts.model.demographics.RaceEthnicity
 import edu.stanford.myheartcounts.model.demographics.StageOfChangeOption
 import edu.stanford.myheartcounts.model.demographics.UKRegion
 import edu.stanford.myheartcounts.model.demographics.USRegion
-import edu.stanford.spezi.account.AccountDetails
-import edu.stanford.spezi.account.AccountKeys
-import edu.stanford.spezi.account.InitialValue
 import kotlinx.serialization.builtins.serializer
+import org.grovealliance.account.AccountDetails
+import org.grovealliance.account.AccountKeys
+import org.grovealliance.account.InitialValue
 
 /**
  * Demographics account keys. All are **manual** keys (see [ManualAccountKey]).

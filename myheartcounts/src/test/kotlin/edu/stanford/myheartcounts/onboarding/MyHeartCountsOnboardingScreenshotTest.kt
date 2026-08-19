@@ -22,16 +22,16 @@ import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
 import edu.stanford.myheartcounts.onboarding.eligibility.LinkRow
 import edu.stanford.myheartcounts.onboarding.eligibility.Section
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
-import edu.stanford.spezi.onboarding.OnboardingInformation
-import edu.stanford.spezi.onboarding.OnboardingLayout
-import edu.stanford.spezi.onboarding.OnboardingTitle
-import edu.stanford.spezi.testing.screenshot.ScreenshotTest
-import edu.stanford.spezi.ui.AsyncTextButton
-import edu.stanford.spezi.ui.ImageResource
-import edu.stanford.spezi.ui.StaticSpeziScaffold
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.speziAppBar
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.grovealliance.onboarding.OnboardingInformation
+import org.grovealliance.onboarding.OnboardingLayout
+import org.grovealliance.onboarding.OnboardingTitle
+import org.grovealliance.testing.screenshot.ScreenshotTest
+import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.ImageResource
+import org.grovealliance.ui.StaticGroveScaffold
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveAppBar
 import org.junit.Test
 
 class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
@@ -40,7 +40,7 @@ class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
     fun `LearnMoreSheet screenshot`() {
         screenshot {
             LearnMoreSheet(
-                appBar = speziAppBar {
+                appBar = groveAppBar {
                     title("Study Overview")
                     close { }
                 },
@@ -254,8 +254,8 @@ class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
 
     @Composable
     private fun Scaffold(appBarTitle: String? = null, content: @Composable BoxScope.() -> Unit) {
-        StaticSpeziScaffold(
-            appBar = speziAppBar {
+        StaticGroveScaffold(
+            appBar = groveAppBar {
                 appBarTitle?.let { title(it) }
                 back { }
             },

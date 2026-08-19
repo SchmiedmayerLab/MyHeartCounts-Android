@@ -22,14 +22,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
 import edu.stanford.myheartcounts.ui.MHCAppTheme
-import edu.stanford.spezi.ui.AsyncTextButton
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.SpeziCard
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.theme.Colors
-import edu.stanford.spezi.ui.theme.Spacings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveCard
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.theme.Colors
+import org.grovealliance.ui.theme.Spacings
 
 /**
  * The consent survey step layout: an introductory [header], a list of review [questions], and a
@@ -50,7 +50,7 @@ data class ConsentSurveyLayout(
                 .padding(Spacings.medium),
             verticalArrangement = Arrangement.spacedBy(Spacings.medium),
         ) {
-            SpeziCard {
+            GroveCard {
                 Text(
                     modifier = Modifier.padding(Spacings.medium),
                     text = header.text(),
@@ -58,7 +58,7 @@ data class ConsentSurveyLayout(
                 )
             }
             questions.forEach { question ->
-                SpeziCard {
+                GroveCard {
                     question.Content(modifier = Modifier.fillMaxWidth())
                 }
             }

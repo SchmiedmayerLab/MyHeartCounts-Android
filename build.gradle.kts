@@ -32,7 +32,7 @@ subprojects {
 installCustomTasks()
 
 dokka {
-    moduleName.set("Spezi Documentation")
+    moduleName.set("Grove Documentation")
     dokkaPublications.html {
         includes.from("README.md")
     }

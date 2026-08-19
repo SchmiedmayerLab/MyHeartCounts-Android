@@ -1,0 +1,74 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.core.viewmodel
+
+import android.content.Context
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import org.grovealliance.core.DependenciesGraph
+
+/**
+ * The receiver scope for ViewModel factory lambdas registered via
+ * [org.grovealliance.core.viewmodel.viewModel].
+ *
+ * This scope exposes resolution methods that can be used to construct a [ViewModel]:
+ * - [dependency] – resolves any registered type from the dependency graph (modules, singletons,
+ *   or factory-produced values).
+ * - [optionalDependency] – same as [dependency] but returns `null` instead of throwing.
+ * - [savedStateHandle] – retrieves the [SavedStateHandle] associated with the ViewModel's
+ *   [androidx.lifecycle.ViewModelStoreOwner] (e.g. a navigation back-stack entry or Activity).
+ * - [appContext] – retrieves the application [android.content.Context].
+ *
+ * Example:
+ * ```kotlin
+ * viewModel { HomeViewModel(dependency(), dependency()) }
+ * viewModel { DetailViewModel(savedStateHandle(), dependency()) }
+ * viewModel { FeatureViewModel(optionalDependency(), dependency()) }
+ * ```
+ */
+class ViewModelFactoryScope internal constructor(
+    @PublishedApi internal val graph: DependenciesGraph,
+    private val handle: SavedStateHandle,
+) {
+
+    /**
+     * Resolves a required dependency of type [T] from the Grove dependency graph.
+     * Works for [org.grovealliance.core.Module] instances, singletons, and factory-produced values.
+     *
+     * @param identifier An optional identifier for disambiguating multiple registrations of the
+     *   same type.
+     * @return The resolved instance.
+     */
+    inline fun <reified T : Any> dependency(identifier: String? = null): T =
+        graph.dependency(identifier)
+
+    /**
+     * Resolves an optional dependency of type [T] from the Grove dependency graph.
+     * Works for [org.grovealliance.core.Module] instances, singletons, and factory-produced values.
+     *
+     * @param identifier An optional identifier for disambiguating multiple registrations of the
+     *   same type.
+     * @return The resolved instance, or `null` if no dependency of type [T] is registered.
+     */
+    inline fun <reified T : Any> optionalDependency(identifier: String? = null): T? =
+        graph.optionalDependency(identifier)
+
+    /**
+     * Retrieves the [SavedStateHandle] provided by the nearest
+     * [androidx.lifecycle.ViewModelStoreOwner] via [androidx.lifecycle.viewmodel.CreationExtras].
+     *
+     * Use this when the ViewModel needs to read or write navigation arguments or persisted state.
+     */
+    fun savedStateHandle(): SavedStateHandle = handle
+
+    /**
+     * Returns the application [Context] of the [GroveApplication][org.grovealliance.core.GroveApplication]
+     * backing the dependency graph.
+     */
+    fun appContext(): Context = graph.appContext()
+}

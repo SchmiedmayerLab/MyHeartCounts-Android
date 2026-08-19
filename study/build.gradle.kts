@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
-    alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.grove.library)
+    alias(libs.plugins.grove.serialization)
     alias(libs.plugins.google.devtools.ksp)
 }
 
 android {
-    namespace = "edu.stanford.spezi.study"
+    namespace = "org.grovealliance.study"
     testFixtures { enable = true }
 }
 

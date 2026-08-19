@@ -38,20 +38,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
 import edu.stanford.myheartcounts.ui.MHCAppTheme
-import edu.stanford.spezi.ui.AsyncTextButton
-import edu.stanford.spezi.ui.BottomSheetComposableContent
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.SpeziCard
-import edu.stanford.spezi.ui.SpeziSearchFieldComposable
-import edu.stanford.spezi.ui.StaticSpeziScaffold
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.rememberSpeziAppBar
-import edu.stanford.spezi.ui.theme.Colors
-import edu.stanford.spezi.ui.theme.Sizes
-import edu.stanford.spezi.ui.theme.Spacings
-import edu.stanford.spezi.ui.theme.medium
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.BottomSheetComposableContent
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveCard
+import org.grovealliance.ui.GroveSearchFieldComposable
+import org.grovealliance.ui.StaticGroveScaffold
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.rememberGroveAppBar
+import org.grovealliance.ui.theme.Colors
+import org.grovealliance.ui.theme.Sizes
+import org.grovealliance.ui.theme.Spacings
+import org.grovealliance.ui.theme.medium
 
 /**
  * A searchable bottom-sheet country picker presenting the given [rows]; [onClose] dismisses it
@@ -79,14 +79,14 @@ data class CountrySelectionSheet(
         val filtered = remember(query, rows) {
             rows.filter { it.matches(query) }
         }
-        StaticSpeziScaffold(
-            appBar = rememberSpeziAppBar {
+        StaticGroveScaffold(
+            appBar = rememberGroveAppBar {
                 title(MHCStrings.eligibility_country_selection_title)
                 close { onClose() }
             },
         ) {
             Column(modifier = modifier.padding(Spacings.medium)) {
-                SpeziSearchFieldComposable(
+                GroveSearchFieldComposable(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = Spacings.medium),
@@ -94,7 +94,7 @@ data class CountrySelectionSheet(
                     placeholder = stringResource(MHCStrings.eligibility_country_selection_search_placeholder),
                     onValueChanged = { query = it },
                 )
-                SpeziCard {
+                GroveCard {
                     LazyColumn {
                         items(filtered.size) { position ->
                             val row = filtered[position]
@@ -147,7 +147,7 @@ data class EligibilityLayout(
                 .padding(Spacings.medium),
             verticalArrangement = Arrangement.spacedBy(Spacings.medium),
         ) {
-            SpeziCard {
+            GroveCard {
                 Text(
                     modifier = Modifier.padding(Spacings.medium),
                     text = description.text(),
@@ -184,7 +184,7 @@ data class Section(
                 color = Colors.onSurfaceVariant,
             )
 
-            SpeziCard {
+            GroveCard {
                 content.Content(modifier = Modifier.fillMaxWidth())
             }
         }

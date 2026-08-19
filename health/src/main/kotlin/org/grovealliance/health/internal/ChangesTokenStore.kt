@@ -1,0 +1,62 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.health.internal
+
+import kotlinx.serialization.serializer
+import org.grovealliance.health.AnyRecordType
+import org.grovealliance.storage.local.LocalStorage
+import org.grovealliance.storage.local.LocalStorageSetting
+
+/**
+ * Internal class for storing and retrieving health changes tokens.
+ *
+ * @property storage The [LocalStorage] instance used for storing tokens.
+ */
+internal class ChangesTokenStore(
+    private val storage: LocalStorage,
+) {
+    /**
+     * Stores a changes token for the specified [recordType].
+     *
+     * @param recordType The [AnyRecordType] for which the token is stored.
+     * @param token The changes token to store.
+     */
+    suspend fun storeToken(recordType: AnyRecordType, token: String) {
+        storage.store(
+            key = keyFor(recordType),
+            value = token,
+            settings = LocalStorageSetting.Unencrypted,
+            serializer = serializer(),
+        )
+    }
+
+    /**
+     * Retrieves the changes token for the specified [recordType].
+     *
+     * @param recordType The [AnyRecordType] for which the token is retrieved.
+     * @return The changes token, or null if not found.
+     */
+    suspend fun getToken(recordType: AnyRecordType): String? {
+        return storage.read(
+            key = keyFor(recordType),
+            settings = LocalStorageSetting.Unencrypted,
+            serializer = serializer(),
+        )
+    }
+
+    /**
+     * Deletes the changes token for the specified [recordType].
+     *
+     * @param recordType The [AnyRecordType] for which the token is deleted.
+     */
+    suspend fun deleteToken(recordType: AnyRecordType) {
+        storage.delete(keyFor(recordType))
+    }
+
+    private fun keyFor(type: AnyRecordType) = "health_changes_token_${type.identifier}"
+}

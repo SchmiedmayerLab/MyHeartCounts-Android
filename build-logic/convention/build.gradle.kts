@@ -12,7 +12,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "edu.stanford.spezi.build.logic"
+group = "org.grovealliance.build.logic"
 
 val javaVersion = JavaVersion.VERSION_21
 
@@ -41,13 +41,13 @@ tasks {
 
 fun NamedDomainObjectContainer<PluginDeclaration>.conventionPlugin(id: String, className: String) {
     register(className) {
-        this.id = "spezi.$id"
-        implementationClass = "edu.stanford.spezi.build.logic.convention.plugins.$className"
+        this.id = "grove.$id"
+        implementationClass = "org.grovealliance.build.logic.convention.plugins.$className"
     }
 }
 
 /**
- * Plugins specific to the My Heart Counts application rather than to the Spezi framework modules.
+ * Plugins specific to the My Heart Counts application rather than to the Grove framework modules.
  */
 fun NamedDomainObjectContainer<PluginDeclaration>.applicationPlugin(id: String, className: String) {
     register(className) {
@@ -61,11 +61,11 @@ gradlePlugin {
         // Please keep plugins sorted. Select all method calls below and in Android Studio `Edit > Sort Lines`
         applicationPlugin(id = "studybundle", className = "MHCStudyBundleConventionPlugin")
         applicationPlugin(id = "studybundlefixture", className = "MHCStudyBundleFixtureConventionPlugin")
-        conventionPlugin(id = "application", className = "SpeziApplicationConventionPlugin")
-        conventionPlugin(id = "base", className = "SpeziBaseConfigConventionPlugin")
-        conventionPlugin(id = "compose", className = "SpeziComposeConventionPlugin")
+        conventionPlugin(id = "application", className = "GroveApplicationConventionPlugin")
+        conventionPlugin(id = "base", className = "GroveBaseConfigConventionPlugin")
+        conventionPlugin(id = "compose", className = "GroveComposeConventionPlugin")
         conventionPlugin(id = "desugaring", className = "DesugaringConventionPlugin")
-        conventionPlugin(id = "library", className = "SpeziLibraryConventionPlugin")
-        conventionPlugin(id = "serialization", className = "SpeziSerializationConventionPlugin")
+        conventionPlugin(id = "library", className = "GroveLibraryConventionPlugin")
+        conventionPlugin(id = "serialization", className = "GroveSerializationConventionPlugin")
     }
 }

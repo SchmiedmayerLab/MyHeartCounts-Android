@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
 
 # Detekt Guide
 
-The Spezi project utilizes [Detekt](https://detekt.dev/) as a static code analyzer for Kotlin. This guide contains relevant information regarding Detekt setup and its usage.
+The Grove project utilizes [Detekt](https://detekt.dev/) as a static code analyzer for Kotlin. This guide contains relevant information regarding Detekt setup and its usage.
 
 ## Introduction
 
@@ -43,7 +43,7 @@ In addition to the project setup, we advise making use of [Android Studio Detekt
     1. `Enable background analysis`
     2. `Treat detekt findings as errors`
     3. `Enable formatting (ktlint) rules`
-    4. Under `Files / Configuration files`, add the project's `detekt-config.yml` located at `SpeziKt/internal/detekt-config.yml`
+    4. Under `Files / Configuration files`, add the project's `detekt-config.yml` located at `MyHeartCounts-Android/internal/detekt-config.yml`
 4. Save the changes
 
 <p align="center">
@@ -53,7 +53,7 @@ In addition to the project setup, we advise making use of [Android Studio Detekt
 In order to comply automatically with some detekt rules, we advise to also perform the following configurations in Android studio
 
 1. Open `Android Studio` > `Settings` > `Editor` > `General` > `On Save` and check `Ensure every saved file ends with a line break`
-2. Open `Android Studio` > `Settings` > `Editor` > `Kotlin` > `Scheme` and on in the settings icon import [spezi_code_style.xml](../spezi_code_style.xml) file at `SpeziKt/internal/spezi_code_style.xml`. This will allow formatting with respect to detekt formatting rules when applying `Code` > `Reformat Code / File` commands in Android studio (or the corresponding shortcuts)
+2. Open `Android Studio` > `Settings` > `Editor` > `Kotlin` > `Scheme` and on in the settings icon import [grove_code_style.xml](../grove_code_style.xml) file at `MyHeartCounts-Android/internal/grove_code_style.xml`. This will allow formatting with respect to detekt formatting rules when applying `Code` > `Reformat Code / File` commands in Android studio (or the corresponding shortcuts)
 
 <p align="center">
   <img width="500" src="resources/code_style.png">
@@ -79,7 +79,7 @@ else
 fi
 ```
 
-The script can be installed as a `pre-commit` git hook, which runs Detekt (with autocorrection enabled) before a commit is executed. This ensures that applied changes conform to Detekt rules. To install the git hook, the project contains a Gradle task under the group `spezi`, which activates the hook:
+The script can be installed as a `pre-commit` git hook, which runs Detekt (with autocorrection enabled) before a commit is executed. This ensures that applied changes conform to Detekt rules. To install the git hook, the project contains a Gradle task under the group `grove`, which activates the hook:
 
 <p align="center">
   <img width="400" src="resources/gradle_installgithooks.png">

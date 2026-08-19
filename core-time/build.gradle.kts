@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.library)
+    alias(libs.plugins.grove.library)
 }
 
 android {
-    namespace = "edu.stanford.spezi.core.time"
+    namespace = "org.grovealliance.core.time"
     testFixtures { enable = true }
 }
 

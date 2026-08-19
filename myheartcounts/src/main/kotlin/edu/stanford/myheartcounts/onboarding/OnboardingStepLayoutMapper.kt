@@ -33,17 +33,17 @@ import edu.stanford.myheartcounts.onboarding.eligibility.CountrySelectionSheet
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EmailField
 import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
-import edu.stanford.spezi.onboarding.OnboardingActions
-import edu.stanford.spezi.onboarding.OnboardingArea
-import edu.stanford.spezi.onboarding.OnboardingInformation
-import edu.stanford.spezi.onboarding.OnboardingLayout
-import edu.stanford.spezi.onboarding.OnboardingTitle
-import edu.stanford.spezi.ui.ActionSink
-import edu.stanford.spezi.ui.AsyncTextButton
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.ImageResource
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.theme.Colors
+import org.grovealliance.onboarding.OnboardingActions
+import org.grovealliance.onboarding.OnboardingArea
+import org.grovealliance.onboarding.OnboardingInformation
+import org.grovealliance.onboarding.OnboardingLayout
+import org.grovealliance.onboarding.OnboardingTitle
+import org.grovealliance.ui.ActionSink
+import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.ImageResource
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.theme.Colors
 
 /**
  * Builds the [ComposableContent] for an [OnboardingStep]. Button interactions are dispatched to

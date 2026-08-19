@@ -26,14 +26,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.stanford.spezi.ui.ComposableContent
-import edu.stanford.spezi.ui.StringResource
-import edu.stanford.spezi.ui.VerticalSpacer
-import edu.stanford.spezi.ui.theme.Colors
-import edu.stanford.spezi.ui.theme.Spacings
-import edu.stanford.spezi.ui.theme.TextStyles
-import edu.stanford.spezi.ui.theme.medium
 import kotlinx.coroutines.flow.Flow
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.VerticalSpacer
+import org.grovealliance.ui.theme.Colors
+import org.grovealliance.ui.theme.Spacings
+import org.grovealliance.ui.theme.TextStyles
+import org.grovealliance.ui.theme.medium
 
 /**
  * A unified boolean-input row that renders either a [Style.Switch] toggle or a [Style.Label] choice

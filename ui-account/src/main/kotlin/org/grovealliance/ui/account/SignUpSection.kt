@@ -1,0 +1,85 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.ui.account
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.account.internal.AccountSectionTitle
+import org.grovealliance.ui.theme.GroveTheme
+import org.grovealliance.ui.theme.Spacings
+import org.grovealliance.ui.theme.ThemePreviews
+
+/**
+ * Represents a section of the sign-up form.
+ *
+ * @param title The title of the section.
+ * @param entries The entries in the section.
+ */
+data class SignUpSection(
+    val title: StringResource?,
+    val entries: List<AnySignUpFormEntry>,
+) : ComposableContent {
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(Spacings.extraSmall),
+        ) {
+            title?.let {
+                AccountSectionTitle(title = it)
+            }
+            entries.forEach { entry ->
+                entry.Content(
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun Preview() {
+    val section = SignUpSection(
+        title = StringResource("NAME"),
+        entries = listOf(
+            SignUpFormEntry(
+                title = StringResource("First name"),
+                entry = StringDataEntry(placeholder = StringResource("Enter your first name")),
+                value = "John",
+                onValueChange = {}
+            ),
+            SignUpFormEntry(
+                title = StringResource("Last name"),
+                entry = StringDataEntry(
+                    placeholder = StringResource("Enter your last name"),
+                    hideContent = false,
+                ),
+                value = "Smith",
+                onValueChange = {}
+            ),
+            SignUpFormEntry(
+                title = StringResource("Consent"),
+                entry = BooleanDataEntry(description = StringResource("Accept data collection")),
+                value = true,
+                onValueChange = {}
+            ),
+        )
+    )
+
+    GroveTheme {
+        section.Content(modifier = Modifier.padding(Spacings.medium))
+    }
+}

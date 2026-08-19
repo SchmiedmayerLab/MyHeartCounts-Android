@@ -1,0 +1,55 @@
+//
+// This source file is part of the My Heart Counts Android open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+package org.grovealliance.core
+
+import org.grovealliance.core.internal.Grove
+
+/**
+ * Lazy delegate to retrieve an optional dependency of type [T] from the [GroveApplication]
+ * dependency graph.
+ *
+ * Resolves [Module] instances, singletons registered via [ConfigurationBuilder.singleton], and
+ * transient factories registered via [ConfigurationBuilder.factory].
+ */
+inline fun <reified T : Any> optionalDependency(identifier: String? = null) = lazy {
+    requireOptionalDependency<T>(identifier)
+}
+
+/**
+ * Retrieves an optional dependency of type [T] from the [GroveApplication] dependency graph,
+ * returning `null` if not found.
+ *
+ * Resolves [Module] instances, singletons, and transient factories.
+ */
+inline fun <reified T : Any> requireOptionalDependency(identifier: String? = null): T? {
+    return Grove.requireGraph().optionalDependency<T>(identifier)
+}
+
+/**
+ * Lazy delegate to retrieve a required dependency of type [T] from the [GroveApplication]
+ * dependency graph.
+ *
+ * Resolves [Module] instances, singletons registered via [ConfigurationBuilder.singleton], and
+ * transient factories registered via [ConfigurationBuilder.factory].
+ *
+ * Throws a [GroveError] if the dependency is not registered.
+ */
+inline fun <reified T : Any> dependency(identifier: String? = null): Lazy<T> = lazy {
+    requireDependency<T>(identifier)
+}
+
+/**
+ * Retrieves a required dependency of type [T] from the [GroveApplication] dependency graph.
+ *
+ * Resolves [Module] instances, singletons, and transient factories.
+ *
+ * @throws [GroveError] if the dependency is not registered.
+ */
+inline fun <reified T : Any> requireDependency(identifier: String? = null): T {
+    return Grove.requireGraph().dependency<T>(identifier)
+}

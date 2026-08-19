@@ -30,7 +30,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SpeziKt"
+rootProject.name = "MyHeartCounts-Android"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 

@@ -6,21 +6,21 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    alias(libs.plugins.spezi.application)
-    alias(libs.plugins.spezi.compose)
-    alias(libs.plugins.spezi.serialization)
+    alias(libs.plugins.grove.application)
+    alias(libs.plugins.grove.compose)
+    alias(libs.plugins.grove.serialization)
     alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
-    namespace = "edu.stanford.spezi.sample.app"
+    namespace = "org.grovealliance.sample.app"
 
     buildFeatures {
         buildConfig = true
     }
 
     defaultConfig {
-        applicationId = "edu.stanford.spezi.sample.app"
+        applicationId = "org.grovealliance.sample.app"
         versionCode = 1
         versionName = "1.0.0"
         targetSdk = libs.versions.targetSdk.get().toInt()

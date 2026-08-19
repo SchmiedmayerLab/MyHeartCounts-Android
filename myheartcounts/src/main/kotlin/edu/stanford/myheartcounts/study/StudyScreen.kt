@@ -8,13 +8,13 @@
 package edu.stanford.myheartcounts.study
 
 import androidx.compose.runtime.Composable
-import edu.stanford.spezi.core.viewmodel.speziViewModel
+import org.grovealliance.core.viewmodel.groveViewModel
 
 /**
  * The study content shown after onboarding, hosting the bottom-navigation tabs.
  */
 @Composable
 fun StudyScreen() {
-    val viewModel = speziViewModel<StudyViewModel>()
+    val viewModel = groveViewModel<StudyViewModel>()
     viewModel.screen.Content()
 }

@@ -11,7 +11,7 @@ package edu.stanford.myheartcounts.onboarding
 
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityVerdict
-import edu.stanford.spezi.account.Account
+import org.grovealliance.account.Account
 
 /**
  * The onboarding step graph: which step comes first, and which step follows or precedes a given one.

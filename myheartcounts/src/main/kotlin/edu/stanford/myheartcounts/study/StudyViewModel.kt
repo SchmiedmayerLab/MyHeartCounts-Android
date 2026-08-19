@@ -35,10 +35,10 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.dashboard.HeartHealthScreen
 import edu.stanford.myheartcounts.home.HomeScreen
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksScreen
-import edu.stanford.spezi.ui.ActionSink
-import edu.stanford.spezi.ui.ActionSource
-import edu.stanford.spezi.ui.ComposableContent
 import kotlinx.coroutines.flow.StateFlow
+import org.grovealliance.ui.ActionSink
+import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.ComposableContent
 
 /**
  * Holds the selected [StudyTab] for the study content and builds its [StudyScreenContent].
@@ -113,7 +113,7 @@ data class StudyScreenContent(
                 }
             },
         ) { innerPadding ->
-            // Reserve only the nav-bar space and consume that inset so the nested SpeziScaffold's
+            // Reserve only the nav-bar space and consume that inset so the nested GroveScaffold's
             // systemBarsPadding doesn't re-add the bottom inset (which would gap the content above
             // the bar). The top is left untouched so tab content aligns like a standalone scaffold.
             val bottomBarHeight = innerPadding.calculateBottomPadding()

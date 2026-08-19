@@ -11,21 +11,21 @@ import android.app.Application
 import edu.stanford.myheartcounts.account.account
 import edu.stanford.myheartcounts.di.appConfigurations
 import edu.stanford.myheartcounts.di.appViewModels
-import edu.stanford.spezi.account.Account
-import edu.stanford.spezi.account.name
-import edu.stanford.spezi.consent.ConsentDocument
-import edu.stanford.spezi.consent.SignatureMetadata
-import edu.stanford.spezi.consent.consent
-import edu.stanford.spezi.core.Configuration
-import edu.stanford.spezi.core.SpeziApplication
-import edu.stanford.spezi.core.dependency
-import edu.stanford.spezi.core.logging.SpeziLogger
+import org.grovealliance.account.Account
+import org.grovealliance.account.name
+import org.grovealliance.consent.ConsentDocument
+import org.grovealliance.consent.SignatureMetadata
+import org.grovealliance.consent.consent
+import org.grovealliance.core.Configuration
+import org.grovealliance.core.GroveApplication
+import org.grovealliance.core.dependency
+import org.grovealliance.core.logging.GroveLogger
 
 /**
  * The application entry point. Declares the app's dependency graph and consent document, and enables
  * logging in debug builds.
  */
-class MyHeartCountsApplication : Application(), SpeziApplication {
+class MyHeartCountsApplication : Application(), GroveApplication {
 
     override val configuration: Configuration = Configuration {
         account()
@@ -51,6 +51,6 @@ class MyHeartCountsApplication : Application(), SpeziApplication {
     override fun onCreate() {
         super.onCreate()
 
-        SpeziLogger.setLoggingEnabled(enabled = BuildConfig.DEBUG)
+        GroveLogger.setLoggingEnabled(enabled = BuildConfig.DEBUG)
     }
 }
