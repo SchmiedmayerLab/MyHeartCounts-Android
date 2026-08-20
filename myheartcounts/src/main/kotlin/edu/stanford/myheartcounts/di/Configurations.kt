@@ -9,6 +9,12 @@ package edu.stanford.myheartcounts.di
 
 import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.StudyAppBarProviderImpl
+import edu.stanford.myheartcounts.home.HomeContentMapper
+import edu.stanford.myheartcounts.home.HomeContentMapperImpl
+import edu.stanford.myheartcounts.home.HomeSuggestionsSource
+import edu.stanford.myheartcounts.home.HomeTasksSource
+import edu.stanford.myheartcounts.home.HomeTasksSourceImpl
+import edu.stanford.myheartcounts.home.NoHomeSuggestionsSource
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.navigation.NavigatorImpl
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
@@ -23,8 +29,15 @@ import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMa
 import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMapperImpl
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapperImpl
+import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
+import edu.stanford.myheartcounts.study.MHCStudyBundleProviderImpl
+import edu.stanford.myheartcounts.study.StudyArticleSource
+import edu.stanford.myheartcounts.study.StudyArticleSourceImpl
+import edu.stanford.myheartcounts.study.StudyEnroller
+import edu.stanford.myheartcounts.study.StudyEnrollerImpl
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.GroveDsl
+import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.storage.local.KeyValueStorageFactory
 import org.grovealliance.storage.local.KeyValueStorageType
 
@@ -33,6 +46,7 @@ import org.grovealliance.storage.local.KeyValueStorageType
  */
 @GroveDsl
 fun ConfigurationBuilder.appConfigurations() {
+    homeConfigurations()
     singleton<Navigator> { NavigatorImpl() }
     singleton<StudyAppBarProvider> {
         StudyAppBarProviderImpl(navigator = dependency())
@@ -72,4 +86,50 @@ fun ConfigurationBuilder.appConfigurations() {
             type = KeyValueStorageType.UNENCRYPTED,
         )
     }
+
+    studyConfigurations()
+}
+
+/**
+ * Registers study bundle loading and enrollment.
+ */
+private fun ConfigurationBuilder.studyConfigurations() {
+    module<MHCStudyBundleProvider> {
+        MHCStudyBundleProviderImpl(
+            context = appContext(),
+            studyManager = dependency(),
+            scope = dependency<Concurrency>().ioCoroutineScope(),
+        )
+    }
+
+    factory<StudyArticleSource> {
+        StudyArticleSourceImpl(
+            studyBundleProvider = dependency(),
+            ioDispatcher = dependency<Concurrency>().ioDispatcher(),
+        )
+    }
+
+    factory<StudyEnroller> {
+        StudyEnrollerImpl(
+            studyBundleProvider = dependency(),
+            studyManager = dependency(),
+            account = dependency(),
+            timeProvider = dependency(),
+        )
+    }
+}
+
+/**
+ * Registers the Home tab's data sources and layout mapper.
+ */
+private fun ConfigurationBuilder.homeConfigurations() {
+    factory<HomeContentMapper> { HomeContentMapperImpl(scheduleCalculator = dependency()) }
+    factory<HomeTasksSource> {
+        HomeTasksSourceImpl(
+            studyManager = dependency(),
+            scheduler = dependency(),
+            timeProvider = dependency(),
+        )
+    }
+    singleton<HomeSuggestionsSource> { NoHomeSuggestionsSource() }
 }

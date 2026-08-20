@@ -19,6 +19,7 @@ dependencies {
     api(project(":markdown"))
     api(project(":ui"))
 
+    implementation(project(":core-logging"))
     implementation(project(":core-time"))
     implementation(project(":core-viewmodel"))
 

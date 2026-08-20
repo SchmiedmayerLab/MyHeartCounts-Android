@@ -33,6 +33,7 @@ import edu.stanford.myheartcounts.onboarding.eligibility.CountrySelectionSheet
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EmailField
 import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
+import edu.stanford.myheartcounts.ui.ExternalLink
 import org.grovealliance.onboarding.OnboardingActions
 import org.grovealliance.onboarding.OnboardingArea
 import org.grovealliance.onboarding.OnboardingInformation
@@ -214,7 +215,7 @@ class OnboardingStepLayoutMapperImpl(
         )
     }
 
-    private fun studyWebsiteLink(input: OnboardingStepInput) = OnboardingLink(
+    private fun studyWebsiteLink(input: OnboardingStepInput) = ExternalLink(
         text = StringResource(MHCStrings.eligibility_learn_more),
         onClicked = { input.push(OnboardingAction.OpenStudyWebsite) },
     )

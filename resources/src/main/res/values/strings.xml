@@ -115,6 +115,9 @@ SPDX-License-Identifier: MIT
     <string name="consent_given_name_placeholder">Enter your first name</string>
     <string name="consent_family_name_label">Last name</string>
     <string name="consent_family_name_placeholder">Enter your last name</string>
+    <string name="consent_error_title">Consent form unavailable</string>
+    <string name="consent_error_message">The consent form could not be loaded. Please try again.</string>
+    <string name="consent_error_retry">Try again</string>
 
     <!-- onboarding -->
     <string name="onboarding_next">Next</string>

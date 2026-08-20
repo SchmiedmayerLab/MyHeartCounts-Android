@@ -32,10 +32,19 @@ class StudyBundleArchiveTest {
 
         val definition = File(bundleDir, "definition.json")
         assertThat(definition.exists()).isTrue()
-        val root = Json.parseToJsonElement(definition.readText()).jsonObject
-        assertThat(root["schemaVersion"]?.jsonPrimitive?.content).isEqualTo("0.14.0")
         assertThat(bundleDir.walkTopDown().count { it.isFile }).isEqualTo(FIXTURE_FILE_COUNT)
         assertThat(File(bundleDir, "consent/Consent+en-US.md").readText()).contains("consent")
+    }
+
+    @Test
+    fun `exports the schema version the definition model decodes`() {
+        val bundleDir = File(temporaryFolder.root, "mhcStudyBundle.${StudyBundle.FILE_EXTENSION}")
+
+        archiveFixture().use { StudyBundle.unpack(it, bundleDir) }
+
+        val root = Json.parseToJsonElement(File(bundleDir, "definition.json").readText()).jsonObject
+        assertThat(root["schemaVersion"]?.jsonPrimitive?.content)
+            .isEqualTo(StudyDefinitionJson.SCHEMA_VERSION)
     }
 
     @Test

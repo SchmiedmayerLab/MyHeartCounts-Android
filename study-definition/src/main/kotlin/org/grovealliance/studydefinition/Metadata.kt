@@ -16,20 +16,23 @@ import java.util.UUID
 /**
  * Non-content information about a study: identity, display text, participation gating, and the
  * consent document reference.
+ *
+ * Display text is localized; resolve it against a locale with [LocalizedText.resolve].
+ * [enrollmentConditions] is absent when a study gates enrollment on nothing.
  */
 @Serializable
 data class Metadata(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID,
-    val title: String,
-    val shortTitle: String,
+    val title: LocalizedText,
+    val shortTitle: LocalizedText,
     val icon: Icon?,
-    val explanationText: String,
-    val shortExplanationText: String,
+    val explanationText: LocalizedText,
+    val shortExplanationText: LocalizedText,
     @Serializable(with = UUIDSerializer::class)
     val studyDependency: UUID? = null,
     val participationCriterion: ParticipationCriterion,
-    val enrollmentConditions: EnrollmentConditions,
+    val enrollmentConditions: EnrollmentConditions? = null,
     val consentFileRef: FileReference?,
 ) {
     /**

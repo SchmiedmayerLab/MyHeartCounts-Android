@@ -54,16 +54,7 @@ class StudyBundle(
         val matches = candidates.mapNotNull { file ->
             parseLocalization(file.name, fileRef)?.let { localization -> file to localization }
         }
-        if (matches.isEmpty()) return null
-
-        val language = locale.language.lowercase()
-        val region = locale.country.uppercase()
-        val exact = "$language-$region"
-
-        return matches.firstOrNull { it.second.equals(exact, ignoreCase = true) }?.first
-            ?: matches.firstOrNull { it.second.substringBefore('-').equals(language, ignoreCase = true) }?.first
-            ?: fallback?.let { fb -> matches.firstOrNull { it.second.equals(fb, ignoreCase = true) }?.first }
-            ?: matches.first().first
+        return selectLocalization(matches, locale, fallback)
     }
 
     /**
@@ -73,7 +64,7 @@ class StudyBundle(
         is Component.Informational -> articleMetadata(component.fileRef, locale)?.get("title")
         is Component.Questionnaire -> questionnaireField(component.fileRef, locale, "title")
         is Component.TimedWalkingTest -> component.test.displayTitle
-        is Component.CustomActiveTask -> component.activeTask.title
+        is Component.CustomActiveTask -> component.activeTask.title.resolve(locale)
         is Component.HealthDataCollection -> null
     }
 
@@ -83,7 +74,7 @@ class StudyBundle(
     fun displaySubtitle(component: Component, locale: Locale): String? = when (component) {
         is Component.Informational -> articleMetadata(component.fileRef, locale)?.get("lede")
         is Component.Questionnaire -> questionnaireField(component.fileRef, locale, "purpose")
-        is Component.CustomActiveTask -> component.activeTask.subtitle
+        is Component.CustomActiveTask -> component.activeTask.subtitle?.resolve(locale)
         is Component.TimedWalkingTest, is Component.HealthDataCollection -> null
     }
 

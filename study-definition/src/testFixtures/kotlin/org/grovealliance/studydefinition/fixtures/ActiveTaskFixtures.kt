@@ -8,6 +8,7 @@
 package org.grovealliance.studydefinition.fixtures
 
 import org.grovealliance.studydefinition.Component
+import org.grovealliance.studydefinition.LocalizedText
 
 /**
  * Fixture for [Component.CustomActiveTask.ActiveTask].
@@ -15,8 +16,8 @@ import org.grovealliance.studydefinition.Component
 object ActiveTaskFixtures {
     fun create(
         identifier: String = "",
-        title: String = "",
-        subtitle: String? = null,
+        title: LocalizedText = LocalizedText.empty,
+        subtitle: LocalizedText? = null,
     ): Component.CustomActiveTask.ActiveTask = Component.CustomActiveTask.ActiveTask(
         identifier = identifier,
         title = title,

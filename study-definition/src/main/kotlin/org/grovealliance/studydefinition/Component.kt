@@ -13,7 +13,6 @@ import org.grovealliance.foundation.InstantSerializer
 import org.grovealliance.foundation.UUIDSerializer
 import org.grovealliance.studydefinition.internal.AttosecondDurationSerializer
 import org.grovealliance.studydefinition.internal.ComponentSerializer
-import org.grovealliance.studydefinition.internal.DisplayTextSerializer
 import org.grovealliance.studydefinition.internal.HistoricalDataCollectionSerializer
 import org.grovealliance.studydefinition.internal.HistoricalStartDateSerializer
 import org.grovealliance.studydefinition.internal.SampleTypesSerializer
@@ -166,10 +165,8 @@ sealed interface Component {
         @Serializable
         data class ActiveTask(
             val identifier: String,
-            @Serializable(with = DisplayTextSerializer::class)
-            val title: String,
-            @Serializable(with = DisplayTextSerializer::class)
-            val subtitle: String?,
+            val title: LocalizedText,
+            val subtitle: LocalizedText?,
         )
     }
 }

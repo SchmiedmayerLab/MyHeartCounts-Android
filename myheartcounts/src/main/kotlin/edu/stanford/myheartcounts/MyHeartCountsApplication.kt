@@ -11,6 +11,7 @@ import android.app.Application
 import edu.stanford.myheartcounts.account.account
 import edu.stanford.myheartcounts.di.appConfigurations
 import edu.stanford.myheartcounts.di.appViewModels
+import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
 import org.grovealliance.account.Account
 import org.grovealliance.account.name
 import org.grovealliance.consent.ConsentDocument
@@ -20,6 +21,10 @@ import org.grovealliance.core.Configuration
 import org.grovealliance.core.GroveApplication
 import org.grovealliance.core.dependency
 import org.grovealliance.core.logging.GroveLogger
+import org.grovealliance.scheduler.SchedulerNotificationsConfiguration
+import org.grovealliance.scheduler.scheduler
+import org.grovealliance.study.studyManager
+import java.util.Locale
 
 /**
  * The application entry point. Declares the app's dependency graph and consent document, and enables
@@ -32,9 +37,17 @@ class MyHeartCountsApplication : Application(), GroveApplication {
         appConfigurations()
         appViewModels()
 
+        scheduler(notifications = SchedulerNotificationsConfiguration.DEFAULT)
+        studyManager()
+
         consent {
             document {
-                ConsentDocument.Asset(filename = "Consent+en-US.md")
+                val studyBundleProvider by dependency<MHCStudyBundleProvider>()
+                val bundle = studyBundleProvider.get().getOrThrow()
+                val text = requireNotNull(bundle.consentText(locale = Locale.getDefault())) {
+                    "The study bundle carries no consent document."
+                }
+                ConsentDocument.Text(text = text)
             }
             initialSignatureMetadata {
                 val account by dependency<Account>()
