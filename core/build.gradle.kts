@@ -11,6 +11,7 @@ plugins {
 
 android {
     namespace = "org.grovealliance.core"
+    defaultConfig { consumerProguardFiles("consumer-rules.pro") }
 }
 
 dependencies {
