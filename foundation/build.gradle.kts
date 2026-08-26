@@ -12,6 +12,7 @@ plugins {
 
 android {
     namespace = "org.grovealliance.foundation"
+    defaultConfig { consumerProguardFiles("consumer-rules.pro") }
     testFixtures { enable = true }
 }
 
