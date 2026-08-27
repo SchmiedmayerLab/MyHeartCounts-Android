@@ -130,6 +130,17 @@ SPDX-License-Identifier: MIT
     <uses-permission android:name="android.permission.health.READ_MEDICAL_DATA_VISITS" />
     <uses-permission android:name="android.permission.health.READ_MEDICAL_DATA_VITAL_SIGNS" />
 
+    <!--
+    Required to detect the Health Connect app. Without this declaration, Android 11+ package
+    visibility filtering hides `com.google.android.apps.healthdata` from
+    `HealthConnectClient.getSdkStatus` / `getOrCreate`, which then fail and silently degrade the
+    module to a NoOpHealthClient. Only relevant below Android 14, where Health Connect ships as a
+    separate app rather than as a platform component.
+    -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
+
     <application>
         <activity
             android:name=".internal.PermissionsRationaleActivity"
