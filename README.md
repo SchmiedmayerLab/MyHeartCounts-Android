@@ -26,6 +26,9 @@ Kotlin &amp; Android Version of the My Heart Counts ecosystem.
 - **Onboarding**: Provides Onboarding screens for the
   application. [View the module](./onboarding/)
 - **Contact**: Provides Contact screens. [View the module](./contact/)
+- **Health Connect FHIR R4**: Produces deterministic Grove-conformant Mobile and
+  Health Connect resource graphs from the closed supported record inventory.
+  [View the module contract](./health-fhir/README.md)
 
 ### Study Bundle
 
