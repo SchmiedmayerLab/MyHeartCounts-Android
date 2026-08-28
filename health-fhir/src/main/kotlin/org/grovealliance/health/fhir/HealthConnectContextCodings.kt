@@ -7,12 +7,15 @@
 
 package org.grovealliance.health.fhir
 
+import androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyTemperatureMeasurementLocation
 import androidx.health.connect.client.records.MealType
+import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.Vo2MaxRecord
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.Coding
 
@@ -45,6 +48,83 @@ internal fun sleepStageCoding(stage: Int): SourceCodedValue = when (stage) {
     SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED ->
         SourceCodedValue("awake", "Awake", "STAGE_TYPE_AWAKE_IN_BED", "Awake in bed")
     else -> throw InvalidHealthConnectRecord("Unsupported Health Connect sleep stage: $stage")
+}
+
+@OptIn(ExperimentalMindfulnessSessionApi::class)
+internal fun mindfulnessSessionTypeCoding(value: Int): Coding = when (value) {
+    MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_UNKNOWN ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
+            "MINDFULNESS_SESSION_TYPE_UNKNOWN",
+            "Unknown",
+        )
+    MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MEDITATION ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
+            "MINDFULNESS_SESSION_TYPE_MEDITATION",
+            "Meditation",
+        )
+    MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_BREATHING ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
+            "MINDFULNESS_SESSION_TYPE_BREATHING",
+            "Breathing",
+        )
+    MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MUSIC ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
+            "MINDFULNESS_SESSION_TYPE_MUSIC",
+            "Music",
+        )
+    MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MOVEMENT ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
+            "MINDFULNESS_SESSION_TYPE_MOVEMENT",
+            "Movement",
+        )
+    MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_UNGUIDED ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
+            "MINDFULNESS_SESSION_TYPE_UNGUIDED",
+            "Unguided",
+        )
+    else -> throw InvalidHealthConnectRecord("Unsupported Health Connect mindfulness-session type: $value")
+}
+
+internal fun vo2MaxMeasurementMethodCoding(value: Int): Coding = when (value) {
+    Vo2MaxRecord.MEASUREMENT_METHOD_OTHER ->
+        Coding(HealthConnectContract.HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD, "MEASUREMENT_METHOD_OTHER", "Other")
+    Vo2MaxRecord.MEASUREMENT_METHOD_METABOLIC_CART ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD,
+            "MEASUREMENT_METHOD_METABOLIC_CART",
+            "Metabolic cart",
+        )
+    Vo2MaxRecord.MEASUREMENT_METHOD_HEART_RATE_RATIO ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD,
+            "MEASUREMENT_METHOD_HEART_RATE_RATIO",
+            "Heart-rate ratio",
+        )
+    Vo2MaxRecord.MEASUREMENT_METHOD_COOPER_TEST ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD,
+            "MEASUREMENT_METHOD_COOPER_TEST",
+            "Cooper test",
+        )
+    Vo2MaxRecord.MEASUREMENT_METHOD_MULTISTAGE_FITNESS_TEST ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD,
+            "MEASUREMENT_METHOD_MULTISTAGE_FITNESS_TEST",
+            "Multistage fitness test",
+        )
+    Vo2MaxRecord.MEASUREMENT_METHOD_ROCKPORT_FITNESS_TEST ->
+        Coding(
+            HealthConnectContract.HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD,
+            "MEASUREMENT_METHOD_ROCKPORT_FITNESS_TEST",
+            "Rockport fitness test",
+        )
+    else -> throw InvalidHealthConnectRecord("Unsupported Health Connect VO2 max measurement method: $value")
 }
 
 internal fun bloodGlucoseRelationToMeal(value: Int): Coding? = when (value) {

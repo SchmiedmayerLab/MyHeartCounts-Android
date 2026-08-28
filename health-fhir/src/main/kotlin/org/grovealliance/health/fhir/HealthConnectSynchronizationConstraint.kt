@@ -66,7 +66,9 @@ class HealthConnectSynchronizationConstraint(
 
     override suspend fun <T : Record> onFullyResyncRequired(type: RecordType<out T>) {
         requireSupported(type.identifier)
-        coordinator.reconcile(type.identifier, fullReader.readAll(type), now())
+        coordinator.reconcile(type.identifier, now) {
+            fullReader.readAll(type)
+        }
     }
 
     private fun requireSupported(recordType: String) {

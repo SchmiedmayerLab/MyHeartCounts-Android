@@ -8,134 +8,126 @@
 package org.grovealliance.health.fhir
 
 import com.google.common.truth.Truth.assertThat
-import org.hl7.fhir.r4.model.Identifier
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.time.Instant
 
 class HealthConnectIdentityTest {
-    private val source = identifier(
-        HealthConnectContract.HEALTH_CONNECT_RECORD_IDENTIFIER,
-        RECORD_VALUE,
+    private val key = testIdentityKey()
+    private val source = HealthConnectIdentity.record(
+        key,
+        REPOSITORY_SCOPE_KEY,
+        "HeartRateRecord",
+        "record-heart-001",
     )
 
     @Test
-    fun `matches the normative recording-device identity vector`() {
-        // The same preimage is published in grove-fhir catalog/exchange-identity.json and is
-        // reproduced by the Swift producer, so the three implementations agree byte for byte.
-        assertThat(
-            HealthConnectIdentity.recordingDeviceValue(
-                "Patient/1a2b3c",
-                "Google",
-                "Pixel Watch",
-            ),
-        ).isEqualTo("v1:Patient/1a2b3c|health-connect|Google|Pixel Watch|")
-    }
-
-    @Test
-    fun `one participant's recorder is one device and two participants' are not`() {
-        val mine = HealthConnectIdentity.recordingDeviceValue("Patient/1a2b3c", "Google", "Pixel Watch")
-        val again = HealthConnectIdentity.recordingDeviceValue("Patient/1a2b3c", "Google", "Pixel Watch")
-        val yours = HealthConnectIdentity.recordingDeviceValue("Patient/9z8y7x", "Google", "Pixel Watch")
-        assertThat(mine).isEqualTo(again)
-        assertThat(mine).isNotEqualTo(yours)
-    }
-
-    @Test
-    fun `a record naming too little has no admitted device identity`() {
-        assertThat(HealthConnectIdentity.recordingDeviceValue("Patient/1a2b3c", "Google", null)).isNull()
-        assertThat(HealthConnectIdentity.recordingDeviceValue("Patient/1a2b3c", null, "Pixel Watch")).isNull()
-        assertThat(HealthConnectIdentity.recordingDeviceValue("", "Google", "Pixel Watch")).isNull()
-    }
-
-    @Test
-    fun `matches every normative Health Connect identity vector`() {
-        assertThat(
-            HealthConnectIdentity.recordValue(
-                REPOSITORY_SCOPE,
-                "HeartRateRecord",
-                "record-heart-001",
-            ),
-        ).isEqualTo(RECORD_VALUE)
-        assertThat(
-            HealthConnectIdentity.heartRateSampleOutput(
-                source,
-                Instant.parse("2026-08-20T17:30:15Z"),
-                0,
-            ).value,
-        ).isEqualTo("v1:1f5c58aa-6ec6-4e79-a682-829a9debd3f5|HeartRateRecord|record-heart-001|sample|2026-08-20T17:30:15.000000000Z|0")
-        assertThat(
-            HealthConnectIdentity.sleepStageOutput(
-                source,
-                Instant.parse("2026-08-20T17:30:00Z"),
-                Instant.parse("2026-08-20T18:00:00Z"),
-                "STAGE_TYPE_LIGHT",
-                0,
-            ).value,
-        ).isEqualTo(
-            RECORD_VALUE + "|sleep-stage|2026-08-20T17:30:00.000000000Z" +
-                "|2026-08-20T18:00:00.000000000Z|STAGE_TYPE_LIGHT|0"
+    fun `source identity uses its deployment key epoch system and typed opaque value`() {
+        val vector = HealthConnectIdentity.record(
+            key,
+            REPOSITORY_SCOPE_KEY,
+            "RestingHeartRateRecord",
+            "record|東京",
         )
-        assertThat(
-            HealthConnectIdentity.specimen(source, "SPECIMEN_SOURCE_WHOLE_BLOOD").value,
-        ).isEqualTo("v1:1f5c58aa-6ec6-4e79-a682-829a9debd3f5|HeartRateRecord|record-heart-001|specimen|SPECIMEN_SOURCE_WHOLE_BLOOD")
-        // Export-created nodes live in the deployment's namespace, so they carry no scheme prefix.
-        assertThat(HealthConnectIdentity.conversion(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("1")).value)
-            .isEqualTo("1f5c58aa-6ec6-4e79-a682-829a9debd3f5|1|conversion-provenance")
-        assertThat(HealthConnectIdentity.exchange(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("1")).value)
-            .isEqualTo("1f5c58aa-6ec6-4e79-a682-829a9debd3f5|1|exchange-bundle")
+        assertThat(vector.identifier.system).isEqualTo(
+            "$TEST_OPAQUE_IDENTITY_SYSTEM_FAMILY/source-record/test-key/1",
+        )
+        assertThat(vector.identifier.value).startsWith("v2:test-key:1:")
+        assertThat(vector.identifier.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD)).isTrue()
     }
 
     @Test
-    fun `an export event identity is keyed by the event, not by any one record`() {
-        // One export covers many Records, so the identity names the event and its repository.
-        assertThat(HealthConnectIdentity.exchange(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("42")).value)
-            .isEqualTo(HealthConnectIdentity.exchange(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("42")).value)
-        assertThat(HealthConnectIdentity.exchange(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("43")).value)
-            .isNotEqualTo(HealthConnectIdentity.exchange(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("42")).value)
+    fun `source identity debug representation redacts native and derived identifiers`() {
+        val debugRepresentation = source.toString()
+
+        assertThat(debugRepresentation).doesNotContain("record-heart-001")
+        assertThat(debugRepresentation).doesNotContain(source.identifier.value)
+        assertThat(debugRepresentation).contains("nativeRecordId=<redacted>")
+        assertThat(debugRepresentation).contains("identifier=<redacted>")
     }
 
     @Test
-    fun `a separator in a source value is rejected, never escaped`() {
-        assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.recordValue(REPOSITORY_SCOPE, "HeartRateRecord", "record|heart")
+    fun `length framing accepts separators and supplementary Unicode without collisions`() {
+        val value = HealthConnectIdentity.record(
+            key,
+            REPOSITORY_SCOPE_KEY,
+            "HeartRateRecord",
+            "record|heart-😀",
+        )
+        assertThat(value.identifier.value).isNotEqualTo(source.identifier.value)
+    }
+
+    @Test
+    fun `rejects only unpaired Unicode surrogates`() {
+        listOf("\ud800", "\udc00", "prefix\ud800suffix").forEach { invalid ->
+            assertThrows(IllegalArgumentException::class.java) {
+                HealthConnectIdentity.record(key, REPOSITORY_SCOPE_KEY, "HeartRateRecord", invalid)
+            }
         }
     }
 
     @Test
-    fun `fails closed on values outside the frozen lexical grammar`() {
+    fun `recording Device identity requires a per-unit token`() {
+        val subject = FhirIdentifierKey("https://example.org/patients", "participant-1")
+        val mine = HealthConnectIdentity.recordingDevice(key, subject, "unit-42")
+        val again = HealthConnectIdentity.recordingDevice(key, subject, "unit-42")
+        val yours = HealthConnectIdentity.recordingDevice(key, subject, "unit-43")
+        assertThat(mine.value).isEqualTo(again.value)
+        assertThat(mine.value).isNotEqualTo(yours.value)
+        assertThat(mine.hasGroveRole(GroveIdentifierRole.RECORDING_DEVICE)).isTrue()
         assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.recordValue(REPOSITORY_SCOPE.uppercase(), "HeartRateRecord", "record")
+            HealthConnectIdentity.recordingDevice(key, subject, "")
         }
+    }
+
+    @Test
+    fun `sample slot replays identically while a duplicate uses another occurrence`() {
+        val time = Instant.parse("2026-08-20T17:30:15Z")
+        val first = HealthConnectIdentity.heartRateSampleOutput(key, source, time, 0)
+        val duplicate = HealthConnectIdentity.heartRateSampleOutput(key, source, time, 1)
+        val replayedSlot = HealthConnectIdentity.heartRateSampleOutput(key, source, time, 0)
+        assertThat(replayedSlot.value).isEqualTo(first.value)
+        assertThat(duplicate.value).isNotEqualTo(first.value)
+        assertThat(first.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT)).isTrue()
+    }
+
+    @Test
+    fun `event and entry-node identities use their typed v2 lexical forms`() {
+        val event = HealthConnectIdentity.exchange(TEST_EVENT_SYSTEM, TEST_PRODUCER_INSTANCE, EventSequence("42"))
+        assertThat(event.value).isEqualTo("e2:$TEST_PRODUCER_INSTANCE:42")
+        assertThat(event.hasGroveRole(GroveIdentifierRole.EVENT)).isTrue()
+
+        val node = HealthConnectIdentity.conversionNode(TEST_ENTRY_NODE_SYSTEM, event)
+        assertThat(node.value).matches("n2:conversion-provenance:0:[A-Za-z0-9_-]{43}")
+        assertThat(node.hasGroveRole(GroveIdentifierRole.ENTRY_NODE)).isTrue()
+        assertThat(GroveExchangeIdentity.fullUrl(node)).startsWith("urn:uuid:")
+    }
+
+    @Test
+    fun `fails closed on values outside the frozen grammar`() {
         assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.recordValue(REPOSITORY_SCOPE, "FutureRecord", "record")
-        }
-        assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.recordValue(REPOSITORY_SCOPE, "HeartRateRecord", "prefix\ud800suffix")
-        }
-        assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.conversion(GRAPH_SYSTEM, REPOSITORY_SCOPE, EventSequence("01"))
-        }
-        assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.sleepStageOutput(
-                source,
-                Instant.parse("2026-08-20T17:30:00Z"),
-                Instant.parse("2026-08-20T18:00:00Z"),
-                "LIGHT",
-                0,
+            GroveHmacIdentityKey(
+                TEST_OPAQUE_IDENTITY_SYSTEM_FAMILY,
+                "test-key",
+                "1",
+                ByteArray(32) { index -> index.toByte() },
             )
         }
         assertThrows(IllegalArgumentException::class.java) {
-            HealthConnectIdentity.specimen(source, "SPECIMEN_SOURCE_TEARS")
+            HealthConnectIdentity.exchange(TEST_EVENT_SYSTEM, TEST_PRODUCER_INSTANCE.uppercase(), EventSequence("1"))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            HealthConnectIdentity.record(key, REPOSITORY_SCOPE_KEY, "FutureRecord", "record")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            HealthConnectIdentity.specimenOutput(key, source, "SPECIMEN_SOURCE_TEARS")
         }
     }
 
-    private fun identifier(system: String, value: String): Identifier =
-        Identifier().setSystem(system).setValue(value)
-
     private companion object {
-        const val REPOSITORY_SCOPE = "1f5c58aa-6ec6-4e79-a682-829a9debd3f5"
-        const val GRAPH_SYSTEM = "urn:grove:health-connect-graph:org.grovealliance.example"
-        const val RECORD_VALUE = "v1:1f5c58aa-6ec6-4e79-a682-829a9debd3f5|HeartRateRecord|record-heart-001"
+        val REPOSITORY_SCOPE_KEY = FhirIdentifierKey(
+            "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+            "default",
+        )
     }
 }

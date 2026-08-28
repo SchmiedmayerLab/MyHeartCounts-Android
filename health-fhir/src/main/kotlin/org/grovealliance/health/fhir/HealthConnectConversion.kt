@@ -11,6 +11,7 @@ import org.hl7.fhir.r4.model.Bundle
 import org.hl7.fhir.r4.model.Identifier
 import org.hl7.fhir.r4.model.Observation
 import org.hl7.fhir.r4.model.Provenance
+import org.hl7.fhir.r4.model.Specimen
 import java.time.Instant
 
 /**
@@ -51,9 +52,11 @@ class HealthConnectConversion internal constructor(
         require(conversionContractVersion.isNotBlank()) {
             "The conversion-contract version must not be blank."
         }
-        require(sourceRecordIdentifierSnapshot.hasSystem() && sourceRecordIdentifierSnapshot.hasValue()) {
-            "The source record identifier must contain a system and value."
-        }
+        require(
+            sourceRecordIdentifierSnapshot.hasSystem() &&
+                sourceRecordIdentifierSnapshot.hasValue() &&
+                sourceRecordIdentifierSnapshot.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD),
+        ) { "The source record identifier must contain a complete typed source-record pair." }
         require(sourceRecordType.isNotBlank()) { "The source record type must not be blank." }
         require(
             observationSnapshots.isNotEmpty() ||
@@ -67,21 +70,17 @@ class HealthConnectConversion internal constructor(
         require(
             observationSnapshots.all { observation ->
                 observation.identifier.count {
-                    it.system == HealthConnectContract.HEALTH_CONNECT_RECORD_IDENTIFIER &&
-                        it.hasValue()
+                    it.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD) && it.hasSystem() && it.hasValue()
                 } == 1 &&
-                    // At most one: a one-to-one conversion emits none, because the record
-                    // identifier already identifies the single Observation it produced.
                     observation.identifier.count {
-                        it.system == HealthConnectContract.HEALTH_CONNECT_OUTPUT_IDENTIFIER &&
-                            it.hasValue()
-                    } <= 1
+                        it.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT) && it.hasSystem() && it.hasValue()
+                    } == 1
             },
-        ) { "Every converted Observation must contain one exact source identifier and at most one output identifier." }
+        ) { "Every converted Observation must contain one exact source and one exact output identifier." }
         require(
             observationSnapshots.all { observation ->
                 observation.identifier.single {
-                    it.system == HealthConnectContract.HEALTH_CONNECT_RECORD_IDENTIFIER
+                    it.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD)
                 }.let {
                     it.system == sourceRecordIdentifierSnapshot.system &&
                         it.value == sourceRecordIdentifierSnapshot.value
@@ -126,7 +125,8 @@ class HealthConnectConversion internal constructor(
         // namespace rather than one this guide owns; only its role-suffixed shape is fixed here.
         require(
             bundleSnapshot.identifier.let {
-                !it.system.isNullOrEmpty() && EXPORT_EVENT_VALUE.matches(it.value.orEmpty())
+                it.hasSystem() && it.hasValue() && it.hasGroveRole(GroveIdentifierRole.EVENT) &&
+                    EVENT_IDENTITY_VALUE.matches(it.value)
             },
         ) { "The Bundle must carry one deployment-namespaced exchange-bundle business identifier." }
         require(
@@ -141,18 +141,43 @@ class HealthConnectConversion internal constructor(
         ) {
             "Bundle fullUrl values must be unique."
         }
+        bundleSnapshot.requireGroveEntryIdentitySelection()
+        bundleSnapshot.requireGroveReferencePolicy()
         require(
             bundleSnapshot.entry.all { entry ->
-                val identityExtensions = entry.extension.filter {
-                    it.url == GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION
+                val device = entry.resource as? org.hl7.fhir.r4.model.Device ?: return@all true
+                val entryIdentifier = (
+                    entry.extension.single {
+                        it.url == GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION
+                    }.value as Identifier
+                    )
+                when {
+                    device.meta.profile.any {
+                        it.value == HealthConnectContract.MOBILE_APPLICATION_DEVICE_PROFILE
+                    } -> device.identifier.count {
+                        it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
+                    } == 1 && device.identifier.single {
+                        it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
+                    }.samePair(entryIdentifier)
+                    device.meta.profile.any {
+                        it.value == HealthConnectContract.MOBILE_HOST_DEVICE_PROFILE
+                    } -> device.identifier.size == 1 && device.identifier.singleOrNull {
+                        it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
+                    }?.samePair(entryIdentifier) == true
+                    device.meta.profile.any {
+                        it.value == HealthConnectContract.MOBILE_RECORDING_DEVICE_PROFILE
+                    } -> device.identifier.size == 2 &&
+                        device.identifier.count {
+                            it.hasGroveRole(GroveIdentifierRole.RECORDING_DEVICE)
+                        } == 1 && device.identifier.singleOrNull {
+                            it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
+                        }?.samePair(entryIdentifier) == true
+                    else -> true
                 }
-                identityExtensions.size == 1 &&
-                    (identityExtensions.single().value as? Identifier)?.let { identifier ->
-                        identifier.hasSystem() && identifier.hasValue() &&
-                            entry.fullUrl == GroveExchangeIdentity.fullUrl(identifier)
-                    } == true
             },
-        ) { "Every Bundle entry fullUrl must derive from its one exact business-identity extension." }
+        ) {
+            "Grove Devices must expose their exact closed typed identities and select the event snapshot as entry key."
+        }
         val bundledObservations = bundleSnapshot.entry.mapNotNull { it.resource as? Observation }
         require(
             bundledObservations.size == observationSnapshots.size &&
@@ -160,6 +185,41 @@ class HealthConnectConversion internal constructor(
                     .zip(observationSnapshots.sortedBy(::completeOutputIdentifierKey))
                     .all { (bundled, converted) -> bundled.equalsDeep(converted) },
         ) { "The Bundle Observation set must exactly match the converted output set." }
+        val specimenEntries = bundleSnapshot.entry.filter { it.resource is Specimen }
+        require(
+            specimenEntries.all { entry ->
+                val specimen = entry.resource as Specimen
+                val sourceIdentifier = specimen.identifier.singleOrNull {
+                    it.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD)
+                }
+                val outputIdentifier = specimen.identifier.singleOrNull {
+                    it.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT)
+                }
+                val entryIdentifier = (
+                    entry.extension.single {
+                        it.url == GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION
+                    }.value as Identifier
+                    )
+                specimen.hasIdElement().not() &&
+                    specimen.meta.profile.map { it.value } ==
+                    listOf(HealthConnectContract.HEALTH_CONNECT_SPECIMEN_PROFILE) &&
+                    specimen.identifier.size == 2 &&
+                    sourceIdentifier?.samePair(sourceRecordIdentifierSnapshot) == true &&
+                    outputIdentifier?.samePair(entryIdentifier) == true
+            },
+        ) {
+            "Every Health Connect Specimen must contain exactly its typed source and specimen-output identities."
+        }
+        val specimenReferences = bundledObservations
+            .filter(Observation::hasSpecimen)
+            .map { it.specimen.reference }
+        require(
+            specimenReferences.size == specimenEntries.size &&
+                specimenReferences.toSet() == specimenEntries.map { it.fullUrl }.toSet() &&
+                (sourceRecordType == "BloodGlucoseRecord") == (specimenEntries.size == 1),
+        ) {
+            "A supported BloodGlucoseRecord must have one referenced Specimen and no other conversion may emit one."
+        }
         val bundledProvenances = bundleSnapshot.entry.mapNotNull { it.resource as? Provenance }
         require(
             if (provenanceSnapshot == null) {
@@ -168,12 +228,30 @@ class HealthConnectConversion internal constructor(
                 bundledProvenances.size == 1 && bundledProvenances.single().equalsDeep(provenanceSnapshot)
             },
         ) { "The Bundle must contain exactly the conversion result's Provenance, when present." }
-        val outputKeys = observationIdentifiers.map { "${it.system}|${it.value}" }.toSet()
+        val outputEntries = bundleSnapshot.entry.mapNotNull { entry ->
+            val identifier = entry.extension.single {
+                it.url == GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION
+            }.value as Identifier
+            identifier.takeIf { it.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT) }
+                ?.key()
+                ?.let { it to entry }
+        }.toMap()
+        val provenanceTargets = provenanceSnapshot?.target.orEmpty()
         require(
-            provenanceSnapshot?.target.orEmpty().map { target ->
-                "${target.identifier.system}|${target.identifier.value}"
-            }.toSet() == outputKeys,
-        ) { "Conversion Provenance must target every exact output identifier." }
+            outputEntries.size == outputIdentifiers.size &&
+                provenanceTargets.size == outputEntries.size &&
+                provenanceTargets.mapNotNull { target ->
+                    target.identifier.takeIf { it.hasSystem() && it.hasValue() }?.key()
+                }.distinct().size == provenanceTargets.size &&
+                provenanceTargets.all { target ->
+                    val key = target.identifier.takeIf { it.hasSystem() && it.hasValue() }?.key()
+                    val outputEntry = key?.let(outputEntries::get)
+                    outputEntry != null && target.reference == outputEntry.fullUrl &&
+                        target.type == outputEntry.resource.fhirType()
+                },
+        ) {
+            "Conversion Provenance must literally target every exact output entry with its typed identifier and resource type."
+        }
         provenanceSnapshot?.let { conversionProvenance ->
             require(!conversionProvenance.hasIdElement()) {
                 "The producer must not assign a Provenance Resource.id."
@@ -189,34 +267,50 @@ class HealthConnectConversion internal constructor(
             }.value as Identifier
             require(
                 !entryIdentifier.system.isNullOrEmpty() &&
-                    CONVERSION_EVENT_VALUE.matches(entryIdentifier.value.orEmpty()),
+                    entryIdentifier.hasGroveRole(GroveIdentifierRole.ENTRY_NODE) &&
+                    ENTRY_NODE_IDENTITY_VALUE.matches(entryIdentifier.value.orEmpty()),
             ) { "The Provenance entry must use a deployment-namespaced conversion-provenance identifier." }
         }
     }
 
     val observationIdentifiers: List<Identifier>
         get() = observationSnapshots.map { observation -> observationIdentity(observation).copy() }
+
+    /** Every addressable active output node, including synthesized Specimens and source artifacts. */
+    val outputIdentifiers: List<Identifier>
+        get() = bundleSnapshot.groveOutputIdentifiers().map(Identifier::copy)
+}
+
+/** Non-throwing public conversion boundary; exceptions remain reserved for producer/configuration bugs. */
+sealed interface HealthConnectConversionOutcome {
+    data class Converted(val conversion: HealthConnectConversion) : HealthConnectConversionOutcome
+
+    data class Unsupported(val sourceType: String, val reason: String) : HealthConnectConversionOutcome
+
+    data class Rejected(val reason: String) : HealthConnectConversionOutcome
 }
 
 /**
  * The identity of one emitted Observation.
  *
- * A Record that yields several Observations gives each an output identifier to tell them apart.
- * A one-to-one conversion emits none, because a second namespace repeating the record identifier
- * would identify nothing new, so the record identifier is the Observation's identity.
+ * Every Observation has one source-output identity. This remains true for one-to-one mappings so a
+ * later retraction can target the exact output independently of the source-record identity.
  */
 internal fun observationIdentity(observation: Observation): Identifier =
-    observation.identifier.firstOrNull {
-        it.system == HealthConnectContract.HEALTH_CONNECT_OUTPUT_IDENTIFIER
-    } ?: observation.identifier.single {
-        it.system == HealthConnectContract.HEALTH_CONNECT_RECORD_IDENTIFIER
-    }
+    observation.identifier.single { it.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT) }
 
-private val IDENTITY_VALUE = Regex("""v1:[^|]+(\|[^|]+)+""")
-private val EXPORT_EVENT_VALUE =
-    Regex("""[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\|[1-9][0-9]*\|exchange-bundle""")
-private val CONVERSION_EVENT_VALUE =
-    Regex("""[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\|[1-9][0-9]*\|conversion-provenance""")
+/** Selected entry identities for every active semantic or source-preservation output node. */
+internal fun Bundle.groveOutputIdentifiers(): List<Identifier> = entry.mapNotNull { bundleEntry ->
+    bundleEntry.resource
+        .takeIf { it.fhirType() in HealthConnectContract.activeOutputResourceTypes }
+        ?.typedGroveIdentifiers("${bundleEntry.resource.fhirType()} output")
+        ?.get(GroveIdentifierRole.SOURCE_OUTPUT)
+}
+
+private val EVENT_IDENTITY_VALUE =
+    Regex("""e2:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
+private val ENTRY_NODE_IDENTITY_VALUE =
+    Regex("""n2:[a-z][a-z0-9-]*:(0|[1-9][0-9]*):[A-Za-z0-9_-]{43}""")
 
 /**
  * Why one Health Connect record cannot be converted.
@@ -230,14 +324,19 @@ private val CONVERSION_EVENT_VALUE =
  * condition that depends on record data belongs in this hierarchy instead, so it reaches the
  * journal as a rejection.
  */
-sealed class HealthConnectRecordRejected(message: String) : IllegalArgumentException(message)
+sealed class HealthConnectRecordRejected(message: String, cause: Throwable? = null) :
+    IllegalArgumentException(message, cause)
 
 /** A record type outside the published inventory; the producer emits nothing for it. */
-class UnsupportedHealthConnectRecord(recordType: String) :
+class UnsupportedHealthConnectRecord(val recordType: String) :
     HealthConnectRecordRejected("Unsupported Health Connect record type: $recordType")
 
-open class InvalidHealthConnectRecord(message: String) : HealthConnectRecordRejected(message)
+open class InvalidHealthConnectRecord(message: String, cause: Throwable? = null) :
+    HealthConnectRecordRejected(message, cause)
 
 private fun completeOutputIdentifierKey(observation: Observation): String =
     observationIdentity(observation)
         .let { "${it.system.length}:${it.system}\u0000${it.value.length}:${it.value}" }
+
+private fun Identifier.samePair(other: Identifier): Boolean =
+    system == other.system && value == other.value

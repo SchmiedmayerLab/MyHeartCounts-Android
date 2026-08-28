@@ -73,6 +73,9 @@ while (( $# > 0 )); do
     esac
 done
 
+script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repository_root="$(cd "$script_directory/.." && pwd)"
+
 require_regular_file() {
     local label="$1"
     local path="$2"
@@ -88,20 +91,32 @@ if [[ -z "$grove_fhir_root" || -L "$grove_fhir_root" || ! -d "$grove_fhir_root" 
 fi
 require_regular_file "Grove Mobile package" "$mobile_package"
 require_regular_file "Grove Health Connect package" "$health_connect_package"
+canonical_file() {
+    local path="$1"
+    local directory
+    directory="$(cd "$(dirname "$path")" && pwd -P)"
+    printf '%s/%s\n' "$directory" "$(basename "$path")"
+}
+grove_fhir_root="$(cd "$grove_fhir_root" && pwd -P)"
+mobile_package="$(canonical_file "$mobile_package")"
+health_connect_package="$(canonical_file "$health_connect_package")"
 # The canonical contract is projected from the same catalogs the guides are built from, so a
 # catalog change that never reached this repository has to fail here rather than at runtime.
-python3 -B Scripts/generate-grove-fhir-kotlin-contract.py \
+python3 -B "$repository_root/Scripts/generate-grove-fhir-kotlin-contract.py" \
     --catalog-directory "$grove_fhir_root/catalog" \
+    --output "$repository_root/health-fhir/src/main/kotlin/org/grovealliance/health/fhir/HealthConnectContract.kt" \
+    --test-vector-output "$repository_root/health-fhir/src/test/resources/grove-exchange-protocol-test-vectors.json" \
     --check
 
 require_regular_file "FHIR Validator jar" "$validator_jar"
+validator_jar="$(canonical_file "$validator_jar")"
 require_regular_file "grove-fhir producer validator" "$grove_fhir_root/Scripts/validate-producer.py"
 require_regular_file "Grove Health Connect adapter catalog" "$grove_fhir_root/catalog/health-connect-adapter.json"
-
-script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repository_root="$(cd "$script_directory/.." && pwd)"
+require_regular_file "Grove exchange-protocol catalog" "$grove_fhir_root/catalog/exchange-protocol.json"
+require_regular_file "Grove measurement catalog" "$grove_fhir_root/catalog/measurement-catalog.json"
 
 producer_inputs=(
+    "Scripts/generate-grove-fhir-kotlin-contract.py"
     "Scripts/validate-health-connect-fhir-conformance.sh"
     "build-logic"
     "build.gradle.kts"
@@ -134,6 +149,7 @@ assert_clean_producer_inputs() {
 assert_clean_producer_inputs
 producer_revision="$(git -C "$repository_root" rev-parse --verify HEAD)"
 temporary_root="$(mktemp -d "${TMPDIR:-/tmp}/mhc-health-connect-fhir.XXXXXX")"
+temporary_root="$(cd "$temporary_root" && pwd -P)"
 trap 'rm -rf -- "$temporary_root"' EXIT
 
 generated_root="$temporary_root/generated"
@@ -146,6 +162,8 @@ capability_path="$generated_root/health-connect-capabilities.json"
     GROVE_CONFORMANCE_EXPORT="$conformance_root" \
         GROVE_WIRE_EXPORT="$wire_root" \
         GROVE_CAPABILITY_EXPORT="$capability_path" \
+        GROVE_EXCHANGE_PROTOCOL_CATALOG="$grove_fhir_root/catalog/exchange-protocol.json" \
+        GROVE_MOBILE_EXCHANGE_CORPUS_DIRECTORY="$grove_fhir_root/Conformance/corpora/mobile-exchange" \
         ./gradlew :health-fhir:testDebugUnitTest --rerun-tasks --console=plain
 )
 assert_clean_producer_inputs
@@ -178,6 +196,7 @@ if capability != {
     "sourcePackage": catalog["source"]["package"],
     "sourceVersion": catalog["source"]["version"],
     "sourceTypeExtension": catalog["sourceTypeExtension"]["url"],
+    "fieldDispositionSourceVersion": catalog["source"]["version"],
     "allRecordTypes": sorted(row["token"] for row in catalog["recordTypes"]),
     "supportedRecordTypes": sorted(
         row["token"] for row in catalog["recordTypes"] if row["status"] == "supported"
@@ -203,13 +222,15 @@ for source in "${wire_paths[@]}"; do
     cp "$source" "$manifest_root/resources/wire-$(basename "$source")"
 done
 
-python3 -B - "$manifest_root" "$producer_revision" <<'PY'
+python3 -B - "$manifest_root" "$producer_revision" \
+    "$grove_fhir_root/catalog/measurement-catalog.json" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
 revision = sys.argv[2]
+release_version = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))["version"]
 resources = []
 for path in sorted((root / "resources").glob("*.json")):
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -263,19 +284,19 @@ manifest = {
     "fhirVersion": "4.0.1",
     "producer": {
         "name": "My Heart Counts Android Health Connect",
-        "version": "0.4.0",
+        "version": release_version,
         "revision": revision,
     },
     "packages": [
         {
             "alias": "mobile",
             "packageId": "org.grovealliance.fhir.mobile",
-            "version": "0.5.0",
+            "version": release_version,
         },
         {
             "alias": "health-connect",
             "packageId": "org.grovealliance.fhir.health-connect",
-            "version": "0.5.0",
+            "version": release_version,
         },
     ],
     "resources": resources,

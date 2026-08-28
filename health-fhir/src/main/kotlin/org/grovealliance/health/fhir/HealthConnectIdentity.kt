@@ -8,179 +8,307 @@
 package org.grovealliance.health.fhir
 
 import org.hl7.fhir.r4.model.Identifier
+import java.security.MessageDigest
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
+import java.util.Base64
 
-/** Exact identity algorithms defined by the Grove Health Connect 0.3.0 machine contract. */
+/** Domain-separated opaque identities defined by the Grove Health Connect 0.6.0 contract. */
 @Suppress("TooManyFunctions")
 internal object HealthConnectIdentity {
-    fun recordValue(repositoryScope: String, recordType: String, rawRecordId: String): String {
-        require(REPOSITORY_SCOPE.matches(repositoryScope)) {
-            "Health Connect repository scope must use canonical lowercase UUID text."
-        }
+    fun record(
+        key: GroveHmacIdentityKey,
+        repositoryScope: FhirIdentifierKey,
+        recordType: String,
+        rawRecordId: String,
+    ): HealthConnectSourceIdentity {
         require(recordType in HealthConnectCatalog.allRecordTypeIdentifiers) {
             "Record type must belong to the closed Health Connect 1.1.0 inventory."
         }
         require(rawRecordId.isNotEmpty()) { "Health Connect raw record id must not be empty." }
-        return compose(repositoryScope, recordType, rawRecordId)
-    }
-
-    /**
-     * The published recording-device identity, or `null` when Health Connect states too little
-     * to identify a recorder.
-     *
-     * One participant's recorder becomes one Device instead of one per record. The subject
-     * partitions the key because a wearable belongs to a person, so two participants using the
-     * same model stay two devices. Health Connect states no hardware version, so the key rests on
-     * the manufacturer and model it does state; a record naming neither has no admitted identity.
-     */
-    fun recordingDeviceValue(subject: String, manufacturer: String?, model: String?): String? {
-        if (subject.isEmpty() || manufacturer.isNullOrEmpty()) {
-            return null
-        }
-        if (model.isNullOrEmpty()) {
-            return null
-        }
-        // Fixed arity of five, so the absent hardware version is an empty component, not a missing one.
-        return "v1:" + listOf(subject, "health-connect", manufacturer, model, "")
-            .onEach(::requireNoSeparator)
-            .joinToString(SEPARATOR)
-    }
-
-    /**
-     * The sample carries no measured value, so a corrected reading at the same instant keeps its
-     * identity and a receiver sees one measurement revised rather than two recorded.
-     */
-    fun heartRateSampleOutput(
-        source: Identifier,
-        sampleTime: Instant,
-        occurrence: Int,
-    ): Identifier {
-        require(occurrence >= 0) { "Heart-rate identity requires an unsigned occurrence." }
-        return outputIdentifier(
-            source,
-            listOf(SAMPLE_SELECTOR, sampleTime.utc9(), occurrence.toString()),
+        return HealthConnectSourceIdentity(
+            adapterId = ADAPTER_ID,
+            sourceType = recordType,
+            repositoryScope = repositoryScope,
+            nativeRecordId = rawRecordId,
+            identifier = key.identifier(
+                GroveOpaqueIdentityKind.SOURCE_RECORD,
+                ADAPTER_ID,
+                recordType,
+                repositoryScope.system,
+                repositoryScope.value,
+                rawRecordId,
+            ),
         )
     }
+
+    /** A Device instance requires a governed per-unit token; model/manufacturer are not identity. */
+    fun recordingDevice(
+        key: GroveHmacIdentityKey,
+        subjectKey: FhirIdentifierKey,
+        stablePerUnitToken: String,
+    ): Identifier {
+        require(stablePerUnitToken.isNotBlank()) {
+            "A recording Device instance requires a stable, explicitly governed per-unit token."
+        }
+        return key.identifier(
+            GroveOpaqueIdentityKind.RECORDING_DEVICE,
+            ADAPTER_ID,
+            subjectKey.system,
+            subjectKey.value,
+            stablePerUnitToken,
+        )
+    }
+
+    /** Event-bound immutable application/host facts; never a mutable long-lived Device identity. */
+    fun deviceSnapshot(
+        key: GroveHmacIdentityKey,
+        event: Identifier,
+        deviceRole: String,
+        sourceDeviceToken: String,
+    ): Identifier {
+        require(event.hasSystem() && event.hasValue() && event.hasGroveRole(GroveIdentifierRole.EVENT)) {
+            "A Device snapshot requires its complete typed exchange-event Identifier."
+        }
+        require(deviceRole.matches(DEVICE_ROLE)) {
+            "A Device snapshot role must use the closed lowercase token grammar."
+        }
+        GroveUnicode.requireScalarText(sourceDeviceToken, "Device snapshot source token")
+        require(sourceDeviceToken.isNotBlank()) { "A Device snapshot requires a nonblank source token." }
+        return key.identifier(
+            GroveOpaqueIdentityKind.DEVICE_SNAPSHOT,
+            event.system,
+            event.value,
+            deviceRole,
+            sourceDeviceToken,
+        )
+    }
+
+    fun writerRecord(
+        key: GroveHmacIdentityKey,
+        writerApplication: FhirIdentifierKey,
+        clientRecordId: String,
+    ): Identifier = key.identifier(
+        GroveOpaqueIdentityKind.WRITER_RECORD,
+        writerApplication.system,
+        writerApplication.value,
+        clientRecordId,
+    )
+
+    fun heartRateSampleOutput(
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
+        sampleTime: Instant,
+        duplicateOccurrence: Int,
+    ): Identifier = sampleOutput(
+        key,
+        source,
+        sampleTime,
+        duplicateOccurrence,
+    )
 
     fun seriesSampleOutput(
-        source: Identifier,
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
         sampleTime: Instant,
-        occurrence: Int,
+        duplicateOccurrence: Int,
+    ): Identifier = sampleOutput(
+        key,
+        source,
+        sampleTime,
+        duplicateOccurrence,
+    )
+
+    private fun sampleOutput(
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
+        sampleTime: Instant,
+        duplicateOccurrence: Int,
     ): Identifier {
-        require(occurrence >= 0) { "Series-sample identity requires an unsigned occurrence." }
-        return outputIdentifier(
-            source,
-            listOf(SAMPLE_SELECTOR, sampleTime.utc9(), occurrence.toString()),
+        require(duplicateOccurrence >= 0) { "Sample identity requires an unsigned duplicate occurrence." }
+        return key.identifier(
+            GroveOpaqueIdentityKind.SOURCE_OUTPUT,
+            source.components + listOf(
+                SAMPLE_OUTPUT_ROLE,
+                listOf(sampleTime.utc9(), duplicateOccurrence.toString())
+                    .joinToString(OUTPUT_DISCRIMINATOR_SEPARATOR),
+            ),
         )
     }
 
-    fun nutrientOutput(source: Identifier, nutrientToken: String): Identifier {
+    fun nutrientOutput(
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
+        nutrientToken: String,
+    ): Identifier {
         require(nutrientToken in NUTRIENT_TOKENS) {
             "Nutrient identity requires an admitted Health Connect dietary measurement token."
         }
-        return outputIdentifier(source, listOf(NUTRIENT_SELECTOR, nutrientToken))
+        return key.identifier(
+            GroveOpaqueIdentityKind.SOURCE_OUTPUT,
+            source.components + listOf(PRESENT_FIELD_OUTPUT_ROLE, nutrientToken),
+        )
     }
 
     fun sleepStageOutput(
-        source: Identifier,
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
         start: Instant,
         end: Instant,
         sourceStageToken: String,
-        occurrence: Int,
+        duplicateOccurrence: Int,
     ): Identifier {
         require(sourceStageToken in SLEEP_STAGE_TOKENS) {
             "Sleep-stage identity requires an exact Health Connect 1.1.0 stage token."
         }
-        require(occurrence >= 0) { "Sleep-stage identity requires an unsigned occurrence." }
-        return outputIdentifier(
-            source,
-            listOf(SLEEP_STAGE_SELECTOR, start.utc9(), end.utc9(), sourceStageToken, occurrence.toString()),
+        require(duplicateOccurrence >= 0) { "Sleep-stage identity requires an unsigned duplicate occurrence." }
+        return key.identifier(
+            GroveOpaqueIdentityKind.SOURCE_OUTPUT,
+            source.components + listOf(
+                SLEEP_STAGE_OUTPUT_ROLE,
+                listOf(start.utc9(), end.utc9(), sourceStageToken, duplicateOccurrence.toString())
+                    .joinToString(OUTPUT_DISCRIMINATOR_SEPARATOR),
+            ),
         )
     }
 
     fun segmentOutput(
-        source: Identifier,
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
         start: Instant,
         end: Instant,
         sourceSegmentToken: String,
-        occurrence: Int,
+        duplicateOccurrence: Int,
     ): Identifier {
         require(sourceSegmentToken in HealthConnectWorkoutVocabulary.segmentIdentityTokens) {
             "Workout-segment identity requires an exact Health Connect 1.1.0 segment token."
         }
-        require(occurrence >= 0) { "Workout-segment identity requires an unsigned occurrence." }
-        return outputIdentifier(
-            source,
-            listOf(SEGMENT_SELECTOR, start.utc9(), end.utc9(), sourceSegmentToken, occurrence.toString()),
+        require(duplicateOccurrence >= 0) { "Workout-segment identity requires an unsigned duplicate occurrence." }
+        return key.identifier(
+            GroveOpaqueIdentityKind.SOURCE_OUTPUT,
+            source.components + listOf(
+                WORKOUT_SEGMENT_OUTPUT_ROLE,
+                listOf(start.utc9(), end.utc9(), sourceSegmentToken, duplicateOccurrence.toString())
+                    .joinToString(OUTPUT_DISCRIMINATOR_SEPARATOR),
+            ),
         )
     }
 
-    fun specimen(source: Identifier, sourceSpecimenToken: String): Identifier {
+    fun specimenOutput(
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
+        sourceSpecimenToken: String,
+    ): Identifier {
         require(sourceSpecimenToken in SPECIMEN_TOKENS) {
             "Specimen identity requires an admitted Health Connect specimen token."
         }
-        return identifier(
-            HealthConnectContract.HEALTH_CONNECT_SPECIMEN_IDENTIFIER,
-            source.composedValue() + SEPARATOR + SPECIMEN_SELECTOR + SEPARATOR + requireNoSeparator(sourceSpecimenToken),
+        return key.identifier(
+            GroveOpaqueIdentityKind.SOURCE_OUTPUT,
+            source.components + listOf(SPECIMEN_OUTPUT_ROLE, sourceSpecimenToken),
         )
     }
 
-    /**
-     * The conversion Provenance identity, in the deployment's own namespace.
-     *
-     * An export event is created here rather than read from Health Connect, so two deployments
-     * converting the same Records are expected to differ on it. Everything derived from a Record
-     * stays in this guide's namespaces, where they are expected to agree.
-     */
-    fun conversion(
-        graphIdentifierSystem: String,
-        repositoryScope: String,
-        eventSequence: EventSequence,
-    ): Identifier = event(CONVERSION_ROLE, graphIdentifierSystem, repositoryScope, eventSequence)
+    fun singleOutput(
+        key: GroveHmacIdentityKey,
+        source: HealthConnectSourceIdentity,
+        measurementId: String,
+    ): Identifier {
+        require(MEASUREMENT_ID.matches(measurementId)) {
+            "An exactly-one output requires its canonical measurement id."
+        }
+        return key.identifier(
+            GroveOpaqueIdentityKind.SOURCE_OUTPUT,
+            source.components + listOf(SINGLE_OUTPUT_ROLE, measurementId),
+        )
+    }
 
-    /** The exchange Bundle identity, in the deployment's own namespace. See [conversion]. */
     fun exchange(
-        graphIdentifierSystem: String,
-        repositoryScope: String,
-        eventSequence: EventSequence,
-    ): Identifier = event(EXCHANGE_ROLE, graphIdentifierSystem, repositoryScope, eventSequence)
-
-    private fun outputIdentifier(source: Identifier, selector: List<String>): Identifier = identifier(
-        HealthConnectContract.HEALTH_CONNECT_OUTPUT_IDENTIFIER,
-        (listOf(source.composedValue()) + selector.map(::requireNoSeparator)).joinToString(SEPARATOR),
-    )
-
-    private fun event(
-        role: String,
-        graphIdentifierSystem: String,
-        repositoryScope: String,
+        eventSystem: String,
+        producerInstance: String,
         eventSequence: EventSequence,
     ): Identifier {
-        require(REPOSITORY_SCOPE.matches(repositoryScope)) {
-            "Health Connect repository scope must use canonical lowercase UUID text."
+        requireAbsoluteSystem(eventSystem, "event Identifier system")
+        require(PRODUCER_INSTANCE.matches(producerInstance)) {
+            "Producer instance must use canonical lowercase RFC 4122 UUID text."
         }
-        require(graphIdentifierSystem.isNotEmpty()) {
-            "A deployment graph identifier system is required for an export-created identity."
+        return Identifier().apply {
+            system = eventSystem
+            value = "e2:$producerInstance:${eventSequence.value}"
+            type = org.hl7.fhir.r4.model.CodeableConcept(
+                org.hl7.fhir.r4.model.Coding(
+                    HealthConnectContract.GROVE_IDENTIFIER_ROLE,
+                    GroveIdentifierRole.EVENT.code,
+                    GroveIdentifierRole.EVENT.display,
+                ),
+            )
         }
-        // No scheme prefix: the deployment owns this namespace, so this guide does not version it.
-        return identifier(
-            graphIdentifierSystem,
-            listOf(repositoryScope, eventSequence.value, role).joinToString(SEPARATOR),
+    }
+
+    fun conversionNode(
+        entryNodeSystem: String,
+        event: Identifier,
+    ): Identifier = eventNode(entryNodeSystem, event, "conversion-provenance", 0)
+
+    fun retractionNode(
+        entryNodeSystem: String,
+        event: Identifier,
+    ): Identifier = eventNode(entryNodeSystem, event, "retraction-provenance", 0)
+
+    /** Names a resource without a protocol-selected business identity inside one immutable event. */
+    fun contextNode(
+        entryNodeSystem: String,
+        event: Identifier,
+        resourceRole: String,
+        ordinal: Int,
+    ): Identifier = eventNode(entryNodeSystem, event, resourceRole, ordinal)
+
+    private fun eventNode(
+        entryNodeSystem: String,
+        event: Identifier,
+        resourceRole: String,
+        ordinal: Int,
+    ): Identifier {
+        requireAbsoluteSystem(entryNodeSystem, "entry-node Identifier system")
+        require(event.hasSystem() && event.hasValue() && event.hasGroveRole(GroveIdentifierRole.EVENT)) {
+            "An entry node requires its complete typed exchange-event Identifier."
+        }
+        require(resourceRole.matches(Regex("[a-z][a-z0-9-]*")) && ordinal >= 0) {
+            "Entry-node role and ordinal must use the closed lexical grammar."
+        }
+        val digest = framedSha256(
+            listOf(
+                ENTRY_NODE_DOMAIN,
+                event.system,
+                event.value,
+                resourceRole,
+                ordinal.toString(),
+            ),
         )
+        return Identifier().apply {
+            system = entryNodeSystem
+            value = "n2:$resourceRole:$ordinal:$digest"
+            type = org.hl7.fhir.r4.model.CodeableConcept(
+                org.hl7.fhir.r4.model.Coding(
+                    HealthConnectContract.GROVE_IDENTIFIER_ROLE,
+                    GroveIdentifierRole.ENTRY_NODE.code,
+                    GroveIdentifierRole.ENTRY_NODE.display,
+                ),
+            )
+        }
     }
 
-    /** Recovers the repository scope a Record identifier was composed from. */
-    internal fun repositoryScopeOf(source: Identifier): String {
-        val value = source.composedValue()
-        require(value.startsWith("$SCHEME:")) { "A Health Connect record identifier is a v1 composition." }
-        return value.removePrefix("$SCHEME:").substringBefore(SEPARATOR)
+    private fun framedSha256(fields: List<String>): String {
+        val preimage = GroveExchangeProtocol.frameFields(fields)
+        return Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(MessageDigest.getInstance("SHA-256").digest(preimage))
     }
 
-    private fun Identifier.composedValue(): String {
-        require(hasSystem() && hasValue()) { "A complete source Identifier system and value are required." }
-        return value
+    private fun requireAbsoluteSystem(system: String, field: String) {
+        GroveUnicode.requireScalarText(system, field)
+        require(system.isAbsoluteAsciiUri()) {
+            "$field must be a deployment-owned absolute ASCII RFC 3986 URI."
+        }
     }
 
     private fun Instant.utc9(): String {
@@ -188,28 +316,22 @@ internal object HealthConnectIdentity {
         return UTC_NANOSECOND.format(this)
     }
 
-    /** Joins components behind the scheme version. Nothing is hashed, escaped, or re-encoded. */
-    private fun compose(vararg components: String): String =
-        SCHEME + ":" + components.map(::requireNoSeparator).joinToString(SEPARATOR)
-
-    private fun requireNoSeparator(component: String): String {
-        require(!component.contains(SEPARATOR)) {
-            "An identity component must not contain a vertical bar; such a value is rejected, never escaped."
-        }
-        require(component.none { it.isSurrogate() }) {
-            "An identity component must not contain an isolated Unicode surrogate."
-        }
-        return component
-    }
-
-    private fun identifier(system: String, value: String): Identifier =
-        Identifier().setSystem(system).setValue(value)
-
     private val UTC_NANOSECOND: DateTimeFormatter =
         DateTimeFormatterBuilder().appendInstant(INSTANT_FRACTION_DIGITS).toFormatter()
-    private val REPOSITORY_SCOPE = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-    private val POSITIVE_DECIMAL = Regex("[1-9][0-9]*")
-    private val CANONICAL_DECIMAL = Regex("-?(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?")
+    private val PRODUCER_INSTANCE = Regex(
+        "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+    )
+    private val DEVICE_ROLE = Regex("[a-z][a-z0-9-]*")
+    private val MEASUREMENT_ID = Regex("[a-z][a-z0-9-]*")
+    private const val ENTRY_NODE_DOMAIN = "org.grovealliance.fhir.entry-node.v2"
+    private const val ADAPTER_ID = "health-connect"
+    private const val OUTPUT_DISCRIMINATOR_SEPARATOR = "|"
+    private const val SINGLE_OUTPUT_ROLE = "single"
+    private const val SAMPLE_OUTPUT_ROLE = "sample"
+    private const val SLEEP_STAGE_OUTPUT_ROLE = "sleep-stage"
+    private const val PRESENT_FIELD_OUTPUT_ROLE = "present-field"
+    private const val SPECIMEN_OUTPUT_ROLE = "specimen"
+    private const val WORKOUT_SEGMENT_OUTPUT_ROLE = "workout-segment"
 
     private val NUTRIENT_TOKENS =
         HealthConnectContract.mobileDietaryProfiles.keys + setOf(
@@ -236,15 +358,28 @@ internal object HealthConnectIdentity {
         "SPECIMEN_SOURCE_SERUM",
         "SPECIMEN_SOURCE_INTERSTITIAL_FLUID",
     )
-
-    private const val SCHEME = "v1"
-    private const val SEPARATOR = "|"
-    private const val SPECIMEN_SELECTOR = "specimen"
-    private const val SAMPLE_SELECTOR = "sample"
-    private const val NUTRIENT_SELECTOR = "nutrient"
-    private const val SLEEP_STAGE_SELECTOR = "sleep-stage"
-    private const val SEGMENT_SELECTOR = "workout-segment"
-    private const val CONVERSION_ROLE = "conversion-provenance"
-    private const val EXCHANGE_ROLE = "exchange-bundle"
     private const val INSTANT_FRACTION_DIGITS = 9
+}
+
+/** The exact catalog components and opaque identifier for one source record. */
+internal data class HealthConnectSourceIdentity(
+    val adapterId: String,
+    val sourceType: String,
+    val repositoryScope: FhirIdentifierKey,
+    val nativeRecordId: String,
+    val identifier: Identifier,
+) {
+    val components: List<String>
+        get() = listOf(
+            adapterId,
+            sourceType,
+            repositoryScope.system,
+            repositoryScope.value,
+            nativeRecordId,
+        )
+
+    override fun toString(): String =
+        "HealthConnectSourceIdentity(" +
+            "adapterId=$adapterId, sourceType=$sourceType, " +
+            "repositoryScope=$repositoryScope, nativeRecordId=<redacted>, identifier=<redacted>)"
 }

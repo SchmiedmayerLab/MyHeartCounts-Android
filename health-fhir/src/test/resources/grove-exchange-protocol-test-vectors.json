@@ -1,0 +1,276 @@
+{
+  "keyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "keyId": "test-key",
+  "epoch": "1",
+  "warning": "Public conformance key only. A production deployment must reject this key.",
+  "identitySystems": [
+    {
+      "identityKind": "source-record",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1"
+    },
+    {
+      "identityKind": "source-output",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-source-output-v2/test-key/1"
+    },
+    {
+      "identityKind": "writer-record",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-writer-record-v2/test-key/1"
+    },
+    {
+      "identityKind": "provider-record",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-provider-record-v2/test-key/1"
+    },
+    {
+      "identityKind": "provider-output",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-provider-output-v2/test-key/1"
+    },
+    {
+      "identityKind": "source-artifact",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-source-artifact-v2/test-key/1"
+    },
+    {
+      "identityKind": "provider-artifact",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v2/test-key/1"
+    },
+    {
+      "identityKind": "source-context",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-source-context-v2/test-key/1"
+    },
+    {
+      "identityKind": "recording-device",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-recording-device-v2/test-key/1"
+    },
+    {
+      "identityKind": "device-snapshot",
+      "system": "https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v2/test-key/1"
+    }
+  ],
+  "measurementExamples": {
+    "effectiveInstant": "2026-08-19T10:30:00-07:00",
+    "effectivePeriodStart": "2026-08-19T00:00:00-07:00",
+    "effectivePeriodEnd": "2026-08-20T00:00:00-07:00",
+    "healthConnectLastModifiedTime": "2026-08-20T08:00:00Z",
+    "nativeRecordPrefix": "record-",
+    "repositoryScope": {
+      "system": "https://study.example.org/fhir/NamingSystem/source-repository",
+      "value": "1f5c58aa-6ec6-4e79-a682-829a9debd3f5"
+    },
+    "providerScope": {
+      "system": "https://study.example.org/fhir/NamingSystem/provider-account",
+      "value": "acct-7f3a9c"
+    },
+    "globalProviderScope": {
+      "system": "https://study.example.org/fhir/NamingSystem/provider-key-space",
+      "value": "oura-document-id-global"
+    },
+    "coordinates": {
+      "canonicalInstant": "2026-08-19T17:30:00.000000000Z",
+      "canonicalPeriodStart": "2026-08-19T07:00:00.000000000Z",
+      "canonicalPeriodEnd": "2026-08-20T07:00:00.000000000Z",
+      "occurrence": "0",
+      "sleepStageToken": "STAGE_TYPE_LIGHT",
+      "exerciseSegmentToken": "EXERCISE_LAP"
+    }
+  },
+  "identities": [
+    {
+      "id": "unicode-and-separator-source-record",
+      "identityKind": "source-record",
+      "components": [
+        "health-connect",
+        "RestingHeartRateRecord",
+        "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "default",
+        "record|東京"
+      ],
+      "value": "v2:test-key:1:UKY2qgzSB8--SueGxEfOhpElzHTVJ6usIUWV_KUTD6o"
+    },
+    {
+      "id": "multi-output-sample",
+      "identityKind": "source-output",
+      "components": [
+        "health-connect",
+        "HeartRateRecord",
+        "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "default",
+        "record-heart-001",
+        "sample",
+        "2026-08-19T10:30:00.000000000Z|0"
+      ],
+      "value": "v2:test-key:1:PQCWz9dZSrJm-KrbhbkckGeowkjhSSwWDRCVuF3VfXw"
+    },
+    {
+      "id": "provider-account-complete-pair",
+      "identityKind": "provider-record",
+      "components": [
+        "withings",
+        "measure",
+        "https://accounts.example.org",
+        "patient|α",
+        "17348211"
+      ],
+      "value": "v2:test-key:1:p3NFdQ-hmHon98JG7cmCbLncbAmNkjkBa5sYocSr6pw"
+    },
+    {
+      "id": "provider-output-domain-separated",
+      "identityKind": "provider-output",
+      "components": [
+        "withings",
+        "getmeas:9+10",
+        "https://accounts.example.org",
+        "patient|α",
+        "17348211",
+        "blood-pressure-panel",
+        "single"
+      ],
+      "value": "v2:test-key:1:HjBwHRt0W3-CbhJbc7hGpWRp92zug70gt5m626T4Y2U"
+    },
+    {
+      "id": "provider-artifact-domain-separated",
+      "identityKind": "provider-artifact",
+      "components": [
+        "google-health-api",
+        "heart-rate",
+        "https://accounts.example.org",
+        "patient|α",
+        "recording-001",
+        "provider-recording",
+        "0"
+      ],
+      "value": "v2:test-key:1:CxLpZ4NQee12xCyJCGimrxMLEKvbRt54Kl6RTh9UsrU"
+    },
+    {
+      "id": "generic-source-artifact",
+      "identityKind": "source-artifact",
+      "components": [
+        "sensorkit",
+        "device-usage",
+        "https://store.example.org",
+        "default",
+        "record-001",
+        "native-recording",
+        "0"
+      ],
+      "value": "v2:test-key:1:7QkJwJojYb7w6BlKMy3TyoX-sgiPzjGJHL1euY-4SKk"
+    },
+    {
+      "id": "writer-record-complete-application-pair",
+      "identityKind": "writer-record",
+      "components": [
+        "https://applications.example.org",
+        "com.withings.wiscale2",
+        "logical-record-001"
+      ],
+      "value": "v2:test-key:1:N4QSlWU6sNp9ahfyfSRTUO0K_VIZZoy-Lw3JTNrDzP4"
+    },
+    {
+      "id": "healthkit-medication-source-context",
+      "identityKind": "source-context",
+      "components": [
+        "healthkit",
+        "medication-health-concept",
+        "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "default",
+        "2f8a51c6-9d34-4e07-b2f1-63c8ad905e12"
+      ],
+      "value": "v2:test-key:1:nq3ZogmXHSznC1LC1wNMm7KTQChgapPzmjmGeB9RHcw"
+    },
+    {
+      "id": "recording-device-per-unit",
+      "identityKind": "recording-device",
+      "components": [
+        "healthkit",
+        "https://study.example.org/participants",
+        "participant-001",
+        "watch-unit-token-001"
+      ],
+      "value": "v2:test-key:1:MWGV3Vfk0jfLIr0nowr_I7TAwoqGtpSkxUi1d8FxTnE"
+    },
+    {
+      "id": "device-snapshot-per-event",
+      "identityKind": "device-snapshot",
+      "components": [
+        "https://study.example.org/fhir/NamingSystem/grove-event-v2",
+        "e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42",
+        "application",
+        "com.example.app|1.2.3"
+      ],
+      "value": "v2:test-key:1:TUaZacIuSMAFl_WbhxvMBX4AgxIKcHw_KvbntQdXYxQ"
+    }
+  ],
+  "invalidIdentities": [
+    {
+      "id": "empty-typed-component",
+      "identityKind": "source-record",
+      "components": [
+        "health-connect",
+        "RestingHeartRateRecord",
+        "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "",
+        "record-001"
+      ],
+      "expectedError": "empty-component"
+    },
+    {
+      "id": "provider-components-under-generic-record-kind",
+      "identityKind": "source-record",
+      "components": [
+        "oura",
+        "daily_activity",
+        "https://accounts.example.org",
+        "patient-001",
+        "activity-001"
+      ],
+      "expectedError": "provider-kind-required"
+    },
+    {
+      "id": "provider-components-under-generic-output-kind",
+      "identityKind": "source-output",
+      "components": [
+        "withings",
+        "getmeas:9+10",
+        "https://accounts.example.org",
+        "patient-001",
+        "17348211",
+        "blood-pressure-panel",
+        "single"
+      ],
+      "expectedError": "provider-kind-required"
+    },
+    {
+      "id": "provider-components-under-generic-artifact-kind",
+      "identityKind": "source-artifact",
+      "components": [
+        "google-health-api",
+        "heart-rate",
+        "https://accounts.example.org",
+        "patient-001",
+        "recording-001",
+        "provider-recording",
+        "0"
+      ],
+      "expectedError": "provider-kind-required"
+    }
+  ],
+  "event": {
+    "system": "https://study.example.org/fhir/NamingSystem/grove-event-v2",
+    "producerInstance": "1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+    "sequence": "42",
+    "value": "e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42"
+  },
+  "entryNode": {
+    "system": "https://study.example.org/fhir/NamingSystem/grove-entry-node-v2",
+    "role": "conversion-provenance",
+    "ordinal": "0",
+    "value": "n2:conversion-provenance:0:SwGD7C4DT5_9kgIOQ9h7W8I4UdwJPuEOnkh2TgQVwko",
+    "fullUrl": "urn:uuid:9908feb7-0370-5f06-a689-f8afa210eb41"
+  },
+  "fullUrls": [
+    {
+      "id": "unicode-value-and-escaped-system",
+      "system": "https://xn--fsq.example/%E8%AD%98%E5%88%A5%E5%AD%90",
+      "value": "café|東京",
+      "fullUrl": "urn:uuid:d35e4203-71f6-595c-bd1b-306b8414974e"
+    }
+  ]
+}

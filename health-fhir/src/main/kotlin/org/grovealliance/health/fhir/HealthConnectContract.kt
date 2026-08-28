@@ -12,15 +12,26 @@ package org.grovealliance.health.fhir
 /** Canonicals shared with the Grove FHIR Mobile and Health Connect packages. */
 object HealthConnectContract {
     const val FHIR_VERSION = "4.0.1"
-    const val PACKAGE_VERSION = "0.5.0"
-    const val CONVERSION_CONTRACT_VERSION = "health-connect-r4-0.5.0"
+    const val PACKAGE_VERSION = "0.6.0"
+    const val CONVERSION_CONTRACT_VERSION = "health-connect-r4-0.6.0"
     const val CANONICAL_ROOT = "https://grovealliance.org/fhir"
     const val MOBILE_BASE = "$CANONICAL_ROOT/mobile"
     const val HEALTH_CONNECT_BASE = "$CANONICAL_ROOT/health-connect"
 
+    /** Closed provider codes admitted by the provider-specific HMAC identity domains. */
+    internal val providerCodes: Set<String> = setOf(
+        "google-health-api",
+        "oura",
+        "withings",
+    )
+
     const val MOBILE_OBSERVATION_PROFILE = "$MOBILE_BASE/StructureDefinition/grove-mobile-observation"
     const val MOBILE_EXCHANGE_BUNDLE_PROFILE = "$MOBILE_BASE/StructureDefinition/grove-mobile-exchange-bundle"
+    const val MOBILE_RETRACTION_BUNDLE_PROFILE = "$MOBILE_BASE/StructureDefinition/grove-mobile-retraction-bundle"
+    const val MOBILE_RETRACTION_PROVENANCE_PROFILE =
+        "$MOBILE_BASE/StructureDefinition/grove-mobile-retraction-provenance"
     const val MOBILE_APPLICATION_DEVICE_PROFILE = "$MOBILE_BASE/StructureDefinition/grove-application-device"
+    const val MOBILE_HOST_DEVICE_PROFILE = "$MOBILE_BASE/StructureDefinition/grove-host-device"
     const val MOBILE_RECORDING_DEVICE_PROFILE = "$MOBILE_BASE/StructureDefinition/grove-recording-device"
     const val HEALTH_CONNECT_OBSERVATION_PROFILE = "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-observation"
     const val HEALTH_CONNECT_SPECIMEN_PROFILE = "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-specimen"
@@ -194,31 +205,374 @@ object HealthConnectContract {
         HEALTH_CONNECT_TOTAL_ENERGY_PROFILE,
     )
 
-    const val HEALTH_CONNECT_RECORD_IDENTIFIER = "$HEALTH_CONNECT_BASE/NamingSystem/health-connect-record-id"
-    const val HEALTH_CONNECT_OUTPUT_IDENTIFIER = "$HEALTH_CONNECT_BASE/NamingSystem/health-connect-output-id"
-    const val HEALTH_CONNECT_SPECIMEN_IDENTIFIER = "$HEALTH_CONNECT_BASE/NamingSystem/health-connect-specimen-id"
-    const val ANDROID_PACKAGE_IDENTIFIER = "$HEALTH_CONNECT_BASE/NamingSystem/android-package-name"
+    /** Exact direct profile for every protocol-declared adapter-only active output type. */
+    internal val adapterOnlyOutputProfiles: Map<String, String> = mapOf(
+        "MedicationAdministration" to
+            "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-medication-dose-event",
+        "MedicationStatement" to
+            "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-user-annotated-medication",
+        "Specimen" to
+            "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-specimen",
+        "VisionPrescription" to
+            "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vision-prescription",
+    )
 
-    const val WRITER_RECORD_IDENTIFIER = "$MOBILE_BASE/NamingSystem/grove-writer-record-id"
+    /** Closed resource types admitted in a Mobile active event graph. */
+    internal val activeOutputResourceTypes: Set<String> = setOf(
+        "Observation",
+        "DocumentReference",
+        "Specimen",
+        "VisionPrescription",
+        "MedicationAdministration",
+        "MedicationStatement",
+    )
+    internal val activeSupportingResourceTypes: Set<String> = setOf(
+        "Patient",
+        "Device",
+        "ResearchStudy",
+        "ResearchSubject",
+        "PlanDefinition",
+        "QuestionnaireResponse",
+    )
+    const val ACTIVE_LIFECYCLE_RESOURCE_TYPE = "Provenance"
+
+    /** Catalog-priority business Identifier used as each exchange entry key. */
+    internal val entryIdentifierPriority: List<GroveIdentifierRole> = listOf(
+        GroveIdentifierRole.SOURCE_OUTPUT,
+        GroveIdentifierRole.SOURCE_ARTIFACT,
+        GroveIdentifierRole.SOURCE_RECORD,
+        GroveIdentifierRole.WRITER_RECORD,
+        GroveIdentifierRole.DEVICE_SNAPSHOT,
+        GroveIdentifierRole.RECORDING_DEVICE,
+    )
+
+    /** Exact Device profile mode to its exact typed Grove identifier roles. */
+    internal val activeDeviceProfileClaims: Map<String, Set<GroveIdentifierRole>> = mapOf(
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-application-device" to
+            setOf(
+                GroveIdentifierRole.DEVICE_SNAPSHOT,
+            ),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device" to
+            setOf(
+                GroveIdentifierRole.DEVICE_SNAPSHOT,
+            ),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device" to
+            setOf(
+                GroveIdentifierRole.DEVICE_SNAPSHOT,
+            ),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device" to
+            setOf(
+                GroveIdentifierRole.RECORDING_DEVICE,
+                GroveIdentifierRole.DEVICE_SNAPSHOT,
+            ),
+    )
+
+    /** Exact DocumentReference profile mode to its required Grove identifier roles. */
+    internal val activeDocumentProfileClaims: Map<Set<String>, Set<GroveIdentifierRole>> = mapOf(
+        setOf(
+            "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-record-document",
+        ) to setOf(
+            GroveIdentifierRole.SOURCE_RECORD,
+            GroveIdentifierRole.SOURCE_OUTPUT,
+            GroveIdentifierRole.SOURCE_ARTIFACT,
+        ),
+        setOf(
+            "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-recording-document",
+            "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+        ) to setOf(
+            GroveIdentifierRole.SOURCE_RECORD,
+            GroveIdentifierRole.SOURCE_OUTPUT,
+            GroveIdentifierRole.SOURCE_ARTIFACT,
+        ),
+        setOf(
+            "https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document",
+            "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+        ) to setOf(
+            GroveIdentifierRole.SOURCE_RECORD,
+            GroveIdentifierRole.SOURCE_OUTPUT,
+            GroveIdentifierRole.SOURCE_ARTIFACT,
+        ),
+        setOf(
+            "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+        ) to setOf(
+            GroveIdentifierRole.SOURCE_RECORD,
+            GroveIdentifierRole.SOURCE_OUTPUT,
+            GroveIdentifierRole.SOURCE_ARTIFACT,
+        ),
+        setOf(
+            "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+            "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document",
+        ) to setOf(
+            GroveIdentifierRole.SOURCE_RECORD,
+            GroveIdentifierRole.SOURCE_OUTPUT,
+            GroveIdentifierRole.SOURCE_ARTIFACT,
+        ),
+    )
+    const val ACTIVE_QUESTIONNAIRE_RESPONSE_PROFILE =
+        "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response"
+
+    /** Exact retraction target role, Identifier role, and resource-type closure. */
+    internal val retractionTargetClaims: Map<HealthConnectRetractionTargetRole, GroveRetractionTargetClaim> = mapOf(
+        HealthConnectRetractionTargetRole.CHILD_OUTPUT to GroveRetractionTargetClaim(
+            identifierRole = GroveIdentifierRole.SOURCE_OUTPUT,
+            resourceTypes = setOf(
+                "Observation",
+            ),
+        ),
+        HealthConnectRetractionTargetRole.DEVICE_SNAPSHOT to GroveRetractionTargetClaim(
+            identifierRole = GroveIdentifierRole.DEVICE_SNAPSHOT,
+            resourceTypes = setOf(
+                "Device",
+            ),
+        ),
+        HealthConnectRetractionTargetRole.PRIMARY_OUTPUT to GroveRetractionTargetClaim(
+            identifierRole = GroveIdentifierRole.SOURCE_OUTPUT,
+            resourceTypes = setOf(
+                "Observation",
+                "VisionPrescription",
+                "MedicationAdministration",
+                "MedicationStatement",
+            ),
+        ),
+        HealthConnectRetractionTargetRole.SOURCE_ARTIFACT to GroveRetractionTargetClaim(
+            identifierRole = GroveIdentifierRole.SOURCE_OUTPUT,
+            resourceTypes = setOf(
+                "DocumentReference",
+            ),
+        ),
+        HealthConnectRetractionTargetRole.SPECIMEN to GroveRetractionTargetClaim(
+            identifierRole = GroveIdentifierRole.SOURCE_OUTPUT,
+            resourceTypes = setOf(
+                "Specimen",
+            ),
+        ),
+    )
+
+    /** Exact Mobile or Health Connect profiles admitted on the active lifecycle Provenance. */
+    internal val activeConversionProvenanceProfiles: Set<String> = setOf(
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-conversion-provenance",
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-conversion-provenance",
+    )
+
+    /** Health Connect Observation profiles whose complete claim is one direct profile. */
+    internal val activeHealthConnectExclusiveObservationProfiles: Set<String> = setOf(
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+    )
+
+    /** Fixed Quantity system/code pairs keyed by a produced semantic profile. */
+    internal val quantitySemanticsByProfile: Map<String, QuantitySemantics> = mapOf(
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-basal-metabolic-rate" to
+            QuantitySemantics("http://unitsofmeasure.org", "kcal/d"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg/dL"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-dietary-energy-from-fat" to
+            QuantitySemantics("http://unitsofmeasure.org", "kcal"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-dietary-fat-trans" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-dietary-fat-unsaturated" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-dietary-folic-acid" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-elevation-gained" to
+            QuantitySemantics("http://unitsofmeasure.org", "m"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg/dL"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg/dL"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-step-cadence" to
+            QuantitySemantics("http://unitsofmeasure.org", "{steps}/min"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-total-energy" to
+            QuantitySemantics("http://unitsofmeasure.org", "kcal"),
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg/dL"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy" to
+            QuantitySemantics("http://unitsofmeasure.org", "kcal"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-basal-body-temperature" to
+            QuantitySemantics("http://unitsofmeasure.org", "Cel"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-fat-percentage" to
+            QuantitySemantics("http://unitsofmeasure.org", "%"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-height" to
+            QuantitySemantics("http://unitsofmeasure.org", "cm"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-temperature" to
+            QuantitySemantics("http://unitsofmeasure.org", "Cel"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-water-mass" to
+            QuantitySemantics("http://unitsofmeasure.org", "kg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-weight" to
+            QuantitySemantics("http://unitsofmeasure.org", "kg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-bone-mass" to
+            QuantitySemantics("http://unitsofmeasure.org", "kg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-cycling-cadence" to
+            QuantitySemantics("http://unitsofmeasure.org", "/min"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-biotin" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-caffeine" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-calcium" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-carbohydrates" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-chloride" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-cholesterol" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-chromium" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-copper" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-energy" to
+            QuantitySemantics("http://unitsofmeasure.org", "kcal"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-fat-monounsaturated" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-fat-polyunsaturated" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-fat-saturated" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-fat-total" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-fiber" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-folate" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-iodine" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-iron" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-magnesium" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-manganese" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-molybdenum" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-niacin" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-pantothenic-acid" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-phosphorus" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-potassium" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-protein" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-riboflavin" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-selenium" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-sodium" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-sugar" to
+            QuantitySemantics("http://unitsofmeasure.org", "g"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-thiamin" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-a" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-b12" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-b6" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-c" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-d" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-e" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-vitamin-k" to
+            QuantitySemantics("http://unitsofmeasure.org", "ug"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-dietary-zinc" to
+            QuantitySemantics("http://unitsofmeasure.org", "mg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance" to
+            QuantitySemantics("http://unitsofmeasure.org", "m"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-flights-climbed" to
+            QuantitySemantics("http://unitsofmeasure.org", "{flights}"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-fluid-intake" to
+            QuantitySemantics("http://unitsofmeasure.org", "mL"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-heart-rate" to
+            QuantitySemantics("http://unitsofmeasure.org", "/min"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-heart-rate-variability-rmssd" to
+            QuantitySemantics("http://unitsofmeasure.org", "ms"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-lean-body-mass" to
+            QuantitySemantics("http://unitsofmeasure.org", "kg"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-mindfulness-session" to
+            QuantitySemantics("http://unitsofmeasure.org", "min"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-oxygen-saturation" to
+            QuantitySemantics("http://unitsofmeasure.org", "%"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-power" to
+            QuantitySemantics("http://unitsofmeasure.org", "W"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-respiratory-rate" to
+            QuantitySemantics("http://unitsofmeasure.org", "/min"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-resting-heart-rate" to
+            QuantitySemantics("http://unitsofmeasure.org", "/min"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-skin-temperature" to
+            QuantitySemantics("http://unitsofmeasure.org", "Cel"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-duration" to
+            QuantitySemantics("http://unitsofmeasure.org", "h"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-speed" to
+            QuantitySemantics("http://unitsofmeasure.org", "m/s"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-step-count" to
+            QuantitySemantics("http://unitsofmeasure.org", "{steps}"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-vo2-max" to
+            QuantitySemantics("http://unitsofmeasure.org", "mL/kg/min"),
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-wheelchair-push-count" to
+            QuantitySemantics("http://unitsofmeasure.org", "{pushes}"),
+    )
+
+    /** Catalog-defined representational Quantity domains used by this adapter. */
+    internal val quantityValueDomains: Map<String, QuantityValueDomain> = mapOf(
+        "body-fat-percentage" to QuantityValueDomain(
+            minimum = java.math.BigDecimal("0"),
+            maximum = java.math.BigDecimal("100"),
+            integerOnly = false,
+        ),
+        "flights-climbed" to QuantityValueDomain(
+            minimum = java.math.BigDecimal("0"),
+            maximum = null,
+            integerOnly = true,
+        ),
+        "oxygen-saturation" to QuantityValueDomain(
+            minimum = java.math.BigDecimal("0"),
+            maximum = java.math.BigDecimal("100"),
+            integerOnly = false,
+        ),
+        "step-count" to QuantityValueDomain(
+            minimum = java.math.BigDecimal("0"),
+            maximum = null,
+            integerOnly = true,
+        ),
+        "wheelchair-push-count" to QuantityValueDomain(
+            minimum = java.math.BigDecimal("0"),
+            maximum = null,
+            integerOnly = true,
+        ),
+    )
+
+    const val ANDROID_PACKAGE_IDENTIFIER =
+        "https://grovealliance.org/fhir/health-connect/NamingSystem/android-package-name"
+
     const val WRITER_RECORD_VERSION = "$MOBILE_BASE/StructureDefinition/grove-writer-record-version"
     const val RECORDING_METHOD_EXTENSION = "$MOBILE_BASE/StructureDefinition/grove-recording-method"
-    const val HEALTH_CONNECT_SLEEP_TITLE = "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-sleep-title"
-    const val HEALTH_CONNECT_EXERCISE_TITLE = "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-exercise-title"
+    const val HEALTH_CONNECT_SESSION_TITLE = "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-session-title"
     const val HEALTH_CONNECT_GLUCOSE_MEAL_CONTEXT =
         "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-glucose-meal-context"
     const val HEALTH_CONNECT_RECORD_TYPE_EXTENSION =
         "$HEALTH_CONNECT_BASE/StructureDefinition/health-connect-record-type"
+    const val GROVE_EXCHANGE_ENTRY_NODE_KEY = "$MOBILE_BASE/StructureDefinition/grove-exchange-entry-node-key"
+    const val GROVE_RETRACTION_TARGET_ROLE = "$MOBILE_BASE/StructureDefinition/grove-retraction-target-role"
 
     const val GROVE_AGGREGATION_METHOD = "$MOBILE_BASE/CodeSystem/grove-aggregation-method"
     const val GROVE_APPLICATION_VERSION_TYPE = "$MOBILE_BASE/CodeSystem/grove-application-version-type"
     const val GROVE_CERVICAL_MUCUS_QUALITY = "$MOBILE_BASE/CodeSystem/grove-cervical-mucus-quality"
     const val GROVE_CERVICAL_MUCUS_SENSATION = "$MOBILE_BASE/CodeSystem/grove-cervical-mucus-sensation"
+    const val GROVE_IDENTIFIER_ROLE = "$MOBILE_BASE/CodeSystem/grove-identifier-role"
     const val GROVE_INTERMENSTRUAL_BLEEDING = "$MOBILE_BASE/CodeSystem/grove-intermenstrual-bleeding"
+    const val GROVE_LIFECYCLE_EVENT = "$MOBILE_BASE/CodeSystem/grove-lifecycle-event"
     const val GROVE_MENSTRUAL_CYCLE_START = "$MOBILE_BASE/CodeSystem/grove-menstrual-cycle-start"
     const val GROVE_MENSTRUATION_FLOW = "$MOBILE_BASE/CodeSystem/grove-menstruation-flow"
     const val GROVE_MOBILE_MEASUREMENT = "$MOBILE_BASE/CodeSystem/grove-mobile-measurement"
     const val GROVE_OVULATION_TEST_RESULT = "$MOBILE_BASE/CodeSystem/grove-ovulation-test-result"
     const val GROVE_RECORDING_METHOD = "$MOBILE_BASE/CodeSystem/grove-recording-method"
+    const val GROVE_RETRACTION_TARGET_ROLE_CS = "$MOBILE_BASE/CodeSystem/grove-retraction-target-role"
     const val GROVE_SEXUAL_ACTIVITY = "$MOBILE_BASE/CodeSystem/grove-sexual-activity"
     const val GROVE_SLEEP_STAGE = "$MOBILE_BASE/CodeSystem/grove-sleep-stage"
     const val GROVE_WORKOUT_ACTIVITY = "$MOBILE_BASE/CodeSystem/grove-workout-activity"
@@ -236,6 +590,8 @@ object HealthConnectContract {
     const val HEALTH_CONNECT_MEASUREMENT = "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-measurement"
     const val HEALTH_CONNECT_MENSTRUATION_FLOW = "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-menstruation-flow"
     const val HEALTH_CONNECT_MENSTRUATION_PERIOD = "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-menstruation-period"
+    const val HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE =
+        "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-mindfulness-session-type"
     const val HEALTH_CONNECT_OVULATION_TEST_RESULT =
         "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-ovulation-test-result"
     const val HEALTH_CONNECT_RECORD_TYPE = "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-record-type"
@@ -243,6 +599,8 @@ object HealthConnectContract {
     const val HEALTH_CONNECT_SEXUAL_ACTIVITY_PROTECTION =
         "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-sexual-activity-protection"
     const val HEALTH_CONNECT_SLEEP_STAGE = "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-sleep-stage"
+    const val HEALTH_CONNECT_VO2_MAX_MEASUREMENT_METHOD =
+        "$HEALTH_CONNECT_BASE/CodeSystem/health-connect-vo2-max-measurement-method"
 
     const val OBSERVATION_BODY_POSITION = "http://hl7.org/fhir/StructureDefinition/observation-bodyPosition"
     const val LOINC = "http://loinc.org"

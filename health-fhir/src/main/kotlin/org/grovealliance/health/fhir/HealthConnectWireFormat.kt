@@ -49,9 +49,11 @@ object HealthConnectWireFormat {
 
     /** Returns lowercase SHA-256 for the exact UTF-8 string. */
     fun sha256(value: String): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest(value.toByteArray(StandardCharsets.UTF_8))
-            .let(::lowercaseHex)
+        sha256(value.toByteArray(StandardCharsets.UTF_8))
+
+    /** Returns lowercase SHA-256 for exact bytes such as a length-framed journal state. */
+    internal fun sha256(value: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(value).let(::lowercaseHex)
 
     private fun lowercaseHex(bytes: ByteArray): String = buildString(capacity = bytes.size * HEX_CHARS_PER_BYTE) {
         bytes.forEach { byte ->

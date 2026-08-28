@@ -59,6 +59,37 @@ def load(catalog_directory: Path, name: str) -> dict[str, Any]:
     return json.loads((catalog_directory / name).read_text(encoding="utf-8"))
 
 
+def generate_test_vectors(catalog_directory: Path) -> str:
+    """Vendor the complete normative vector set that same-module Kotlin tests execute."""
+    protocol = load(catalog_directory, "exchange-protocol.json")
+    kinds = protocol.get("opaqueIdentity", {}).get("identityKinds")
+    vectors = protocol.get("testVectors")
+    if not isinstance(kinds, list) or not isinstance(vectors, dict):
+        raise SystemExit("The exchange protocol must declare identity kinds and test vectors")
+    kind_names = [row.get("kind") for row in kinds if isinstance(row, dict)]
+    identities = vectors.get("identities")
+    invalid_identities = vectors.get("invalidIdentities")
+    vector_kinds = (
+        [row.get("identityKind") for row in identities if isinstance(row, dict)]
+        if isinstance(identities, list)
+        else []
+    )
+    if (
+        len(kind_names) != len(kinds)
+        or len(set(kind_names)) != len(kind_names)
+        or len(vector_kinds) != len(kind_names)
+        or set(vector_kinds) != set(kind_names)
+        or len(set(vector_kinds)) != len(vector_kinds)
+        or not isinstance(invalid_identities, list)
+        or len(invalid_identities) != 4
+    ):
+        raise SystemExit(
+            "The normative test vectors must cover every closed identity kind exactly once "
+            "and retain all four invalid domain vectors"
+        )
+    return json.dumps(vectors, ensure_ascii=False, indent=2) + "\n"
+
+
 def constant_name(
     identifier: str, suffix: str = "", prefix: str | None = None, strip: str | None = None
 ) -> str:
@@ -102,15 +133,229 @@ def health_connect_outputs(catalogs: dict[str, Any]) -> list[str]:
     )
 
 
+def adapter_only_output_profiles(catalogs: dict[str, Any]) -> dict[str, str]:
+    """Exact direct profile required for each protocol-declared adapter-only output type.
+
+    The exchange protocol owns the closed resource-type list while profile-claims.json owns the
+    adapter canonicals. Walk the claims structurally so adding another exact claim does not require
+    teaching the Kotlin generator a catalog property name.
+    """
+    contract = catalogs["exchange-protocol"]["lifecycle"]["active"][
+        "adapterOnlyOutputProfileClaims"
+    ]
+    if contract.get("authority") != "catalog/profile-claims.json":
+        raise SystemExit(
+            "adapterOnlyOutputProfileClaims must name catalog/profile-claims.json as its authority"
+        )
+    resource_types = contract.get("resourceTypes")
+    if (
+        not isinstance(resource_types, list)
+        or not resource_types
+        or any(
+            not isinstance(resource_type, str) or not resource_type
+            for resource_type in resource_types
+        )
+        or len(resource_types) != len(set(resource_types))
+    ):
+        raise SystemExit(
+            "adapterOnlyOutputProfileClaims.resourceTypes must be a unique nonempty string list"
+        )
+
+    candidates: dict[str, list[dict[str, Any]]] = {
+        resource_type: [] for resource_type in resource_types
+    }
+
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            resource_type = value.get("resourceType")
+            if resource_type in candidates and isinstance(value.get("profile"), str):
+                candidates[resource_type].append(value)
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(catalogs["profile-claims"])
+    profiles: dict[str, str] = {}
+    for resource_type in resource_types:
+        matches = candidates[resource_type]
+        if len(matches) != 1:
+            raise SystemExit(
+                f"{resource_type}: expected exactly one adapter-only claim in profile-claims.json, "
+                f"found {len(matches)}"
+            )
+        claim = matches[0]
+        profile = claim["profile"]
+        if (
+            claim.get("cardinality") != 1
+            or claim.get("otherProfilesAllowed") is not False
+            or not profile.startswith("https://")
+        ):
+            raise SystemExit(
+                f"{resource_type}: adapter-only claim must require one exact HTTPS profile and no others"
+            )
+        profiles[resource_type] = profile
+    return dict(sorted(profiles.items()))
+
+
+def grove_role_constant(role: str) -> str:
+    return "GroveIdentifierRole." + re.sub(r"[^A-Za-z0-9]+", "_", role).upper()
+
+
+def exact_profile_claims(catalogs: dict[str, Any]) -> dict[str, Any]:
+    """Project the closed active-event profile modes needed at the Kotlin wire boundary."""
+    claims = catalogs["profile-claims"]
+    protocol = catalogs["exchange-protocol"]
+    active = protocol["lifecycle"]["active"]
+    devices = claims["activeDeviceClaims"]
+    device_modes: dict[str, list[str]] = {}
+    for claim in devices:
+        profiles = claim.get("profiles")
+        if (
+            claim.get("resourceType") != "Device"
+            or claim.get("cardinality") != 1
+            or claim.get("otherProfilesAllowed") is not False
+            or not isinstance(profiles, list)
+            or len(profiles) != 1
+        ):
+            raise SystemExit("Every active Device claim must be one exact closed profile")
+        device_modes[profiles[0]] = claim.get("requiredIdentifierRoles", [])
+
+    documents = [
+        claims["sensorRecordingDocumentClaim"],
+        claims["healthKitRecordingDocumentClaim"],
+        claims["healthKitClinicalRecordDocumentClaim"],
+        claims["sensorKitRecordingDocumentClaim"],
+        claims["providerRecordingDocumentClaim"],
+    ]
+    document_modes: list[tuple[list[str], list[str]]] = []
+    for claim in documents:
+        profiles = claim.get("profiles")
+        if (
+            claim.get("resourceType", "DocumentReference") != "DocumentReference"
+            or claim.get("cardinality") != len(profiles or [])
+            or claim.get("otherProfilesAllowed") is not False
+            or not profiles
+            or len(profiles) != len(set(profiles))
+        ):
+            raise SystemExit("Every active DocumentReference claim must be an exact closed profile set")
+        document_modes.append((sorted(profiles), claim.get("requiredIdentifierRoles", [])))
+
+    questionnaire = claims["activeQuestionnaireResponseClaim"]
+    questionnaire_profiles = questionnaire.get("profiles")
+    if (
+        questionnaire.get("resourceType") != "QuestionnaireResponse"
+        or questionnaire.get("cardinality") != 1
+        or questionnaire.get("otherProfilesAllowed") is not False
+        or not isinstance(questionnaire_profiles, list)
+        or len(questionnaire_profiles) != 1
+    ):
+        raise SystemExit("The active QuestionnaireResponse claim must be one exact closed profile")
+
+    health_connect_provenance = next(
+        claim["profile"]
+        for claim in claims["adapterConversionProvenanceClaims"]
+        if claim["adapter"] == "health-connect"
+    )
+    retraction_target_roles = protocol["lifecycle"]["retraction"]["targetRoles"]
+    if not isinstance(retraction_target_roles, dict) or not retraction_target_roles:
+        raise SystemExit("The retraction target-role table must be a nonempty object")
+    for role, rule in retraction_target_roles.items():
+        resource_types = rule.get("resourceTypes")
+        if (
+            not re.fullmatch(r"[a-z][a-z0-9-]*", role)
+            or not isinstance(rule.get("identifierRole"), str)
+            or not isinstance(resource_types, list)
+            or not resource_types
+            or len(resource_types) != len(set(resource_types))
+        ):
+            raise SystemExit(f"{role}: invalid retraction target-role rule")
+    entry_identifier_priority = protocol["entryIdentity"]["resourceIdentifierPriority"]
+    identity_roles = {
+        row["identifierRole"] for row in protocol["opaqueIdentity"]["identityKinds"]
+    }
+    if (
+        not isinstance(entry_identifier_priority, list)
+        or not entry_identifier_priority
+        or len(entry_identifier_priority) != len(set(entry_identifier_priority))
+        or any(role not in identity_roles for role in entry_identifier_priority)
+    ):
+        raise SystemExit("entryIdentity.resourceIdentifierPriority must be a unique closed role list")
+    return {
+        "outputResourceTypes": active["entryResourcePolicy"]["outputResourceTypes"],
+        "supportingResourceTypes": active["entryResourcePolicy"]["supportingResourceTypes"],
+        "lifecycleResourceType": active["entryResourcePolicy"]["lifecycleResourceType"],
+        "deviceModes": dict(sorted(device_modes.items())),
+        "documentModes": sorted(document_modes),
+        "questionnaireProfile": questionnaire_profiles[0],
+        # This module produces Health Connect graphs and consumes the adapter-neutral positive
+        # Mobile corpus. Do not make it a second validator for every other adapter package.
+        "provenanceProfiles": sorted(
+            {protocol["profiles"]["conversionProvenance"], health_connect_provenance}
+        ),
+        "healthConnectExclusiveObservationProfiles": sorted(
+            set(claims["healthConnectPlatformExclusiveClaims"]["profiles"])
+        ),
+        "entryIdentifierPriority": entry_identifier_priority,
+        "retractionTargetRoles": dict(sorted(retraction_target_roles.items())),
+    }
+
+
+def produced_quantity_semantics(catalogs: dict[str, Any], produced: list[str]) -> dict[str, tuple[str, str]]:
+    """Fixed Quantity system/code pairs keyed by each directly claimed semantic profile."""
+    measurements = {row["id"]: row for row in catalogs["measurements"]["measurements"]}
+    adapter = {row["id"]: row for row in catalogs["health-connect"]["adapterMeasurements"]}
+    root = catalogs["graph"]["canonicalRoot"]
+    semantics: dict[str, tuple[str, str]] = {}
+    for identifier in produced:
+        row = adapter.get(identifier, measurements.get(identifier))
+        if row is None or not isinstance(row.get("quantity"), dict):
+            continue
+        profile = row["profile"]
+        if not profile.startswith("https://"):
+            package = "health-connect" if row.get("owner") == "health-connect" else "mobile"
+            profile = f"{root}/{package}/StructureDefinition/{profile}"
+        quantity = row["quantity"]
+        semantics[profile] = (quantity["system"], quantity["code"])
+    return dict(sorted(semantics.items()))
+
+
+def kotlin_decimal(value: int | float | None) -> str:
+    if value is None:
+        return "null"
+    lexical = json.dumps(value, allow_nan=False, ensure_ascii=True)
+    return f'java.math.BigDecimal("{lexical}")'
+
+
 def generate(catalog_directory: Path) -> str:
     catalogs = {
         "measurements": load(catalog_directory, "measurement-catalog.json"),
         "health-connect": load(catalog_directory, "health-connect-adapter.json"),
         "graph": load(catalog_directory, "package-graph.json"),
+        "exchange-protocol": load(catalog_directory, "exchange-protocol.json"),
+        "profile-claims": load(catalog_directory, "profile-claims.json"),
+        "providers": load(catalog_directory, "providers-adapter.json"),
     }
     measurements = {m["id"]: m for m in catalogs["measurements"]["measurements"]}
     adapter_measurements = {m["id"]: m for m in catalogs["health-connect"]["adapterMeasurements"]}
     produced = health_connect_outputs(catalogs)
+    profile_claims = exact_profile_claims(catalogs)
+    quantity_semantics = produced_quantity_semantics(catalogs, produced)
+    provider_rows = catalogs["providers"].get("providers")
+    if not isinstance(provider_rows, list) or not provider_rows:
+        raise SystemExit("Provider adapter catalog declares no closed provider codes")
+    provider_codes = [row.get("id") for row in provider_rows if isinstance(row, dict)]
+    if (
+        len(provider_codes) != len(provider_rows)
+        or len(set(provider_codes)) != len(provider_codes)
+        or any(
+            not isinstance(code, str) or re.fullmatch(r"[a-z][a-z0-9-]*", code) is None
+            for code in provider_codes
+        )
+    ):
+        raise SystemExit("Provider adapter codes must be unique lowercase protocol tokens")
+    provider_codes.sort()
 
     shared: list[tuple[str, str]] = []
     dietary: list[tuple[str, str]] = []
@@ -153,11 +398,25 @@ def generate(catalog_directory: Path) -> str:
         declaration("MOBILE_BASE", '"$CANONICAL_ROOT/mobile"'),
         declaration("HEALTH_CONNECT_BASE", '"$CANONICAL_ROOT/health-connect"'),
         "",
+        "    /** Closed provider codes admitted by the provider-specific HMAC identity domains. */",
+        "    internal val providerCodes: Set<String> = setOf(",
+        *[f'        "{code}",' for code in provider_codes],
+        "    )",
+        "",
         declaration("MOBILE_OBSERVATION_PROFILE", profile_value(MOBILE_BASE, "grove-mobile-observation")),
         declaration(
             "MOBILE_EXCHANGE_BUNDLE_PROFILE", profile_value(MOBILE_BASE, "grove-mobile-exchange-bundle")
         ),
+        declaration(
+            "MOBILE_RETRACTION_BUNDLE_PROFILE",
+            profile_value(MOBILE_BASE, "grove-mobile-retraction-bundle"),
+        ),
+        declaration(
+            "MOBILE_RETRACTION_PROVENANCE_PROFILE",
+            profile_value(MOBILE_BASE, "grove-mobile-retraction-provenance"),
+        ),
         declaration("MOBILE_APPLICATION_DEVICE_PROFILE", profile_value(MOBILE_BASE, "grove-application-device")),
+        declaration("MOBILE_HOST_DEVICE_PROFILE", profile_value(MOBILE_BASE, "grove-host-device")),
         declaration("MOBILE_RECORDING_DEVICE_PROFILE", profile_value(MOBILE_BASE, "grove-recording-device")),
         declaration(
             "HEALTH_CONNECT_OBSERVATION_PROFILE",
@@ -203,20 +462,153 @@ def generate(catalog_directory: Path) -> str:
     lines.append("    )")
     lines.append("")
 
-    naming_systems = [
-        ("HEALTH_CONNECT_RECORD_IDENTIFIER", "health-connect-record-id"),
-        ("HEALTH_CONNECT_OUTPUT_IDENTIFIER", "health-connect-output-id"),
-        ("HEALTH_CONNECT_SPECIMEN_IDENTIFIER", "health-connect-specimen-id"),
-        ("ANDROID_PACKAGE_IDENTIFIER", "android-package-name"),
-    ]
-    for name, identifier in naming_systems:
-        lines.append(declaration(name, system_value(HEALTH_CONNECT_BASE, "NamingSystem", identifier)))
+    lines.append("    /** Exact direct profile for every protocol-declared adapter-only active output type. */")
+    lines.append("    internal val adapterOnlyOutputProfiles: Map<String, String> = mapOf(")
+    for resource_type, profile in adapter_only_output_profiles(catalogs).items():
+        lines.append(f'        "{resource_type}" to')
+        lines.append(f'            "{profile}",')
+    lines.append("    )")
     lines.append("")
 
-    # One namespace serves every adapter, so the writer record identity is a Mobile canonical.
+    lines.append("    /** Closed resource types admitted in a Mobile active event graph. */")
+    lines.append("    internal val activeOutputResourceTypes: Set<String> = setOf(")
+    for resource_type in profile_claims["outputResourceTypes"]:
+        lines.append(f'        "{resource_type}",')
+    lines.append("    )")
+    lines.append("    internal val activeSupportingResourceTypes: Set<String> = setOf(")
+    for resource_type in profile_claims["supportingResourceTypes"]:
+        lines.append(f'        "{resource_type}",')
+    lines.append("    )")
     lines.append(
-        declaration("WRITER_RECORD_IDENTIFIER", system_value(MOBILE_BASE, "NamingSystem", "grove-writer-record-id"))
+        declaration("ACTIVE_LIFECYCLE_RESOURCE_TYPE", f'"{profile_claims["lifecycleResourceType"]}"')
     )
+    lines.append("")
+
+    lines.append("    /** Catalog-priority business Identifier used as each exchange entry key. */")
+    lines.append("    internal val entryIdentifierPriority: List<GroveIdentifierRole> = listOf(")
+    for role in profile_claims["entryIdentifierPriority"]:
+        lines.append(f"        {grove_role_constant(role)},")
+    lines.append("    )")
+    lines.append("")
+
+    lines.append("    /** Exact Device profile mode to its exact typed Grove identifier roles. */")
+    lines.append("    internal val activeDeviceProfileClaims: Map<String, Set<GroveIdentifierRole>> = mapOf(")
+    for profile, roles in profile_claims["deviceModes"].items():
+        lines.append(f'        "{profile}" to')
+        lines.append("            setOf(")
+        for role in roles:
+            lines.append(f"                {grove_role_constant(role)},")
+        lines.append("            ),")
+    lines.append("    )")
+    lines.append("")
+
+    lines.append("    /** Exact DocumentReference profile mode to its required Grove identifier roles. */")
+    lines.append(
+        "    internal val activeDocumentProfileClaims: "
+        "Map<Set<String>, Set<GroveIdentifierRole>> = mapOf("
+    )
+    for profiles, roles in profile_claims["documentModes"]:
+        lines.append("        setOf(")
+        for profile in profiles:
+            lines.append(f'            "{profile}",')
+        lines.append("        ) to setOf(")
+        for role in roles:
+            lines.append(f"            {grove_role_constant(role)},")
+        lines.append("        ),")
+    lines.append("    )")
+    lines.append(
+        declaration(
+            "ACTIVE_QUESTIONNAIRE_RESPONSE_PROFILE",
+            f'"{profile_claims["questionnaireProfile"]}"',
+        )
+    )
+    lines.append("")
+
+    lines.append("    /** Exact retraction target role, Identifier role, and resource-type closure. */")
+    lines.append(
+        "    internal val retractionTargetClaims: "
+        "Map<HealthConnectRetractionTargetRole, GroveRetractionTargetClaim> = mapOf("
+    )
+    for role, rule in profile_claims["retractionTargetRoles"].items():
+        enum_name = re.sub(r"[^A-Za-z0-9]+", "_", role).upper()
+        lines.append(f"        HealthConnectRetractionTargetRole.{enum_name} to GroveRetractionTargetClaim(")
+        lines.append(f"            identifierRole = {grove_role_constant(rule['identifierRole'])},")
+        lines.append("            resourceTypes = setOf(")
+        for resource_type in rule["resourceTypes"]:
+            lines.append(f'                "{resource_type}",')
+        lines.append("            ),")
+        lines.append("        ),")
+    lines.append("    )")
+    lines.append("")
+
+    for property_name, values, doc in [
+        (
+            "activeConversionProvenanceProfiles",
+            profile_claims["provenanceProfiles"],
+            "Exact Mobile or Health Connect profiles admitted on the active lifecycle Provenance.",
+        ),
+        (
+            "activeHealthConnectExclusiveObservationProfiles",
+            profile_claims["healthConnectExclusiveObservationProfiles"],
+            "Health Connect Observation profiles whose complete claim is one direct profile.",
+        ),
+    ]:
+        lines.append(f"    /** {doc} */")
+        lines.append(f"    internal val {property_name}: Set<String> = setOf(")
+        for value in values:
+            lines.append(f'        "{value}",')
+        lines.append("    )")
+        lines.append("")
+    lines.append("    /** Fixed Quantity system/code pairs keyed by a produced semantic profile. */")
+    lines.append("    internal val quantitySemanticsByProfile: Map<String, QuantitySemantics> = mapOf(")
+    for profile, (system, code) in quantity_semantics.items():
+        lines.append(f'        "{profile}" to')
+        lines.append(f'            QuantitySemantics("{system}", "{code}"),')
+    lines.append("    )")
+    lines.append("")
+
+    lines.append("    /** Catalog-defined representational Quantity domains used by this adapter. */")
+    lines.append("    internal val quantityValueDomains: Map<String, QuantityValueDomain> = mapOf(")
+    for identifier in produced:
+        measurement = measurements.get(identifier)
+        quantity = measurement.get("quantity") if measurement else None
+        domain = quantity.get("valueDomain") if isinstance(quantity, dict) else None
+        if domain is None:
+            continue
+        minimum = domain.get("minimum")
+        maximum = domain.get("maximum")
+        for label, boundary in (("minimum", minimum), ("maximum", maximum)):
+            if boundary is not None and boundary.get("inclusive") is not True:
+                raise SystemExit(
+                    f"{identifier}: exclusive {label} cannot be projected by QuantityValueDomain"
+                )
+        lines.extend(
+            [
+                f'        "{identifier}" to QuantityValueDomain(',
+                f'            minimum = {kotlin_decimal(minimum.get("value") if minimum else None)},',
+                f'            maximum = {kotlin_decimal(maximum.get("value") if maximum else None)},',
+                f'            integerOnly = {str(domain.get("integerOnly", False)).lower()},',
+                "        ),",
+            ]
+        )
+    lines.append("    )")
+    lines.append("")
+
+    data_origin = catalogs["health-connect"]["dataOriginApplication"]
+    expected_data_origin = {
+        "sourceField": "Metadata.dataOrigin.packageName",
+        "r4Element": "Provenance.entity.agent.who",
+        "referenceType": "Device",
+        "referenceMode": "identifier-only",
+        "literalReferenceAllowed": False,
+        "eventBundleEntryRequired": False,
+        "profileClaimRequired": False,
+    }
+    if any(data_origin.get(key) != value for key, value in expected_data_origin.items()):
+        raise SystemExit("Health Connect DataOrigin is no longer the admitted logical Device reference contract")
+    lines.append(declaration("ANDROID_PACKAGE_IDENTIFIER", f'"{data_origin["identifierSystem"]}"'))
+    lines.append("")
+
     lines.append(
         declaration("WRITER_RECORD_VERSION", profile_value(MOBILE_BASE, "grove-writer-record-version"))
     )
@@ -224,12 +616,16 @@ def generate(catalog_directory: Path) -> str:
         declaration("RECORDING_METHOD_EXTENSION", profile_value(MOBILE_BASE, "grove-recording-method"))
     )
     for name, identifier in [
-        ("HEALTH_CONNECT_SLEEP_TITLE", "health-connect-sleep-title"),
-        ("HEALTH_CONNECT_EXERCISE_TITLE", "health-connect-exercise-title"),
+        ("HEALTH_CONNECT_SESSION_TITLE", "health-connect-session-title"),
         ("HEALTH_CONNECT_GLUCOSE_MEAL_CONTEXT", "health-connect-glucose-meal-context"),
         ("HEALTH_CONNECT_RECORD_TYPE_EXTENSION", "health-connect-record-type"),
     ]:
         lines.append(declaration(name, profile_value(HEALTH_CONNECT_BASE, identifier)))
+    for name, identifier in [
+        ("GROVE_EXCHANGE_ENTRY_NODE_KEY", "grove-exchange-entry-node-key"),
+        ("GROVE_RETRACTION_TARGET_ROLE", "grove-retraction-target-role"),
+    ]:
+        lines.append(declaration(name, profile_value(MOBILE_BASE, identifier)))
     lines.append("")
 
     for name, identifier in mobile_code_systems(catalog_directory):
@@ -282,10 +678,14 @@ def code_systems(guide_directory: Path) -> list[str]:
 
 def mobile_code_systems(catalog_directory: Path) -> list[tuple[str, str]]:
     guide = catalog_directory.parent / "mobile"
-    return [
+    systems = [
         # A code system keeps its package word: `grove-mobile-measurement` is not `grove-measurement`.
         (constant_name(identifier, prefix="GROVE", strip=r"^grove-"), identifier)
         for identifier in code_systems(guide)
+    ]
+    return [
+        ("GROVE_RETRACTION_TARGET_ROLE_CS" if name == "GROVE_RETRACTION_TARGET_ROLE" else name, identifier)
+        for name, identifier in systems
     ]
 
 
@@ -302,20 +702,41 @@ def main() -> int:
         type=Path,
         default=Path("health-fhir/src/main/kotlin/org/grovealliance/health/fhir/HealthConnectContract.kt"),
     )
+    parser.add_argument(
+        "--test-vector-output",
+        type=Path,
+        default=Path("health-fhir/src/test/resources/grove-exchange-protocol-test-vectors.json"),
+    )
     parser.add_argument("--check", action="store_true")
     arguments = parser.parse_args()
     generated = generate(arguments.catalog_directory)
+    generated_test_vectors = generate_test_vectors(arguments.catalog_directory)
     if arguments.check:
         actual = arguments.output.read_text(encoding="utf-8") if arguments.output.exists() else ""
+        actual_test_vectors = (
+            arguments.test_vector_output.read_text(encoding="utf-8")
+            if arguments.test_vector_output.exists()
+            else ""
+        )
+        stale = False
         if actual != generated:
             print(
                 f"error: {arguments.output} is not synchronized with the grove-fhir catalogs",
                 file=sys.stderr,
             )
-            return 1
-        return 0
+            stale = True
+        if actual_test_vectors != generated_test_vectors:
+            print(
+                f"error: {arguments.test_vector_output} is not synchronized with the "
+                "grove-fhir exchange-protocol vectors",
+                file=sys.stderr,
+            )
+            stale = True
+        return int(stale)
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     arguments.output.write_text(generated, encoding="utf-8")
+    arguments.test_vector_output.parent.mkdir(parents=True, exist_ok=True)
+    arguments.test_vector_output.write_text(generated_test_vectors, encoding="utf-8")
     return 0
 
 

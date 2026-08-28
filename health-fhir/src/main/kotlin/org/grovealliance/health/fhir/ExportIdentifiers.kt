@@ -56,3 +56,34 @@ value class EventSequence(val value: String) : Comparable<EventSequence> {
         val PATTERN = Regex("[1-9][0-9]*")
     }
 }
+
+/** Opaque content-derived revision used for journal compare-and-swap transitions. */
+@JvmInline
+value class HealthConnectJournalRevision(val value: String) {
+    init {
+        require(value.matches(PATTERN)) { "A journal revision must be an opaque v1 SHA-256 digest." }
+    }
+
+    override fun toString(): String = value
+
+    private companion object {
+        val PATTERN = Regex("v1:[0-9a-f]{64}")
+    }
+}
+
+/** Monotonic fencing token issued by a journal-owned cross-instance lease. */
+@JvmInline
+value class HealthConnectJournalFence(val value: String) : Comparable<HealthConnectJournalFence> {
+    init {
+        require(value.matches(PATTERN)) { "A journal fence must be a positive canonical decimal integer." }
+    }
+
+    override fun compareTo(other: HealthConnectJournalFence): Int =
+        compareValuesBy(this, other, { it.value.length }, { it.value })
+
+    override fun toString(): String = value
+
+    private companion object {
+        val PATTERN = Regex("[1-9][0-9]*")
+    }
+}

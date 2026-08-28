@@ -25,7 +25,7 @@ detekt = "1.23.8" # please adjust github action version as well in case of versi
 dokka = "2.2.0"
 espressoCore = "3.7.0"
 fhirDataCapture = "1.3.1"
-fhirCore = "6.0.22"
+fhirCore = "6.10.3"
 firebaseAuthKtx = "23.2.1"
 firebaseFirestoreKtx = "25.1.4"
 firebaseFunctionsKtx = "21.2.1"
@@ -48,6 +48,7 @@ minSdk = "31"
 navigation3 = "1.1.4"
 paparazziVersion = "2.0.0-alpha05"
 playServicesAuth = "21.6.0"
+robolectric = "4.16.1"
 room = "2.8.4"
 rulesVersion = "1.7.0"
 runnerVersion = "1.7.0"
@@ -86,6 +87,7 @@ androidx-lifecycle-viewmodel-navigation3 = { group = "androidx.lifecycle", name 
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 androidx-security-crypto-ktx = { group = "androidx.security", name = "security-crypto-ktx", version.ref = "securityCryptoKtx" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "testCoreVersion" }
 androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "rulesVersion" }
@@ -124,6 +126,7 @@ navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", ver
 navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 paparazzi = { module = "app.cash.paparazzi:paparazzi", version.ref = "paparazziVersion" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timberVersion" }
 zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni" }
 
