@@ -104,9 +104,9 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
         assertThat(nextEvent.observationIdentifiers.single().value)
             .isEqualTo(first.observationIdentifiers.single().value)
         assertThat(first.bundle.identifier.value)
-            .isEqualTo("e2:$TEST_PRODUCER_INSTANCE:41")
+            .isEqualTo("e0:$TEST_PRODUCER_INSTANCE:41")
         assertThat(firstConversion.value)
-            .matches("n2:conversion-provenance:0:[A-Za-z0-9_-]{43}")
+            .matches("n0:conversion-provenance:0:[A-Za-z0-9_-]{43}")
     }
 
     @Test
@@ -300,7 +300,7 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
         )
 
         assertThat(result.observationIdentifiers.single().value)
-            .matches("v2:test-key:1:[A-Za-z0-9_-]{43}")
+            .matches("v0:test-key:1:[A-Za-z0-9_-]{43}")
         assertThat(HealthConnectWireFormat.bundleJson(result.bundle)).doesNotContain("héal记录")
     }
 
@@ -378,7 +378,7 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
         assertThat(identities).containsExactlyElementsIn(
             converter.convert(record, convertedAt).observations.map { outputIdentifier(it).value },
         ).inOrder()
-        assertThat(identities.all { it.matches(Regex("v2:test-key:1:[A-Za-z0-9_-]{43}")) }).isTrue()
+        assertThat(identities.all { it.matches(Regex("v0:test-key:1:[A-Za-z0-9_-]{43}")) }).isTrue()
         assertThat(observations.map { it.effectiveDateTimeType.valueAsString }.distinct())
             .containsExactly("2026-08-19T17:30:15Z")
     }

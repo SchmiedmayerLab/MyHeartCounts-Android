@@ -141,7 +141,7 @@ internal fun bloodGlucoseDefinition(specimenSource: Int): BloodGlucoseDefinition
         ),
     )
     BloodGlucoseRecord.SPECIMEN_SOURCE_TEARS -> throw InvalidHealthConnectRecord(
-        "Health Connect tear glucose has no admitted shared Grove Mobile profile in 0.6.0.",
+        "Health Connect tear glucose has no admitted shared Grove Mobile profile.",
     )
     BloodGlucoseRecord.SPECIMEN_SOURCE_UNKNOWN -> throw InvalidHealthConnectRecord(
         "Health Connect blood glucose requires an explicit supported specimen source.",

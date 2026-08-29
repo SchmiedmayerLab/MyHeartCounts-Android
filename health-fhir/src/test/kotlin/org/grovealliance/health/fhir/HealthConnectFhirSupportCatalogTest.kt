@@ -93,7 +93,7 @@ class HealthConnectFhirSupportCatalogTest {
         deferred: Set<String>,
     ): String = buildString {
         append("{\n")
-        append("  \"schemaVersion\": 1,\n")
+        append("  \"schemaVersion\": 0,\n")
         append("  \"sourcePackage\": \"androidx.health.connect:connect-client\",\n")
         append("  \"sourceVersion\": \"")
         append(checkNotNull(System.getProperty("grove.health-connect.version")))

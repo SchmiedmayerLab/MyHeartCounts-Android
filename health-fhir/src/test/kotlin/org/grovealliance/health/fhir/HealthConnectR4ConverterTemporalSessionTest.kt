@@ -417,7 +417,7 @@ class HealthConnectR4ConverterTemporalSessionTest : HealthConnectR4ConverterTest
 
         assertThat(first).isEqualTo(second)
         assertThat(first.distinct()).hasSize(4)
-        assertThat(first.all { it.matches(Regex("v2:test-key:1:[A-Za-z0-9_-]{43}")) }).isTrue()
+        assertThat(first.all { it.matches(Regex("v0:test-key:1:[A-Za-z0-9_-]{43}")) }).isTrue()
     }
 
     @Test
@@ -454,7 +454,7 @@ class HealthConnectR4ConverterTemporalSessionTest : HealthConnectR4ConverterTest
         // The same logical measurement re-imported: Health Connect stores a new metadata.id, so
         // only the client record identity ties the two together.
         val first = converter.convert(weight("weight-v1", 68.4, 1), convertedAt, EventSequence("1"))
-        val revision = converter.convert(weight("weight-v2", 68.9, 2), convertedAt, EventSequence("2"))
+        val revision = converter.convert(weight("weight-revision", 68.9, 2), convertedAt, EventSequence("2"))
 
         fun clientRecordId(conversion: HealthConnectConversion) = conversion.observations.single()
             .identifier
@@ -465,7 +465,7 @@ class HealthConnectR4ConverterTemporalSessionTest : HealthConnectR4ConverterTest
             .value.primitiveValue()
 
         // Scoped to the writer: two apps choosing the same id stay distinct measurements.
-        assertThat(clientRecordId(first)).startsWith("v2:test-key:1:")
+        assertThat(clientRecordId(first)).startsWith("v0:test-key:1:")
         assertThat(clientRecordId(first)).doesNotContain("com.example.source")
         assertThat(clientRecordId(first)).doesNotContain("scale-weighin")
         assertThat(clientRecordId(revision)).isEqualTo(clientRecordId(first))

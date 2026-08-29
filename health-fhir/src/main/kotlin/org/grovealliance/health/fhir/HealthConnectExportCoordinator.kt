@@ -222,7 +222,7 @@ class HealthConnectExportBatch(
 
     private companion object {
         val EVENT_IDENTIFIER_VALUE =
-            Regex("""e2:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
+            Regex("""e0:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
     }
 }
 

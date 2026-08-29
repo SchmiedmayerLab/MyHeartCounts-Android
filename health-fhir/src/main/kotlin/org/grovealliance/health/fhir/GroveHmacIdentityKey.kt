@@ -132,7 +132,7 @@ class GroveHmacIdentityKey private constructor(
             doFinal(preimage)
         }
         val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
-        return "v2:$keyId:$epoch:$encoded"
+        return "v0:$keyId:$epoch:$encoded"
     }
 
     /** A system is immutable for one identity kind, key id, and key epoch. */
@@ -157,7 +157,7 @@ class GroveHmacIdentityKey private constructor(
             true,
         )
 
-        private const val DOMAIN = "org.grovealliance.fhir.identity.v2"
+        private const val DOMAIN = "org.grovealliance.fhir.identity.v0"
         private const val HMAC_SHA_256 = "HmacSHA256"
         private const val MINIMUM_KEY_BYTES = 32
         private val KEY_ID = Regex("[A-Za-z0-9._-]+")
@@ -177,7 +177,7 @@ private const val SOURCE_CONTEXT_COMPONENT_COUNT = 5
 private const val RECORDING_DEVICE_COMPONENT_COUNT = 4
 private const val DEVICE_SNAPSHOT_COMPONENT_COUNT = 4
 
-/** Closed HMAC identity shapes from the Grove 0.6.0 exchange-protocol catalog. */
+/** Closed HMAC identity shapes from the Grove FHIR exchange-protocol catalog. */
 internal enum class GroveOpaqueIdentityKind(
     val code: String,
     val identifierRole: GroveIdentifierRole,

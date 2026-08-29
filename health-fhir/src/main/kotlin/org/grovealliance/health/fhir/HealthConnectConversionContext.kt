@@ -211,9 +211,9 @@ data class HealthConnectConversionContext(
     val assemblerHost: HealthConnectHostDeviceResource? = null,
     val researchStudies: List<HealthConnectBundleResource<ResearchStudy>> = emptyList(),
     val supportingResources: List<HealthConnectBundleResource<Resource>> = emptyList(),
-    /** Deployment-owned system for clear `e2:<producer-instance>:<sequence>` event identifiers. */
+    /** Deployment-owned system for clear `e0:<producer-instance>:<sequence>` event identifiers. */
     val eventIdentifierSystem: String,
-    /** Deployment-owned system for deterministic `n2:` event-scoped entry-node identifiers. */
+    /** Deployment-owned system for deterministic `n0:` event-scoped entry-node identifiers. */
     val entryNodeIdentifierSystem: String,
     val userAuthoredTextPolicy: HealthConnectUserAuthoredTextPolicy,
     /** Optional, explicit wire disclosure of Metadata.id on a one-to-one primary Observation. */

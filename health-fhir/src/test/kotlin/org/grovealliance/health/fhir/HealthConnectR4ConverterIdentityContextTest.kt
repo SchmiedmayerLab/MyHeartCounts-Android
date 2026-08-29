@@ -68,7 +68,7 @@ class HealthConnectR4ConverterIdentityContextTest : HealthConnectR4ConverterTest
         val recorder = recorderEntry.resource as FhirDevice
         assertThat(recorder.identifier).hasSize(2)
         assertThat(recorder.identifier.single { it.hasGroveRole(GroveIdentifierRole.RECORDING_DEVICE) }.value)
-            .startsWith("v2:test-key:1:")
+            .startsWith("v0:test-key:1:")
         val snapshot = recorder.identifier.single { it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT) }
         assertThat(recorderEntry.fullUrl).isEqualTo(GroveExchangeIdentity.fullUrl(snapshot))
 

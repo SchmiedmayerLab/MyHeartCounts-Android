@@ -112,7 +112,7 @@ internal object HealthConnectFieldDispositions {
             "laps" to "one workout-segment member Observation per ExerciseLap",
         ) + mapOf(
             "exerciseRouteResult" to omitted(
-                "Grove 0.6.0 admits no safe route geometry profile; route data requires a separately reviewed source artifact.",
+                "The Grove FHIR contracts admit no safe route geometry profile; route data requires a separately reviewed source artifact.",
             ),
             "plannedExerciseSessionId" to omitted(
                 "The referenced PlannedExerciseSessionRecord source type is explicitly deferred in AndroidX 1.1.0 support.",

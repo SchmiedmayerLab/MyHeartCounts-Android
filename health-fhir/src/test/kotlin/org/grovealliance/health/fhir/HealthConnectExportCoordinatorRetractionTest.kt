@@ -262,7 +262,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         firstCoordinator.delete("StepsRecord", "reactivated", conversionTime.plusSeconds(1))
         val nextScope = testSynchronizationScope(
             repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
-            configurationFingerprint = "expanded-filter-v2",
+            configurationFingerprint = "expanded-filter-revision",
         )
         val nextCoordinator = HealthConnectExportCoordinator(
             HealthConnectConverter(fhirContext(), nextScope),
@@ -289,7 +289,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         val upgradedScope = testSynchronizationScope(
             repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
             configurationFingerprint = "all-supported-records-v1",
-            conversionContractVersion = "health-connect-r4-v2-test",
+            conversionContractVersion = "health-connect-r4-revision-test",
         )
         val upgradedCoordinator = HealthConnectExportCoordinator(
             HealthConnectConverter(fhirContext(), upgradedScope),
@@ -310,7 +310,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         ).inOrder()
         val migrated = requireNotNull(journal.entry("StepsRecord", "contract-upgrade"))
         assertThat(migrated.projectionScopeKey).isEqualTo(upgradedScope.projectionScopeKey)
-        assertThat(migrated.conversionContractVersion).isEqualTo("health-connect-r4-v2-test")
+        assertThat(migrated.conversionContractVersion).isEqualTo("health-connect-r4-revision-test")
     }
 
     @Test
@@ -347,7 +347,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         val upgradedScope = testSynchronizationScope(
             repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
             configurationFingerprint = "all-supported-records-v1",
-            conversionContractVersion = "health-connect-r4-v2-test",
+            conversionContractVersion = "health-connect-r4-revision-test",
         )
         val coordinator = HealthConnectExportCoordinator(
             HealthConnectConverter(fhirContext(), upgradedScope),

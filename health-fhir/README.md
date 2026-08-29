@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT
 -->
 
 `health-fhir` is the AndroidX Health Connect 1.1.0 producer for the Grove FHIR
-R4 Mobile and Health Connect 0.6.0 contracts. One conversion event represents
+R4 Mobile and Health Connect contracts. One conversion event represents
 exactly one immutable source-record revision and produces a FHIR collection
 `Bundle`. A source removal is a separate Provenance-only retraction event; it is
 an assertion for a configured sink, not a FHIR delete command.
@@ -72,7 +72,7 @@ epochs must remain available while their outputs can be replayed or retracted.
 
 ```kotlin
 val identityKey = GroveHmacIdentityKey(
-    identifierSystemFamily = "https://study.example/fhir/NamingSystem/grove-opaque-v2",
+    identifierSystemFamily = "https://study.example/fhir/NamingSystem/grove-opaque-v0",
     keyId = managedKeyId,
     epoch = managedKeyEpoch,
     secret = managedKeyBytes,
@@ -95,8 +95,8 @@ val converter = HealthConnectConverter(
                 resource = host.fhirTemplate,
             )
         },
-        eventIdentifierSystem = "https://study.example/fhir/NamingSystem/grove-event-v2",
-        entryNodeIdentifierSystem = "https://study.example/fhir/NamingSystem/grove-entry-node-v2",
+        eventIdentifierSystem = "https://study.example/fhir/NamingSystem/grove-event-v0",
+        entryNodeIdentifierSystem = "https://study.example/fhir/NamingSystem/grove-entry-node-v0",
         userAuthoredTextPolicy = HealthConnectUserAuthoredTextPolicy.RETAIN,
         // Optional: omit this block unless wire-level native round-trip is required.
         nativeIdentifierDisclosure = HealthConnectNativeIdentifierDisclosure(
@@ -148,7 +148,7 @@ Every produced Observation carries exactly two Grove-typed opaque identifiers:
 same source-record identity plus its own `source-output` identity, whose
 `specimen` discriminator is the exact admitted source enum. Writer records and
 recording Devices have separate domains. Values use the normative
-`v2:<keyId>:<epoch>:<base64url HMAC-SHA-256>` form over unsigned 32-bit
+`v0:<keyId>:<epoch>:<base64url HMAC-SHA-256>` form over unsigned 32-bit
 length-framed UTF-8 fields. Repository scope and stable physical-device tokens
 are never serialized. Writer ids are emitted only as separately scoped opaque
 writer-record identities. Raw Health Connect record ids are omitted by default.
@@ -179,8 +179,8 @@ Health Connect sample and stage lists, `occurrence` is assigned among identical
 canonical coordinates in the exact platform-list order before output sorting.
 The adapter never derives identity from a clinical value or unordered iteration.
 
-Event values are clear `e2:<producer-instance>:<positive-sequence>` identifiers.
-Entries without a selected business identity use deterministic `n2:` entry-node
+Event values are clear `e0:<producer-instance>:<positive-sequence>` identifiers.
+Entries without a selected business identity use deterministic `n0:` entry-node
 keys. Bundle `fullUrl` values are UUIDv5 over the length-framed complete
 Identifier pair using the Grove namespace. UUIDv5 is graph addressing, not a
 privacy control.
@@ -288,7 +288,7 @@ reviewed negative cases. The capability export reports the exact AndroidX
 baseline and supported/deferred inventory.
 
 Run the offline official-validator lane from a clean producer revision with the
-exact 0.6.0 packages:
+exact packages:
 
 ```bash
 ./Scripts/validate-health-connect-fhir-conformance.sh \

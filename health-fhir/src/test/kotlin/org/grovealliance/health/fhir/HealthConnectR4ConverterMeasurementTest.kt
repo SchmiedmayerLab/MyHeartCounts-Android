@@ -89,7 +89,7 @@ class HealthConnectR4ConverterMeasurementTest : HealthConnectR4ConverterTestSupp
             .isEqualTo(1)
         assertThat(result.sourceRecordIdentifier.system)
             .isEqualTo(testIdentityKey().identifierSystem(GroveOpaqueIdentityKind.SOURCE_RECORD))
-        assertThat(sourceIdentifier(observation).value).startsWith("v2:test-key:1:")
+        assertThat(sourceIdentifier(observation).value).startsWith("v0:test-key:1:")
         assertThat(sourceIdentifier(observation).value).doesNotContain("source-record")
         assertThat(outputIdentifier(observation).value).isNotEqualTo(result.sourceRecordIdentifier.value)
         val provenance = requireNotNull(result.provenance)

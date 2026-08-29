@@ -23,7 +23,7 @@ import org.hl7.fhir.r4.model.VisionPrescription
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 
-/** Shared byte-level primitives from the Grove 0.6.0 exchange protocol. */
+/** Shared byte-level primitives from the Grove FHIR exchange protocol. */
 internal object GroveExchangeProtocol {
     /** Unsigned 32-bit big-endian UTF-8 byte length followed by the exact bytes, per field. */
     fun frameFields(fields: Iterable<String>): ByteArray = ByteArrayOutputStream().use { bytes ->

@@ -17,7 +17,7 @@ import java.util.UUID
 
 /** Implements the Grove Mobile exchange-entry identity contract exactly. */
 object GroveExchangeIdentity {
-    const val ALGORITHM = "uuid-v5-framed-identifier-v2"
+    const val ALGORITHM = "uuid-v5-framed-identifier-v0"
     const val ENTRY_IDENTIFIER_EXTENSION = HealthConnectContract.GROVE_EXCHANGE_ENTRY_NODE_KEY
 
     private val namespace = UUID.fromString("43df4575-bff7-5a57-9a80-2472cd2b0623")

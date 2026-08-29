@@ -100,7 +100,7 @@ class GroveExchangeProtocolCatalogTest {
 
         GroveOpaqueIdentityKind.entries.forEach { kind ->
             val exact = validComponents(kind)
-            assertThat(key.value(kind, exact)).matches("v2:test-key:1:[A-Za-z0-9_-]{43}")
+            assertThat(key.value(kind, exact)).matches("v0:test-key:1:[A-Za-z0-9_-]{43}")
             org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
                 key.value(kind, exact.dropLast(1))
             }
@@ -133,14 +133,14 @@ class GroveExchangeProtocolCatalogTest {
         domainPairs.forEach { (genericKind, providerKind) ->
             val providerComponents = validComponents(providerKind)
             assertThat(key.value(providerKind, providerComponents))
-                .matches("v2:test-key:1:[A-Za-z0-9_-]{43}")
+                .matches("v0:test-key:1:[A-Za-z0-9_-]{43}")
             org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
                 key.value(genericKind, providerComponents)
             }
 
             val genericComponents = validComponents(genericKind)
             assertThat(key.value(genericKind, genericComponents))
-                .matches("v2:test-key:1:[A-Za-z0-9_-]{43}")
+                .matches("v0:test-key:1:[A-Za-z0-9_-]{43}")
             org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
                 key.value(providerKind, genericComponents)
             }

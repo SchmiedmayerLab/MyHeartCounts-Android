@@ -192,7 +192,7 @@ capability = json.loads(capability_path.read_text(encoding="utf-8"))
 catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
 if capability != {
-    "schemaVersion": 1,
+    "schemaVersion": 0,
     "sourcePackage": catalog["source"]["package"],
     "sourceVersion": catalog["source"]["version"],
     "sourceTypeExtension": catalog["sourceTypeExtension"]["url"],
@@ -280,7 +280,7 @@ if missing_semantic_paths:
     )
 
 manifest = {
-    "schemaVersion": 1,
+    "schemaVersion": 0,
     "fhirVersion": "4.0.1",
     "producer": {
         "name": "My Heart Counts Android Health Connect",

@@ -308,9 +308,9 @@ internal fun Bundle.groveOutputIdentifiers(): List<Identifier> = entry.mapNotNul
 }
 
 private val EVENT_IDENTITY_VALUE =
-    Regex("""e2:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
+    Regex("""e0:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
 private val ENTRY_NODE_IDENTITY_VALUE =
-    Regex("""n2:[a-z][a-z0-9-]*:(0|[1-9][0-9]*):[A-Za-z0-9_-]{43}""")
+    Regex("""n0:[a-z][a-z0-9-]*:(0|[1-9][0-9]*):[A-Za-z0-9_-]{43}""")
 
 /**
  * Why one Health Connect record cannot be converted.

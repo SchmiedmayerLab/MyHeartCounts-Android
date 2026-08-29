@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.Base64
 
-/** Domain-separated opaque identities defined by the Grove Health Connect 0.6.0 contract. */
+/** Domain-separated opaque identities defined by the Grove Health Connect contract. */
 @Suppress("TooManyFunctions")
 internal object HealthConnectIdentity {
     fun record(
@@ -234,7 +234,7 @@ internal object HealthConnectIdentity {
         }
         return Identifier().apply {
             system = eventSystem
-            value = "e2:$producerInstance:${eventSequence.value}"
+            value = "e0:$producerInstance:${eventSequence.value}"
             type = org.hl7.fhir.r4.model.CodeableConcept(
                 org.hl7.fhir.r4.model.Coding(
                     HealthConnectContract.GROVE_IDENTIFIER_ROLE,
@@ -287,7 +287,7 @@ internal object HealthConnectIdentity {
         )
         return Identifier().apply {
             system = entryNodeSystem
-            value = "n2:$resourceRole:$ordinal:$digest"
+            value = "n0:$resourceRole:$ordinal:$digest"
             type = org.hl7.fhir.r4.model.CodeableConcept(
                 org.hl7.fhir.r4.model.Coding(
                     HealthConnectContract.GROVE_IDENTIFIER_ROLE,
@@ -323,7 +323,7 @@ internal object HealthConnectIdentity {
     )
     private val DEVICE_ROLE = Regex("[a-z][a-z0-9-]*")
     private val MEASUREMENT_ID = Regex("[a-z][a-z0-9-]*")
-    private const val ENTRY_NODE_DOMAIN = "org.grovealliance.fhir.entry-node.v2"
+    private const val ENTRY_NODE_DOMAIN = "org.grovealliance.fhir.entry-node.v0"
     private const val ADAPTER_ID = "health-connect"
     private const val OUTPUT_DISCRIMINATOR_SEPARATOR = "|"
     private const val SINGLE_OUTPUT_ROLE = "single"

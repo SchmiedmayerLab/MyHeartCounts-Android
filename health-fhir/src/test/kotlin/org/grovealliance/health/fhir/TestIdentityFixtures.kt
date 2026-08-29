@@ -8,10 +8,10 @@
 package org.grovealliance.health.fhir
 
 internal const val TEST_PRODUCER_INSTANCE = "1f5c58aa-6ec6-4e79-a682-829a9debd3f5"
-internal const val TEST_EVENT_SYSTEM = "https://conformance.grovealliance.org/fhir/NamingSystem/grove-event-v2"
-internal const val TEST_ENTRY_NODE_SYSTEM = "https://conformance.grovealliance.org/fhir/NamingSystem/grove-entry-node-v2"
+internal const val TEST_EVENT_SYSTEM = "https://conformance.grovealliance.org/fhir/NamingSystem/grove-event-v0"
+internal const val TEST_ENTRY_NODE_SYSTEM = "https://conformance.grovealliance.org/fhir/NamingSystem/grove-entry-node-v0"
 internal const val TEST_OPAQUE_IDENTITY_SYSTEM_FAMILY =
-    "https://conformance.grovealliance.org/fhir/NamingSystem/grove-opaque-v2"
+    "https://conformance.grovealliance.org/fhir/NamingSystem/grove-opaque-v0"
 
 internal fun testIdentityKey(): GroveHmacIdentityKey = GroveHmacIdentityKey.forConformanceTesting(
     identifierSystemFamily = TEST_OPAQUE_IDENTITY_SYSTEM_FAMILY,

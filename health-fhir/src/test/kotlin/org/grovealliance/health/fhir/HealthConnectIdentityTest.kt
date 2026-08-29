@@ -32,7 +32,7 @@ class HealthConnectIdentityTest {
         assertThat(vector.identifier.system).isEqualTo(
             "$TEST_OPAQUE_IDENTITY_SYSTEM_FAMILY/source-record/test-key/1",
         )
-        assertThat(vector.identifier.value).startsWith("v2:test-key:1:")
+        assertThat(vector.identifier.value).startsWith("v0:test-key:1:")
         assertThat(vector.identifier.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD)).isTrue()
     }
 
@@ -92,13 +92,13 @@ class HealthConnectIdentityTest {
     }
 
     @Test
-    fun `event and entry-node identities use their typed v2 lexical forms`() {
+    fun `event and entry-node identities use their typed v0 lexical forms`() {
         val event = HealthConnectIdentity.exchange(TEST_EVENT_SYSTEM, TEST_PRODUCER_INSTANCE, EventSequence("42"))
-        assertThat(event.value).isEqualTo("e2:$TEST_PRODUCER_INSTANCE:42")
+        assertThat(event.value).isEqualTo("e0:$TEST_PRODUCER_INSTANCE:42")
         assertThat(event.hasGroveRole(GroveIdentifierRole.EVENT)).isTrue()
 
         val node = HealthConnectIdentity.conversionNode(TEST_ENTRY_NODE_SYSTEM, event)
-        assertThat(node.value).matches("n2:conversion-provenance:0:[A-Za-z0-9_-]{43}")
+        assertThat(node.value).matches("n0:conversion-provenance:0:[A-Za-z0-9_-]{43}")
         assertThat(node.hasGroveRole(GroveIdentifierRole.ENTRY_NODE)).isTrue()
         assertThat(GroveExchangeIdentity.fullUrl(node)).startsWith("urn:uuid:")
     }

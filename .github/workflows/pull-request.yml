@@ -60,14 +60,13 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Checkout Grove FHIR 0.6.0 Development Contract
+      - name: Checkout Grove FHIR Contract
         uses: actions/checkout@v7
         with:
           repository: SchmiedmayerLab/grove-fhir
           # Pinned so a contract change is a visible edit here, not a silent CI drift.
-          # Development verification follows the exact grove-fhir commit on main
-          # until the immutable 0.6.0 release artifacts are published.
-          ref: 31197e876161e9c6d207760d472343231da527e2
+          # Development verification follows the exact grove-fhir commit on main.
+          ref: 54d977149c038b7487614bbe30fbc8f8ebf541d0
           path: .grove-fhir
           persist-credentials: false
       - name: Record the Exact Grove FHIR Revision
