@@ -13,9 +13,11 @@ import org.hl7.fhir.r4.model.Device
 import org.hl7.fhir.r4.model.DocumentReference
 import org.hl7.fhir.r4.model.DomainResource
 import org.hl7.fhir.r4.model.Extension
+import org.hl7.fhir.r4.model.Identifier
 import org.hl7.fhir.r4.model.MedicationAdministration
 import org.hl7.fhir.r4.model.MedicationStatement
 import org.hl7.fhir.r4.model.Observation
+import org.hl7.fhir.r4.model.QuestionnaireResponse
 import org.hl7.fhir.r4.model.Reference
 import org.hl7.fhir.r4.model.ResearchStudy
 import org.hl7.fhir.r4.model.ResearchSubject
@@ -100,6 +102,16 @@ private fun Reference.requireGovernedShape(
         "$label identifier-only logical Reference requires an exact admitted type and one complete Identifier."
     }
     identifier.key()
+    if (targetTypes == PATIENT_TARGET) identifier.requireLogicalPatientPseudonym(label)
+}
+
+internal fun Identifier.requireLogicalPatientPseudonym(label: String) {
+    require(system !in LOGICAL_PATIENT_RESERVED_SYSTEMS) {
+        "$label logical Patient Identifier.system must not use a Grove protocol code system."
+    }
+    require(type.coding.none { it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE }) {
+        "$label logical Patient Identifier must not claim a Grove identifier role."
+    }
 }
 
 private fun Resource.governedReferences(): List<GovernedReference> =
@@ -117,6 +129,12 @@ private fun Resource.governedElementReferences(): List<GovernedReference> = when
     is DocumentReference -> optionalGovernedReference(
         hasSubject(),
         "DocumentReference.subject",
+        subject,
+        PATIENT_TARGET,
+    )
+    is QuestionnaireResponse -> optionalGovernedReference(
+        hasSubject(),
+        "QuestionnaireResponse.subject",
         subject,
         PATIENT_TARGET,
     )
@@ -188,6 +206,11 @@ private val OBSERVATION_TARGET = setOf("Observation")
 private val RESEARCH_STUDY_TARGET = setOf("ResearchStudy")
 private val PLAN_DEFINITION_TARGET = setOf("PlanDefinition")
 private val DERIVED_FROM_TARGETS = setOf("DocumentReference", "QuestionnaireResponse")
+private val LOGICAL_PATIENT_RESERVED_SYSTEMS = setOf(
+    HealthConnectContract.GROVE_IDENTIFIER_ROLE,
+    HealthConnectContract.GROVE_LIFECYCLE_EVENT,
+    HealthConnectContract.GROVE_RETRACTION_TARGET_ROLE_CS,
+)
 private val EXTENSION_TARGETS = mapOf(
     "http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice" to DEVICE_TARGET,
     "http://hl7.org/fhir/StructureDefinition/workflow-researchStudy" to RESEARCH_STUDY_TARGET,

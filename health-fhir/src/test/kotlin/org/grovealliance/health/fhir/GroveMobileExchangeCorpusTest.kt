@@ -108,7 +108,7 @@ class GroveMobileExchangeCorpusTest {
                 document.applyPatch(operationPatch.jsonObject)
             }
 
-            assertThrows(Exception::class.java) {
+            assertThrows(case.getValue("id").jsonPrimitive.content, Exception::class.java) {
                 val bundle = JsonParser().parse(mutated.toString()) as Bundle
                 eventBatch(operation, bundle, source, targets)
             }
@@ -239,7 +239,7 @@ class GroveMobileExchangeCorpusTest {
 
     private companion object {
         const val CORPUS_DIRECTORY_PROPERTY = "grove.mobile-exchange.corpus-directory"
-        const val EXPECTED_MUTATION_COUNT = 31
+        const val EXPECTED_MUTATION_COUNT = 34
         val EXPECTED_MUTATION_IDS = setOf(
             "missing-entry-node-key",
             "non-deterministic-full-url",
@@ -271,6 +271,9 @@ class GroveMobileExchangeCorpusTest {
             "unprofiled-active-document-reference",
             "unprofiled-active-device",
             "unprofiled-active-provenance",
+            "questionnaire-response-subject-wrong-target",
+            "questionnaire-response-subject-reserved-system",
+            "questionnaire-response-subject-grove-role",
             "disconnected-supporting-patient",
         )
     }

@@ -199,6 +199,24 @@ class HealthConnectR4ConverterIdentityContextTest : HealthConnectR4ConverterTest
         assertThrows(IllegalArgumentException::class.java) {
             HealthConnectPatientSubject.Logical(identifier("relative", "participant-42"))
         }
+        assertThrows(IllegalArgumentException::class.java) {
+            HealthConnectPatientSubject.Logical(
+                identifier(HealthConnectContract.GROVE_IDENTIFIER_ROLE, "participant-42"),
+            )
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            HealthConnectPatientSubject.Logical(
+                identifier("https://deployment.example/fhir/patient", "participant-42").apply {
+                    type.addCoding(
+                        Coding(
+                            HealthConnectContract.GROVE_IDENTIFIER_ROLE,
+                            GroveIdentifierRole.SOURCE_RECORD.code,
+                            null,
+                        ),
+                    )
+                },
+            )
+        }
         val logical = HealthConnectPatientSubject.Logical(
             identifier("https://deployment.example/fhir/patient", "participant-42"),
         )

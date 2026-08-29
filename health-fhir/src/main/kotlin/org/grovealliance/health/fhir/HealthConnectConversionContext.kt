@@ -178,7 +178,10 @@ sealed class HealthConnectPatientSubject {
     internal fun requireValid() {
         when (this) {
             is Bundled -> patient.requireStableEntryIdentity()
-            is Logical -> identifier.key()
+            is Logical -> {
+                identifier.key()
+                identifier.requireLogicalPatientPseudonym("Logical Patient subject")
+            }
         }
     }
 
