@@ -66,7 +66,7 @@ jobs:
           repository: SchmiedmayerLab/grove-fhir
           # Pinned so a contract change is a visible edit here, not a silent CI drift.
           # Development verification follows the exact grove-fhir commit on main.
-          ref: 54d977149c038b7487614bbe30fbc8f8ebf541d0
+          ref: 90b23e647f1dd728035c64348abede5746375529
           path: .grove-fhir
           persist-credentials: false
       - name: Record the Exact Grove FHIR Revision
