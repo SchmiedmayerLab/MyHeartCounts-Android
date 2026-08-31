@@ -19,39 +19,20 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 /**
- * Internal class for storing and retrieving health changes tokens.
+ * Durable Health Connect changes-token state, namespaced per repository and projection scope.
  *
- * @property storage The [LocalStorage] instance used for storing tokens.
+ * A projection scope change bumps the owner generation, which invalidates every lease a running
+ * collector still holds and forces a fresh baseline before the token may advance again.
+ *
+ * The key and value format changed with this contract and reads no legacy key: only `:health-fhir`
+ * and `:sample-app` depend on `:health`, and neither has shipped, so no installed token exists to
+ * migrate.
  */
 @Suppress("TooManyFunctions")
 internal class ChangesTokenStore(
     private val storage: LocalStorage,
 ) {
     private val ownerMutex = Mutex()
-
-    /**
-     * Stores a changes token for the specified [recordType].
-     *
-     * @param recordType The [AnyRecordType] for which the token is stored.
-     * @param token The changes token to store.
-     */
-    suspend fun storeToken(recordType: AnyRecordType, token: String, collectionScopeId: String = "default") {
-        val lease = claimProjection(recordType, HealthConstraint.DEFAULT_REPOSITORY_SCOPE_ID, collectionScopeId)
-        storePendingBoundary(recordType, lease, token)
-        commitToken(recordType, lease, token)
-    }
-
-    /**
-     * Retrieves the changes token for the specified [recordType].
-     *
-     * @param recordType The [AnyRecordType] for which the token is retrieved.
-     * @return The changes token, or null if not found.
-     */
-    suspend fun getToken(
-        recordType: AnyRecordType,
-        collectionScopeId: String = "default",
-        repositoryScopeId: String = HealthConstraint.DEFAULT_REPOSITORY_SCOPE_ID,
-    ): String? = getState(recordType, collectionScopeId, repositoryScopeId)?.token
 
     suspend fun getState(
         recordType: AnyRecordType,
@@ -71,14 +52,9 @@ internal class ChangesTokenStore(
             getState(recordType, lease.projectionScopeId, lease.repositoryScopeId)
         }
 
-    /**
-     * Deletes the changes token for the specified [recordType].
-     *
-     * @param recordType The [AnyRecordType] for which the token is deleted.
-     */
     suspend fun deleteToken(
         recordType: AnyRecordType,
-        collectionScopeId: String = "default",
+        collectionScopeId: String = HealthConstraint.DEFAULT_COLLECTION_SCOPE_ID,
         repositoryScopeId: String = HealthConstraint.DEFAULT_REPOSITORY_SCOPE_ID,
     ) {
         storage.delete(keyFor(recordType, repositoryScopeId, collectionScopeId))
@@ -184,17 +160,7 @@ internal class ChangesTokenStore(
         require(scopeId.isNotBlank()) { "A collection scope id is required for token storage." }
         return MessageDigest.getInstance("SHA-256")
             .digest(scopeId.toByteArray(StandardCharsets.UTF_8))
-            .joinToString("") { byte ->
-                val unsigned = byte.toInt() and BYTE_MASK
-                "${LOWERCASE_HEX[unsigned ushr HEX_NIBBLE_BITS]}${LOWERCASE_HEX[unsigned and HEX_NIBBLE_MASK]}"
-            }
-    }
-
-    private companion object {
-        const val LOWERCASE_HEX = "0123456789abcdef"
-        const val HEX_NIBBLE_BITS = 4
-        const val HEX_NIBBLE_MASK = 0x0f
-        const val BYTE_MASK = 0xff
+            .joinToString("") { "%02x".format(it) }
     }
 }
 

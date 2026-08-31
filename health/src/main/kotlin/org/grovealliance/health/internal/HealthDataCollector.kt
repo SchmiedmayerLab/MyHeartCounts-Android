@@ -16,8 +16,12 @@ import androidx.health.connect.client.response.ChangesResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.grovealliance.health.AnyRecordType
 import org.grovealliance.health.CollectionMode
 import org.grovealliance.health.CollectionTimeRange
@@ -44,8 +48,10 @@ internal class HealthDataCollector(
     private val client: HealthConnectClient,
 ) {
     private val logger by healthLogger()
-    private var collectionJob: Job? = null
-    private var projectionLease: CollectionProjectionLease? = null
+    private val lifecycleMutex = Mutex()
+
+    @Volatile
+    private var activeRun: CollectionRun? = null
     val collectionScopeId: String = healthConstraint.collectionScopeId(recordType).also {
         require(it.isNotBlank()) { "A HealthConstraint collection scope id must not be blank." }
     }
@@ -54,152 +60,38 @@ internal class HealthDataCollector(
     }
 
     val isActive: Boolean
-        get() = collectionJob?.isActive == true
+        get() = activeRun?.job?.isActive == true
 
-    fun startDataCollection() {
-        if (isActive) return
-
-        collectionJob = scope.launch {
-            when (val mode = deliverySetting.collectionMode) {
-                is CollectionMode.Manual -> {
-                    collectUntilDrained()
+    suspend fun startDataCollection() = lifecycleMutex.withLock {
+        if (activeRun?.job?.isActive == true) return@withLock
+        val started = CollectionSession()
+        activeRun = CollectionRun(
+            started,
+            scope.launch {
+                when (val mode = deliverySetting.collectionMode) {
+                    is CollectionMode.Manual -> started.collectUntilDrained()
+                    is CollectionMode.Automatic -> started.runPollingLoop(mode.pollingInterval)
                 }
-
-                is CollectionMode.Automatic -> {
-                    runPollingLoop(mode.pollingInterval)
-                }
-            }
-        }
+            },
+        )
     }
 
-    suspend fun stopDataCollectionAndJoin() {
-        collectionJob?.cancelAndJoin()
-        collectionJob = null
+    suspend fun stopDataCollectionAndJoin() = lifecycleMutex.withLock {
+        activeRun?.job?.cancelAndJoin()
+        activeRun = null
     }
 
-    private suspend fun ensureProjectionLease(): CollectionProjectionLease {
-        projectionLease?.let {
-            tokenStore.requireProjectionOwner(recordType, it)
-            return it
-        }
-        return tokenStore.claimProjection(recordType, collectionRepositoryId, collectionScopeId).also {
-            projectionLease = it
-        }
+    internal suspend fun collectOnce(): ChangesResponse = currentSession().collectOnce()
+
+    internal suspend fun collectUntilDrained() = currentSession().collectUntilDrained()
+
+    /** The unstarted branch is the synchronous drive `:health`'s own tests use in place of a job. */
+    private suspend fun currentSession(): CollectionSession = lifecycleMutex.withLock {
+        activeRun?.session ?: CollectionSession().also { activeRun = CollectionRun(it, job = null) }
     }
 
-    private suspend fun acquireDurableBoundary(lease: CollectionProjectionLease): String {
-        val boundary = client.getChangesToken(ChangesTokenRequest(setOf(recordType.type)))
-        tokenStore.storePendingBoundary(recordType, lease, boundary)
-        return boundary
-    }
-
-    /**
-     * Establishes an exact baseline and drains every page after its durable boundary.
-     *
-     * A pending boundary survives callback, process, and token-store failures. Retrying repeats the
-     * scoped baseline and the same page sequence. If Health Connect expires that boundary, a new
-     * boundary is durably installed before the baseline is repeated.
-     */
-    private suspend fun reconcileFromBoundary(
-        initialBoundary: String?,
-        lease: CollectionProjectionLease,
-    ): ChangesResponse {
-        var boundary = initialBoundary ?: acquireDurableBoundary(lease)
-        while (true) {
-            tokenStore.requireProjectionOwner(recordType, lease)
-            healthConstraint.onFullyResyncRequired(recordType)
-            var pageToken = boundary
-            while (true) {
-                val response = client.getChanges(pageToken)
-                if (response.changesTokenExpired) {
-                    logger.w { "Recovery boundary expired for $recordType. Re-establishing baseline." }
-                    boundary = acquireDurableBoundary(lease)
-                    break
-                }
-                processResult(response, lease)
-                pageToken = response.nextChangesToken
-                if (!response.hasMore) {
-                    tokenStore.commitToken(recordType, lease, pageToken)
-                    return response
-                }
-            }
-        }
-    }
-
-    private suspend fun runPollingLoop(interval: Duration) {
-        while (isActive) {
-            runCatching {
-                val result = collectOnce()
-                if (!result.hasMore) delay(interval)
-            }.onFailure {
-                logger.e(it) { "Error collecting Health data for $recordType" }
-                delay(interval)
-            }
-        }
-    }
-
-    /**
-     * Delivers one change page and advances its token only after every callback succeeds.
-     *
-     * The token is the commit point for a page. Advancing it before the constraint has durably
-     * accepted upserts and deletions loses that page when a callback fails.
-     */
-    internal suspend fun collectOnce(): ChangesResponse {
-        val lease = ensureProjectionLease()
-        var state = tokenStore.getState(recordType, lease)
-        if (tokenStore.baselineRequired(recordType, lease)) {
-            val boundary = state
-                ?.takeIf { it.phase == ChangesTokenPhase.PENDING_BASELINE }
-                ?.token
-                ?: client.getChangesToken(ChangesTokenRequest(setOf(recordType.type)))
-            tokenStore.storePendingBoundary(recordType, lease, boundary)
-            state = ChangesTokenState(boundary, ChangesTokenPhase.PENDING_BASELINE)
-        }
-        if (state == null || state.phase == ChangesTokenPhase.PENDING_BASELINE) {
-            return reconcileFromBoundary(state?.token, lease)
-        }
-
-        val result = client.getChanges(state.token)
-        if (result.changesTokenExpired) {
-            logger.w { "Token expired for $recordType. Performing full resync." }
-            return reconcileFromBoundary(initialBoundary = null, lease = lease)
-        }
-        processResult(result, lease)
-        tokenStore.commitToken(recordType, lease, result.nextChangesToken)
-        return result
-    }
-
-    internal suspend fun collectUntilDrained() {
-        var result: ChangesResponse
-        do {
-            result = collectOnce()
-        } while (result.hasMore)
-    }
-
-    private suspend fun processResult(result: ChangesResponse, lease: CollectionProjectionLease) {
-        // Preserve Health Connect's change order. Collapsing a page into independent upsert and
-        // deletion sets can resurrect a record or delete its replacement when both changes for an
-        // id occur in the same page.
-        for (change in result.changes) {
-            tokenStore.requireProjectionOwner(recordType, lease)
-            when (change) {
-                is UpsertionChange -> {
-                    val record = change.record
-                    if (!recordType.type.java.isAssignableFrom(record::class.java)) continue
-                    if (matchesFilter(record)) {
-                        healthConstraint.handleNewRecords(setOf(record), recordType)
-                    } else {
-                        healthConstraint.handleExcludedRecords(setOf(record.metadata.id), recordType)
-                    }
-                }
-
-                is DeletionChange -> {
-                    healthConstraint.handleDeletedRecords(setOf(change.recordId), recordType)
-                }
-            }
-            tokenStore.requireProjectionOwner(recordType, lease)
-        }
-    }
+    /** Session and driving job, replaced as one so a lease can never outlive the run that took it. */
+    private data class CollectionRun(val session: CollectionSession, val job: Job?)
 
     private fun matchesFilter(record: Record): Boolean {
         val predicateFilterMatched = predicate?.invoke(record) ?: true
@@ -211,6 +103,134 @@ internal class HealthDataCollector(
                 val startInstant = record.startTime()
                 val minDate = timeRange.date
                 startInstant == null || startInstant >= minDate
+            }
+        }
+    }
+
+    /** One start-to-stop collection run and the projection lease it holds for that run. */
+    private inner class CollectionSession {
+        private var projectionLease: CollectionProjectionLease? = null
+
+        suspend fun runPollingLoop(interval: Duration) {
+            while (currentCoroutineContext().isActive) {
+                runCatching {
+                    val result = collectOnce()
+                    if (!result.hasMore) delay(interval)
+                }.onFailure {
+                    logger.e(it) { "Error collecting Health data for $recordType" }
+                    delay(interval)
+                }
+            }
+        }
+
+        suspend fun collectUntilDrained() {
+            var result: ChangesResponse
+            do {
+                result = collectOnce()
+            } while (result.hasMore)
+        }
+
+        /**
+         * Delivers one change page and advances its token only after every callback succeeds.
+         *
+         * The token is the commit point for a page. Advancing it before the constraint has durably
+         * accepted upserts and deletions loses that page when a callback fails.
+         */
+        suspend fun collectOnce(): ChangesResponse {
+            val lease = ensureProjectionLease()
+            var state = tokenStore.getState(recordType, lease)
+            if (tokenStore.baselineRequired(recordType, lease)) {
+                val boundary = state
+                    ?.takeIf { it.phase == ChangesTokenPhase.PENDING_BASELINE }
+                    ?.token
+                    ?: client.getChangesToken(ChangesTokenRequest(setOf(recordType.type)))
+                tokenStore.storePendingBoundary(recordType, lease, boundary)
+                state = ChangesTokenState(boundary, ChangesTokenPhase.PENDING_BASELINE)
+            }
+            if (state == null || state.phase == ChangesTokenPhase.PENDING_BASELINE) {
+                return reconcileFromBoundary(state?.token, lease)
+            }
+
+            val result = client.getChanges(state.token)
+            if (result.changesTokenExpired) {
+                logger.w { "Token expired for $recordType. Performing full resync." }
+                return reconcileFromBoundary(initialBoundary = null, lease = lease)
+            }
+            processResult(result, lease)
+            tokenStore.commitToken(recordType, lease, result.nextChangesToken)
+            return result
+        }
+
+        private suspend fun ensureProjectionLease(): CollectionProjectionLease {
+            projectionLease?.let {
+                tokenStore.requireProjectionOwner(recordType, it)
+                return it
+            }
+            return tokenStore.claimProjection(recordType, collectionRepositoryId, collectionScopeId).also {
+                projectionLease = it
+            }
+        }
+
+        private suspend fun acquireDurableBoundary(lease: CollectionProjectionLease): String {
+            val boundary = client.getChangesToken(ChangesTokenRequest(setOf(recordType.type)))
+            tokenStore.storePendingBoundary(recordType, lease, boundary)
+            return boundary
+        }
+
+        /**
+         * Establishes an exact baseline and drains every page after its durable boundary.
+         *
+         * A pending boundary survives callback, process, and token-store failures. Retrying repeats
+         * the scoped baseline and the same page sequence. If Health Connect expires that boundary, a
+         * new boundary is durably installed before the baseline is repeated.
+         */
+        private suspend fun reconcileFromBoundary(
+            initialBoundary: String?,
+            lease: CollectionProjectionLease,
+        ): ChangesResponse {
+            var boundary = initialBoundary ?: acquireDurableBoundary(lease)
+            while (true) {
+                tokenStore.requireProjectionOwner(recordType, lease)
+                healthConstraint.onFullyResyncRequired(recordType)
+                var pageToken = boundary
+                while (true) {
+                    val response = client.getChanges(pageToken)
+                    if (response.changesTokenExpired) {
+                        logger.w { "Recovery boundary expired for $recordType. Re-establishing baseline." }
+                        boundary = acquireDurableBoundary(lease)
+                        break
+                    }
+                    processResult(response, lease)
+                    pageToken = response.nextChangesToken
+                    if (!response.hasMore) {
+                        tokenStore.commitToken(recordType, lease, pageToken)
+                        return response
+                    }
+                }
+            }
+        }
+
+        private suspend fun processResult(result: ChangesResponse, lease: CollectionProjectionLease) {
+            // Preserve Health Connect's change order. Collapsing a page into independent upsert and
+            // deletion sets can resurrect a record or delete its replacement when both changes for
+            // an id occur in the same page.
+            for (change in result.changes) {
+                tokenStore.requireProjectionOwner(recordType, lease)
+                when (change) {
+                    is UpsertionChange -> {
+                        val record = change.record
+                        if (!recordType.type.isInstance(record)) continue
+                        if (matchesFilter(record)) {
+                            healthConstraint.handleNewRecords(setOf(record), recordType)
+                        } else {
+                            healthConstraint.handleExcludedRecords(setOf(record.metadata.id), recordType)
+                        }
+                    }
+
+                    is DeletionChange -> {
+                        healthConstraint.handleDeletedRecords(setOf(change.recordId), recordType)
+                    }
+                }
             }
         }
     }

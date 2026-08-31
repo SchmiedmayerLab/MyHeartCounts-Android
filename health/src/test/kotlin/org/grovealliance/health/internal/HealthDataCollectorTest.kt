@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -27,6 +27,8 @@ import kotlinx.serialization.SerializationStrategy
 import org.grovealliance.health.CollectionMode
 import org.grovealliance.health.CollectionTimeRange
 import org.grovealliance.health.HealthConstraint
+import org.grovealliance.health.HealthConstraint.Companion.DEFAULT_COLLECTION_SCOPE_ID
+import org.grovealliance.health.HealthConstraint.Companion.DEFAULT_REPOSITORY_SCOPE_ID
 import org.grovealliance.health.RecordType
 import org.grovealliance.storage.local.LocalStorage
 import org.grovealliance.storage.local.LocalStorageSetting
@@ -58,7 +60,7 @@ class HealthDataCollectorTest {
         assertThat(constraint.events).containsExactly("upsert", "upsert").inOrder()
         assertThat(tokenStore.getState(RecordType.steps, collector.collectionScopeId)?.phase)
             .isEqualTo(ChangesTokenPhase.COMMITTED)
-        assertThat(tokenStore.getToken(RecordType.steps, collector.collectionScopeId))
+        assertThat(tokenStore.getState(RecordType.steps, collector.collectionScopeId)?.token)
             .isEqualTo("baseline-page-2")
     }
 
@@ -87,7 +89,7 @@ class HealthDataCollectorTest {
         val client = FakeHealthConnectClient()
         val tokenStore = ChangesTokenStore(InMemoryLocalStorage())
         val initialToken = client.getChangesToken(ChangesTokenRequest(setOf(StepsRecord::class)))
-        tokenStore.storeToken(RecordType.steps, initialToken)
+        tokenStore.commitStepsToken(initialToken)
         client.insertRecords(listOf(stepRecord("2026-08-19T17:00:00Z")))
         val constraint = FailOnceHealthConstraint()
         val collector = collector(client, tokenStore, constraint, backgroundScope)
@@ -95,12 +97,12 @@ class HealthDataCollectorTest {
         val failure = runCatching { collector.collectOnce() }.exceptionOrNull()
 
         assertThat(failure).isInstanceOf(IllegalStateException::class.java)
-        assertThat(tokenStore.getToken(RecordType.steps)).isEqualTo(initialToken)
+        assertThat(tokenStore.getState(RecordType.steps, DEFAULT_COLLECTION_SCOPE_ID)?.token).isEqualTo(initialToken)
 
         collector.collectOnce()
 
         assertThat(constraint.newRecordCalls).isEqualTo(2)
-        assertThat(tokenStore.getToken(RecordType.steps)).isNotEqualTo(initialToken)
+        assertThat(tokenStore.getState(RecordType.steps, DEFAULT_COLLECTION_SCOPE_ID)?.token).isNotEqualTo(initialToken)
     }
 
     @Test
@@ -108,7 +110,7 @@ class HealthDataCollectorTest {
         val client = FakeHealthConnectClient()
         val tokenStore = ChangesTokenStore(InMemoryLocalStorage())
         val expiredToken = client.getChangesToken(ChangesTokenRequest(setOf(StepsRecord::class)))
-        tokenStore.storeToken(RecordType.steps, expiredToken)
+        tokenStore.commitStepsToken(expiredToken)
         client.expireToken(expiredToken)
         val constraint = InsertDuringResyncHealthConstraint(client)
 
@@ -116,7 +118,7 @@ class HealthDataCollectorTest {
 
         assertThat(constraint.resyncCalls).isEqualTo(1)
         assertThat(constraint.deliveredRecords).isEqualTo(1)
-        assertThat(tokenStore.getToken(RecordType.steps)).isNotEqualTo(expiredToken)
+        assertThat(tokenStore.getState(RecordType.steps, DEFAULT_COLLECTION_SCOPE_ID)?.token).isNotEqualTo(expiredToken)
     }
 
     @Test
@@ -124,7 +126,7 @@ class HealthDataCollectorTest {
         val client = FakeHealthConnectClient()
         val tokenStore = ChangesTokenStore(InMemoryLocalStorage())
         val token = client.getChangesToken(ChangesTokenRequest(setOf(StepsRecord::class)))
-        tokenStore.storeToken(RecordType.steps, token)
+        tokenStore.commitStepsToken(token)
         client.overrides.getChanges = MutableStub {
             ChangesResponse(
                 changes = listOf(
@@ -148,7 +150,7 @@ class HealthDataCollectorTest {
         val client = FakeHealthConnectClient()
         val tokenStore = ChangesTokenStore(InMemoryLocalStorage())
         val token = client.getChangesToken(ChangesTokenRequest(setOf(StepsRecord::class)))
-        tokenStore.storeToken(RecordType.steps, token)
+        tokenStore.commitStepsToken(token)
         var page = 0
         client.overrides.getChanges = MutableStub {
             page += 1
@@ -164,7 +166,7 @@ class HealthDataCollectorTest {
         collector(client, tokenStore, constraint, backgroundScope).collectUntilDrained()
 
         assertThat(constraint.events).containsExactly("upsert", "upsert").inOrder()
-        assertThat(tokenStore.getToken(RecordType.steps)).isEqualTo("page-2")
+        assertThat(tokenStore.getState(RecordType.steps, DEFAULT_COLLECTION_SCOPE_ID)?.token).isEqualTo("page-2")
     }
 
     @Test
@@ -172,7 +174,7 @@ class HealthDataCollectorTest {
         val client = FakeHealthConnectClient()
         val tokenStore = ChangesTokenStore(InMemoryLocalStorage())
         val token = client.getChangesToken(ChangesTokenRequest(setOf(StepsRecord::class)))
-        tokenStore.storeToken(RecordType.steps, token)
+        tokenStore.commitStepsToken(token)
         client.overrides.getChanges = MutableStub {
             ChangesResponse(
                 changes = listOf(UpsertionChange(stepRecord("2026-08-19T17:00:00Z"))),
@@ -229,7 +231,7 @@ class HealthDataCollectorTest {
     }
 
     @Test
-    fun `stop and join fences an in-flight baseline before token reset`() = runTest {
+    fun `stop and join awaits the in-flight baseline before returning`() = runTest {
         val tokenStore = ChangesTokenStore(InMemoryLocalStorage())
         val constraint = BlockingBaselineHealthConstraint()
         val collector = collector(FakeHealthConnectClient(), tokenStore, constraint, backgroundScope)
@@ -237,9 +239,18 @@ class HealthDataCollectorTest {
         constraint.entered.await()
 
         collector.stopDataCollectionAndJoin()
-        tokenStore.deleteToken(RecordType.steps, collector.collectionScopeId)
 
+        assertThat(constraint.cancelled.isCompleted).isTrue()
+        assertThat(collector.isActive).isFalse()
+        tokenStore.deleteToken(RecordType.steps, collector.collectionScopeId)
         assertThat(tokenStore.getState(RecordType.steps, collector.collectionScopeId)).isNull()
+    }
+
+    /** Installs a committed default-scope token through the same lease path the collector uses. */
+    private suspend fun ChangesTokenStore.commitStepsToken(token: String) {
+        val lease = claimProjection(RecordType.steps, DEFAULT_REPOSITORY_SCOPE_ID, DEFAULT_COLLECTION_SCOPE_ID)
+        storePendingBoundary(RecordType.steps, lease, token)
+        commitToken(RecordType.steps, lease, token)
     }
 
     private fun collector(
@@ -389,6 +400,7 @@ class HealthDataCollectorTest {
 
     private class BlockingBaselineHealthConstraint : HealthConstraint {
         val entered = CompletableDeferred<Unit>()
+        val cancelled = CompletableDeferred<Unit>()
 
         override suspend fun <T : Record> handleNewRecords(addedRecords: Set<T>, type: RecordType<out T>) = Unit
 
@@ -399,7 +411,11 @@ class HealthDataCollectorTest {
 
         override suspend fun <T : Record> onFullyResyncRequired(type: RecordType<out T>) {
             entered.complete(Unit)
-            awaitCancellation()
+            try {
+                awaitCancellation()
+            } finally {
+                cancelled.complete(Unit)
+            }
         }
     }
 

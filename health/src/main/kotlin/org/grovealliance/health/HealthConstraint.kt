@@ -21,7 +21,7 @@ interface HealthConstraint : Standard {
      * membership rule changes. It namespaces durable change-token state. Implementations that do
      * not maintain a synchronized projection may keep the default.
      */
-    fun <T : Record> collectionScopeId(type: RecordType<out T>): String = "default"
+    fun <T : Record> collectionScopeId(type: RecordType<out T>): String = DEFAULT_COLLECTION_SCOPE_ID
 
     /** Stable repository identity shared by every filter projection over the same source store. */
     fun <T : Record> collectionRepositoryId(type: RecordType<out T>): String = DEFAULT_REPOSITORY_SCOPE_ID
@@ -60,5 +60,8 @@ interface HealthConstraint : Standard {
     companion object {
         /** One [org.grovealliance.health.internal.DefaultHealthClient] fronts one repository. */
         const val DEFAULT_REPOSITORY_SCOPE_ID = "health-connect-default-repository"
+
+        /** Its digest is an ingredient of every persisted token key, so it has exactly one home. */
+        const val DEFAULT_COLLECTION_SCOPE_ID = "default"
     }
 }
