@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -78,7 +78,6 @@ internal class HealthConnectRetractionBuilder(
         val identifierKey = identifier.key()
         HealthConnectRetractionTarget(
             identifier = identifierKey,
-            identifierRole = GroveIdentifierRole.SOURCE_OUTPUT,
             resourceType = observation.fhirType(),
             role = if (identifierKey in childOutputIdentifiers) {
                 HealthConnectRetractionTargetRole.CHILD_OUTPUT
@@ -103,7 +102,6 @@ internal class HealthConnectRetractionBuilder(
                 }
                 HealthConnectRetractionTarget(
                     identifier = identifier.key(),
-                    identifierRole = GroveIdentifierRole.SOURCE_OUTPUT,
                     resourceType = entry.resource.fhirType(),
                     role = targetRole,
                 )
@@ -118,7 +116,6 @@ internal class HealthConnectRetractionBuilder(
             )[GroveIdentifierRole.DEVICE_SNAPSHOT]?.let { identifier ->
                 HealthConnectRetractionTarget(
                     identifier = identifier.key(),
-                    identifierRole = GroveIdentifierRole.DEVICE_SNAPSHOT,
                     resourceType = entry.resource.fhirType(),
                     role = HealthConnectRetractionTargetRole.DEVICE_SNAPSHOT,
                 )

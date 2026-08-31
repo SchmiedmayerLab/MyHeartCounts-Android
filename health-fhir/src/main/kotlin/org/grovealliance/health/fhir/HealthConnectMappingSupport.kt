@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -58,7 +58,7 @@ internal fun HealthConnectConverter.sampleIdentifier(
     sourceIdentifier: HealthConnectSourceIdentity,
     sample: HeartRateRecord.Sample,
     occurrence: Int,
-): Identifier = HealthConnectIdentity.heartRateSampleOutput(
+): Identifier = HealthConnectIdentity.sampleOutput(
     synchronizationScope.identityKey,
     sourceIdentifier,
     sample.time,

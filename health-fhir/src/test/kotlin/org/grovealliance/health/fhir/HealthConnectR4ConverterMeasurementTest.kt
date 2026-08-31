@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -91,7 +91,7 @@ class HealthConnectR4ConverterMeasurementTest : HealthConnectR4ConverterTestSupp
             .isEqualTo(testIdentityKey().identifierSystem(GroveOpaqueIdentityKind.SOURCE_RECORD))
         assertThat(sourceIdentifier(observation).value).startsWith("v0:test-key:1:")
         assertThat(sourceIdentifier(observation).value).doesNotContain("source-record")
-        assertThat(outputIdentifier(observation).value).isNotEqualTo(result.sourceRecordIdentifier.value)
+        assertThat(observationIdentity(observation).value).isNotEqualTo(result.sourceRecordIdentifier.value)
         val provenance = requireNotNull(result.provenance)
         assertThat(provenance.entityFirstRep.what.identifier.system)
             .isEqualTo(result.sourceRecordIdentifier.system)
@@ -232,7 +232,7 @@ class HealthConnectR4ConverterMeasurementTest : HealthConnectR4ConverterTestSupp
         }
         assertThat(stages).hasSize(2)
         assertThat(summary.hasMember.map { it.reference })
-            .containsExactlyElementsIn(stages.map { GroveExchangeIdentity.fullUrl(outputIdentifier(it)) })
+            .containsExactlyElementsIn(stages.map { GroveExchangeIdentity.fullUrl(observationIdentity(it)) })
             .inOrder()
         assertThat(summary.valueQuantity.value).isEqualTo(BigDecimal("8"))
         assertThat(summary.note.single().text).isEqualTo("Participant-reported note")

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -80,9 +80,13 @@ class HealthConnectR4ConverterSeriesTest : HealthConnectR4ConverterTestSupport()
             assertThat(observation.valueQuantity.code).isEqualTo("W")
             assertThat(observation.hasEffectiveDateTimeType()).isTrue()
         }
-        assertThat(result.observations.map { it.valueQuantity.value.toPlainString() })
-            .containsExactly("215.5", "220.0", "215.5")
-            .inOrder()
+        assertThat(
+            result.observations.map { it.effectiveDateTimeType.value.time to it.valueQuantity.value.toPlainString() },
+        ).containsExactly(
+            start.plusSeconds(15).toEpochMilli() to "215.5",
+            start.plusSeconds(15).toEpochMilli() to "220.0",
+            start.plusSeconds(45).toEpochMilli() to "215.5",
+        )
     }
 
     @Test

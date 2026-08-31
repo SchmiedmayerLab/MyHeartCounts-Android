@@ -18,13 +18,14 @@ package org.grovealliance.health.fhir
 @JvmInline
 value class ScopeKey(val value: String) {
     init {
-        require(value.matches(PATTERN)) { "A scope key must be an opaque v1 digest." }
+        // The `v0` tag versions this local digest format, not the Grove exchange protocol.
+        require(value.matches(PATTERN)) { "A scope key must be an opaque v0 digest." }
     }
 
     override fun toString(): String = value
 
     private companion object {
-        val PATTERN = Regex("v1:[0-9a-f]{64}")
+        val PATTERN = Regex("v0:[0-9a-f]{64}")
     }
 }
 
@@ -61,13 +62,14 @@ value class EventSequence(val value: String) : Comparable<EventSequence> {
 @JvmInline
 value class HealthConnectJournalRevision(val value: String) {
     init {
-        require(value.matches(PATTERN)) { "A journal revision must be an opaque v1 SHA-256 digest." }
+        // The `v0` tag versions this local digest format, not the Grove exchange protocol.
+        require(value.matches(PATTERN)) { "A journal revision must be an opaque v0 SHA-256 digest." }
     }
 
     override fun toString(): String = value
 
     private companion object {
-        val PATTERN = Regex("v1:[0-9a-f]{64}")
+        val PATTERN = Regex("v0:[0-9a-f]{64}")
     }
 }
 

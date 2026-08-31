@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -9,14 +9,34 @@
 
 package org.grovealliance.health.fhir
 
-/** Canonicals shared with the Grove FHIR Mobile and Health Connect packages. */
+/** Canonicals shared by the relevant Grove FHIR Implementation Guides. */
 object HealthConnectContract {
     const val FHIR_VERSION = "4.0.1"
     const val PACKAGE_VERSION = "0.6.0"
-    const val CONVERSION_CONTRACT_VERSION = "health-connect-r4-0.6.0"
+
+    /** Conversion-contract identity; changing it forces a new projection baseline. */
+    const val CONVERSION_CONTRACT_MARKER = "health-connect-r4-0.6.0"
     const val CANONICAL_ROOT = "https://grovealliance.org/fhir"
     const val MOBILE_BASE = "$CANONICAL_ROOT/mobile"
     const val HEALTH_CONNECT_BASE = "$CANONICAL_ROOT/health-connect"
+
+    /** Domain separator framed into every Grove opaque-identity HMAC preimage. */
+    const val OPAQUE_IDENTITY_DOMAIN = "org.grovealliance.fhir.identity.v0"
+
+    /** Leading protocol token of every opaque identity value. */
+    const val OPAQUE_IDENTITY_PREFIX = "v0"
+
+    /** Leading protocol token of every clear event Bundle identifier value. */
+    const val EVENT_IDENTITY_PREFIX = "e0"
+
+    /** Domain separator framed into every entry-node digest preimage. */
+    const val ENTRY_NODE_DOMAIN = "org.grovealliance.fhir.entry-node.v0"
+
+    /** Leading protocol token of every deterministic entry-node identifier value. */
+    const val ENTRY_NODE_IDENTITY_PREFIX = "n0"
+
+    /** UUIDv5 namespace over the length-framed entry Identifier pair. */
+    const val ENTRY_FULL_URL_NAMESPACE = "43df4575-bff7-5a57-9a80-2472cd2b0623"
 
     /** Closed provider codes admitted by the provider-specific HMAC identity domains. */
     internal val providerCodes: Set<String> = setOf(
@@ -354,12 +374,37 @@ object HealthConnectContract {
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-conversion-provenance",
     )
 
-    /** Health Connect Observation profiles whose complete claim is one direct profile. */
-    internal val activeHealthConnectExclusiveObservationProfiles: Set<String> = setOf(
-        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
-        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose",
-        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
-        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+    /** Catalog-governed Reference target types, keyed by `ResourceType.path`. */
+    internal val governedReferenceTargets: Map<String, Set<String>> = mapOf(
+        "Observation.subject" to setOf("Patient"),
+        "Observation.device" to setOf("Device"),
+        "Observation.specimen" to setOf("Specimen"),
+        "Observation.focus" to setOf("Location"),
+        "Observation.hasMember" to setOf("Observation"),
+        "Observation.derivedFrom" to setOf("Observation", "DocumentReference", "QuestionnaireResponse"),
+        "DocumentReference.subject" to setOf("Patient"),
+        "QuestionnaireResponse.subject" to setOf("Patient"),
+        "Specimen.subject" to setOf("Patient"),
+        "MedicationAdministration.subject" to setOf("Patient"),
+        "MedicationStatement.subject" to setOf("Patient"),
+        "VisionPrescription.patient" to setOf("Patient"),
+        "ResearchSubject.individual" to setOf("Patient"),
+        "ResearchSubject.study" to setOf("ResearchStudy"),
+        "ResearchStudy.protocol" to setOf("PlanDefinition"),
+        "Device.parent" to setOf("Device"),
+    )
+
+    /** Catalog-governed Reference target types for extension-carried references. */
+    internal val governedExtensionReferenceTargets: Map<String, Set<String>> = mapOf(
+        "http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice" to setOf("Device"),
+        "http://hl7.org/fhir/StructureDefinition/workflow-researchStudy" to setOf("ResearchStudy"),
+    )
+
+    /** Code-system URIs a logical Patient pseudonym may never be typed with. */
+    internal val reservedPatientIdentifierSystems: Set<String> = setOf(
+        "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+        "https://grovealliance.org/fhir/mobile/CodeSystem/grove-lifecycle-event",
+        "https://grovealliance.org/fhir/mobile/CodeSystem/grove-retraction-target-role",
     )
 
     /** Fixed Quantity system/code pairs keyed by a produced semantic profile. */

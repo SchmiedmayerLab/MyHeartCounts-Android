@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -146,12 +146,10 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
 
         assertThrows(IllegalArgumentException::class.java) {
             HealthConnectConversion(
-                conversionContractVersion = valid.conversionContractVersion,
+                conversionContractMarker = valid.conversionContractMarker,
                 sourceRecordIdentifier = valid.sourceRecordIdentifier,
                 sourceRecordType = valid.sourceRecordType,
                 sourceLastModified = valid.sourceLastModified,
-                observations = valid.observations,
-                provenance = valid.provenance,
                 bundle = mismatchedBundle,
             )
         }
@@ -179,19 +177,16 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
     fun `conversion rejects an unresolved internal UUID reference even when snapshots agree`() {
         val valid = converter.convert(stepRecord(), convertedAt)
         val unresolved = "urn:uuid:00000000-0000-5000-8000-000000000000"
-        val observations = valid.observations.onEach { it.subject.reference = unresolved }
         val bundle = valid.bundle.apply {
             (entry.single { it.resource is Observation }.resource as Observation).subject.reference = unresolved
         }
 
         assertThrows(IllegalArgumentException::class.java) {
             HealthConnectConversion(
-                conversionContractVersion = valid.conversionContractVersion,
+                conversionContractMarker = valid.conversionContractMarker,
                 sourceRecordIdentifier = valid.sourceRecordIdentifier,
                 sourceRecordType = valid.sourceRecordType,
                 sourceLastModified = valid.sourceLastModified,
-                observations = observations,
-                provenance = valid.provenance,
                 bundle = bundle,
             )
         }
@@ -267,18 +262,15 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
 
         invalidators.forEach { invalidate ->
             val valid = converter.convert(stepRecord(), convertedAt)
-            val observations = valid.observations.onEach { invalidate(it.subject) }
             val bundle = valid.bundle.apply {
                 invalidate((entry.single { it.resource is Observation }.resource as Observation).subject)
             }
             assertThrows(IllegalArgumentException::class.java) {
                 HealthConnectConversion(
-                    conversionContractVersion = valid.conversionContractVersion,
+                    conversionContractMarker = valid.conversionContractMarker,
                     sourceRecordIdentifier = valid.sourceRecordIdentifier,
                     sourceRecordType = valid.sourceRecordType,
                     sourceLastModified = valid.sourceLastModified,
-                    observations = observations,
-                    provenance = valid.provenance,
                     bundle = bundle,
                 )
             }
@@ -373,10 +365,10 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
 
         val observations = converter.convert(record, convertedAt).observations
 
-        val identities = observations.map { outputIdentifier(it).value }
+        val identities = observations.map { observationIdentity(it).value }
         assertThat(identities).containsNoDuplicates()
         assertThat(identities).containsExactlyElementsIn(
-            converter.convert(record, convertedAt).observations.map { outputIdentifier(it).value },
+            converter.convert(record, convertedAt).observations.map { observationIdentity(it).value },
         ).inOrder()
         assertThat(identities.all { it.matches(Regex("v0:test-key:1:[A-Za-z0-9_-]{43}")) }).isTrue()
         assertThat(observations.map { it.effectiveDateTimeType.valueAsString }.distinct())
@@ -420,8 +412,8 @@ class HealthConnectR4ConverterGraphIdentityTest : HealthConnectR4ConverterTestSu
         val originalOutputs = converter.convert(original, convertedAt).observations
         val correctedOutputs = converter.convert(corrected, convertedAt).observations
 
-        assertThat(correctedOutputs.map { outputIdentifier(it).value })
-            .containsExactlyElementsIn(originalOutputs.map { outputIdentifier(it).value })
+        assertThat(correctedOutputs.map { observationIdentity(it).value })
+            .containsExactlyElementsIn(originalOutputs.map { observationIdentity(it).value })
             .inOrder()
         assertThat(originalOutputs.map { it.valueQuantity.value.toLong() }).containsExactly(80L, 70L).inOrder()
         assertThat(correctedOutputs.map { it.valueQuantity.value.toLong() }).containsExactly(60L, 70L).inOrder()

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.Base64
 
-/** Domain-separated opaque identities defined by the Grove Health Connect contract. */
+/** Domain-separated opaque identities defined by the Grove FHIR contracts. */
 @Suppress("TooManyFunctions")
 internal object HealthConnectIdentity {
     fun record(
@@ -96,31 +96,7 @@ internal object HealthConnectIdentity {
         clientRecordId,
     )
 
-    fun heartRateSampleOutput(
-        key: GroveHmacIdentityKey,
-        source: HealthConnectSourceIdentity,
-        sampleTime: Instant,
-        duplicateOccurrence: Int,
-    ): Identifier = sampleOutput(
-        key,
-        source,
-        sampleTime,
-        duplicateOccurrence,
-    )
-
-    fun seriesSampleOutput(
-        key: GroveHmacIdentityKey,
-        source: HealthConnectSourceIdentity,
-        sampleTime: Instant,
-        duplicateOccurrence: Int,
-    ): Identifier = sampleOutput(
-        key,
-        source,
-        sampleTime,
-        duplicateOccurrence,
-    )
-
-    private fun sampleOutput(
+    fun sampleOutput(
         key: GroveHmacIdentityKey,
         source: HealthConnectSourceIdentity,
         sampleTime: Instant,
@@ -234,7 +210,7 @@ internal object HealthConnectIdentity {
         }
         return Identifier().apply {
             system = eventSystem
-            value = "e0:$producerInstance:${eventSequence.value}"
+            value = "${HealthConnectContract.EVENT_IDENTITY_PREFIX}:$producerInstance:${eventSequence.value}"
             type = org.hl7.fhir.r4.model.CodeableConcept(
                 org.hl7.fhir.r4.model.Coding(
                     HealthConnectContract.GROVE_IDENTIFIER_ROLE,
@@ -278,7 +254,7 @@ internal object HealthConnectIdentity {
         }
         val digest = framedSha256(
             listOf(
-                ENTRY_NODE_DOMAIN,
+                HealthConnectContract.ENTRY_NODE_DOMAIN,
                 event.system,
                 event.value,
                 resourceRole,
@@ -287,7 +263,7 @@ internal object HealthConnectIdentity {
         )
         return Identifier().apply {
             system = entryNodeSystem
-            value = "n0:$resourceRole:$ordinal:$digest"
+            value = "${HealthConnectContract.ENTRY_NODE_IDENTITY_PREFIX}:$resourceRole:$ordinal:$digest"
             type = org.hl7.fhir.r4.model.CodeableConcept(
                 org.hl7.fhir.r4.model.Coding(
                     HealthConnectContract.GROVE_IDENTIFIER_ROLE,
@@ -318,12 +294,21 @@ internal object HealthConnectIdentity {
 
     private val UTC_NANOSECOND: DateTimeFormatter =
         DateTimeFormatterBuilder().appendInstant(INSTANT_FRACTION_DIGITS).toFormatter()
-    private val PRODUCER_INSTANCE = Regex(
-        "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+    private const val PRODUCER_INSTANCE_PATTERN =
+        "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    private val PRODUCER_INSTANCE = Regex(PRODUCER_INSTANCE_PATTERN)
+
+    /** Lexical form of a clear event Bundle identifier value, minted by [exchange]. */
+    internal val EVENT_IDENTITY_VALUE = Regex(
+        "${HealthConnectContract.EVENT_IDENTITY_PREFIX}:$PRODUCER_INSTANCE_PATTERN:[1-9][0-9]*",
+    )
+
+    /** Lexical form of a deterministic entry-node identifier value, minted by [contextNode]. */
+    internal val ENTRY_NODE_IDENTITY_VALUE = Regex(
+        "${HealthConnectContract.ENTRY_NODE_IDENTITY_PREFIX}:[a-z][a-z0-9-]*:(0|[1-9][0-9]*):[A-Za-z0-9_-]{43}",
     )
     private val DEVICE_ROLE = Regex("[a-z][a-z0-9-]*")
     private val MEASUREMENT_ID = Regex("[a-z][a-z0-9-]*")
-    private const val ENTRY_NODE_DOMAIN = "org.grovealliance.fhir.entry-node.v0"
     private const val ADAPTER_ID = "health-connect"
     private const val OUTPUT_DISCRIMINATOR_SEPARATOR = "|"
     private const val SINGLE_OUTPUT_ROLE = "single"

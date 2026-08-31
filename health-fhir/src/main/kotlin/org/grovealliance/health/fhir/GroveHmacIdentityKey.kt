@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -88,9 +88,6 @@ class GroveHmacIdentityKey private constructor(
         )
     }
 
-    internal fun value(identityKind: GroveOpaqueIdentityKind, vararg components: String): String =
-        value(identityKind, components.asList())
-
     internal fun value(identityKind: GroveOpaqueIdentityKind, components: List<String>): String {
         require(components.size == identityKind.componentCount) {
             "${identityKind.code} requires exactly ${identityKind.componentCount} ordered components."
@@ -118,11 +115,16 @@ class GroveHmacIdentityKey private constructor(
                     "or provider-artifact identity kind."
             }
 
-            else -> Unit
+            // These kinds do not start from a provider coordinate; a new kind must decide here.
+            GroveOpaqueIdentityKind.WRITER_RECORD,
+            GroveOpaqueIdentityKind.SOURCE_CONTEXT,
+            GroveOpaqueIdentityKind.RECORDING_DEVICE,
+            GroveOpaqueIdentityKind.DEVICE_SNAPSHOT,
+            -> Unit
         }
         val preimage = GroveExchangeProtocol.frameFields(
             buildList {
-                add(DOMAIN)
+                add(HealthConnectContract.OPAQUE_IDENTITY_DOMAIN)
                 add(identityKind.code)
                 addAll(components)
             },
@@ -132,7 +134,7 @@ class GroveHmacIdentityKey private constructor(
             doFinal(preimage)
         }
         val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
-        return "v0:$keyId:$epoch:$encoded"
+        return "${HealthConnectContract.OPAQUE_IDENTITY_PREFIX}:$keyId:$epoch:$encoded"
     }
 
     /** A system is immutable for one identity kind, key id, and key epoch. */
@@ -157,7 +159,6 @@ class GroveHmacIdentityKey private constructor(
             true,
         )
 
-        private const val DOMAIN = "org.grovealliance.fhir.identity.v0"
         private const val HMAC_SHA_256 = "HmacSHA256"
         private const val MINIMUM_KEY_BYTES = 32
         private val KEY_ID = Regex("[A-Za-z0-9._-]+")
@@ -177,7 +178,7 @@ private const val SOURCE_CONTEXT_COMPONENT_COUNT = 5
 private const val RECORDING_DEVICE_COMPONENT_COUNT = 4
 private const val DEVICE_SNAPSHOT_COMPONENT_COUNT = 4
 
-/** Closed HMAC identity shapes from the Grove FHIR exchange-protocol catalog. */
+/** Closed HMAC identity shapes from the Grove FHIR contracts' exchange-protocol catalog. */
 internal enum class GroveOpaqueIdentityKind(
     val code: String,
     val identifierRole: GroveIdentifierRole,

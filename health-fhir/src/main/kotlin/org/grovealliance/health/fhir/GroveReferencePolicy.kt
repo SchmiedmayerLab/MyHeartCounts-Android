@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -7,7 +7,6 @@
 
 package org.grovealliance.health.fhir
 
-import org.hl7.fhir.r4.model.Base
 import org.hl7.fhir.r4.model.Bundle
 import org.hl7.fhir.r4.model.Device
 import org.hl7.fhir.r4.model.DocumentReference
@@ -24,9 +23,6 @@ import org.hl7.fhir.r4.model.ResearchSubject
 import org.hl7.fhir.r4.model.Resource
 import org.hl7.fhir.r4.model.Specimen
 import org.hl7.fhir.r4.model.VisionPrescription
-import java.util.Collections
-import java.util.IdentityHashMap
-
 /** Enforces the exchange protocol's literal closure and governed Reference-shape table. */
 internal fun Bundle.requireGroveReferencePolicy() {
     val resourcesByFullUrl = entry.associate { bundleEntry ->
@@ -57,17 +53,8 @@ internal fun Bundle.requireGroveReferencePolicy() {
     }
 }
 
-internal fun Resource.groveReferenceNodes(): List<Reference> {
-    val references = mutableListOf<Reference>()
-    val visited = Collections.newSetFromMap(IdentityHashMap<Base, Boolean>())
-    fun visit(element: Base) {
-        if (!visited.add(element)) return
-        if (element is Reference) references += element
-        element.children().flatMap { it.values }.forEach(::visit)
-    }
-    visit(this)
-    return references
-}
+internal fun Resource.groveReferenceNodes(): List<Reference> =
+    buildList { visitPopulatedElements { if (it is Reference) add(it) } }
 
 private fun Reference.requireResolvedLiteral(
     resourcesByFullUrl: Map<String, Resource>,
@@ -102,96 +89,74 @@ private fun Reference.requireGovernedShape(
         "$label identifier-only logical Reference requires an exact admitted type and one complete Identifier."
     }
     identifier.key()
-    if (targetTypes == PATIENT_TARGET) identifier.requireLogicalPatientPseudonym(label)
-}
-
-internal fun Identifier.requireLogicalPatientPseudonym(label: String) {
-    require(system !in LOGICAL_PATIENT_RESERVED_SYSTEMS) {
-        "$label logical Patient Identifier.system must not use a Grove protocol code system."
-    }
-    require(type.coding.none { it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE }) {
-        "$label logical Patient Identifier must not claim a Grove identifier role."
+    if (type == "Patient") {
+        require(identifier.system !in HealthConnectContract.reservedPatientIdentifierSystems) {
+            "$label logical Patient pseudonym must not use a protocol-reserved system."
+        }
+        require(identifier.type.coding.none { it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE }) {
+            "$label logical Patient pseudonym must not claim a Grove identifier role."
+        }
     }
 }
 
 private fun Resource.governedReferences(): List<GovernedReference> =
     governedElementReferences() + buildList {
         allExtensions().forEach { extension ->
-            val targets = EXTENSION_TARGETS[extension.url] ?: return@forEach
+            val targetTypes = HealthConnectContract.governedExtensionReferenceTargets[extension.url]
+                ?: return@forEach
             val reference = extension.value as? Reference
             require(reference != null) { "${extension.url} must carry a valueReference." }
-            add(GovernedReference("extension('${extension.url}')", reference, targets))
+            add(GovernedReference("extension('${extension.url}')", reference, targetTypes))
         }
     }
 
 private fun Resource.governedElementReferences(): List<GovernedReference> = when (this) {
     is Observation -> governedReferences()
-    is DocumentReference -> optionalGovernedReference(
-        hasSubject(),
-        "DocumentReference.subject",
-        subject,
-        PATIENT_TARGET,
-    )
-    is QuestionnaireResponse -> optionalGovernedReference(
-        hasSubject(),
-        "QuestionnaireResponse.subject",
-        subject,
-        PATIENT_TARGET,
-    )
+    is DocumentReference -> optionalGovernedReference(hasSubject(), "DocumentReference.subject", subject)
+    is QuestionnaireResponse ->
+        optionalGovernedReference(hasSubject(), "QuestionnaireResponse.subject", subject)
     is Specimen -> governedReferences()
     is MedicationAdministration ->
-        optionalGovernedReference(hasSubject(), "MedicationAdministration.subject", subject, PATIENT_TARGET)
+        optionalGovernedReference(hasSubject(), "MedicationAdministration.subject", subject)
     is MedicationStatement ->
-        optionalGovernedReference(hasSubject(), "MedicationStatement.subject", subject, PATIENT_TARGET)
+        optionalGovernedReference(hasSubject(), "MedicationStatement.subject", subject)
     is VisionPrescription ->
-        optionalGovernedReference(hasPatient(), "VisionPrescription.patient", patient, PATIENT_TARGET)
+        optionalGovernedReference(hasPatient(), "VisionPrescription.patient", patient)
     is ResearchSubject -> buildList {
-        if (hasIndividual()) add(GovernedReference("ResearchSubject.individual", individual, PATIENT_TARGET))
-        if (hasStudy()) add(GovernedReference("ResearchSubject.study", study, RESEARCH_STUDY_TARGET))
+        if (hasIndividual()) add(governed("ResearchSubject.individual", individual))
+        if (hasStudy()) add(governed("ResearchSubject.study", study))
     }
-    is ResearchStudy -> protocol.map {
-        GovernedReference("ResearchStudy.protocol", it, PLAN_DEFINITION_TARGET)
-    }
-    is Device -> optionalGovernedReference(hasParent(), "Device.parent", parent, DEVICE_TARGET)
+    is ResearchStudy -> protocol.map { governed("ResearchStudy.protocol", it) }
+    is Device -> optionalGovernedReference(hasParent(), "Device.parent", parent)
     else -> emptyList()
 }
 
 private fun Observation.governedReferences(): List<GovernedReference> = buildList {
     require(hasSubject()) { "A Grove Observation requires one Patient subject." }
-    add(GovernedReference("Observation.subject", subject, PATIENT_TARGET))
-    if (hasDevice()) add(GovernedReference("Observation.device", device, DEVICE_TARGET))
-    if (hasSpecimen()) add(GovernedReference("Observation.specimen", specimen, SPECIMEN_TARGET))
-    hasMember.forEach { add(GovernedReference("Observation.hasMember", it, OBSERVATION_TARGET)) }
-    derivedFrom.forEach { add(GovernedReference("Observation.derivedFrom", it, DERIVED_FROM_TARGETS)) }
+    add(governed("Observation.subject", subject))
+    if (hasDevice()) add(governed("Observation.device", device))
+    if (hasSpecimen()) add(governed("Observation.specimen", specimen))
+    focus.forEach { add(governed("Observation.focus", it)) }
+    hasMember.forEach { add(governed("Observation.hasMember", it)) }
+    derivedFrom.forEach { add(governed("Observation.derivedFrom", it)) }
 }
 
 private fun Specimen.governedReferences(): List<GovernedReference> {
     require(hasSubject()) { "A Grove Health Connect Specimen requires one Patient subject." }
-    return listOf(GovernedReference("Specimen.subject", subject, PATIENT_TARGET))
+    return listOf(governed("Specimen.subject", subject))
 }
+
+private fun governed(path: String, reference: Reference): GovernedReference =
+    GovernedReference(path, reference, targets(path))
 
 private fun optionalGovernedReference(
     present: Boolean,
     path: String,
     reference: Reference,
-    targetTypes: Set<String>,
-): List<GovernedReference> = if (present) {
-    listOf(GovernedReference(path, reference, targetTypes))
-} else {
-    emptyList()
-}
+): List<GovernedReference> = if (present) listOf(governed(path, reference)) else emptyList()
 
-private fun Resource.allExtensions(): List<Extension> {
-    val extensions = mutableListOf<Extension>()
-    val visited = Collections.newSetFromMap(IdentityHashMap<Base, Boolean>())
-    fun visit(element: Base) {
-        if (!visited.add(element)) return
-        if (element is Extension) extensions += element
-        element.children().flatMap { it.values }.forEach(::visit)
-    }
-    visit(this)
-    return extensions
-}
+private fun Resource.allExtensions(): List<Extension> =
+    buildList { visitPopulatedElements { if (it is Extension) add(it) } }
 
 private data class GovernedReference(
     val path: String,
@@ -199,19 +164,31 @@ private data class GovernedReference(
     val targetTypes: Set<String>,
 )
 
-private val PATIENT_TARGET = setOf("Patient")
-private val DEVICE_TARGET = setOf("Device")
-private val SPECIMEN_TARGET = setOf("Specimen")
-private val OBSERVATION_TARGET = setOf("Observation")
-private val RESEARCH_STUDY_TARGET = setOf("ResearchStudy")
-private val PLAN_DEFINITION_TARGET = setOf("PlanDefinition")
-private val DERIVED_FROM_TARGETS = setOf("DocumentReference", "QuestionnaireResponse")
-private val LOGICAL_PATIENT_RESERVED_SYSTEMS = setOf(
-    HealthConnectContract.GROVE_IDENTIFIER_ROLE,
-    HealthConnectContract.GROVE_LIFECYCLE_EVENT,
-    HealthConnectContract.GROVE_RETRACTION_TARGET_ROLE_CS,
+/** Every governed path this validator resolves; the catalog owns which paths exist. */
+private val HANDLED_GOVERNED_PATHS = setOf(
+    "Observation.subject",
+    "Observation.device",
+    "Observation.specimen",
+    "Observation.focus",
+    "Observation.hasMember",
+    "Observation.derivedFrom",
+    "DocumentReference.subject",
+    "QuestionnaireResponse.subject",
+    "Specimen.subject",
+    "MedicationAdministration.subject",
+    "MedicationStatement.subject",
+    "VisionPrescription.patient",
+    "ResearchSubject.individual",
+    "ResearchSubject.study",
+    "ResearchStudy.protocol",
+    "Device.parent",
 )
-private val EXTENSION_TARGETS = mapOf(
-    "http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice" to DEVICE_TARGET,
-    "http://hl7.org/fhir/StructureDefinition/workflow-researchStudy" to RESEARCH_STUDY_TARGET,
-)
+
+private val GOVERNED_TARGETS: Map<String, Set<String>> =
+    HealthConnectContract.governedReferenceTargets.also {
+        check(it.keys == HANDLED_GOVERNED_PATHS) {
+            "Every catalog-governed Reference path requires an explicit adapter disposition."
+        }
+    }
+
+private fun targets(path: String): Set<String> = GOVERNED_TARGETS.getValue(path)

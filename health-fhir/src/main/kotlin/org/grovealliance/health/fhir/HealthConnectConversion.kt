@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -21,20 +21,20 @@ import java.time.Instant
  * copies from its public accessors, so a caller cannot invalidate a graph after its identities,
  * profile claims, and references have been checked.
  */
-@Suppress("LongParameterList")
 class HealthConnectConversion internal constructor(
-    val conversionContractVersion: String,
+    val conversionContractMarker: String,
     sourceRecordIdentifier: Identifier,
     val sourceRecordType: String,
     val sourceLastModified: Instant,
-    observations: List<Observation>,
-    provenance: Provenance?,
     bundle: Bundle,
 ) {
     private val sourceRecordIdentifierSnapshot = sourceRecordIdentifier.copy()
-    private val observationSnapshots = observations.map(Observation::copy)
-    private val provenanceSnapshot = provenance?.copy()
     private val bundleSnapshot = bundle.copy()
+    private val observationSnapshots = bundleSnapshot.entry.mapNotNull { it.resource as? Observation }
+    private val provenanceSnapshot = bundleSnapshot.entry
+        .mapNotNull { it.resource as? Provenance }
+        .also { require(it.size <= 1) { "A conversion graph carries at most one Provenance." } }
+        .singleOrNull()
 
     val sourceRecordIdentifier: Identifier
         get() = sourceRecordIdentifierSnapshot.copy()
@@ -49,8 +49,8 @@ class HealthConnectConversion internal constructor(
         get() = bundleSnapshot.copy()
 
     init {
-        require(conversionContractVersion.isNotBlank()) {
-            "The conversion-contract version must not be blank."
+        require(conversionContractMarker.isNotBlank()) {
+            "The conversion-contract marker must not be blank."
         }
         require(
             sourceRecordIdentifierSnapshot.hasSystem() &&
@@ -126,13 +126,15 @@ class HealthConnectConversion internal constructor(
         require(
             bundleSnapshot.identifier.let {
                 it.hasSystem() && it.hasValue() && it.hasGroveRole(GroveIdentifierRole.EVENT) &&
-                    EVENT_IDENTITY_VALUE.matches(it.value)
+                    HealthConnectIdentity.EVENT_IDENTITY_VALUE.matches(it.value)
             },
         ) { "The Bundle must carry one deployment-namespaced exchange-bundle business identifier." }
         require(
             bundleSnapshot.meta.profile.map { it.value } ==
                 listOf(HealthConnectContract.MOBILE_EXCHANGE_BUNDLE_PROFILE),
         ) { "The collection Bundle must claim only the Grove Mobile exchange profile directly." }
+        bundleSnapshot.requireGroveEntryIdentitySelection()
+        bundleSnapshot.requireGroveReferencePolicy()
         require(bundleSnapshot.entry.all { it.hasFullUrl() && it.hasResource() }) {
             "Every collection Bundle entry must contain a fullUrl and resource."
         }
@@ -141,8 +143,6 @@ class HealthConnectConversion internal constructor(
         ) {
             "Bundle fullUrl values must be unique."
         }
-        bundleSnapshot.requireGroveEntryIdentitySelection()
-        bundleSnapshot.requireGroveReferencePolicy()
         require(
             bundleSnapshot.entry.all { entry ->
                 val device = entry.resource as? org.hl7.fhir.r4.model.Device ?: return@all true
@@ -158,12 +158,12 @@ class HealthConnectConversion internal constructor(
                         it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
                     } == 1 && device.identifier.single {
                         it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
-                    }.samePair(entryIdentifier)
+                    }.matchesIdentifierPair(entryIdentifier)
                     device.meta.profile.any {
                         it.value == HealthConnectContract.MOBILE_HOST_DEVICE_PROFILE
                     } -> device.identifier.size == 1 && device.identifier.singleOrNull {
                         it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
-                    }?.samePair(entryIdentifier) == true
+                    }?.matchesIdentifierPair(entryIdentifier) == true
                     device.meta.profile.any {
                         it.value == HealthConnectContract.MOBILE_RECORDING_DEVICE_PROFILE
                     } -> device.identifier.size == 2 &&
@@ -171,20 +171,13 @@ class HealthConnectConversion internal constructor(
                             it.hasGroveRole(GroveIdentifierRole.RECORDING_DEVICE)
                         } == 1 && device.identifier.singleOrNull {
                             it.hasGroveRole(GroveIdentifierRole.DEVICE_SNAPSHOT)
-                        }?.samePair(entryIdentifier) == true
+                        }?.matchesIdentifierPair(entryIdentifier) == true
                     else -> true
                 }
             },
         ) {
             "Grove Devices must expose their exact closed typed identities and select the event snapshot as entry key."
         }
-        val bundledObservations = bundleSnapshot.entry.mapNotNull { it.resource as? Observation }
-        require(
-            bundledObservations.size == observationSnapshots.size &&
-                bundledObservations.sortedBy(::completeOutputIdentifierKey)
-                    .zip(observationSnapshots.sortedBy(::completeOutputIdentifierKey))
-                    .all { (bundled, converted) -> bundled.equalsDeep(converted) },
-        ) { "The Bundle Observation set must exactly match the converted output set." }
         val specimenEntries = bundleSnapshot.entry.filter { it.resource is Specimen }
         require(
             specimenEntries.all { entry ->
@@ -204,13 +197,13 @@ class HealthConnectConversion internal constructor(
                     specimen.meta.profile.map { it.value } ==
                     listOf(HealthConnectContract.HEALTH_CONNECT_SPECIMEN_PROFILE) &&
                     specimen.identifier.size == 2 &&
-                    sourceIdentifier?.samePair(sourceRecordIdentifierSnapshot) == true &&
-                    outputIdentifier?.samePair(entryIdentifier) == true
+                    sourceIdentifier?.matchesIdentifierPair(sourceRecordIdentifierSnapshot) == true &&
+                    outputIdentifier?.matchesIdentifierPair(entryIdentifier) == true
             },
         ) {
             "Every Health Connect Specimen must contain exactly its typed source and specimen-output identities."
         }
-        val specimenReferences = bundledObservations
+        val specimenReferences = observationSnapshots
             .filter(Observation::hasSpecimen)
             .map { it.specimen.reference }
         require(
@@ -220,14 +213,6 @@ class HealthConnectConversion internal constructor(
         ) {
             "A supported BloodGlucoseRecord must have one referenced Specimen and no other conversion may emit one."
         }
-        val bundledProvenances = bundleSnapshot.entry.mapNotNull { it.resource as? Provenance }
-        require(
-            if (provenanceSnapshot == null) {
-                bundledProvenances.isEmpty()
-            } else {
-                bundledProvenances.size == 1 && bundledProvenances.single().equalsDeep(provenanceSnapshot)
-            },
-        ) { "The Bundle must contain exactly the conversion result's Provenance, when present." }
         val outputEntries = bundleSnapshot.entry.mapNotNull { entry ->
             val identifier = entry.extension.single {
                 it.url == GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION
@@ -268,13 +253,20 @@ class HealthConnectConversion internal constructor(
             require(
                 !entryIdentifier.system.isNullOrEmpty() &&
                     entryIdentifier.hasGroveRole(GroveIdentifierRole.ENTRY_NODE) &&
-                    ENTRY_NODE_IDENTITY_VALUE.matches(entryIdentifier.value.orEmpty()),
+                    HealthConnectIdentity.ENTRY_NODE_IDENTITY_VALUE.matches(entryIdentifier.value.orEmpty()),
             ) { "The Provenance entry must use a deployment-namespaced conversion-provenance identifier." }
         }
     }
 
     val observationIdentifiers: List<Identifier>
         get() = observationSnapshots.map { observation -> observationIdentity(observation).copy() }
+
+    /** Non-copying module-internal views for comparisons that never retain the graph. */
+    internal val observationViews: List<Observation>
+        get() = observationSnapshots
+
+    internal val bundleView: Bundle
+        get() = bundleSnapshot
 
     /** Every addressable active output node, including synthesized Specimens and source artifacts. */
     val outputIdentifiers: List<Identifier>
@@ -307,11 +299,6 @@ internal fun Bundle.groveOutputIdentifiers(): List<Identifier> = entry.mapNotNul
         ?.get(GroveIdentifierRole.SOURCE_OUTPUT)
 }
 
-private val EVENT_IDENTITY_VALUE =
-    Regex("""e0:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
-private val ENTRY_NODE_IDENTITY_VALUE =
-    Regex("""n0:[a-z][a-z0-9-]*:(0|[1-9][0-9]*):[A-Za-z0-9_-]{43}""")
-
 /**
  * Why one Health Connect record cannot be converted.
  *
@@ -333,10 +320,3 @@ class UnsupportedHealthConnectRecord(val recordType: String) :
 
 open class InvalidHealthConnectRecord(message: String, cause: Throwable? = null) :
     HealthConnectRecordRejected(message, cause)
-
-private fun completeOutputIdentifierKey(observation: Observation): String =
-    observationIdentity(observation)
-        .let { "${it.system.length}:${it.system}\u0000${it.value.length}:${it.value}" }
-
-private fun Identifier.samePair(other: Identifier): Boolean =
-    system == other.system && value == other.value

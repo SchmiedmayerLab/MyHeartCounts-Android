@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -112,7 +112,8 @@ internal object HealthConnectFieldDispositions {
             "laps" to "one workout-segment member Observation per ExerciseLap",
         ) + mapOf(
             "exerciseRouteResult" to omitted(
-                "The Grove FHIR contracts admit no safe route geometry profile; route data requires a separately reviewed source artifact.",
+                "The Grove FHIR contracts admit no safe route geometry profile; route data requires a separately " +
+                    "reviewed source artifact.",
             ),
             "plannedExerciseSessionId" to omitted(
                 "The referenced PlannedExerciseSessionRecord source type is explicitly deferred in AndroidX 1.1.0 support.",

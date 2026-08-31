@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -87,8 +87,8 @@ private fun Bundle.requireGroveIdentitySystemRoleSeparation() {
     }
 }
 
-/** Traverses the populated FHIR object tree without assuming any resource-specific Identifier path. */
-private fun Base.visitPopulatedElements(visitor: (Base) -> Unit) {
+/** Traverses the populated FHIR object tree without assuming any resource-specific element path. */
+internal fun Base.visitPopulatedElements(visitor: (Base) -> Unit) {
     val visited = Collections.newSetFromMap(IdentityHashMap<Base, Boolean>())
     fun visit(element: Base) {
         if (!visited.add(element)) return

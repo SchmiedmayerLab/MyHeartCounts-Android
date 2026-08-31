@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -17,10 +17,9 @@ import java.util.UUID
 
 /** Implements the Grove Mobile exchange-entry identity contract exactly. */
 object GroveExchangeIdentity {
-    const val ALGORITHM = "uuid-v5-framed-identifier-v0"
     const val ENTRY_IDENTIFIER_EXTENSION = HealthConnectContract.GROVE_EXCHANGE_ENTRY_NODE_KEY
 
-    private val namespace = UUID.fromString("43df4575-bff7-5a57-9a80-2472cd2b0623")
+    private val namespace = UUID.fromString(HealthConnectContract.ENTRY_FULL_URL_NAMESPACE)
 
     /** Returns the deterministic lowercase UUID URN for one complete business Identifier. */
     fun fullUrl(identifier: Identifier): String {

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -57,12 +57,10 @@ internal fun HealthConnectConverter.conversion(
         conversionResources,
     )
     return HealthConnectConversion(
-        conversionContractVersion = synchronizationScope.conversionContractVersion,
+        conversionContractMarker = synchronizationScope.conversionContractMarker,
         sourceRecordIdentifier = source.identifier,
         sourceRecordType = recordType,
         sourceLastModified = metadata.lastModifiedTime,
-        observations = observations,
-        provenance = provenance,
         bundle = bundle,
     )
 }
@@ -105,9 +103,9 @@ internal fun HealthConnectConverter.conversionProvenance(
     outputs.forEach { observation ->
         addTarget(
             Reference().apply {
-                reference = GroveExchangeIdentity.fullUrl(outputIdentifier(observation))
+                reference = GroveExchangeIdentity.fullUrl(observationIdentity(observation))
                 type = "Observation"
-                identifier = outputIdentifier(observation).copy()
+                identifier = observationIdentity(observation).copy()
             },
         )
     }
@@ -180,8 +178,8 @@ internal fun HealthConnectConverter.bundle(
     conversionResources.forEach { resolved ->
         addGroveEntry(resolved.entryIdentifier, resolved.resource.copy())
     }
-    observations.sortedBy { outputIdentifier(it).value }.forEach { observation ->
-        addGroveEntry(outputIdentifier(observation), observation.copy())
+    observations.sortedBy { observationIdentity(it).value }.forEach { observation ->
+        addGroveEntry(observationIdentity(observation), observation.copy())
     }
     provenance?.let {
         addGroveEntry(

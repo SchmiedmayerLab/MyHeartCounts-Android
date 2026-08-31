@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -83,9 +83,9 @@ class HealthConnectIdentityTest {
     @Test
     fun `sample slot replays identically while a duplicate uses another occurrence`() {
         val time = Instant.parse("2026-08-20T17:30:15Z")
-        val first = HealthConnectIdentity.heartRateSampleOutput(key, source, time, 0)
-        val duplicate = HealthConnectIdentity.heartRateSampleOutput(key, source, time, 1)
-        val replayedSlot = HealthConnectIdentity.heartRateSampleOutput(key, source, time, 0)
+        val first = HealthConnectIdentity.sampleOutput(key, source, time, 0)
+        val duplicate = HealthConnectIdentity.sampleOutput(key, source, time, 1)
+        val replayedSlot = HealthConnectIdentity.sampleOutput(key, source, time, 0)
         assertThat(replayedSlot.value).isEqualTo(first.value)
         assertThat(duplicate.value).isNotEqualTo(first.value)
         assertThat(first.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT)).isTrue()

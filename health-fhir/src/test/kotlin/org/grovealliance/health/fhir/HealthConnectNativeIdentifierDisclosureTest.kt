@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -24,15 +24,7 @@ import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import com.google.common.truth.Truth.assertThat
-import org.hl7.fhir.r4.model.CodeableConcept
-import org.hl7.fhir.r4.model.Coding
-import org.hl7.fhir.r4.model.Device
 import org.hl7.fhir.r4.model.Identifier
-import org.hl7.fhir.r4.model.Observation
-import org.hl7.fhir.r4.model.Patient
-import org.hl7.fhir.r4.model.Provenance
-import org.hl7.fhir.r4.model.ResearchStudy
-import org.hl7.fhir.r4.model.Resource
 import org.hl7.fhir.r4.model.Specimen
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -44,20 +36,15 @@ class HealthConnectNativeIdentifierDisclosureTest {
     @Test
     fun `disclosure is omitted by default and emitted exactly on a one-to-one primary`() {
         val withoutDisclosure = converter().convert(steps("native-step-42"), CONVERTED_AT, EventSequence("1"))
-        assertThat(withoutDisclosure.bundle.allIdentifiers().none { it.system == NATIVE_SYSTEM }).isTrue()
+        assertThat(withoutDisclosure.bundle.countNativeIdentifiers("native-step-42")).isEqualTo(0)
 
         val withDisclosure = converter(disclosure()).convert(
             steps("native-step-42"),
             CONVERTED_AT,
             EventSequence("1"),
         )
-        val carryingResources = withDisclosure.bundle.entry.map { it.resource }.filter { resource ->
-            resource.directIdentifiers().any {
-                it.system == NATIVE_SYSTEM && it.value == "native-step-42"
-            }
-        }
-        assertThat(carryingResources).hasSize(1)
-        val observation = carryingResources.single() as Observation
+        assertThat(withDisclosure.bundle.countNativeIdentifiers("native-step-42")).isEqualTo(1)
+        val observation = withDisclosure.observations.single()
         val native = observation.identifier.single { it.system == NATIVE_SYSTEM }
         assertThat(native.value).isEqualTo("native-step-42")
         assertThat(native.type.text).isEqualTo("Health Connect repository record id")
@@ -73,7 +60,7 @@ class HealthConnectNativeIdentifierDisclosureTest {
         val converter = converter(disclosure())
         val heartRate = converter.convert(heartRate(), CONVERTED_AT, EventSequence("1"))
         assertThat(heartRate.observations).hasSize(2)
-        assertThat(heartRate.bundle.countNativeIdentifiers()).isEqualTo(0)
+        assertThat(heartRate.bundle.countNativeIdentifiers(HEART_RATE_ID)).isEqualTo(0)
 
         val sleep = converter.convert(sleep(), CONVERTED_AT, EventSequence("2"))
         val sleepSummary = sleep.observations.single {
@@ -89,7 +76,7 @@ class HealthConnectNativeIdentifierDisclosureTest {
         assertThat(sleepSummary.identifier.count { it.system == NATIVE_SYSTEM }).isEqualTo(1)
         assertThat(stages).hasSize(2)
         assertThat(stages.all { stage -> stage.identifier.none { it.system == NATIVE_SYSTEM } }).isTrue()
-        assertThat(sleep.bundle.countNativeIdentifiers()).isEqualTo(1)
+        assertThat(sleep.bundle.countNativeIdentifiers(SLEEP_ID)).isEqualTo(1)
 
         val workout = converter.convert(workout(), CONVERTED_AT, EventSequence("3"))
         val workoutSummary = workout.observations.single {
@@ -103,17 +90,17 @@ class HealthConnectNativeIdentifierDisclosureTest {
         assertThat(workoutSummary.identifier.count { it.system == NATIVE_SYSTEM }).isEqualTo(1)
         assertThat(workoutChildren).hasSize(2)
         assertThat(workoutChildren.all { child -> child.identifier.none { it.system == NATIVE_SYSTEM } }).isTrue()
-        assertThat(workout.bundle.countNativeIdentifiers()).isEqualTo(1)
+        assertThat(workout.bundle.countNativeIdentifiers(WORKOUT_ID)).isEqualTo(1)
 
         val nutrition = converter.convert(nutrition(), CONVERTED_AT, EventSequence("4"))
         assertThat(nutrition.observations).hasSize(3)
-        assertThat(nutrition.bundle.countNativeIdentifiers()).isEqualTo(0)
+        assertThat(nutrition.bundle.countNativeIdentifiers(NUTRITION_ID)).isEqualTo(0)
 
         val glucose = converter.convert(glucose(), CONVERTED_AT, EventSequence("5"))
         assertThat(glucose.observations.single().identifier.count { it.system == NATIVE_SYSTEM }).isEqualTo(1)
         val specimen = glucose.bundle.entry.single { it.resource is Specimen }.resource as Specimen
         assertThat(specimen.identifier.none { it.system == NATIVE_SYSTEM }).isTrue()
-        assertThat(glucose.bundle.countNativeIdentifiers()).isEqualTo(1)
+        assertThat(glucose.bundle.countNativeIdentifiers(GLUCOSE_ID)).isEqualTo(1)
     }
 
     @Test
@@ -210,34 +197,11 @@ class HealthConnectNativeIdentifierDisclosureTest {
         ),
         synchronizationScope = testSynchronizationScope(
             repositoryScope = TEST_PRODUCER_INSTANCE,
-            configurationFingerprint = "native-identifier-tests-v1",
+            configurationFingerprint = "native-identifier-tests",
         ),
     )
 
-    private fun application(): HealthConnectBundleResource<Device> {
-        val identifier = Identifier()
-            .setSystem(HealthConnectContract.ANDROID_PACKAGE_IDENTIFIER)
-            .setValue("org.example.grove.fhir")
-        return HealthConnectBundleResource(
-            identifier,
-            Device().apply {
-                meta.addProfile(HealthConnectContract.MOBILE_APPLICATION_DEVICE_PROFILE)
-                addIdentifier(identifier.copy())
-                addDeviceName().setName("Test converter").setType(Device.DeviceNameType.USERFRIENDLYNAME)
-                addVersion()
-                    .setType(
-                        CodeableConcept(
-                            Coding(
-                                HealthConnectContract.MDC,
-                                HealthConnectContract.APPLICATION_SOFTWARE_VERSION,
-                                "MDC_ID_PROD_SPEC_SW",
-                            ),
-                        ),
-                    )
-                    .setValue("1.0.0")
-            },
-        )
-    }
+    private fun application() = testApplication("Test converter", "org.example.grove.fhir", "1.0.0")
 
     private fun metadata(id: String): Metadata = Metadata.autoRecorded(
         HealthConnectDevice(type = HealthConnectDevice.TYPE_PHONE),
@@ -265,7 +229,7 @@ class HealthConnectNativeIdentifierDisclosureTest {
             HeartRateRecord.Sample(START.plusSeconds(15), 72),
             HeartRateRecord.Sample(START.plusSeconds(45), 75),
         ),
-        metadata = metadata("native-heart-rate"),
+        metadata = metadata(HEART_RATE_ID),
     )
 
     private fun sleep(): SleepSessionRecord = SleepSessionRecord(
@@ -283,7 +247,7 @@ class HealthConnectNativeIdentifierDisclosureTest {
                 SleepSessionRecord.STAGE_TYPE_AWAKE,
             ),
         ),
-        metadata = metadata("native-sleep"),
+        metadata = metadata(SLEEP_ID),
     )
 
     @Suppress("LongParameterList")
@@ -305,7 +269,7 @@ class HealthConnectNativeIdentifierDisclosureTest {
             ZoneOffset.UTC,
             START.plusSeconds(3_600),
             ZoneOffset.UTC,
-            metadata("native-workout"),
+            metadata(WORKOUT_ID),
             ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
             null,
             null,
@@ -325,7 +289,7 @@ class HealthConnectNativeIdentifierDisclosureTest {
         startZoneOffset = ZoneOffset.UTC,
         endTime = START.plusSeconds(1_800),
         endZoneOffset = ZoneOffset.UTC,
-        metadata = metadata("native-nutrition"),
+        metadata = metadata(NUTRITION_ID),
         energy = Energy.kilocalories(650.0),
         protein = Mass.grams(32.5),
         vitaminC = Mass.milligrams(90.0),
@@ -334,31 +298,28 @@ class HealthConnectNativeIdentifierDisclosureTest {
     private fun glucose(): BloodGlucoseRecord = BloodGlucoseRecord(
         time = START,
         zoneOffset = ZoneOffset.UTC,
-        metadata = metadata("native-glucose"),
+        metadata = metadata(GLUCOSE_ID),
         level = BloodGlucose.milligramsPerDeciliter(95.5),
         specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_CAPILLARY_BLOOD,
         mealType = MealType.MEAL_TYPE_UNKNOWN,
         relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_UNKNOWN,
     )
 
-    private fun org.hl7.fhir.r4.model.Bundle.allIdentifiers(): List<Identifier> =
-        entry.flatMap { it.resource.directIdentifiers() }
-
-    private fun org.hl7.fhir.r4.model.Bundle.countNativeIdentifiers(): Int =
-        allIdentifiers().count { it.system == NATIVE_SYSTEM }
-
-    private fun Resource.directIdentifiers(): List<Identifier> = when (this) {
-        is Observation -> identifier
-        is Specimen -> identifier
-        is Device -> identifier
-        is Patient -> identifier
-        is ResearchStudy -> identifier
-        is Provenance -> emptyList()
-        else -> emptyList()
-    }
+    /**
+     * Counts the raw native value anywhere on the wire, so a leak into any element, extension,
+     * narrative, or reference display fails instead of escaping a resource-type allowlist.
+     */
+    private fun org.hl7.fhir.r4.model.Bundle.countNativeIdentifiers(nativeValue: String): Int =
+        HealthConnectWireFormat.bundleJson(this).windowed(nativeValue.length) { it }
+            .count { it.contentEquals(nativeValue) }
 
     private companion object {
         const val NATIVE_SYSTEM = "https://example.org/repositories/device-7/health-connect-records"
+        const val HEART_RATE_ID = "native-heart-rate"
+        const val SLEEP_ID = "native-sleep"
+        const val WORKOUT_ID = "native-workout"
+        const val NUTRITION_ID = "native-nutrition"
+        const val GLUCOSE_ID = "native-glucose"
         const val NATIVE_TYPE_SYSTEM = "https://example.org/fhir/CodeSystem/source-identifier-type"
         const val PATIENT_SYSTEM = "https://example.org/fhir/identifiers/patient-pseudonyms"
         val START: Instant = Instant.parse("2026-08-19T08:00:00Z")

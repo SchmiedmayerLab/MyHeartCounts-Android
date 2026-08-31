@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -68,13 +68,13 @@ internal fun mindfulnessSessionTypeCoding(value: Int): Coding = when (value) {
         Coding(
             HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
             "MINDFULNESS_SESSION_TYPE_BREATHING",
-            "Breathing",
+            "Guided breathing",
         )
     MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MUSIC ->
         Coding(
             HealthConnectContract.HEALTH_CONNECT_MINDFULNESS_SESSION_TYPE,
             "MINDFULNESS_SESSION_TYPE_MUSIC",
-            "Music",
+            "Music or soundscapes",
         )
     MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MOVEMENT ->
         Coding(
@@ -198,7 +198,7 @@ internal fun bloodPressureMeasurementLocation(value: Int): CodeableConcept? = wh
     BloodPressureRecord.MEASUREMENT_LOCATION_LEFT_WRIST ->
         concept(HealthConnectContract.SNOMED_CT, "5951000", "Structure of left wrist region")
     BloodPressureRecord.MEASUREMENT_LOCATION_RIGHT_WRIST ->
-        concept(HealthConnectContract.SNOMED_CT, "9736006", "Structure of right wrist")
+        concept(HealthConnectContract.SNOMED_CT, "9736006", "Structure of right wrist region")
     BloodPressureRecord.MEASUREMENT_LOCATION_LEFT_UPPER_ARM ->
         concept(HealthConnectContract.SNOMED_CT, "368208006", "Left upper arm structure")
     BloodPressureRecord.MEASUREMENT_LOCATION_RIGHT_UPPER_ARM ->

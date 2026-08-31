@@ -6,7 +6,7 @@ hand-written, so it could fall behind without anything failing. Generating it cl
 place where a catalog change reaches two languages and silently misses the third.
 """
 
-# This source file belongs to the My Heart Counts Android project
+# This source file is part of the My Heart Counts Android open-source project
 #
 # SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
@@ -23,7 +23,7 @@ from typing import Any
 
 
 HEADER = """//
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -74,20 +74,35 @@ def generate_test_vectors(catalog_directory: Path) -> str:
         if isinstance(identities, list)
         else []
     )
+    # Coverage, not cardinality: a kind may carry several vectors, but none may go unexercised.
     if (
         len(kind_names) != len(kinds)
         or len(set(kind_names)) != len(kind_names)
-        or len(vector_kinds) != len(kind_names)
         or set(vector_kinds) != set(kind_names)
-        or len(set(vector_kinds)) != len(vector_kinds)
         or not isinstance(invalid_identities, list)
         or len(invalid_identities) != 4
     ):
         raise SystemExit(
-            "The normative test vectors must cover every closed identity kind exactly once "
+            "The normative test vectors must cover every closed identity kind "
             "and retain all four invalid domain vectors"
         )
     return json.dumps(vectors, ensure_ascii=False, indent=2) + "\n"
+
+
+def value_form_prefix(value_form: Any, label: str) -> str:
+    """`n0:<node-role>:...` yields `n0`, so a protocol-version rename reaches Kotlin by regeneration."""
+    if not isinstance(value_form, str):
+        raise SystemExit(f"The exchange protocol must declare a {label} value form")
+    prefix = value_form.split(":", 1)[0]
+    if re.fullmatch(r"[a-z][a-z0-9]*", prefix) is None:
+        raise SystemExit(f"The {label} value form must start with a lowercase protocol token")
+    return prefix
+
+
+def protocol_string(value: Any, label: str, pattern: str) -> str:
+    if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
+        raise SystemExit(f"The exchange protocol must declare a well-formed {label}")
+    return value
 
 
 def constant_name(
@@ -328,6 +343,82 @@ def kotlin_decimal(value: int | float | None) -> str:
     return f'java.math.BigDecimal("{lexical}")'
 
 
+def protocol_lexeme_declarations(protocol: dict[str, Any]) -> list[str]:
+    """The protocol's own domains and value-form prefixes, so a version rename is regeneration-only."""
+    opaque = protocol.get("opaqueIdentity", {})
+    entry_node = protocol.get("entryIdentity", {}).get("entryNode", {})
+    full_url = protocol.get("entryIdentity", {}).get("fullUrl", {})
+    event_identifier = protocol.get("event", {}).get("bundleIdentifier", {})
+    domain_pattern = r"[a-z][a-z0-9.\-]*"
+    uuid_pattern = r"[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    return [
+        declaration(
+            "OPAQUE_IDENTITY_DOMAIN",
+            f'"{protocol_string(opaque.get("domain"), "opaque identity domain", domain_pattern)}"',
+            "Domain separator framed into every Grove opaque-identity HMAC preimage.",
+        ),
+        declaration(
+            "OPAQUE_IDENTITY_PREFIX",
+            f'"{value_form_prefix(opaque.get("valueForm"), "opaque identity")}"',
+            "Leading protocol token of every opaque identity value.",
+        ),
+        declaration(
+            "EVENT_IDENTITY_PREFIX",
+            f'"{value_form_prefix(event_identifier.get("valueForm"), "event identifier")}"',
+            "Leading protocol token of every clear event Bundle identifier value.",
+        ),
+        declaration(
+            "ENTRY_NODE_DOMAIN",
+            f'"{protocol_string(entry_node.get("domain"), "entry-node domain", domain_pattern)}"',
+            "Domain separator framed into every entry-node digest preimage.",
+        ),
+        declaration(
+            "ENTRY_NODE_IDENTITY_PREFIX",
+            f'"{value_form_prefix(entry_node.get("valueForm"), "entry-node identifier")}"',
+            "Leading protocol token of every deterministic entry-node identifier value.",
+        ),
+        declaration(
+            "ENTRY_FULL_URL_NAMESPACE",
+            f'"{protocol_string(full_url.get("namespace"), "fullUrl UUID namespace", uuid_pattern)}"',
+            "UUIDv5 namespace over the length-framed entry Identifier pair.",
+        ),
+    ]
+
+
+def governed_reference_declarations(protocol: dict[str, Any]) -> list[str]:
+    """The catalog's governed Reference rows, so the validator cannot drift from the contract."""
+    policy = protocol.get("referencePolicy", {})
+    paths = policy.get("paths")
+    extension_targets = policy.get("extensionTargets")
+    reserved = policy.get("identifierOnlyPatient", {}).get("reservedSystems")
+    if not isinstance(paths, list) or not isinstance(extension_targets, list) or not isinstance(reserved, list):
+        raise SystemExit("The exchange protocol must declare its complete governed Reference policy")
+    lines = [
+        "    /** Catalog-governed Reference target types, keyed by `ResourceType.path`. */",
+        "    internal val governedReferenceTargets: Map<String, Set<String>> = mapOf(",
+    ]
+    for row in paths:
+        path = f'{row["resourceType"]}.{row["path"]}'
+        targets = ", ".join(f'"{target}"' for target in row["targetTypes"])
+        lines.append(f'        "{path}" to setOf({targets}),')
+    lines.append("    )")
+    lines.append("")
+    lines.append("    /** Catalog-governed Reference target types for extension-carried references. */")
+    lines.append("    internal val governedExtensionReferenceTargets: Map<String, Set<String>> = mapOf(")
+    for row in extension_targets:
+        targets = ", ".join(f'"{target}"' for target in row["targetTypes"])
+        lines.append(f'        "{row["url"]}" to setOf({targets}),')
+    lines.append("    )")
+    lines.append("")
+    lines.append("    /** Code-system URIs a logical Patient pseudonym may never be typed with. */")
+    lines.append("    internal val reservedPatientIdentifierSystems: Set<String> = setOf(")
+    for system in reserved:
+        lines.append(f'        "{system}",')
+    lines.append("    )")
+    lines.append("")
+    return lines
+
+
 def generate(catalog_directory: Path) -> str:
     catalogs = {
         "measurements": load(catalog_directory, "measurement-catalog.json"),
@@ -386,17 +477,19 @@ def generate(catalog_directory: Path) -> str:
         target.append((constant_name(profile, "_PROFILE"), profile))
 
     lines: list[str] = [
-        "/** Canonicals shared with the Grove FHIR Mobile and Health Connect packages. */",
+        "/** Canonicals shared by the relevant Grove FHIR Implementation Guides. */",
         "object HealthConnectContract {",
         declaration("FHIR_VERSION", f'"{catalogs["measurements"]["fhirVersion"]}"'),
         declaration("PACKAGE_VERSION", f'"{catalogs["measurements"]["version"]}"'),
         declaration(
-            "CONVERSION_CONTRACT_VERSION",
+            "CONVERSION_CONTRACT_MARKER",
             f'"health-connect-r4-{catalogs["measurements"]["version"]}"',
+            "Conversion-contract identity; changing it forces a new projection baseline.",
         ),
         declaration("CANONICAL_ROOT", f'"{catalogs["graph"]["canonicalRoot"]}"'),
         declaration("MOBILE_BASE", '"$CANONICAL_ROOT/mobile"'),
         declaration("HEALTH_CONNECT_BASE", '"$CANONICAL_ROOT/health-connect"'),
+        *protocol_lexeme_declarations(catalogs["exchange-protocol"]),
         "",
         "    /** Closed provider codes admitted by the provider-specific HMAC identity domains. */",
         "    internal val providerCodes: Set<String> = setOf(",
@@ -541,24 +634,13 @@ def generate(catalog_directory: Path) -> str:
     lines.append("    )")
     lines.append("")
 
-    for property_name, values, doc in [
-        (
-            "activeConversionProvenanceProfiles",
-            profile_claims["provenanceProfiles"],
-            "Exact Mobile or Health Connect profiles admitted on the active lifecycle Provenance.",
-        ),
-        (
-            "activeHealthConnectExclusiveObservationProfiles",
-            profile_claims["healthConnectExclusiveObservationProfiles"],
-            "Health Connect Observation profiles whose complete claim is one direct profile.",
-        ),
-    ]:
-        lines.append(f"    /** {doc} */")
-        lines.append(f"    internal val {property_name}: Set<String> = setOf(")
-        for value in values:
-            lines.append(f'        "{value}",')
-        lines.append("    )")
-        lines.append("")
+    lines.append("    /** Exact Mobile or Health Connect profiles admitted on the active lifecycle Provenance. */")
+    lines.append("    internal val activeConversionProvenanceProfiles: Set<String> = setOf(")
+    for value in profile_claims["provenanceProfiles"]:
+        lines.append(f'        "{value}",')
+    lines.append("    )")
+    lines.append("")
+    lines.extend(governed_reference_declarations(catalogs["exchange-protocol"]))
     lines.append("    /** Fixed Quantity system/code pairs keyed by a produced semantic profile. */")
     lines.append("    internal val quantitySemanticsByProfile: Map<String, QuantitySemantics> = mapOf(")
     for profile, (system, code) in quantity_semantics.items():

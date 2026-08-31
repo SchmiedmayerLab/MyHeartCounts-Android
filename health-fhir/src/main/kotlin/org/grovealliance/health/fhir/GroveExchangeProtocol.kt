@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -23,7 +23,7 @@ import org.hl7.fhir.r4.model.VisionPrescription
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 
-/** Shared byte-level primitives from the Grove FHIR exchange protocol. */
+/** Shared byte-level primitives required by the Grove FHIR contracts. */
 internal object GroveExchangeProtocol {
     /** Unsigned 32-bit big-endian UTF-8 byte length followed by the exact bytes, per field. */
     fun frameFields(fields: Iterable<String>): ByteArray = ByteArrayOutputStream().use { bytes ->
@@ -139,9 +139,7 @@ private fun Observation.requireExactObservationClaim(profiles: List<String>) {
     val healthConnectAdapter = profiles.size == 2 &&
         profiles.count { it in HealthConnectContract.sharedMeasurementProfiles } == 1 &&
         profiles.count { it == HealthConnectContract.HEALTH_CONNECT_OBSERVATION_PROFILE } == 1
-    val healthConnectExclusive = profiles.size == 1 &&
-        profiles.single() in HealthConnectContract.activeHealthConnectExclusiveObservationProfiles
-    require(adapterNeutral || healthConnectAdapter || healthConnectExclusive) {
+    require(adapterNeutral || healthConnectAdapter) {
         "Active Observation must carry one exact admitted semantic/profile-claim mode."
     }
     requireHealthConnectSourceMarkerClaim(profiles)
@@ -160,7 +158,7 @@ private fun Observation.requireHealthConnectSourceMarkerClaim(profiles: List<Str
     }
     val claimsHealthConnect =
         HealthConnectContract.HEALTH_CONNECT_OBSERVATION_PROFILE in profiles ||
-            profiles.any(HealthConnectContract.activeHealthConnectExclusiveObservationProfiles::contains)
+            profiles.any(HealthConnectContract.adapterSpecificObservationProfiles::contains)
     val hasOneCompleteMarker = markers.singleOrNull()?.value?.primitiveValue()?.isNotBlank() == true
     require(
         if (claimsHealthConnect) hasOneCompleteMarker else markers.isEmpty(),

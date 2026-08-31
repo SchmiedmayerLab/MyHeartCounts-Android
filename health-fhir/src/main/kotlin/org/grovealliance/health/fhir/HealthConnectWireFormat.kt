@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -55,19 +55,8 @@ object HealthConnectWireFormat {
     internal fun sha256(value: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(value).let(::lowercaseHex)
 
-    private fun lowercaseHex(bytes: ByteArray): String = buildString(capacity = bytes.size * HEX_CHARS_PER_BYTE) {
-        bytes.forEach { byte ->
-            val unsigned = byte.toInt() and BYTE_MASK
-            append(LOWERCASE_HEX[unsigned ushr HEX_NIBBLE_BITS])
-            append(LOWERCASE_HEX[unsigned and HEX_NIBBLE_MASK])
-        }
-    }
+    private fun lowercaseHex(bytes: ByteArray): String = bytes.joinToString("") { "%02x".format(it) }
 
     private val NANOSECONDS_PER_SECOND = BigInteger.valueOf(NANOSECONDS_PER_SECOND_LONG)
     private const val NANOSECONDS_PER_SECOND_LONG = 1_000_000_000L
-    private const val LOWERCASE_HEX = "0123456789abcdef"
-    private const val HEX_CHARS_PER_BYTE = 2
-    private const val HEX_NIBBLE_BITS = 4
-    private const val HEX_NIBBLE_MASK = 0x0f
-    private const val BYTE_MASK = 0xff
 }

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -362,13 +362,13 @@ class HealthConnectR4ConverterTemporalSessionTest : HealthConnectR4ConverterTest
         val workout = result.observations.single {
             it.meta.profile.any { profile -> profile.value == HealthConnectContract.MOBILE_WORKOUT_PROFILE }
         }
-        val children = result.observations.filter {
+        val childrenByUrl = result.observations.filter {
             it.meta.profile.any { profile -> profile.value == HealthConnectContract.MOBILE_WORKOUT_SEGMENT_PROFILE }
-        }
+        }.associateBy { GroveExchangeIdentity.fullUrl(observationIdentity(it)) }
+        // The workout's own hasMember order is the graph's child order; entry order is by identity.
+        val children = workout.hasMember.map { childrenByUrl.getValue(it.reference) }
+        assertThat(childrenByUrl).hasSize(4)
         assertThat(children).hasSize(4)
-        assertThat(workout.hasMember.map { it.reference })
-            .containsExactlyElementsIn(children.map { GroveExchangeIdentity.fullUrl(outputIdentifier(it)) })
-            .inOrder()
         assertThat(children.map { it.valueCodeableConcept.coding[0].system to it.valueCodeableConcept.coding[0].code })
             .containsExactly(
                 HealthConnectContract.GROVE_WORKOUT_ACTIVITY to "strength-training",
@@ -412,8 +412,8 @@ class HealthConnectR4ConverterTemporalSessionTest : HealthConnectR4ConverterTest
             laps = listOf(ExerciseLap(start, start.plusSeconds(900), Length.meters(400.0))),
         )
 
-        val first = converter.convert(record, convertedAt).observations.map { outputIdentifier(it).value }
-        val second = converter.convert(record, convertedAt).observations.map { outputIdentifier(it).value }
+        val first = converter.convert(record, convertedAt).observations.map { observationIdentity(it).value }
+        val second = converter.convert(record, convertedAt).observations.map { observationIdentity(it).value }
 
         assertThat(first).isEqualTo(second)
         assertThat(first.distinct()).hasSize(4)
@@ -453,8 +453,8 @@ class HealthConnectR4ConverterTemporalSessionTest : HealthConnectR4ConverterTest
 
         // The same logical measurement re-imported: Health Connect stores a new metadata.id, so
         // only the client record identity ties the two together.
-        val first = converter.convert(weight("weight-v1", 68.4, 1), convertedAt, EventSequence("1"))
-        val revision = converter.convert(weight("weight-revision", 68.9, 2), convertedAt, EventSequence("2"))
+        val first = converter.convert(weight("weight-initial", 68.4, 1), convertedAt, EventSequence("1"))
+        val revision = converter.convert(weight("weight-updated", 68.9, 2), convertedAt, EventSequence("2"))
 
         fun clientRecordId(conversion: HealthConnectConversion) = conversion.observations.single()
             .identifier

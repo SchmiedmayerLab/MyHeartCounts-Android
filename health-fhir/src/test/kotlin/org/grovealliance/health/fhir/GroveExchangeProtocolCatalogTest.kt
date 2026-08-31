@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -15,6 +15,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.hl7.fhir.r4.model.Identifier
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.File
 import java.time.Instant
@@ -23,7 +24,9 @@ import java.time.Instant
 class GroveExchangeProtocolCatalogTest {
     @Test
     fun `vendored vectors exactly match the configured normative catalog`() {
-        val externalPath = System.getProperty(EXTERNAL_CATALOG_PROPERTY)?.takeIf(String::isNotBlank) ?: return
+        val externalPath = System.getProperty(EXTERNAL_CATALOG_PROPERTY)?.takeIf(String::isNotBlank)
+        assumeTrue("The $EXTERNAL_CATALOG_PROPERTY lane is not configured.", externalPath != null)
+        requireNotNull(externalPath)
         val external = Json.parseToJsonElement(File(externalPath).readText()).jsonObject
             .getValue("testVectors")
 
@@ -32,7 +35,9 @@ class GroveExchangeProtocolCatalogTest {
 
     @Test
     fun `closed HMAC kinds and arities exactly match the configured normative catalog`() {
-        val externalPath = System.getProperty(EXTERNAL_CATALOG_PROPERTY)?.takeIf(String::isNotBlank) ?: return
+        val externalPath = System.getProperty(EXTERNAL_CATALOG_PROPERTY)?.takeIf(String::isNotBlank)
+        assumeTrue("The $EXTERNAL_CATALOG_PROPERTY lane is not configured.", externalPath != null)
+        requireNotNull(externalPath)
         val catalogKinds = Json.parseToJsonElement(File(externalPath).readText()).jsonObject
             .getValue("opaqueIdentity").jsonObject
             .getValue("identityKinds").jsonArray
@@ -60,10 +65,10 @@ class GroveExchangeProtocolCatalogTest {
         )
 
         val identities = vectors.array("identities")
+        // Coverage, not cardinality: a kind may publish several vectors, and every one of them runs.
         assertThat(identities.map { it.jsonObject.string("identityKind") }.toSet()).isEqualTo(
             GroveOpaqueIdentityKind.entries.map(GroveOpaqueIdentityKind::code).toSet(),
         )
-        assertThat(identities).hasSize(GroveOpaqueIdentityKind.entries.size)
         identities.forEach { element ->
             val vector = element.jsonObject
             val kind = GroveOpaqueIdentityKind.entries.single {
@@ -156,7 +161,8 @@ class GroveExchangeProtocolCatalogTest {
     @Test
     fun `rejects every vendored invalid opaque identity vector`() {
         val invalidVectors = vectors.getValue("invalidIdentities").jsonArray
-        assertThat(invalidVectors).hasSize(EXPECTED_INVALID_IDENTITY_VECTOR_COUNT)
+        assertThat(invalidVectors).isNotEmpty()
+        assertThat(invalidVectors.map { it.jsonObject.string("id") }).containsNoDuplicates()
         val key = GroveHmacIdentityKey.forConformanceTesting(
             TEST_OPAQUE_IDENTITY_SYSTEM_FAMILY,
             vectors.string("keyId"),
@@ -197,7 +203,7 @@ class GroveExchangeProtocolCatalogTest {
             vector.array("components")[4].jsonPrimitive.content,
         )
 
-        val output = HealthConnectIdentity.heartRateSampleOutput(
+        val output = HealthConnectIdentity.sampleOutput(
             key,
             source,
             Instant.parse("2026-08-19T10:30:00Z"),
@@ -266,7 +272,6 @@ class GroveExchangeProtocolCatalogTest {
     private companion object {
         const val VENDORED_RESOURCE = "/grove-exchange-protocol-test-vectors.json"
         const val EXTERNAL_CATALOG_PROPERTY = "grove.exchange-protocol.catalog"
-        const val EXPECTED_INVALID_IDENTITY_VECTOR_COUNT = 4
         val PROVIDER_IDENTITY_KINDS = setOf(
             GroveOpaqueIdentityKind.PROVIDER_RECORD,
             GroveOpaqueIdentityKind.PROVIDER_OUTPUT,

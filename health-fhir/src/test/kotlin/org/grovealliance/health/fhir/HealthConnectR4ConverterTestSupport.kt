@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -16,13 +16,10 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.MealType
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
-import androidx.health.connect.client.testing.populatedWithTestValues
 import androidx.health.connect.client.units.BloodGlucose
 import org.hl7.fhir.r4.model.Bundle
-import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.Identifier
 import org.hl7.fhir.r4.model.Observation
 import org.hl7.fhir.r4.model.Patient
@@ -36,7 +33,7 @@ abstract class HealthConnectR4ConverterTestSupport {
     protected val convertedAt = Instant.parse("2026-08-19T17:30:02Z")
     protected val synchronizationScope = testSynchronizationScope(
         repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
-        configurationFingerprint = "all-supported-records-v1",
+        configurationFingerprint = "all-supported-records",
     )
     protected val device = Device(
         type = Device.TYPE_WATCH,
@@ -122,14 +119,8 @@ abstract class HealthConnectR4ConverterTestSupport {
         )
     }
 
-    protected fun metadata(
-        metadata: Metadata,
-        id: String = "source-record",
-    ): Metadata = metadata.populatedWithTestValues(
-        id = id,
-        dataOrigin = DataOrigin("com.example.source"),
-        lastModifiedTime = Instant.parse("2026-08-19T17:30:01Z"),
-    )
+    protected fun metadata(metadata: Metadata, id: String = "source-record"): Metadata =
+        testMetadata(metadata, id)
 
     // The exercise-session primary constructor differs between the pinned compile classpath and the
     // newer client forced by connect-testing; this ten-argument overload is shared by both.
@@ -205,36 +196,9 @@ abstract class HealthConnectR4ConverterTestSupport {
         name: String,
         identifierValue: String,
         version: String? = null,
-    ): HealthConnectBundleResource<FhirDevice> {
-        val entryIdentifier = identifier(HealthConnectContract.ANDROID_PACKAGE_IDENTIFIER, identifierValue)
-        return HealthConnectBundleResource(
-            entryIdentifier,
-            FhirDevice().apply {
-                meta.addProfile(HealthConnectContract.MOBILE_APPLICATION_DEVICE_PROFILE)
-                addIdentifier(entryIdentifier.copy())
-                addDeviceName().setName(name).setType(FhirDevice.DeviceNameType.USERFRIENDLYNAME)
-                version?.let {
-                    addVersion()
-                        .setType(
-                            org.hl7.fhir.r4.model.CodeableConcept(
-                                Coding(
-                                    HealthConnectContract.MDC,
-                                    HealthConnectContract.APPLICATION_SOFTWARE_VERSION,
-                                    "MDC_ID_PROD_SPEC_SW",
-                                ),
-                            ),
-                        )
-                        .setValue(it)
-                }
-            },
-        )
-    }
+    ): HealthConnectBundleResource<FhirDevice> = testApplication(name, identifierValue, version)
 
-    protected fun identifier(system: String, value: String): Identifier =
-        Identifier().setSystem(system).setValue(value)
-
-    protected fun outputIdentifier(observation: org.hl7.fhir.r4.model.Observation): Identifier =
-        observationIdentity(observation)
+    protected fun identifier(system: String, value: String): Identifier = testIdentifier(system, value)
 
     protected fun sourceIdentifier(observation: org.hl7.fhir.r4.model.Observation): Identifier =
         observation.identifier.single {
@@ -245,9 +209,4 @@ abstract class HealthConnectR4ConverterTestSupport {
         bundle.entry.single { it.resource.fhirType() == resourceType }
             .getExtensionByUrl(GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION)
             .value as Identifier
-
-    companion object {
-        const val EXAMPLE_REPOSITORY_SCOPE = "1f5c58aa-6ec6-4e79-a682-829a9debd3f5"
-        const val TEST_CONTEXT_IDENTIFIER_SYSTEM = "urn:uuid:8d3fd52b-efda-5f3d-b83d-50f0a70b44aa"
-    }
 }

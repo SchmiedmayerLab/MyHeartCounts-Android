@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -18,15 +18,16 @@ import java.util.UUID
  * repository. [generateRepositoryScope] creates an opaque UUIDv4-based pair, but a deployment may
  * supply an equivalent governed pair. A scope must never be cloned into a different repository.
  * [configurationFingerprint] identifies the exact source/filter configuration used by the full
- * reader and must change when that projection changes. The adapter-owned conversion-contract
- * version is included automatically, so an adapter upgrade cannot resume an old cursor without a
- * new baseline. None of these inputs is serialized into FHIR or the exchange Bundle.
+ * reader and must change when that projection changes. The catalog-derived conversion-contract
+ * marker is included automatically, so a Grove FHIR package bump yields a distinct projection scope
+ * and incompatible local projections cannot share cursor state without a new baseline. None of these
+ * inputs is serialized into FHIR or the exchange Bundle.
  */
 class HealthConnectSynchronizationScope private constructor(
     internal val repositoryScope: FhirIdentifierKey,
     internal val producerInstance: String,
     configurationFingerprint: String,
-    internal val conversionContractVersion: String,
+    internal val conversionContractMarker: String,
     internal val identityKey: GroveHmacIdentityKey,
 ) {
     /** Opaque local key shared by every projection over this repository. */
@@ -40,7 +41,7 @@ class HealthConnectSynchronizationScope private constructor(
     val projectionScopeKey: ScopeKey = ScopeKey(
         digest(
             "projection\u0000${repositoryScope.system.sized()}\u0000${repositoryScope.value.sized()}" +
-                "\u0000${configurationFingerprint.sized()}\u0000${conversionContractVersion.sized()}" +
+                "\u0000${configurationFingerprint.sized()}\u0000${conversionContractMarker.sized()}" +
                 "\u0000${identityKey.identifierSystemFamily.sized()}" +
                 "\u0000${identityKey.keyId.sized()}\u0000${identityKey.epoch.sized()}",
         ),
@@ -53,8 +54,8 @@ class HealthConnectSynchronizationScope private constructor(
         require(producerInstance.isCanonicalProducerUuid()) {
             "The producer instance must be a durable canonical lowercase RFC 4122 UUID."
         }
-        require(conversionContractVersion.isNotBlank()) {
-            "The adapter conversion-contract version must not be blank."
+        require(conversionContractMarker.isNotBlank()) {
+            "The adapter conversion-contract marker must not be blank."
         }
     }
 
@@ -90,23 +91,23 @@ class HealthConnectSynchronizationScope private constructor(
                 repositoryScope,
                 producerInstance,
                 configurationFingerprint,
-                HealthConnectContract.CONVERSION_CONTRACT_VERSION,
+                HealthConnectContract.CONVERSION_CONTRACT_MARKER,
                 identityKey,
             )
 
-        /** Test-only seam proving an adapter contract upgrade changes the mandatory projection scope. */
-        internal fun createForContractVersion(
+        /** Test-only seam proving a distinct contract marker changes the mandatory projection scope. */
+        internal fun createForContractMarker(
             repositoryScope: FhirIdentifierKey,
             producerInstance: String,
             configurationFingerprint: String,
-            conversionContractVersion: String,
+            conversionContractMarker: String,
             identityKey: GroveHmacIdentityKey,
         ): HealthConnectSynchronizationScope =
             HealthConnectSynchronizationScope(
                 repositoryScope,
                 producerInstance,
                 configurationFingerprint,
-                conversionContractVersion,
+                conversionContractMarker,
                 identityKey,
             )
     }
@@ -114,7 +115,8 @@ class HealthConnectSynchronizationScope private constructor(
 
 private fun String.sized(): String = "${toByteArray(StandardCharsets.UTF_8).size}:$this"
 
-private fun digest(preimage: String): String = "v1:${HealthConnectWireFormat.sha256(preimage)}"
+/** The `v0` tag versions this local scope-digest format, not the Grove exchange protocol. */
+private fun digest(preimage: String): String = "v0:${HealthConnectWireFormat.sha256(preimage)}"
 
 private fun String.isCanonicalProducerUuid(): Boolean = runCatching {
     val uuid = UUID.fromString(this)

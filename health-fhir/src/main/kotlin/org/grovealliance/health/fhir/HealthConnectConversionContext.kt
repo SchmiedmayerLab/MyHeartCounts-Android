@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -8,7 +8,6 @@
 package org.grovealliance.health.fhir
 
 import androidx.health.connect.client.records.metadata.Device
-import org.hl7.fhir.r4.model.Base
 import org.hl7.fhir.r4.model.Identifier
 import org.hl7.fhir.r4.model.Observation
 import org.hl7.fhir.r4.model.Patient
@@ -16,8 +15,6 @@ import org.hl7.fhir.r4.model.Provenance
 import org.hl7.fhir.r4.model.Reference
 import org.hl7.fhir.r4.model.ResearchStudy
 import org.hl7.fhir.r4.model.Resource
-import java.util.Collections
-import java.util.IdentityHashMap
 import java.util.Locale
 
 /** A resource and the complete business identity used to derive its exchange Bundle fullUrl. */
@@ -519,15 +516,11 @@ private fun HealthConnectBundleResource<Resource>.remapLiteralReferences(
     replacements: Map<String, String>,
 ): HealthConnectBundleResource<Resource> {
     val remapped = resource.copy()
-    val visited = Collections.newSetFromMap(IdentityHashMap<Base, Boolean>())
-    fun visit(element: Base) {
-        if (!visited.add(element)) return
+    remapped.visitPopulatedElements { element ->
         if (element is Reference && element.hasReference()) {
             replacements[element.reference]?.let { element.reference = it }
         }
-        element.children().flatMap { it.values }.forEach(::visit)
     }
-    visit(remapped)
     return HealthConnectBundleResource(entryIdentifier.copy(), remapped)
 }
 
