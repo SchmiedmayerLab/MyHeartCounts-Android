@@ -89,13 +89,15 @@ private fun Reference.requireGovernedShape(
         "$label identifier-only logical Reference requires an exact admitted type and one complete Identifier."
     }
     identifier.key()
-    if (type == "Patient") {
-        require(identifier.system !in HealthConnectContract.reservedPatientIdentifierSystems) {
-            "$label logical Patient pseudonym must not use a protocol-reserved system."
-        }
-        require(identifier.type.coding.none { it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE }) {
-            "$label logical Patient pseudonym must not claim a Grove identifier role."
-        }
+    if (type == "Patient") identifier.requireLogicalPatientPseudonym(label)
+}
+
+internal fun Identifier.requireLogicalPatientPseudonym(label: String) {
+    require(system !in HealthConnectContract.reservedPatientIdentifierSystems) {
+        "$label logical Patient pseudonym must not use a protocol-reserved system."
+    }
+    require(type.coding.none { it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE }) {
+        "$label logical Patient pseudonym must not claim a Grove identifier role."
     }
 }
 
