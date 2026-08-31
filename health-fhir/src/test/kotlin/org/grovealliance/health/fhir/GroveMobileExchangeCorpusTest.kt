@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -22,6 +22,7 @@ import org.hl7.fhir.r4.model.Identifier
 import org.hl7.fhir.r4.model.Observation
 import org.hl7.fhir.r4.model.Provenance
 import org.junit.Assert.assertThrows
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.File
 import java.time.Instant
@@ -30,10 +31,9 @@ import java.time.Instant
 class GroveMobileExchangeCorpusTest {
     @Test
     fun `shared active and retraction examples satisfy the Kotlin event boundary`() {
-        val directory = System.getProperty(CORPUS_DIRECTORY_PROPERTY)
-            ?.takeIf(String::isNotBlank)
-            ?.let(::File)
-            ?: return
+        val directory = System.getProperty(CORPUS_DIRECTORY_PROPERTY)?.takeIf(String::isNotBlank)?.let(::File)
+        assumeTrue("The $CORPUS_DIRECTORY_PROPERTY lane is not configured.", directory != null)
+        requireNotNull(directory)
         val manifest = Json.parseToJsonElement(directory.resolve("corpus.json").readText()).jsonObject
         assertThat(manifest.getValue("version").jsonPrimitive.content)
             .isEqualTo(HealthConnectContract.PACKAGE_VERSION)
@@ -52,15 +52,11 @@ class GroveMobileExchangeCorpusTest {
         val lifecycle = retraction.entry.map { it.resource }.filterIsInstance<Provenance>().single()
         val retractionSource = lifecycle.entity.single().what.identifier
         val targets = lifecycle.target.map { target ->
-            val identifierRole = target.identifier.type.coding.single {
-                it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE
-            }.code
             val targetRole = (target.extension.single {
                 it.url == HealthConnectContract.GROVE_RETRACTION_TARGET_ROLE
             }.value as CodeType).value
             HealthConnectRetractionTarget(
                 identifier = target.identifier.key(),
-                identifierRole = GroveIdentifierRole.entries.single { it.code == identifierRole },
                 resourceType = target.type,
                 role = HealthConnectRetractionTargetRole.entries.single { it.code == targetRole },
             )
@@ -75,13 +71,12 @@ class GroveMobileExchangeCorpusTest {
 
     @Test
     fun `every exact structured mutation fails the Kotlin event boundary`() {
-        val directory = System.getProperty(CORPUS_DIRECTORY_PROPERTY)
-            ?.takeIf(String::isNotBlank)
-            ?.let(::File)
-            ?: return
+        val directory = System.getProperty(CORPUS_DIRECTORY_PROPERTY)?.takeIf(String::isNotBlank)?.let(::File)
+        assumeTrue("The $CORPUS_DIRECTORY_PROPERTY lane is not configured.", directory != null)
+        requireNotNull(directory)
         val manifest = Json.parseToJsonElement(directory.resolve("corpus.json").readText()).jsonObject
         val cases = manifest.getValue("cases").jsonArray.map { it.jsonObject }
-        assertThat(cases).hasSize(EXPECTED_MUTATION_COUNT)
+        assertThat(cases).hasSize(EXPECTED_MUTATION_IDS.size)
         assertThat(cases.map { it.getValue("id").jsonPrimitive.content })
             .containsExactlyElementsIn(EXPECTED_MUTATION_IDS)
 
@@ -138,15 +133,11 @@ class GroveMobileExchangeCorpusTest {
 
     private fun retractionTargets(bundle: Bundle): Set<HealthConnectRetractionTarget> =
         bundle.entry.map { it.resource }.filterIsInstance<Provenance>().single().target.map { target ->
-            val identifierRole = target.identifier.type.coding.single {
-                it.system == HealthConnectContract.GROVE_IDENTIFIER_ROLE
-            }.code
             val targetRole = (target.extension.single {
                 it.url == HealthConnectContract.GROVE_RETRACTION_TARGET_ROLE
             }.value as CodeType).value
             HealthConnectRetractionTarget(
                 identifier = target.identifier.key(),
-                identifierRole = GroveIdentifierRole.entries.single { it.code == identifierRole },
                 resourceType = target.type,
                 role = HealthConnectRetractionTargetRole.entries.single { it.code == targetRole },
             )
@@ -239,7 +230,6 @@ class GroveMobileExchangeCorpusTest {
 
     private companion object {
         const val CORPUS_DIRECTORY_PROPERTY = "grove.mobile-exchange.corpus-directory"
-        const val EXPECTED_MUTATION_COUNT = 34
         val EXPECTED_MUTATION_IDS = setOf(
             "missing-entry-node-key",
             "non-deterministic-full-url",
@@ -247,6 +237,7 @@ class GroveMobileExchangeCorpusTest {
             "wrong-heart-rate-unit",
             "non-canonical-event-identity",
             "tampered-entry-node-digest",
+            "misnumbered-entry-node-ordinal",
             "missing-source-output-identity",
             "identity-system-changes-role",
             "missing-transform-provenance",
@@ -275,6 +266,7 @@ class GroveMobileExchangeCorpusTest {
             "questionnaire-response-subject-reserved-system",
             "questionnaire-response-subject-grove-role",
             "disconnected-supporting-patient",
+            "retraction-native-identifier-uses-grove-role",
         )
     }
 }

@@ -196,6 +196,105 @@
         "com.example.app|1.2.3"
       ],
       "value": "v0:test-key:1:Q2sME_dGFj94xyprI1HtMokER94GYsHINZi0ilnsnRY"
+    },
+    {
+      "id": "normative-corpus-heart-rate-source-record",
+      "identityKind": "source-record",
+      "components": [
+        "health-connect",
+        "HeartRateRecord",
+        "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "default",
+        "record-heart-001"
+      ],
+      "value": "v0:test-key:1:ptHr751zWyYfaR2WIvrP1TfnVEK4bInC__ibP_AYfVY"
+    },
+    {
+      "id": "normative-corpus-heart-rate-source-output",
+      "identityKind": "source-output",
+      "components": [
+        "health-connect",
+        "HeartRateRecord",
+        "urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "default",
+        "record-heart-001",
+        "sample",
+        "2026-08-20T15:30:00.251000000Z|0"
+      ],
+      "value": "v0:test-key:1:PPULnf0LKpASjIj8mU5TKafPKig_oqWND3_dHFShGd8"
+    },
+    {
+      "id": "normative-corpus-retraction-application-snapshot",
+      "identityKind": "device-snapshot",
+      "components": [
+        "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:43",
+        "application",
+        "com.example.app|1.2.3"
+      ],
+      "value": "v0:test-key:1:JUZooa4NZX-rlMn9-NC8W078xzEuUO9X3Xo1mgk0Vac"
+    },
+    {
+      "id": "questionnaire-extraction-source-record",
+      "identityKind": "source-record",
+      "components": [
+        "questionnaire",
+        "QuestionnaireResponse",
+        "https://study.example.org/fhir/NamingSystem/questionnaire-response",
+        "default",
+        "home-vitals-2026-08-28"
+      ],
+      "value": "v0:test-key:1:7_7dmqTFxPH01QGTycmp8nIPty7WwphH2X0ZaV-p3wk"
+    },
+    {
+      "id": "questionnaire-extraction-body-weight-output",
+      "identityKind": "source-output",
+      "components": [
+        "questionnaire",
+        "QuestionnaireResponse",
+        "https://study.example.org/fhir/NamingSystem/questionnaire-response",
+        "default",
+        "home-vitals-2026-08-28",
+        "body-weight",
+        "single"
+      ],
+      "value": "v0:test-key:1:oY5ARo6F_wNj5wVdtFqORMdUwZ__B9kQ6GW1RSaEz10"
+    },
+    {
+      "id": "questionnaire-extraction-blood-pressure-output",
+      "identityKind": "source-output",
+      "components": [
+        "questionnaire",
+        "QuestionnaireResponse",
+        "https://study.example.org/fhir/NamingSystem/questionnaire-response",
+        "default",
+        "home-vitals-2026-08-28",
+        "blood-pressure",
+        "single"
+      ],
+      "value": "v0:test-key:1:ljzpyfYa15oOpj_A37-cd-_8JXqQwwfomR9iT0gct6g"
+    },
+    {
+      "id": "questionnaire-extraction-application-snapshot",
+      "identityKind": "device-snapshot",
+      "components": [
+        "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "e0:6f9d1c4a-2b7e-4f18-9c33-5a1d0e7b2c48:1",
+        "application",
+        "org.grovealliance.example.client|1.4.0|1402"
+      ],
+      "value": "v0:test-key:1:W8r_v8DzqOippQF5DUZiyhr_iwyRQk3NTa_sQLF8aM0"
+    },
+    {
+      "id": "questionnaire-extraction-host-snapshot",
+      "identityKind": "device-snapshot",
+      "components": [
+        "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "e0:6f9d1c4a-2b7e-4f18-9c33-5a1d0e7b2c48:1",
+        "host",
+        "iPhone17,1|26.0"
+      ],
+      "value": "v0:test-key:1:Bjx_NBNO2-QhII9c1M5mcLUUOJRB0YSTXbg68kkTDdc"
     }
   ],
   "invalidIdentities": [
