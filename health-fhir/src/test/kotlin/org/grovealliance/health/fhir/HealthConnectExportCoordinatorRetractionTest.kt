@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -18,6 +18,8 @@ import org.hl7.fhir.r4.model.Provenance
 import org.junit.Test
 import java.time.Instant
 import java.time.ZoneOffset
+
+private const val ALTERNATE_CONVERSION_CONTRACT_MARKER = "v0-alternate"
 
 class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordinatorTestSupport() {
     @Test
@@ -262,7 +264,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         firstCoordinator.delete("StepsRecord", "reactivated", conversionTime.plusSeconds(1))
         val nextScope = testSynchronizationScope(
             repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
-            configurationFingerprint = "expanded-filter-revision",
+            configurationFingerprint = "expanded-filter",
         )
         val nextCoordinator = HealthConnectExportCoordinator(
             HealthConnectConverter(fhirContext(), nextScope),
@@ -280,7 +282,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
     }
 
     @Test
-    fun `adapter contract version changes projection scope and baseline re-encodes unchanged source`() = runTest {
+    fun `contract marker changes projection scope and baseline re-encodes unchanged source`() = runTest {
         val journal = InMemoryJournal()
         val sink = RecordingSink()
         val record = stepRecord("contract-upgrade")
@@ -288,8 +290,8 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         initialCoordinator.reconcile("StepsRecord", { conversionTime }) { listOf(record) }
         val upgradedScope = testSynchronizationScope(
             repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
-            configurationFingerprint = "all-supported-records-v1",
-            conversionContractVersion = "health-connect-r4-revision-test",
+            configurationFingerprint = "all-supported-records",
+            conversionContractMarker = ALTERNATE_CONVERSION_CONTRACT_MARKER,
         )
         val upgradedCoordinator = HealthConnectExportCoordinator(
             HealthConnectConverter(fhirContext(), upgradedScope),
@@ -310,7 +312,8 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         ).inOrder()
         val migrated = requireNotNull(journal.entry("StepsRecord", "contract-upgrade"))
         assertThat(migrated.projectionScopeKey).isEqualTo(upgradedScope.projectionScopeKey)
-        assertThat(migrated.conversionContractVersion).isEqualTo("health-connect-r4-revision-test")
+        assertThat(migrated.conversionContractMarker)
+            .isEqualTo(ALTERNATE_CONVERSION_CONTRACT_MARKER)
     }
 
     @Test
@@ -319,7 +322,7 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         val record = stepRecord("identity-upgrade")
         val oldScope = testSynchronizationScope(
             repositoryScope = "86f286c0-ec67-40d9-901d-264f2e1c627e",
-            configurationFingerprint = "all-supported-records-v1",
+            configurationFingerprint = "all-supported-records",
         )
         val oldConversion = HealthConnectConverter(fhirContext(), oldScope)
             .convert(record, conversionTime, EventSequence("99"))
@@ -332,9 +335,8 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
                     healthConnectId = record.metadata.id,
                     dataOriginPackage = record.metadata.dataOrigin.packageName,
                     sourceLastModified = oldConversion.sourceLastModified,
-                    conversionContractVersion = oldConversion.conversionContractVersion,
+                    conversionContractMarker = oldConversion.conversionContractMarker,
                     sourceRecordIdentifier = oldConversion.sourceRecordIdentifier.copy(),
-                    observations = oldConversion.observations.map { it.copy() },
                     bundle = oldConversion.bundle.copy(),
                     destinationReferences = oldConversion.outputIdentifiers.associate {
                         it.key() to "Resource/old-${it.value}"
@@ -346,8 +348,8 @@ class HealthConnectExportCoordinatorRetractionTest : HealthConnectExportCoordina
         val sink = RecordingSink()
         val upgradedScope = testSynchronizationScope(
             repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
-            configurationFingerprint = "all-supported-records-v1",
-            conversionContractVersion = "health-connect-r4-revision-test",
+            configurationFingerprint = "all-supported-records",
+            conversionContractMarker = ALTERNATE_CONVERSION_CONTRACT_MARKER,
         )
         val coordinator = HealthConnectExportCoordinator(
             HealthConnectConverter(fhirContext(), upgradedScope),

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -243,8 +243,20 @@ internal interface RoomHealthConnectExportDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertUnmatchedDeletion(deletion: RoomHealthConnectUnmatchedDeletion): Long
 
+    @Query(
+        "SELECT * FROM health_connect_unmatched_deletions " +
+            "WHERE repositoryScopeKey = :scope AND recordType = :recordType ORDER BY healthConnectId",
+    )
+    suspend fun unmatchedDeletions(scope: String, recordType: String): List<RoomHealthConnectUnmatchedDeletion>
+
     @Upsert
     suspend fun upsertRejectedRecord(rejected: RoomHealthConnectRejectedRecord)
+
+    @Query(
+        "SELECT * FROM health_connect_rejected_records " +
+            "WHERE repositoryScopeKey = :scope AND recordType = :recordType ORDER BY healthConnectId",
+    )
+    suspend fun rejectedRecords(scope: String, recordType: String): List<RoomHealthConnectRejectedRecord>
 }
 
 @Database(

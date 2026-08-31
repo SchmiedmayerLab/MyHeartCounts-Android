@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -28,14 +28,12 @@ data class RoomHealthConnectJournalOptions(
     val unavailableLeaseRetryDelay: Duration = Duration.ofMillis(DEFAULT_RETRY_MILLIS),
 ) {
     init {
-        require(!leaseDuration.isZero && !leaseDuration.isNegative) {
-            "The journal lease duration must be positive."
-        }
         require(!unavailableLeaseRetryDelay.isZero && !unavailableLeaseRetryDelay.isNegative) {
             "The unavailable-lease retry delay must be positive."
         }
-        require(leaseDuration.toMillis() >= MINIMUM_LEASE_MILLIS) {
-            "The journal lease duration must be at least $MINIMUM_LEASE_MILLIS milliseconds."
+        require(leaseDuration.toMillis() in MINIMUM_LEASE_MILLIS..MAXIMUM_LEASE_MILLIS) {
+            "The journal lease duration must be between $MINIMUM_LEASE_MILLIS and " +
+                "$MAXIMUM_LEASE_MILLIS milliseconds."
         }
     }
 
@@ -47,6 +45,7 @@ data class RoomHealthConnectJournalOptions(
         const val DEFAULT_LEASE_SECONDS = 30L
         const val DEFAULT_RETRY_MILLIS = 50L
         const val MINIMUM_LEASE_MILLIS = 30L
+        const val MAXIMUM_LEASE_MILLIS = 3_600_000L
         const val RENEWAL_DIVISOR = 3L
     }
 }
@@ -164,15 +163,11 @@ class RoomHealthConnectExportJournal private constructor(
     override suspend fun complete(
         lease: HealthConnectSourceTransitionLease,
         pending: HealthConnectPendingExport,
-        entry: HealthConnectExportJournalEntry,
+        destinationReferences: Map<FhirIdentifierKey, String>,
     ) = database.withTransaction {
         requireSourceLeaseLocked(lease)
         requireSourceMatchesLease(pending.repositoryScopeKey, pending.recordType, pending.healthConnectId, lease)
-        requireSourceMatchesLease(entry.repositoryScopeKey, entry.recordType, entry.healthConnectId, lease)
-        val expectedEntry = pending.acknowledgedEntry(entry.destinationReferences)
-        check(expectedEntry.revision == entry.revision) {
-            "Completion must be derived from the exact validated pending payload."
-        }
+        val entry = pending.acknowledgedEntry(destinationReferences)
         val storedPendingRow = dao.pending(
             lease.repositoryScopeKey.value,
             lease.recordType,
@@ -204,7 +199,7 @@ class RoomHealthConnectExportJournal private constructor(
     ) = database.withTransaction {
         requireSourceLeaseLocked(lease)
         requireSourceMatchesLease(entry.repositoryScopeKey, entry.recordType, entry.healthConnectId, lease)
-        check(entry.outputIdentifiers.isEmpty()) {
+        check(!entry.hasActiveOutputs) {
             "A local-only transition cannot bypass delivery of active or retraction outputs."
         }
         check(dao.pending(lease.repositoryScopeKey.value, lease.recordType, lease.healthConnectId) == null) {
@@ -455,8 +450,7 @@ class RoomHealthConnectExportJournal private constructor(
             ?.revision
             ?.let(::HealthConnectJournalRevision)
 
-    private fun leaseExpiry(now: Long): Long =
-        runCatching { Math.addExact(now, options.leaseMillis) }.getOrElse { Long.MAX_VALUE }
+    private fun leaseExpiry(now: Long): Long = now + options.leaseMillis
 
     private suspend fun <L, T> runRenewableLease(
         lease: L,
@@ -586,7 +580,7 @@ private fun requireSourceMatchesLease(
     ) { "Journal state must identify the exact source-transition lease." }
 }
 
-private fun HealthConnectPendingExport.sameExactEvent(other: HealthConnectPendingExport): Boolean =
+internal fun HealthConnectPendingExport.sameExactEvent(other: HealthConnectPendingExport): Boolean =
     eventSequence == other.eventSequence &&
         baseRevision == other.baseRevision &&
         repositoryScopeKey == other.repositoryScopeKey &&
@@ -605,38 +599,20 @@ private fun RoomHealthConnectReconciliationLease?.isCurrentOwner(
     expectedFence: String,
     expectedOwner: String,
     now: Long,
-): Boolean {
-    if (this == null) return false
-    return listOf(
-        fence == expectedFence,
-        owner == expectedOwner,
-        expiresAtEpochMillis > now,
-    ).all { it }
-}
+): Boolean = this != null && fence == expectedFence && owner == expectedOwner && expiresAtEpochMillis > now
 
 private fun RoomHealthConnectSourceLease?.isCurrentOwner(
     lease: HealthConnectSourceTransitionLease,
     expectedOwner: String,
     now: Long,
 ): Boolean {
-    if (this == null) return false
-    return listOf(
-        owner == expectedOwner,
-        fence == lease.fence.value,
-        reconciliationFence == lease.reconciliationFence?.value,
-        expiresAtEpochMillis > now,
-    ).all { it }
+    if (this == null || owner != expectedOwner) return false
+    if (reconciliationFence != lease.reconciliationFence?.value) return false
+    return fence == lease.fence.value && expiresAtEpochMillis > now
 }
 
 private fun RoomHealthConnectReconciliationLease?.isCurrentOwner(
     lease: HealthConnectReconciliationLease,
     expectedOwner: String,
     now: Long,
-): Boolean {
-    if (this == null) return false
-    return listOf(
-        owner == expectedOwner,
-        fence == lease.fence.value,
-        expiresAtEpochMillis > now,
-    ).all { it }
-}
+): Boolean = isCurrentOwner(lease.fence.value, expectedOwner, now)

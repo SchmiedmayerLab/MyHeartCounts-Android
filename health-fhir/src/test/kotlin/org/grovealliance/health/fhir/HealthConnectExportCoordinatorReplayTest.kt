@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -290,14 +290,29 @@ class HealthConnectExportCoordinatorReplayTest : HealthConnectExportCoordinatorT
         val pending = requireNotNull(journal.pending("StepsRecord", "corrupt-pending"))
 
         val failure = runCatching {
-            pending.copy(bundle = pending.bundle.copy().apply { id = "different-bundle" })
+            HealthConnectPendingExport(
+                eventSequence = pending.eventSequence,
+                baseRevision = pending.baseRevision,
+                repositoryScopeKey = pending.repositoryScopeKey,
+                projectionScopeKey = pending.projectionScopeKey,
+                operation = pending.operation,
+                recordType = pending.recordType,
+                healthConnectId = pending.healthConnectId,
+                sourceRecordIdentifier = pending.sourceRecordIdentifier,
+                sourceVersion = pending.sourceVersion,
+                bundle = pending.bundle.apply { id = "different-bundle" },
+                bundleJson = pending.bundleJson,
+                payloadSha256 = pending.payloadSha256,
+                retractedTargets = pending.retractedTargets,
+                nextEntry = pending.nextEntry,
+            )
         }.exceptionOrNull()
 
         assertThat(failure).isInstanceOf(IllegalArgumentException::class.java)
     }
 
     @Test
-    fun `hydrated journal entry rejects a missing selected output identity`() {
+    fun `the export boundary rejects a missing selected output identity`() {
         val record = stepRecord("corrupt-journal-entry")
         val conversion = converter.convert(record, conversionTime, EventSequence("1"))
         val corruptedBundle = conversion.bundle.copy().apply {
@@ -305,21 +320,17 @@ class HealthConnectExportCoordinatorReplayTest : HealthConnectExportCoordinatorT
                 it.url == GroveExchangeIdentity.ENTRY_IDENTIFIER_EXTENSION
             }
         }
+        val bundleJson = HealthConnectWireFormat.bundleJson(corruptedBundle)
 
         val failure = runCatching {
-            HealthConnectExportJournalEntry(
-                repositoryScopeKey = synchronizationScope.repositoryScopeKey,
-                projectionScopeKey = synchronizationScope.projectionScopeKey,
-                recordType = conversion.sourceRecordType,
-                healthConnectId = record.metadata.id,
-                dataOriginPackage = record.metadata.dataOrigin.packageName,
-                sourceLastModified = conversion.sourceLastModified,
-                conversionContractVersion = conversion.conversionContractVersion,
+            HealthConnectExportBatch(
+                eventSequence = EventSequence("1"),
+                operation = HealthConnectExportOperation.ACTIVE,
                 sourceRecordIdentifier = conversion.sourceRecordIdentifier,
-                observations = conversion.observations,
+                sourceVersion = conversion.sourceLastModified,
                 bundle = corruptedBundle,
-                destinationReferences = emptyMap(),
-                lastEventSequence = EventSequence("1"),
+                bundleJson = bundleJson,
+                payloadSha256 = HealthConnectWireFormat.sha256(bundleJson),
             )
         }.exceptionOrNull()
 

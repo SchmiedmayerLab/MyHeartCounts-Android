@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -7,12 +7,9 @@
 
 package org.grovealliance.health.fhir
 
-import org.hl7.fhir.r4.formats.IParser
-import org.hl7.fhir.r4.formats.JsonParser
 import org.hl7.fhir.r4.model.Bundle
 import org.hl7.fhir.r4.model.Identifier
 import org.hl7.fhir.r4.model.Observation
-import org.hl7.fhir.r4.model.Parameters
 import org.hl7.fhir.r4.model.Provenance
 import java.time.Instant
 
@@ -115,13 +112,15 @@ interface HealthConnectExportJournal {
     ): HealthConnectPendingExport
 
     /**
-     * Atomically stores [entry] and removes the exact [pending] outbox event with fence and base-state CAS.
-     * Repeating completion for the same event and exact resulting revision is a successful no-op.
+     * Atomically stores the acknowledged state for [pending] and removes that exact outbox event
+     * under fence and base-state CAS. Repeating completion for the same event and exact resulting
+     * revision is a successful no-op. The resulting entry is derived from [pending], so a
+     * caller-supplied entry cannot disagree with the payload the sink acknowledged.
      */
     suspend fun complete(
         lease: HealthConnectSourceTransitionLease,
         pending: HealthConnectPendingExport,
-        entry: HealthConnectExportJournalEntry,
+        destinationReferences: Map<FhirIdentifierKey, String>,
     )
 
     /**
@@ -170,9 +169,8 @@ class HealthConnectExportJournalEntry(
     val healthConnectId: String,
     val dataOriginPackage: String,
     val sourceLastModified: Instant,
-    val conversionContractVersion: String,
+    val conversionContractMarker: String,
     sourceRecordIdentifier: Identifier,
-    observations: List<Observation>,
     bundle: Bundle,
     destinationReferences: Map<FhirIdentifierKey, String>,
     val lastEventSequence: EventSequence? = null,
@@ -180,8 +178,9 @@ class HealthConnectExportJournalEntry(
     val invalidatedAt: Instant? = null,
 ) {
     private val sourceRecordIdentifierSnapshot = sourceRecordIdentifier.copy()
-    private val observationSnapshots = observations.map(Observation::copy)
     private val bundleSnapshot = bundle.copy()
+    private val observationSnapshots = bundleSnapshot.entry.mapNotNull { it.resource as? Observation }
+    private val outputIdentifierSnapshots = bundleSnapshot.groveOutputIdentifiers()
     private val destinationReferenceSnapshot = destinationReferences.toMap()
 
     init {
@@ -189,7 +188,9 @@ class HealthConnectExportJournalEntry(
         require(healthConnectId.isNotBlank()) { "The Health Connect id must not be blank." }
         require(dataOriginPackage.isNotBlank()) { "The data-origin package must not be blank." }
         GroveUnicode.requireScalarText(dataOriginPackage, "Journal data-origin package")
-        require(conversionContractVersion.isNotBlank()) { "The conversion-contract version must not be blank." }
+        require(conversionContractMarker.isNotBlank()) {
+            "The conversion-contract marker must not be blank."
+        }
         require(
             sourceRecordIdentifierSnapshot.hasSystem() && sourceRecordIdentifierSnapshot.hasValue() &&
                 sourceRecordIdentifierSnapshot.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD),
@@ -199,36 +200,14 @@ class HealthConnectExportJournalEntry(
         sourceRecordIdentifierSnapshot.key()
         require(
             observationSnapshots.all { observation ->
-                observation.identifier.count {
-                    it.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD) && it.hasSystem() && it.hasValue()
-                } == 1 &&
-                    observation.identifier.count {
-                        it.hasGroveRole(GroveIdentifierRole.SOURCE_OUTPUT) && it.hasSystem() && it.hasValue()
-                    } == 1
-            },
-        ) { "The journal must retain a complete snapshot of every derived Observation." }
-        require(
-            observationSnapshots.all { observation ->
-                observation.identifier.single { it.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD) }
-                    .equalsDeep(sourceRecordIdentifierSnapshot)
+                observation.identifier.singleOrNull {
+                    it.hasGroveRole(GroveIdentifierRole.SOURCE_RECORD)
+                }?.equalsDeep(sourceRecordIdentifierSnapshot) == true
             },
         ) { "Every journal Observation must identify the entry's exact source Record." }
         require(bundleSnapshot.type == Bundle.BundleType.COLLECTION) {
             "The journal must retain the complete collection Bundle for replay and invalidation."
         }
-        bundleSnapshot.requireGroveEntryIdentitySelection()
-        bundleSnapshot.requireGroveReferencePolicy()
-        val retainedOutputIdentifiers = bundleSnapshot.groveOutputIdentifiers()
-        if (state == HealthConnectExportState.ACTIVE && retainedOutputIdentifiers.isNotEmpty()) {
-            bundleSnapshot.requireGroveActiveExchangeContract(sourceRecordIdentifierSnapshot)
-        }
-        val bundledObservations = bundleSnapshot.entry.mapNotNull { it.resource as? Observation }
-        require(
-            bundledObservations.size == observationSnapshots.size &&
-                bundledObservations.sortedBy(::journalObservationKey)
-                    .zip(observationSnapshots.sortedBy(::journalObservationKey))
-                    .all { (bundled, retained) -> bundled.equalsDeep(retained) },
-        ) { "The journal Observation snapshot must exactly match its retained Bundle." }
         val lifecycleSources = bundleSnapshot.entry
             .mapNotNull { it.resource as? Provenance }
             .flatMap(Provenance::getEntity)
@@ -239,14 +218,14 @@ class HealthConnectExportJournalEntry(
         val hasExactLifecycleSource = lifecycleSources.size == 1 &&
             lifecycleSources.single().equalsDeep(sourceRecordIdentifierSnapshot)
         require(
-            (lifecycleSources.isEmpty() && bundleSnapshot.groveOutputIdentifiers().isEmpty()) ||
+            (lifecycleSources.isEmpty() && outputIdentifierSnapshots.isEmpty()) ||
                 hasExactLifecycleSource,
         ) {
             "A journal lifecycle source Identifier must exactly match its source state; only local zero-output state omits it."
         }
         require(
             destinationReferenceSnapshot.isEmpty() ||
-                destinationReferenceSnapshot.keys == retainedOutputIdentifiers.map(Identifier::key).toSet(),
+                destinationReferenceSnapshot.keys == outputIdentifierSnapshots.map(Identifier::key).toSet(),
         ) {
             "A completed journal entry must retain one destination reference for every output identifier."
         }
@@ -270,14 +249,25 @@ class HealthConnectExportJournalEntry(
     val destinationReferences: Map<FhirIdentifierKey, String>
         get() = destinationReferenceSnapshot.toMap()
 
-    val observationIdentifiers: List<Identifier>
-        get() = observationSnapshots.map { observation -> observationIdentity(observation).copy() }
-
     val outputIdentifiers: List<Identifier>
-        get() = bundleSnapshot.groveOutputIdentifiers().map(Identifier::copy)
+        get() = outputIdentifierSnapshots.map(Identifier::copy)
 
+    /** Non-copying module-internal views for comparisons that never retain the graph. */
+    internal val outputIdentifierKeys: Set<FhirIdentifierKey>
+        get() = outputIdentifierSnapshots.mapTo(mutableSetOf(), Identifier::key)
+
+    internal val hasActiveOutputs: Boolean
+        get() = outputIdentifierSnapshots.isNotEmpty()
+
+    internal val observationViews: List<Observation>
+        get() = observationSnapshots
+
+    internal val bundleView: Bundle
+        get() = bundleSnapshot
+
+    // The `v0` tag versions this local revision-digest format, not the Grove exchange protocol.
     val revision: HealthConnectJournalRevision = HealthConnectJournalRevision(
-        "v1:${HealthConnectWireFormat.sha256(GroveExchangeProtocol.frameFields(revisionFields()))}",
+        "v0:${HealthConnectWireFormat.sha256(GroveExchangeProtocol.frameFields(revisionFields()))}",
     )
 
     @Suppress("LongParameterList")
@@ -288,9 +278,8 @@ class HealthConnectExportJournalEntry(
         healthConnectId: String = this.healthConnectId,
         dataOriginPackage: String = this.dataOriginPackage,
         sourceLastModified: Instant = this.sourceLastModified,
-        conversionContractVersion: String = this.conversionContractVersion,
+        conversionContractMarker: String = this.conversionContractMarker,
         sourceRecordIdentifier: Identifier = this.sourceRecordIdentifier,
-        observations: List<Observation> = this.observations,
         bundle: Bundle = this.bundle,
         destinationReferences: Map<FhirIdentifierKey, String> = this.destinationReferences,
         lastEventSequence: EventSequence? = this.lastEventSequence,
@@ -303,9 +292,8 @@ class HealthConnectExportJournalEntry(
         healthConnectId,
         dataOriginPackage,
         sourceLastModified,
-        conversionContractVersion,
+        conversionContractMarker,
         sourceRecordIdentifier,
-        observations,
         bundle,
         destinationReferences,
         lastEventSequence,
@@ -320,8 +308,8 @@ class HealthConnectExportJournalEntry(
         add(healthConnectId)
         add(dataOriginPackage)
         add(HealthConnectWireFormat.sourceVersion(sourceLastModified))
-        add(conversionContractVersion)
-        add(journalIdentifierJson(sourceRecordIdentifierSnapshot))
+        add(conversionContractMarker)
+        add(identifierJson(sourceRecordIdentifierSnapshot))
         add(HealthConnectWireFormat.bundleJson(bundleSnapshot))
         destinationReferenceSnapshot.toSortedMap().forEach { (identifier, reference) ->
             add(identifier.system)
@@ -398,18 +386,6 @@ class HealthConnectPendingExportDraft(
         require(bundleSnapshot.type == Bundle.BundleType.COLLECTION && bundleSnapshot.entry.isNotEmpty()) {
             "A pending export must retain a complete non-empty collection Bundle."
         }
-        requirePendingTransition(
-            repositoryScopeKey,
-            projectionScopeKey,
-            operation,
-            recordType,
-            healthConnectId,
-            sourceRecordIdentifierSnapshot,
-            sourceVersion,
-            bundleSnapshot,
-            retractedTargetSnapshot,
-            nextEntrySnapshot,
-        )
     }
 }
 
@@ -457,10 +433,6 @@ class HealthConnectPendingExport(
         require(payloadSha256 == HealthConnectWireFormat.sha256(bundleJson)) {
             "The stored outbox checksum must match its exact UTF-8 Bundle JSON."
         }
-        val parsedBundle = runCatching { JsonParser().parse(bundleJson) as? Bundle }.getOrNull()
-        require(parsedBundle != null && parsedBundle.equalsDeep(bundleSnapshot)) {
-            "The stored outbox Bundle must exactly match its authoritative JSON payload."
-        }
         requirePendingTransition(
             repositoryScopeKey,
             projectionScopeKey,
@@ -493,8 +465,7 @@ class HealthConnectPendingExport(
         val next = nextEntrySnapshot
         val acknowledged = when (next.state) {
             HealthConnectExportState.ACTIVE -> {
-                val expected = next.outputIdentifiers.map(Identifier::key).toSet()
-                require(destinationReferences.keys == expected) {
+                require(destinationReferences.keys == next.outputIdentifierKeys) {
                     "The sink must acknowledge one destination reference for every active output."
                 }
                 next.copy(destinationReferences = destinationReferences)
@@ -509,39 +480,6 @@ class HealthConnectPendingExport(
         }
         return acknowledged.copy(lastEventSequence = eventSequence)
     }
-
-    @Suppress("LongParameterList")
-    fun copy(
-        eventSequence: EventSequence = this.eventSequence,
-        baseRevision: HealthConnectJournalRevision? = this.baseRevision,
-        repositoryScopeKey: ScopeKey = this.repositoryScopeKey,
-        projectionScopeKey: ScopeKey = this.projectionScopeKey,
-        operation: HealthConnectExportOperation = this.operation,
-        recordType: String = this.recordType,
-        healthConnectId: String = this.healthConnectId,
-        sourceRecordIdentifier: Identifier = this.sourceRecordIdentifier,
-        sourceVersion: Instant = this.sourceVersion,
-        bundle: Bundle = this.bundle,
-        bundleJson: String = this.bundleJson,
-        payloadSha256: String = this.payloadSha256,
-        retractedTargets: Set<HealthConnectRetractionTarget> = this.retractedTargets,
-        nextEntry: HealthConnectExportJournalEntry = this.nextEntry,
-    ): HealthConnectPendingExport = HealthConnectPendingExport(
-        eventSequence,
-        baseRevision,
-        repositoryScopeKey,
-        projectionScopeKey,
-        operation,
-        recordType,
-        healthConnectId,
-        sourceRecordIdentifier,
-        sourceVersion,
-        bundle,
-        bundleJson,
-        payloadSha256,
-        retractedTargets,
-        nextEntry,
-    )
 }
 
 @Suppress("LongParameterList")
@@ -565,7 +503,7 @@ private fun requirePendingTransition(
             nextEntry.sourceLastModified == sourceVersion &&
             nextEntry.sourceRecordIdentifier.equalsDeep(sourceRecordIdentifier),
     ) { "The pending transition and its next journal entry must identify the exact same source state." }
-    require(nextEntry.bundle.equalsDeep(bundle)) {
+    require(nextEntry.bundleView.equalsDeep(bundle)) {
         "The pending transition's next journal entry must retain its exact acknowledged Bundle."
     }
     require(nextEntry.destinationReferences.isEmpty()) {
@@ -578,24 +516,11 @@ private fun requirePendingTransition(
         ) { "An active pending transition must produce active state without retraction targets." }
         HealthConnectExportOperation.RETRACTION -> require(
             nextEntry.state == HealthConnectExportState.INVALIDATED &&
-                nextEntry.invalidatedAt != null && nextEntry.observations.isEmpty() &&
+                nextEntry.invalidatedAt != null && nextEntry.observationViews.isEmpty() &&
                 retractedTargets.isNotEmpty(),
         ) { "A retraction pending transition must produce invalidated state and exact targets." }
     }
 }
-
-private fun journalObservationKey(observation: Observation): FhirIdentifierKey =
-    observationIdentity(observation).key()
-
-private fun journalIdentifierJson(identifier: Identifier): String =
-    JsonParser().setOutputStyle(IParser.OutputStyle.NORMAL).composeString(
-        Parameters().apply {
-            addParameter().apply {
-                name = "identifier"
-                value = identifier.copy()
-            }
-        },
-    )
 
 /** A Health Connect deletion for a record this journal never exported, retained for audit. */
 data class HealthConnectUnmatchedDeletion(
@@ -641,10 +566,10 @@ data class HealthConnectRejectedRecord(
 }
 
 /**
- * Raised when the journal holds entries written under a different conversion contract version.
+ * Raised when a record inside this projection scope no longer maps to its journalled source identity.
  *
- * Re-exporting under a new contract is a deployment decision, so the producer stops rather than
- * silently mixing two contract versions in one destination.
+ * Re-exporting under a changed identity contract is a deployment decision, so the producer stops
+ * rather than silently mixing two contract projections in one destination.
  */
 class HealthConnectConversionContractMigrationRequired(recordType: String) :
     IllegalStateException(

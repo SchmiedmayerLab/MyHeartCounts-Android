@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -43,7 +43,6 @@ internal class HealthConnectPendingExportDelivery(
                 retractedTargets = targets,
                 nextEntry = prior.copy(
                     projectionScopeKey = synchronizationScope.projectionScopeKey,
-                    observations = emptyList(),
                     bundle = retractionBundle.copy(),
                     destinationReferences = emptyMap(),
                     state = HealthConnectExportState.INVALIDATED,
@@ -62,7 +61,6 @@ internal class HealthConnectPendingExportDelivery(
         lease: HealthConnectSourceTransitionLease,
     ) {
         val acknowledgement = sink.apply(pending.batch())
-        val completedEntry = pending.acknowledgedEntry(acknowledgement.destinationReferences)
-        journal.complete(lease, pending, completedEntry)
+        journal.complete(lease, pending, acknowledgement.destinationReferences)
     }
 }

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -20,11 +20,17 @@ import org.hl7.fhir.r4.formats.IParser
 import org.hl7.fhir.r4.formats.JsonParser
 import org.hl7.fhir.r4.model.Bundle
 import org.hl7.fhir.r4.model.Identifier
-import org.hl7.fhir.r4.model.Observation
 import org.hl7.fhir.r4.model.Parameters
 import java.time.Instant
 
-/** Lossless storage codec for Room rows; the pending Bundle JSON remains the authoritative wire bytes. */
+/**
+ * Lossless storage codec for Room rows; the pending Bundle JSON remains the authoritative wire bytes.
+ *
+ * The composed JSON is invisible to the exported Room schema, so the Room schema version doubles as
+ * this blob's format version: any field added, renamed, or removed below requires a schema bump and
+ * a migration that rewrites every stored row. Version 1 has never shipped, so the fields it names
+ * are still free to move without one.
+ */
 internal object RoomHealthConnectJournalCodec {
     private val json = Json {
         ignoreUnknownKeys = false
@@ -83,7 +89,7 @@ internal object RoomHealthConnectJournalCodec {
         put("healthConnectId", JsonPrimitive(entry.healthConnectId))
         put("dataOriginPackage", JsonPrimitive(entry.dataOriginPackage))
         put("sourceLastModified", JsonPrimitive(entry.sourceLastModified.toString()))
-        put("conversionContractVersion", JsonPrimitive(entry.conversionContractVersion))
+        put("conversionContractMarker", JsonPrimitive(entry.conversionContractMarker))
         put("sourceRecordIdentifier", JsonPrimitive(identifierJson(entry.sourceRecordIdentifier)))
         put("bundleJson", JsonPrimitive(HealthConnectWireFormat.bundleJson(entry.bundle)))
         put("destinationReferences", destinationReferencesJson(entry.destinationReferences))
@@ -101,9 +107,8 @@ internal object RoomHealthConnectJournalCodec {
             healthConnectId = value.string("healthConnectId"),
             dataOriginPackage = value.string("dataOriginPackage"),
             sourceLastModified = Instant.parse(value.string("sourceLastModified")),
-            conversionContractVersion = value.string("conversionContractVersion"),
+            conversionContractMarker = value.string("conversionContractMarker"),
             sourceRecordIdentifier = parseIdentifier(value.string("sourceRecordIdentifier")),
-            observations = bundle.entry.mapNotNull { it.resource as? Observation },
             bundle = bundle,
             destinationReferences = parseDestinationReferences(value.array("destinationReferences")),
             lastEventSequence = value.nullableString("lastEventSequence")?.let(::EventSequence),
@@ -153,14 +158,18 @@ internal object RoomHealthConnectJournalCodec {
         val item = element.jsonObject
         HealthConnectRetractionTarget(
             identifier = FhirIdentifierKey(item.string("system"), item.string("value")),
-            identifierRole = GroveIdentifierRole.entries.single { it.code == item.string("identifierRole") },
             resourceType = item.string("resourceType"),
             role = HealthConnectRetractionTargetRole.entries.single { it.code == item.string("role") },
-        )
+        ).also {
+            check(it.identifierRole.code == item.string("identifierRole")) {
+                "A stored retraction target names an Identifier role its target role cannot carry."
+            }
+        }
     }.toSet()
 }
 
-private fun identifierJson(identifier: Identifier): String =
+/** The exact framing the journal revision digest also encodes, so both stay one representation. */
+internal fun identifierJson(identifier: Identifier): String =
     JsonParser().setOutputStyle(IParser.OutputStyle.NORMAL).composeString(
         Parameters().apply {
             addParameter().apply {

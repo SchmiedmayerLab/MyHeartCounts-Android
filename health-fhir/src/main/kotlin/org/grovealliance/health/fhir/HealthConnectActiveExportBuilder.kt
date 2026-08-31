@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -41,9 +41,8 @@ internal class HealthConnectActiveExportBuilder(
         healthConnectId = record.metadata.id,
         dataOriginPackage = record.metadata.dataOrigin.packageName,
         sourceLastModified = conversion.sourceLastModified,
-        conversionContractVersion = conversion.conversionContractVersion,
+        conversionContractMarker = conversion.conversionContractMarker,
         sourceRecordIdentifier = conversion.sourceRecordIdentifier.copy(),
-        observations = conversion.observations.map { it.copy() },
         bundle = conversion.bundle.copy(),
         destinationReferences = emptyMap(),
         lastEventSequence = prior?.lastEventSequence,

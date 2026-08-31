@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -20,18 +20,21 @@ import java.time.Instant
 /** One prior logical output named by a retraction assertion. */
 data class HealthConnectRetractionTarget(
     val identifier: FhirIdentifierKey,
-    val identifierRole: GroveIdentifierRole,
     val resourceType: String,
     val role: HealthConnectRetractionTargetRole,
 ) {
+    /** The catalog admits exactly one Identifier role per target role, so it is derived, not passed. */
+    val identifierRole: GroveIdentifierRole
+        get() = HealthConnectContract.retractionTargetClaims.getValue(role).identifierRole
+
     init {
         require(resourceType.matches(Regex("[A-Z][A-Za-z0-9]+"))) {
             "A retraction target requires its exact FHIR resource type."
         }
         val claim = HealthConnectContract.retractionTargetClaims.getValue(role)
-        require(identifierRole == claim.identifierRole && resourceType in claim.resourceTypes) {
-            "${role.code} requires Identifier role ${claim.identifierRole.code} and one of " +
-                "${claim.resourceTypes.sorted().joinToString()}; received ${identifierRole.code}/$resourceType."
+        require(resourceType in claim.resourceTypes) {
+            "${role.code} requires one of ${claim.resourceTypes.sorted().joinToString()}; " +
+                "received $resourceType."
         }
     }
 }
@@ -92,7 +95,7 @@ class HealthConnectExportBatch(
         require(
             bundleSnapshot.identifier.hasSystem() && bundleSnapshot.identifier.hasValue() &&
                 bundleSnapshot.identifier.hasGroveRole(GroveIdentifierRole.EVENT) &&
-                EVENT_IDENTIFIER_VALUE.matches(bundleSnapshot.identifier.value) &&
+                HealthConnectIdentity.EVENT_IDENTITY_VALUE.matches(bundleSnapshot.identifier.value) &&
                 bundleSnapshot.identifier.value.substringAfterLast(':') == eventSequence.value,
         ) { "An export batch event Identifier must contain its exact allocated sequence." }
         require(bundleSnapshot.hasTimestampElement()) { "An export batch requires its immutable assembly timestamp." }
@@ -219,11 +222,6 @@ class HealthConnectExportBatch(
         val resourceType: String,
         val targetRole: String?,
     )
-
-    private companion object {
-        val EVENT_IDENTIFIER_VALUE =
-            Regex("""e0:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]*""")
-    }
 }
 
 /** A sink's confirmation that it durably stored the exact serialized event it was given. */
@@ -307,7 +305,7 @@ class HealthConnectExportCoordinator(
         when {
             migrateSourceIdentityIfRequired(record, preview, prior, convertedAt, lease) -> Unit
             prior?.isUnchangedActiveProjection(preview, synchronizationScope.projectionScopeKey) == true -> Unit
-            prior?.state == HealthConnectExportState.ACTIVE && prior.outputIdentifiers.isNotEmpty() -> {
+            prior?.state == HealthConnectExportState.ACTIVE && prior.hasActiveOutputs -> {
                 // A changed immutable source version is a new event. Retract its complete prior
                 // graph before publishing the replacement; active and lifecycle assertions never
                 // share one collection Bundle.
@@ -326,7 +324,6 @@ class HealthConnectExportCoordinator(
         prior: HealthConnectExportJournalEntry?,
         lease: HealthConnectSourceTransitionLease,
     ) {
-        activeExportBuilder.draft(record, preview, prior)
         val pending = journal.stage(lease, prior?.revision) { eventSequence ->
             val conversion = converter.convert(record, convertedAt, eventSequence)
             activeExportBuilder.draft(record, conversion, prior)
@@ -349,7 +346,7 @@ class HealthConnectExportCoordinator(
     ): Boolean {
         if (!prior.requiresSourceIdentityRetirement(conversion, synchronizationScope.projectionScopeKey)) return false
         val priorEntry = requireNotNull(prior)
-        if (priorEntry.state == HealthConnectExportState.ACTIVE && priorEntry.outputIdentifiers.isNotEmpty()) {
+        if (priorEntry.state == HealthConnectExportState.ACTIVE && priorEntry.hasActiveOutputs) {
             pendingDelivery.retract(priorEntry, convertedAt, lease)
         }
         upsert(record, convertedAt, lease)
@@ -363,7 +360,7 @@ class HealthConnectExportCoordinator(
         lease: HealthConnectSourceTransitionLease,
     ): Boolean {
         val hasPriorActiveOutputs = prior?.state == HealthConnectExportState.ACTIVE &&
-            prior.outputIdentifiers.isNotEmpty()
+            prior.hasActiveOutputs
         if (conversion.outputIdentifiers.isNotEmpty() || hasPriorActiveOutputs) return false
         journal.storeLocal(lease, prior?.revision, activeExportBuilder.entry(record, conversion, prior))
         return true
@@ -402,7 +399,7 @@ class HealthConnectExportCoordinator(
         }
         if (prior.state == HealthConnectExportState.INVALIDATED) return
 
-        if (prior.outputIdentifiers.isEmpty()) {
+        if (!prior.hasActiveOutputs) {
             invalidateLocal(prior, invalidatedAt, lease)
             return
         }
@@ -456,17 +453,6 @@ class HealthConnectExportCoordinator(
             }
             require(ordered.map { it.metadata.id }.distinct().size == ordered.size) {
                 "A full reconciliation cannot contain the same Health Connect id twice."
-            }
-
-            // Validate every candidate graph before replaying or publishing any sink event. Typed
-            // record rejections remain source-local and are durably recorded during their later
-            // transition.
-            ordered.forEach { record ->
-                try {
-                    converter.preview(record, convertedAt, null)
-                } catch (_: HealthConnectRecordRejected) {
-                    // The source-local transition below records this exact rejection after preflight.
-                }
             }
 
             journal.pendingForType(reconciliationLease)
@@ -539,8 +525,8 @@ class HealthConnectExportCoordinator(
 }
 
 private fun HealthConnectExportJournalEntry.semanticallyEquals(conversion: HealthConnectConversion): Boolean {
-    val previousObservations = observations.sortedBy(::outputIdentifierKey)
-    val currentObservations = conversion.observations.sortedBy(::outputIdentifierKey)
+    val previousObservations = observationViews.sortedBy(::observationIdentityKey)
+    val currentObservations = conversion.observationViews.sortedBy(::observationIdentityKey)
     if (
         previousObservations.size != currentObservations.size ||
         previousObservations.zip(currentObservations).any { (previous, current) -> !previous.equalsDeep(current) }
@@ -548,10 +534,10 @@ private fun HealthConnectExportJournalEntry.semanticallyEquals(conversion: Healt
         return false
     }
 
-    val previousContext = bundle.entry
+    val previousContext = bundleView.entry
         .filterNot { it.resource is Observation || it.resource is org.hl7.fhir.r4.model.Provenance }
         .associate { it.fullUrl to it.resource }
-    val currentContext = conversion.bundle.entry
+    val currentContext = conversion.bundleView.entry
         .filterNot { it.resource is Observation || it.resource is org.hl7.fhir.r4.model.Provenance }
         .associate { it.fullUrl to it.resource }
     return previousContext.keys == currentContext.keys && previousContext.all { (fullUrl, resource) ->
@@ -577,23 +563,16 @@ private fun HealthConnectExportJournalEntry?.requiresExplicitContractMigration(
 ): Boolean = this != null &&
     state == HealthConnectExportState.ACTIVE &&
     projectionScopeKey == currentProjectionScopeKey &&
-    (
-        conversionContractVersion != conversion.conversionContractVersion ||
-            !sourceRecordIdentifier.sameCompleteIdentifier(conversion.sourceRecordIdentifier)
-        )
+    !sourceRecordIdentifier.matchesIdentifierPair(conversion.sourceRecordIdentifier)
 
 private fun HealthConnectExportJournalEntry?.requiresSourceIdentityRetirement(
     conversion: HealthConnectConversion,
     currentProjectionScopeKey: ScopeKey,
 ): Boolean = this != null &&
     state == HealthConnectExportState.ACTIVE &&
-    outputIdentifiers.isNotEmpty() &&
+    hasActiveOutputs &&
     projectionScopeKey != currentProjectionScopeKey &&
-    !sourceRecordIdentifier.sameCompleteIdentifier(conversion.sourceRecordIdentifier)
+    !sourceRecordIdentifier.matchesIdentifierPair(conversion.sourceRecordIdentifier)
 
-private fun org.hl7.fhir.r4.model.Identifier.sameCompleteIdentifier(
-    other: org.hl7.fhir.r4.model.Identifier,
-): Boolean = system == other.system && value == other.value
-
-private fun outputIdentifierKey(observation: Observation): FhirIdentifierKey =
+private fun observationIdentityKey(observation: Observation): FhirIdentifierKey =
     observationIdentity(observation).key()

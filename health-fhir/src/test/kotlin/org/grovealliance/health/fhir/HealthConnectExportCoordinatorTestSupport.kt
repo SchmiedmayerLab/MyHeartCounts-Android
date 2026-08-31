@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -9,6 +9,7 @@ package org.grovealliance.health.fhir
 
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BasalBodyTemperatureRecord
+import androidx.health.connect.client.records.BasalMetabolicRateRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyTemperatureMeasurementLocation
@@ -23,15 +24,14 @@ import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
-import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
-import androidx.health.connect.client.testing.populatedWithTestValues
 import androidx.health.connect.client.units.BloodGlucose
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Percentage
+import androidx.health.connect.client.units.Power
 import androidx.health.connect.client.units.Pressure
 import androidx.health.connect.client.units.Temperature
 import kotlinx.coroutines.CompletableDeferred
@@ -39,8 +39,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.hl7.fhir.r4.model.Attachment
 import org.hl7.fhir.r4.model.Bundle
-import org.hl7.fhir.r4.model.CodeableConcept
-import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.DocumentReference
 import org.hl7.fhir.r4.model.Enumerations
 import org.hl7.fhir.r4.model.Identifier
@@ -66,7 +64,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
     protected val watch = Device(Device.TYPE_WATCH, "Example Device Company", "Study Watch")
     protected val synchronizationScope = testSynchronizationScope(
         repositoryScope = EXAMPLE_REPOSITORY_SCOPE,
-        configurationFingerprint = "all-supported-records-v1",
+        configurationFingerprint = "all-supported-records",
     )
     protected val converter = HealthConnectConverter(fhirContext(), synchronizationScope)
 
@@ -393,9 +391,8 @@ abstract class HealthConnectExportCoordinatorTestSupport {
             healthConnectId = healthConnectId,
             dataOriginPackage = record.metadata.dataOrigin.packageName,
             sourceLastModified = conversion.sourceLastModified,
-            conversionContractVersion = conversion.conversionContractVersion,
+            conversionContractMarker = conversion.conversionContractMarker,
             sourceRecordIdentifier = sourceIdentifier,
-            observations = emptyList(),
             bundle = bundle,
             destinationReferences = mapOf(outputIdentifier.key() to "DocumentReference/$healthConnectId"),
             lastEventSequence = EventSequence("1"),
@@ -408,6 +405,24 @@ abstract class HealthConnectExportCoordinatorTestSupport {
         endTime = Instant.parse("2026-08-19T17:00:00Z"),
         endZoneOffset = ZoneOffset.ofHours(-7),
         count = count,
+        metadata = metadata(Metadata.autoRecorded(watch), id),
+    )
+
+    /** Tear specimens are outside the admitted glucose sources, so the converter refuses this record. */
+    protected fun tearGlucoseRecord(id: String) = BloodGlucoseRecord(
+        time = Instant.parse("2026-08-19T16:00:00Z"),
+        zoneOffset = ZoneOffset.UTC,
+        metadata = metadata(Metadata.autoRecorded(watch), id),
+        level = BloodGlucose.milligramsPerDeciliter(95.5),
+        specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_TEARS,
+        mealType = MealType.MEAL_TYPE_UNKNOWN,
+        relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_UNKNOWN,
+    )
+
+    protected fun basalMetabolicRateRecord(id: String) = BasalMetabolicRateRecord(
+        time = Instant.parse("2026-08-19T15:45:00Z"),
+        zoneOffset = ZoneOffset.ofHours(-7),
+        basalMetabolicRate = Power.kilocaloriesPerDay(1585.5),
         metadata = metadata(Metadata.autoRecorded(watch), id),
     )
 
@@ -439,12 +454,8 @@ abstract class HealthConnectExportCoordinatorTestSupport {
     protected fun metadata(
         metadata: Metadata,
         id: String,
-        lastModified: Instant = Instant.parse("2026-08-19T17:30:01Z"),
-    ): Metadata = metadata.populatedWithTestValues(
-        id = id,
-        dataOrigin = DataOrigin("com.example.source"),
-        lastModifiedTime = lastModified,
-    )
+        lastModified: Instant = TEST_SOURCE_LAST_MODIFIED,
+    ): Metadata = testMetadata(metadata, id, lastModified)
 
     protected class InMemoryJournal(startingSequence: Long = 1L) : HealthConnectExportJournal {
         private val values = mutableMapOf<Triple<ScopeKey, String, String>, HealthConnectExportJournalEntry>()
@@ -484,7 +495,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
             stateMutex.withLock {
                 pending.values.singleOrNull {
                     it.recordType == recordType && it.healthConnectId == healthConnectId
-                }?.copy()
+                }
             }
 
         suspend fun storeLocal(entry: HealthConnectExportJournalEntry) = stateMutex.withLock {
@@ -504,7 +515,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
                 typeMutexes.getOrPut(typeKey) { Mutex() } to sourceMutexes.getOrPut(sourceKey) { Mutex() }
             }
             return if (reconciliationLease == null) {
-                withSuspendingLock(locks.first) {
+                locks.first.withLock {
                     runSourceTransition(sourceKey, null, locks.second, block)
                 }
             } else {
@@ -522,7 +533,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
         ): T {
             val typeKey = repositoryScopeKey to recordType
             val mutex = stateMutex.withLock { typeMutexes.getOrPut(typeKey) { Mutex() } }
-            return withSuspendingLock(mutex) {
+            return mutex.withLock {
                 val lease = stateMutex.withLock {
                     HealthConnectReconciliationLease(
                         repositoryScopeKey,
@@ -556,14 +567,14 @@ abstract class HealthConnectExportCoordinatorTestSupport {
 
         override suspend fun pending(lease: HealthConnectSourceTransitionLease) = stateMutex.withLock {
             requireSourceLeaseLocked(lease)
-            pending[lease.sourceKey()]?.copy()
+            pending[lease.sourceKey()]
         }
 
         override suspend fun pendingForType(lease: HealthConnectReconciliationLease) = stateMutex.withLock {
             requireReconciliationLeaseLocked(lease, lease.typeKey())
             pending.values.filter {
                 it.repositoryScopeKey == lease.repositoryScopeKey && it.recordType == lease.recordType
-            }.map { it.copy() }
+            }
         }
 
         override suspend fun stage(
@@ -573,7 +584,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
         ): HealthConnectPendingExport = stateMutex.withLock {
             requireSourceLeaseLocked(lease)
             val key = lease.sourceKey()
-            pending[key]?.let { return@withLock it.copy() }
+            pending[key]?.let { return@withLock it }
             check(values[key]?.revision == expectedRevision) { "The journal base revision changed before staging." }
             val eventSequence = EventSequence(nextSequence.toString())
             val draft = buildDraft(eventSequence)
@@ -598,21 +609,18 @@ abstract class HealthConnectExportCoordinatorTestSupport {
             )
             nextSequence += BigInteger.ONE
             pending[key] = stored
-            stored.copy()
+            stored
         }
 
         override suspend fun complete(
             lease: HealthConnectSourceTransitionLease,
             pending: HealthConnectPendingExport,
-            entry: HealthConnectExportJournalEntry,
+            destinationReferences: Map<FhirIdentifierKey, String>,
         ) = stateMutex.withLock {
             requireSourceLeaseLocked(lease)
             val key = lease.sourceKey()
-            check(pending.sourceKey() == key && entry.sourceKey() == key)
-            val expectedEntry = pending.acknowledgedEntry(entry.destinationReferences)
-            check(expectedEntry.revision == entry.revision) {
-                "Completion must be derived from the exact validated pending payload."
-            }
+            check(pending.sourceKey() == key)
+            val entry = pending.acknowledgedEntry(destinationReferences)
             if (loseSourceLeaseBeforeNextComplete) {
                 loseSourceLeaseBeforeNextComplete = false
                 activeSourceFences[key] = allocateFenceLocked()
@@ -645,7 +653,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
             requireSourceLeaseLocked(lease)
             val key = lease.sourceKey()
             check(entry.sourceKey() == key)
-            check(entry.outputIdentifiers.isEmpty())
+            check(!entry.hasActiveOutputs)
             check(pending[key] == null)
             check(values[key]?.revision == expectedRevision) { "The journal base revision changed before local storage." }
             values[key] = entry
@@ -678,7 +686,7 @@ abstract class HealthConnectExportCoordinatorTestSupport {
             reconciliationLease: HealthConnectReconciliationLease?,
             mutex: Mutex,
             block: suspend (HealthConnectSourceTransitionLease) -> T,
-        ): T = withSuspendingLock(mutex) {
+        ): T = mutex.withLock {
             val lease = stateMutex.withLock {
                 reconciliationLease?.let { requireReconciliationLeaseLocked(it, sourceKey.first to sourceKey.second) }
                 HealthConnectSourceTransitionLease(
@@ -695,15 +703,6 @@ abstract class HealthConnectExportCoordinatorTestSupport {
                 stateMutex.withLock {
                     if (activeSourceFences[sourceKey] == lease.fence) activeSourceFences.remove(sourceKey)
                 }
-            }
-        }
-
-        private suspend fun <T> withSuspendingLock(mutex: Mutex, block: suspend () -> T): T {
-            mutex.lock()
-            return try {
-                block()
-            } finally {
-                mutex.unlock()
             }
         }
 
@@ -749,20 +748,6 @@ abstract class HealthConnectExportCoordinatorTestSupport {
 
         private fun HealthConnectRejectedRecord.sourceKey() =
             Triple(repositoryScopeKey, recordType, healthConnectId)
-
-        private fun HealthConnectPendingExport.sameExactEvent(other: HealthConnectPendingExport): Boolean =
-            eventSequence == other.eventSequence &&
-                baseRevision == other.baseRevision &&
-                repositoryScopeKey == other.repositoryScopeKey &&
-                projectionScopeKey == other.projectionScopeKey &&
-                operation == other.operation &&
-                recordType == other.recordType &&
-                healthConnectId == other.healthConnectId &&
-                sourceVersion == other.sourceVersion &&
-                bundleJson == other.bundleJson &&
-                payloadSha256 == other.payloadSha256 &&
-                retractedTargets == other.retractedTargets &&
-                nextEntry.revision == other.nextEntry.revision
     }
 
     protected class RecordingSink : HealthConnectExportSink {
@@ -856,33 +841,9 @@ abstract class HealthConnectExportCoordinatorTestSupport {
         name: String,
         packageName: String,
         version: String? = null,
-    ): HealthConnectBundleResource<FhirDevice> {
-        val entryIdentifier = identifier(HealthConnectContract.ANDROID_PACKAGE_IDENTIFIER, packageName)
-        return HealthConnectBundleResource(
-            entryIdentifier,
-            FhirDevice().apply {
-                meta.addProfile(HealthConnectContract.MOBILE_APPLICATION_DEVICE_PROFILE)
-                addIdentifier(entryIdentifier.copy())
-                addDeviceName().setName(name).setType(FhirDevice.DeviceNameType.USERFRIENDLYNAME)
-                version?.let {
-                    addVersion()
-                        .setType(
-                            CodeableConcept(
-                                Coding(
-                                    HealthConnectContract.MDC,
-                                    HealthConnectContract.APPLICATION_SOFTWARE_VERSION,
-                                    "MDC_ID_PROD_SPEC_SW",
-                                ),
-                            ),
-                        )
-                        .setValue(it)
-                }
-            },
-        )
-    }
+    ): HealthConnectBundleResource<FhirDevice> = testApplication(name, packageName, version)
 
-    protected fun identifier(system: String, value: String): Identifier =
-        Identifier().setSystem(system).setValue(value)
+    protected fun identifier(system: String, value: String): Identifier = testIdentifier(system, value)
 
     protected fun contextIdentifier(value: String): Identifier = identifier(TEST_CONTEXT_IDENTIFIER_SYSTEM, value)
 
@@ -892,8 +853,6 @@ abstract class HealthConnectExportCoordinatorTestSupport {
         convert(record, at, EventSequence("1"))
 
     companion object {
-        const val EXAMPLE_REPOSITORY_SCOPE = "1f5c58aa-6ec6-4e79-a682-829a9debd3f5"
-        const val TEST_CONTEXT_IDENTIFIER_SYSTEM = "urn:uuid:8d3fd52b-efda-5f3d-b83d-50f0a70b44aa"
         const val SENSOR_RECORDING_DOCUMENT_PROFILE =
             "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document"
     }

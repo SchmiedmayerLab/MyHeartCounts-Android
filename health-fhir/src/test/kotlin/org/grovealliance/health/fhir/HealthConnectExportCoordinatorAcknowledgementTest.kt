@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -55,6 +55,25 @@ class HealthConnectExportCoordinatorAcknowledgementTest : HealthConnectExportCoo
         assertThat(sink.batches.last().eventSequence).isEqualTo(pending.eventSequence)
         assertThat(requireNotNull(journal.entry("StepsRecord", "step-record")).destinationReferences)
             .isNotEmpty()
+    }
+
+    @Test
+    fun `an adapter-specific output reaches the sink through the active export gate`() = runTest {
+        val journal = InMemoryJournal()
+        val sink = RecordingSink()
+        val coordinator = HealthConnectExportCoordinator(converter, journal, sink)
+
+        coordinator.upsert(basalMetabolicRateRecord("adapter-specific-output"), conversionTime)
+
+        val observation = sink.batches.single().bundle.observations().single()
+        assertThat(observation.meta.profile.map { it.value })
+            .containsExactly(HealthConnectContract.HEALTH_CONNECT_BASAL_METABOLIC_RATE_PROFILE)
+        assertThat(
+            observation.getExtensionsByUrl(HealthConnectContract.HEALTH_CONNECT_RECORD_TYPE_EXTENSION),
+        ).hasSize(1)
+        assertThat(
+            requireNotNull(journal.entry("BasalMetabolicRateRecord", "adapter-specific-output")).state,
+        ).isEqualTo(HealthConnectExportState.ACTIVE)
     }
 
     @Test
@@ -185,34 +204,23 @@ class HealthConnectExportCoordinatorAcknowledgementTest : HealthConnectExportCoo
     }
 
     @Test
-    fun `retraction targets enforce the catalog role type and Identifier role table`() {
+    fun `retraction targets derive their Identifier role and close their resource types`() {
         val identifier = FhirIdentifierKey(TEST_EVENT_SYSTEM, "document-output")
 
         val admitted = HealthConnectRetractionTarget(
             identifier,
-            GroveIdentifierRole.SOURCE_OUTPUT,
             "DocumentReference",
             HealthConnectRetractionTargetRole.SOURCE_ARTIFACT,
         )
-        val wrongIdentifierRole = runCatching {
-            HealthConnectRetractionTarget(
-                identifier,
-                GroveIdentifierRole.SOURCE_ARTIFACT,
-                "DocumentReference",
-                HealthConnectRetractionTargetRole.SOURCE_ARTIFACT,
-            )
-        }.exceptionOrNull()
         val wrongResourceType = runCatching {
             HealthConnectRetractionTarget(
                 identifier,
-                GroveIdentifierRole.SOURCE_OUTPUT,
                 "Observation",
                 HealthConnectRetractionTargetRole.SOURCE_ARTIFACT,
             )
         }.exceptionOrNull()
 
         assertThat(admitted.identifierRole).isEqualTo(GroveIdentifierRole.SOURCE_OUTPUT)
-        assertThat(wrongIdentifierRole).isInstanceOf(IllegalArgumentException::class.java)
         assertThat(wrongResourceType).isInstanceOf(IllegalArgumentException::class.java)
     }
 
