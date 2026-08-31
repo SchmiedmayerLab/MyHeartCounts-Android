@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -122,9 +122,10 @@ class RoomHealthConnectExportJournalTest : HealthConnectExportCoordinatorTestSup
     @Test
     fun `two database instances serialize one source with increasing fences`() = runBlocking {
         val databaseName = databaseName()
-        val options = shortLeaseOptions()
-        val firstJournal = open(databaseName, options)
-        val secondJournal = open(databaseName, options)
+        // A frozen clock leaves the lock protocol, not wall-clock expiry, deciding who blocks.
+        val clock = AtomicLong(PROCESS_DEATH_EPOCH_MILLIS)
+        val firstJournal = openFenced(databaseName, clock)
+        val secondJournal = openFenced(databaseName, clock)
         val firstEntered = CompletableDeferred<HealthConnectJournalFence>()
         val releaseFirst = CompletableDeferred<Unit>()
 
@@ -213,9 +214,9 @@ class RoomHealthConnectExportJournalTest : HealthConnectExportCoordinatorTestSup
     @Test
     fun `reconciliation lease admits child fence and excludes ordinary source in another instance`() = runBlocking {
         val databaseName = databaseName()
-        val options = shortLeaseOptions()
-        val reconciliationJournal = open(databaseName, options)
-        val ordinaryJournal = open(databaseName, options)
+        val clock = AtomicLong(PROCESS_DEATH_EPOCH_MILLIS)
+        val reconciliationJournal = openFenced(databaseName, clock)
+        val ordinaryJournal = openFenced(databaseName, clock)
         val childEntered = CompletableDeferred<Pair<HealthConnectReconciliationLease, HealthConnectSourceTransitionLease>>()
         val releaseChild = CompletableDeferred<Unit>()
         val childExited = CompletableDeferred<Unit>()
@@ -310,6 +311,84 @@ class RoomHealthConnectExportJournalTest : HealthConnectExportCoordinatorTestSup
     }
 
     @Test
+    fun `an unknown deletion durably quarantines its source id across reopen`() = runTest {
+        val databaseName = databaseName()
+        val journal = open(databaseName)
+        HealthConnectExportCoordinator(converter, journal, RecordingSink())
+            .delete("StepsRecord", "never-exported", conversionTime)
+        journal.close()
+
+        val reopened = database(databaseName)
+        val quarantined = reopened.journalDao()
+            .unmatchedDeletions(synchronizationScope.repositoryScopeKey.value, "StepsRecord")
+
+        assertThat(quarantined.map { it.healthConnectId }).containsExactly("never-exported")
+        assertThat(quarantined.single().observedAt).isEqualTo(conversionTime.toString())
+        assertThat(quarantined.single().projectionScopeKey)
+            .isEqualTo(synchronizationScope.projectionScopeKey.value)
+        reopened.close()
+    }
+
+    @Test
+    fun `reconciled absence keeps its invalidation marker and drains the outbox across reopen`() = runTest {
+        val databaseName = databaseName()
+        val journal = open(databaseName)
+        val coordinator = HealthConnectExportCoordinator(converter, journal, RecordingSink())
+        coordinator.upsert(stepRecord("reconcile-retained"), conversionTime)
+        coordinator.upsert(stepRecord("reconcile-removed"), conversionTime)
+
+        coordinator.reconcile(
+            recordType = "StepsRecord",
+            observedAt = { conversionTime.plusSeconds(30) },
+            readAll = { listOf(stepRecord("reconcile-retained")) },
+        )
+        journal.close()
+
+        val reopened = open(databaseName)
+        reopened.withReconciliationLease(synchronizationScope.repositoryScopeKey, "StepsRecord") { lease ->
+            val states = reopened.entries(lease).associate { it.healthConnectId to it.state }
+
+            assertThat(states).containsExactly(
+                "reconcile-retained",
+                HealthConnectExportState.ACTIVE,
+                "reconcile-removed",
+                HealthConnectExportState.INVALIDATED,
+            )
+            assertThat(reopened.pendingForType(lease)).isEmpty()
+        }
+        reopened.close()
+    }
+
+    @Test
+    fun `a refused record round-trips its durable rejection row through the codec`() = runTest {
+        val databaseName = databaseName()
+        val journal = open(databaseName)
+
+        HealthConnectExportCoordinator(converter, journal, RecordingSink())
+            .upsert(tearGlucoseRecord("refused-glucose"), conversionTime)
+        journal.close()
+
+        val reopened = database(databaseName)
+        val rejected = reopened.journalDao()
+            .rejectedRecords(synchronizationScope.repositoryScopeKey.value, "BloodGlucoseRecord")
+            .single()
+
+        assertThat(rejected.healthConnectId).isEqualTo("refused-glucose")
+        assertThat(rejected.observedAt).isEqualTo(conversionTime.toString())
+        assertThat(rejected.reason).isNotEmpty()
+        assertThat(
+            RoomHealthConnectExportJournal.open(context, databaseName).use { journalAfterReopen ->
+                journalAfterReopen.withSourceTransition(
+                    synchronizationScope.repositoryScopeKey,
+                    "BloodGlucoseRecord",
+                    "refused-glucose",
+                ) { lease -> journalAfterReopen.entry(lease) }
+            },
+        ).isNull()
+        reopened.close()
+    }
+
+    @Test
     fun `concurrent sources across database instances receive unique global sequences`() = runTest {
         val databaseName = databaseName()
         val firstJournal = open(databaseName)
@@ -346,10 +425,15 @@ class RoomHealthConnectExportJournalTest : HealthConnectExportCoordinatorTestSup
         databaseName,
     ).setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING).build()
 
-    private fun shortLeaseOptions() = RoomHealthConnectJournalOptions(
-        leaseDuration = Duration.ofMillis(SERIALIZATION_LEASE_MILLIS),
-        unavailableLeaseRetryDelay = Duration.ofMillis(LEASE_RETRY_MILLIS),
-    )
+    private fun openFenced(databaseName: String, clock: AtomicLong): RoomHealthConnectExportJournal =
+        RoomHealthConnectExportJournal.createForTest(
+            database(databaseName),
+            RoomHealthConnectJournalOptions(
+                leaseDuration = Duration.ofMillis(STALE_WRITER_LEASE_MILLIS),
+                unavailableLeaseRetryDelay = Duration.ofMillis(LEASE_RETRY_MILLIS),
+            ),
+            clock::get,
+        )
 
     private suspend fun assertStaleWriterRejected(
         staleOwner: RoomHealthConnectExportJournal,
@@ -363,22 +447,20 @@ class RoomHealthConnectExportJournalTest : HealthConnectExportCoordinatorTestSup
                 error("A stale writer must fail before constructing another draft.")
             }
         }.exceptionOrNull()
-        val acknowledged = pending.acknowledgedEntry(
-            pending.nextEntry.outputIdentifiers.associate { identifier ->
-                identifier.key() to "Observation/takeover"
-            },
-        )
+        val destinationReferences = pending.nextEntry.outputIdentifiers.associate { identifier ->
+            identifier.key() to "Observation/takeover"
+        }
         val completeFailure = runCatching {
-            staleOwner.complete(staleLease, pending, acknowledged)
+            staleOwner.complete(staleLease, pending, destinationReferences)
         }.exceptionOrNull()
 
         assertThat(stageFailure).isInstanceOf(HealthConnectJournalLeaseLostException::class.java)
         assertThat(completeFailure).isInstanceOf(HealthConnectJournalLeaseLostException::class.java)
         assertThat(requireNotNull(nextOwner.pending(takeoverLease)).eventSequence)
             .isEqualTo(pending.eventSequence)
-        nextOwner.complete(takeoverLease, pending, acknowledged)
+        nextOwner.complete(takeoverLease, pending, destinationReferences)
         assertThat(requireNotNull(nextOwner.entry(takeoverLease)).revision)
-            .isEqualTo(acknowledged.revision)
+            .isEqualTo(pending.acknowledgedEntry(destinationReferences).revision)
     }
 
     private class CaptureThenFailSink : HealthConnectExportSink {
@@ -407,7 +489,6 @@ class RoomHealthConnectExportJournalTest : HealthConnectExportCoordinatorTestSup
         const val LEASE_RETRY_MILLIS = 10L
         const val PROCESS_DEATH_EPOCH_MILLIS = 1_800_000_000_000L
         const val PROCESS_DEATH_LEASE_MILLIS = 120L
-        const val SERIALIZATION_LEASE_MILLIS = 600L
         const val STALE_WRITER_LEASE_MILLIS = 5_000L
     }
 }
