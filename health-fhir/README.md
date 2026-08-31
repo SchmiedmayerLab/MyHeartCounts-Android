@@ -10,8 +10,8 @@ SPDX-License-Identifier: MIT
 
 -->
 
-`health-fhir` is the AndroidX Health Connect 1.1.0 producer for the Grove FHIR
-R4 Mobile and Health Connect contracts. One conversion event represents
+`health-fhir` is the AndroidX Health Connect 1.1.0 producer for the R4 Mobile and
+Health Connect packages in the Grove FHIR Implementation Guides. One conversion event represents
 exactly one immutable source-record revision and produces a FHIR collection
 `Bundle`. A source removal is a separate Provenance-only retraction event; it is
 an assertion for a configured sink, not a FHIR delete command.
@@ -38,7 +38,7 @@ A deployment must persist all of the following independently of an app process:
 
 - one repository-scope `FhirIdentifierKey` for exactly one Health Connect
   repository;
-- one lowercase producer-instance UUID and one positive monotonic event counter;
+- one lowercase producer-instance UUID;
 - one managed HMAC-SHA-256 key, key id, positive epoch, and deployment-owned
   identity-system family;
 - distinct deployment-owned event and entry-node Identifier systems; and
@@ -57,6 +57,20 @@ val coordinator = HealthConnectExportCoordinator(
     converter = converter,
     journal = journal,
     sink = idempotentDestinationSink,
+)
+```
+
+`HealthConnectSynchronizationConstraint` is the supported bridge from the
+`:health` collector to that coordinator: it implements `HealthConstraint`, so
+upserts, exclusions, deletions, and full resyncs reach the journal before the
+changes token advances. Give it a `HealthConnectFullReader` that performs one
+complete per-type read; the constraint calls it inside the reconciliation fence.
+
+```kotlin
+val constraint = HealthConnectSynchronizationConstraint(
+    coordinator = coordinator,
+    fullReader = HealthConnectFullReader { type -> healthClient.readAll(type) },
+    now = Instant::now,
 )
 ```
 
@@ -135,15 +149,18 @@ identity; Grove emits an identifier-only reference and does not fabricate a
 `Patient` entry. Use `HealthConnectPatientSubject.Bundled` only when concrete
 patient facts belong in the event Bundle.
 
-Use `convertOutcome` when record-data rejection is part of normal collection
-flow. It distinguishes `Converted`, `Unsupported`, and `Rejected`. `convert`
-retains the throwing boundary for callers that deliberately treat source-data
-failures as exceptions. Producer configuration and graph-invariant failures are
-programming errors in both APIs.
+`convertOutcome` is the module's conversion entry point, and it distinguishes
+`Converted`, `Unsupported`, and `Rejected` so record-data rejection stays part of
+normal collection flow.
+Producer configuration and graph-invariant failures are programming errors and
+still throw.
+A converter-only integration owns the positive monotonic event counter it passes
+as `eventSequence`; the coordinator path below allocates that sequence from the
+journal instead.
 
 ## Identity and privacy
 
-Every produced Observation carries exactly two Grove-typed opaque identifiers:
+Every produced Observation carries two mandatory Grove-typed opaque identifiers:
 `source-record` and `source-output`. A synthesized glucose Specimen carries the
 same source-record identity plus its own `source-output` identity, whose
 `specimen` discriminator is the exact admitted source enum. Writer records and
@@ -151,7 +168,9 @@ recording Devices have separate domains. Values use the normative
 `v0:<keyId>:<epoch>:<base64url HMAC-SHA-256>` form over unsigned 32-bit
 length-framed UTF-8 fields. Repository scope and stable physical-device tokens
 are never serialized. Writer ids are emitted only as separately scoped opaque
-writer-record identities. Raw Health Connect record ids are omitted by default.
+writer-record identities: a record carrying a validated `clientRecordId`
+additionally emits a `writer-record` identity, so such an Observation carries
+three. Raw Health Connect record ids are omitted by default.
 
 The closed protocol implementation also recognizes the Provider-specific
 `provider-output` and `provider-artifact` domains even though this adapter emits
@@ -283,12 +302,12 @@ output, supporting, and lifecycle resource type sets; prohibits contained
 resources; resolves every literal reference inside the Bundle; closes direct
 Observation, DocumentReference, Device, QuestionnaireResponse, and Provenance
 profile modes; requires exactly one transform Provenance; and rejects
-disconnected support. The shared structured corpus is pinned to its exact 31
+disconnected support. The shared structured corpus is pinned to its exact 36
 reviewed negative cases. The capability export reports the exact AndroidX
 baseline and supported/deferred inventory.
 
 Run the offline official-validator lane from a clean producer revision with the
-exact packages:
+exact packages built from the relevant Grove FHIR Implementation Guide checkout:
 
 ```bash
 ./Scripts/validate-health-connect-fhir-conformance.sh \
@@ -301,3 +320,15 @@ exact packages:
 The script invokes the catalog generator by repository-absolute path and
 deliberately refuses a dirty source tree—including generator changes—so generated
 fixtures can be attributed to one exact producer revision.
+
+`HealthConnectContract.kt` and `grove-exchange-protocol-test-vectors.json` are
+generated from the grove-fhir catalogs and must never be hand-edited. Rewrite
+both after a catalog or pin change:
+
+```bash
+python3 Scripts/generate-grove-fhir-kotlin-contract.py \
+  --catalog-directory /path/to/grove-fhir/catalog
+```
+
+Adding `--check` reports staleness instead of writing, which is how CI gates the
+pair.
