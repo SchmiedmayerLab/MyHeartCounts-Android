@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -21,6 +21,7 @@ import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.health.connect.client.records.WheelchairPushesRecord
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.DateTimeType
@@ -32,7 +33,7 @@ internal fun HealthConnectConverter.convertActiveEnergy(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.ACTIVE_CALORIES_BURNED_RECORD,
+    recordType = RecordType.activeCaloriesBurned.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -57,7 +58,7 @@ internal fun HealthConnectConverter.convertBasalMetabolicRate(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.BASAL_METABOLIC_RATE_RECORD,
+    recordType = RecordType.basalMetabolicRate.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.basalMetabolicRate.inKilocaloriesPerDay,
@@ -81,7 +82,7 @@ internal fun HealthConnectConverter.convertBodyFat(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.BODY_FAT_RECORD,
+    recordType = RecordType.bodyFat.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.percentage.value,
@@ -105,7 +106,7 @@ internal fun HealthConnectConverter.convertBodyWaterMass(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.BODY_WATER_MASS_RECORD,
+    recordType = RecordType.bodyWaterMass.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.mass.inKilograms,
@@ -128,7 +129,7 @@ internal fun HealthConnectConverter.convertBoneMass(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.BONE_MASS_RECORD,
+    recordType = RecordType.boneMass.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.mass.inKilograms,
@@ -151,7 +152,7 @@ internal fun HealthConnectConverter.convertLeanBodyMass(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.LEAN_BODY_MASS_RECORD,
+    recordType = RecordType.leanBodyMass.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.mass.inKilograms,
@@ -174,7 +175,7 @@ internal fun HealthConnectConverter.convertHeartRateVariabilityRmssd(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.HEART_RATE_VARIABILITY_RMSSD_RECORD,
+    recordType = RecordType.heartRateVariabilityRmssd.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.heartRateVariabilityMillis,
@@ -197,7 +198,7 @@ internal fun HealthConnectConverter.convertVo2Max(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.VO2_MAX_RECORD,
+    recordType = RecordType.vo2Max.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.vo2MillilitersPerMinuteKilogram,
@@ -221,7 +222,7 @@ internal fun HealthConnectConverter.convertHydration(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.HYDRATION_RECORD,
+    recordType = RecordType.hydration.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -246,7 +247,7 @@ internal fun HealthConnectConverter.convertElevationGained(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.ELEVATION_GAINED_RECORD,
+    recordType = RecordType.elevationGained.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -274,7 +275,7 @@ internal fun HealthConnectConverter.convertFloorsClimbed(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.FLOORS_CLIMBED_RECORD,
+    recordType = RecordType.floorsClimbed.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -300,7 +301,7 @@ internal fun HealthConnectConverter.convertTotalEnergy(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.TOTAL_CALORIES_BURNED_RECORD,
+    recordType = RecordType.totalCaloriesBurned.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -326,7 +327,7 @@ internal fun HealthConnectConverter.convertWheelchairPushes(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.WHEELCHAIR_PUSHES_RECORD,
+    recordType = RecordType.wheelchairPushes.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -355,7 +356,7 @@ internal fun HealthConnectConverter.convertRestingHeartRate(
     if (record.beatsPerMinute < 0L) {
         throw InvalidHealthConnectRecord("RestingHeartRateRecord beats per minute must be unsigned.")
     }
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.RESTING_HEART_RATE_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.restingHeartRate.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -383,7 +384,7 @@ internal fun HealthConnectConverter.convertRestingHeartRate(
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.RESTING_HEART_RATE_RECORD,
+        RecordType.restingHeartRate.identifier,
         source,
         listOf(observation),
         convertedAt,

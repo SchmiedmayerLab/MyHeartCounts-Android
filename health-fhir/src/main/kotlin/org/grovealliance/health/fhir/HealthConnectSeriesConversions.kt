@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -11,6 +11,7 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Metadata
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.DateTimeType
 import org.hl7.fhir.r4.model.Period
@@ -23,7 +24,7 @@ internal fun HealthConnectConverter.convertHeartRate(
     convertedAt: Instant,
     eventSequence: EventSequence,
 ): HealthConnectConversion {
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.HEART_RATE_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.heartRate.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -50,7 +51,7 @@ internal fun HealthConnectConverter.convertHeartRate(
         }
     return conversion(
         record.metadata,
-        HealthConnectConverter.HEART_RATE_RECORD,
+        RecordType.heartRate.identifier,
         source,
         observations,
         convertedAt,
@@ -64,7 +65,7 @@ internal fun HealthConnectConverter.convertSteps(
     convertedAt: Instant,
     eventSequence: EventSequence,
 ): HealthConnectConversion {
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.STEPS_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.steps.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -97,7 +98,7 @@ internal fun HealthConnectConverter.convertSteps(
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.STEPS_RECORD,
+        RecordType.steps.identifier,
         source,
         listOf(observation),
         convertedAt,
@@ -111,7 +112,7 @@ internal fun HealthConnectConverter.convertWeight(
     convertedAt: Instant,
     eventSequence: EventSequence,
 ): HealthConnectConversion {
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.WEIGHT_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.weight.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -136,7 +137,7 @@ internal fun HealthConnectConverter.convertWeight(
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.WEIGHT_RECORD,
+        RecordType.weight.identifier,
         source,
         listOf(observation),
         convertedAt,
@@ -272,7 +273,7 @@ internal fun HealthConnectConverter.convertSampleSeries(
         .map { (sample, occurrence) ->
             HealthConnectWireFormat.requireFhirInstant(sample.time, "${spec.display} sample time")
             val decimal = sample.value.fhirDecimal("${spec.display} sample value", spec.valueDomain)
-            val output = HealthConnectIdentity.seriesSampleOutput(
+            val output = HealthConnectIdentity.sampleOutput(
                 synchronizationScope.identityKey,
                 source,
                 sample.time,

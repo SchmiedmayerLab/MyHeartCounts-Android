@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -15,6 +15,7 @@ import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.RespiratoryRateRecord
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.DateTimeType
 import org.hl7.fhir.r4.model.Extension
@@ -26,7 +27,7 @@ internal fun HealthConnectConverter.convertBloodGlucose(
     convertedAt: Instant,
     eventSequence: EventSequence,
 ): HealthConnectConversion {
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.BLOOD_GLUCOSE_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.bloodGlucose.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -64,7 +65,7 @@ internal fun HealthConnectConverter.convertBloodGlucose(
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.BLOOD_GLUCOSE_RECORD,
+        RecordType.bloodGlucose.identifier,
         source,
         listOf(observation),
         convertedAt,
@@ -79,7 +80,7 @@ internal fun HealthConnectConverter.convertBloodPressure(
     convertedAt: Instant,
     eventSequence: EventSequence,
 ): HealthConnectConversion {
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.BLOOD_PRESSURE_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.bloodPressure.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -118,7 +119,7 @@ internal fun HealthConnectConverter.convertBloodPressure(
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.BLOOD_PRESSURE_RECORD,
+        RecordType.bloodPressure.identifier,
         source,
         listOf(observation),
         convertedAt,
@@ -133,7 +134,7 @@ internal fun HealthConnectConverter.convertBasalBodyTemperature(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.BASAL_BODY_TEMPERATURE_RECORD,
+    recordType = RecordType.basalBodyTemperature.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.temperature.inCelsius,
@@ -157,7 +158,7 @@ internal fun HealthConnectConverter.convertBodyTemperature(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.BODY_TEMPERATURE_RECORD,
+    recordType = RecordType.bodyTemperature.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.temperature.inCelsius,
@@ -182,7 +183,7 @@ internal fun HealthConnectConverter.convertDistance(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertIntervalQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.DISTANCE_RECORD,
+    recordType = RecordType.distance.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,
@@ -207,7 +208,7 @@ internal fun HealthConnectConverter.convertHeight(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.HEIGHT_RECORD,
+    recordType = RecordType.height.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.height.inMeters * HealthConnectConverter.CENTIMETERS_PER_METER,
@@ -230,7 +231,7 @@ internal fun HealthConnectConverter.convertOxygenSaturation(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.OXYGEN_SATURATION_RECORD,
+    recordType = RecordType.oxygenSaturation.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.percentage.value,
@@ -254,7 +255,7 @@ internal fun HealthConnectConverter.convertRespiratoryRate(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantQuantity(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.RESPIRATORY_RATE_RECORD,
+    recordType = RecordType.respiratoryRate.identifier,
     time = record.time,
     offset = record.zoneOffset,
     value = record.rate,

@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -8,6 +8,7 @@
 package org.grovealliance.health.fhir
 
 import androidx.health.connect.client.records.NutritionRecord
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.DateTimeType
 import org.hl7.fhir.r4.model.Period
 import java.time.Instant
@@ -20,7 +21,7 @@ internal fun HealthConnectConverter.convertNutrition(
     if (!record.startTime.isBefore(record.endTime)) {
         throw InvalidHealthConnectRecord("NutritionRecord must have a positive interval.")
     }
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.NUTRITION_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.nutrition.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -54,7 +55,7 @@ internal fun HealthConnectConverter.convertNutrition(
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.NUTRITION_RECORD,
+        RecordType.nutrition.identifier,
         source,
         observations,
         convertedAt,

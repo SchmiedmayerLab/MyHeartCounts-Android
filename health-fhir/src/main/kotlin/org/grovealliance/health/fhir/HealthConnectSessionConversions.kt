@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -13,6 +13,7 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.metadata.Metadata
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.DateTimeType
@@ -30,7 +31,7 @@ internal fun HealthConnectConverter.convertMindfulnessSession(
     eventSequence: EventSequence,
 ): HealthConnectConversion {
     val minutes = mindfulnessDurationMinutes(record.startTime, record.endTime)
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.MINDFULNESS_SESSION_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.mindfulnessSession.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -63,12 +64,12 @@ internal fun HealthConnectConverter.convertMindfulnessSession(
         retainSessionText(
             record.title,
             record.notes,
-            HealthConnectConverter.MINDFULNESS_SESSION_RECORD,
+            RecordType.mindfulnessSession.identifier,
         )
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.MINDFULNESS_SESSION_RECORD,
+        RecordType.mindfulnessSession.identifier,
         source,
         listOf(observation),
         convertedAt,
@@ -89,7 +90,7 @@ internal fun HealthConnectConverter.convertSleepDuration(
         .divide(HealthConnectConverter.NANOSECONDS_PER_HOUR, HealthConnectConverter.SESSION_DURATION_SCALE, RoundingMode.HALF_EVEN)
         .stripTrailingZeros()
         .withPlainScale()
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.SLEEP_SESSION_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.sleepSession.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -172,17 +173,17 @@ internal fun HealthConnectConverter.convertSleepDuration(
         }
         value = quantity(hours, "h", "h")
         stages.forEach { stage ->
-            addHasMember(Reference(GroveExchangeIdentity.fullUrl(outputIdentifier(stage))))
+            addHasMember(Reference(GroveExchangeIdentity.fullUrl(observationIdentity(stage))))
         }
         retainSessionText(
             record.title,
             record.notes,
-            HealthConnectConverter.SLEEP_SESSION_RECORD,
+            RecordType.sleepSession.identifier,
         )
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.SLEEP_SESSION_RECORD,
+        RecordType.sleepSession.identifier,
         source,
         listOf(summary) + stages,
         convertedAt,
@@ -199,7 +200,7 @@ internal fun HealthConnectConverter.convertExerciseSession(
     if (!record.startTime.isBefore(record.endTime)) {
         throw InvalidHealthConnectRecord("ExerciseSessionRecord must have a positive interval.")
     }
-    val source = sourceIdentity(record.metadata, HealthConnectConverter.EXERCISE_SESSION_RECORD)
+    val source = sourceIdentity(record.metadata, RecordType.exerciseSession.identifier)
     val resolvedContext = context.resolve(
         record.metadata,
         synchronizationScope.identityKey,
@@ -229,17 +230,17 @@ internal fun HealthConnectConverter.convertExerciseSession(
             HealthConnectWorkoutVocabulary.activity(record.exerciseType),
         )
         children.forEach { child ->
-            addHasMember(Reference(GroveExchangeIdentity.fullUrl(outputIdentifier(child))))
+            addHasMember(Reference(GroveExchangeIdentity.fullUrl(observationIdentity(child))))
         }
         retainSessionText(
             record.title,
             record.notes,
-            HealthConnectConverter.EXERCISE_SESSION_RECORD,
+            RecordType.exerciseSession.identifier,
         )
     }
     return conversion(
         record.metadata,
-        HealthConnectConverter.EXERCISE_SESSION_RECORD,
+        RecordType.exerciseSession.identifier,
         source,
         listOf(summary) + children,
         convertedAt,

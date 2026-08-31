@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -74,17 +74,13 @@ class HealthConnectConverter(
     internal val entryNodeIdentifierSystem: String
         get() = context.entryNodeIdentifierSystem
 
-    internal fun convert(record: Record, convertedAt: Instant, eventSequence: EventSequence): HealthConnectConversion {
-        return convertWithEventToken(record, convertedAt, eventSequence)
-    }
-
     /** Converts record-data failures into a stable typed result for collector telemetry and flow control. */
     fun convertOutcome(
         record: Record,
         convertedAt: Instant,
         eventSequence: EventSequence,
     ): HealthConnectConversionOutcome = try {
-        HealthConnectConversionOutcome.Converted(convertWithEventToken(record, convertedAt, eventSequence))
+        HealthConnectConversionOutcome.Converted(convert(record, convertedAt, eventSequence))
     } catch (error: UnsupportedHealthConnectRecord) {
         HealthConnectConversionOutcome.Unsupported(error.recordType, requireNotNull(error.message))
     } catch (error: InvalidHealthConnectRecord) {
@@ -98,7 +94,7 @@ class HealthConnectConverter(
     ): HealthConnectConversion =
         // Event-time Device snapshots do depend on the event. Reusing the prior sequence makes the
         // comparison graph address the prior snapshots, while a new record uses a valid placeholder.
-        convertWithEventToken(record, convertedAt, priorEventSequence ?: PREVIEW_EVENT_SEQUENCE)
+        convert(record, convertedAt, priorEventSequence ?: PREVIEW_EVENT_SEQUENCE)
 
     internal fun bundleIdentifier(eventSequence: EventSequence): Identifier =
         HealthConnectIdentity.exchange(
@@ -113,7 +109,7 @@ class HealthConnectConverter(
             bundleIdentifier(eventSequence),
         )
 
-    internal fun convertWithEventToken(
+    internal fun convert(
         record: Record,
         convertedAt: Instant,
         eventSequence: EventSequence,
@@ -222,47 +218,7 @@ class HealthConnectConverter(
             .toFormatter()
         val EFFECTIVE_DATE_TIME_ORDER = compareBy<DateTimeType>({ it.value.time }, { it.valueAsString })
 
-        const val ACTIVE_CALORIES_BURNED_RECORD = "ActiveCaloriesBurnedRecord"
-        const val BASAL_BODY_TEMPERATURE_RECORD = "BasalBodyTemperatureRecord"
-        const val BASAL_METABOLIC_RATE_RECORD = "BasalMetabolicRateRecord"
-        const val BLOOD_GLUCOSE_RECORD = "BloodGlucoseRecord"
-        const val BLOOD_PRESSURE_RECORD = "BloodPressureRecord"
-        const val BODY_FAT_RECORD = "BodyFatRecord"
-        const val BODY_TEMPERATURE_RECORD = "BodyTemperatureRecord"
-        const val BODY_WATER_MASS_RECORD = "BodyWaterMassRecord"
-        const val BONE_MASS_RECORD = "BoneMassRecord"
-        const val CERVICAL_MUCUS_RECORD = "CervicalMucusRecord"
-        const val CYCLING_PEDALING_CADENCE_RECORD = "CyclingPedalingCadenceRecord"
-        const val DISTANCE_RECORD = "DistanceRecord"
-        const val ELEVATION_GAINED_RECORD = "ElevationGainedRecord"
-        const val EXERCISE_SESSION_RECORD = "ExerciseSessionRecord"
-        const val FLOORS_CLIMBED_RECORD = "FloorsClimbedRecord"
-        const val HEART_RATE_RECORD = "HeartRateRecord"
-        const val HEART_RATE_VARIABILITY_RMSSD_RECORD = "HeartRateVariabilityRmssdRecord"
-        const val HEIGHT_RECORD = "HeightRecord"
-        const val HYDRATION_RECORD = "HydrationRecord"
-        const val INTERMENSTRUAL_BLEEDING_RECORD = "IntermenstrualBleedingRecord"
-        const val LEAN_BODY_MASS_RECORD = "LeanBodyMassRecord"
-        const val MENSTRUATION_FLOW_RECORD = "MenstruationFlowRecord"
-        const val MENSTRUATION_PERIOD_RECORD = "MenstruationPeriodRecord"
-        const val MINDFULNESS_SESSION_RECORD = "MindfulnessSessionRecord"
-        const val NUTRITION_RECORD = "NutritionRecord"
-        const val OVULATION_TEST_RECORD = "OvulationTestRecord"
-        const val OXYGEN_SATURATION_RECORD = "OxygenSaturationRecord"
-        const val POWER_RECORD = "PowerRecord"
-        const val RESPIRATORY_RATE_RECORD = "RespiratoryRateRecord"
-        const val RESTING_HEART_RATE_RECORD = "RestingHeartRateRecord"
-        const val SEXUAL_ACTIVITY_RECORD = "SexualActivityRecord"
-        const val SKIN_TEMPERATURE_RECORD = "SkinTemperatureRecord"
-        const val SLEEP_SESSION_RECORD = "SleepSessionRecord"
-        const val SPEED_RECORD = "SpeedRecord"
-        const val STEPS_CADENCE_RECORD = "StepsCadenceRecord"
         const val MAX_WEIGHT_KILOGRAMS = 1_000.0
-        const val STEPS_RECORD = "StepsRecord"
-        const val TOTAL_CALORIES_BURNED_RECORD = "TotalCaloriesBurnedRecord"
-        const val VO2_MAX_RECORD = "Vo2MaxRecord"
-        const val WEIGHT_RECORD = "WeightRecord"
-        const val WHEELCHAIR_PUSHES_RECORD = "WheelchairPushesRecord"
 
         const val ACTIVITY_CATEGORY = "activity"
         const val LABORATORY_CATEGORY = "laboratory"
@@ -283,8 +239,6 @@ class HealthConnectConverter(
         const val MAX_FHIR_YEAR = 9999
     }
 }
-
-internal fun outputIdentifier(observation: Observation): Identifier = observationIdentity(observation)
 
 internal fun concept(system: String, code: String, display: String): CodeableConcept =
     CodeableConcept(Coding(system, code, display))

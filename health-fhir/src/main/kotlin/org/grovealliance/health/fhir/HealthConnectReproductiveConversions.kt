@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -13,6 +13,7 @@ import androidx.health.connect.client.records.MenstruationFlowRecord
 import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.records.OvulationTestRecord
 import androidx.health.connect.client.records.SexualActivityRecord
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.Observation
@@ -24,7 +25,7 @@ internal fun HealthConnectConverter.convertMenstruationFlow(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantCoded(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.MENSTRUATION_FLOW_RECORD,
+    recordType = RecordType.menstruationFlow.identifier,
     time = record.time,
     offset = record.zoneOffset,
     spec = MobileCodedSpec(
@@ -48,7 +49,7 @@ internal fun HealthConnectConverter.convertOvulationTest(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantCoded(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.OVULATION_TEST_RECORD,
+    recordType = RecordType.ovulationTest.identifier,
     time = record.time,
     offset = record.zoneOffset,
     spec = MobileCodedSpec(
@@ -72,7 +73,7 @@ internal fun HealthConnectConverter.convertSexualActivity(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantCoded(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.SEXUAL_ACTIVITY_RECORD,
+    recordType = RecordType.sexualActivity.identifier,
     time = record.time,
     offset = record.zoneOffset,
     spec = MobileCodedSpec(
@@ -111,7 +112,7 @@ internal fun HealthConnectConverter.convertCervicalMucus(
     }
     return convertInstantCoded(
         metadata = record.metadata,
-        recordType = HealthConnectConverter.CERVICAL_MUCUS_RECORD,
+        recordType = RecordType.cervicalMucus.identifier,
         time = record.time,
         offset = record.zoneOffset,
         spec = MobileCodedSpec(
@@ -137,7 +138,7 @@ internal fun HealthConnectConverter.convertIntermenstrualBleeding(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertInstantCoded(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.INTERMENSTRUAL_BLEEDING_RECORD,
+    recordType = RecordType.intermenstrualBleeding.identifier,
     time = record.time,
     offset = record.zoneOffset,
     spec = MobileCodedSpec(
@@ -159,7 +160,7 @@ internal fun HealthConnectConverter.convertMenstruationPeriod(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertPeriodCoded(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.MENSTRUATION_PERIOD_RECORD,
+    recordType = RecordType.menstruationPeriod.identifier,
     start = record.startTime,
     startOffset = record.startZoneOffset,
     end = record.endTime,

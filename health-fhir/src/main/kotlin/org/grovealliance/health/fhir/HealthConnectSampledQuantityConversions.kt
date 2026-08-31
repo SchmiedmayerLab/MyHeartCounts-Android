@@ -1,5 +1,5 @@
 //
-// This source file belongs to the My Heart Counts Android project
+// This source file is part of the My Heart Counts Android open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -12,6 +12,7 @@ import androidx.health.connect.client.records.PowerRecord
 import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.StepsCadenceRecord
+import org.grovealliance.health.RecordType
 import java.time.Instant
 
 internal fun HealthConnectConverter.convertCyclingCadence(
@@ -20,7 +21,7 @@ internal fun HealthConnectConverter.convertCyclingCadence(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertSampleSeries(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.CYCLING_PEDALING_CADENCE_RECORD,
+    recordType = RecordType.cyclingPedalingCadence.identifier,
     start = record.startTime,
     end = record.endTime,
     samples = record.samples.map { SeriesSample(it.time, it.revolutionsPerMinute) },
@@ -43,7 +44,7 @@ internal fun HealthConnectConverter.convertPower(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertSampleSeries(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.POWER_RECORD,
+    recordType = RecordType.power.identifier,
     start = record.startTime,
     end = record.endTime,
     samples = record.samples.map { SeriesSample(it.time, it.power.inWatts) },
@@ -66,7 +67,7 @@ internal fun HealthConnectConverter.convertSpeed(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertSampleSeries(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.SPEED_RECORD,
+    recordType = RecordType.speed.identifier,
     start = record.startTime,
     end = record.endTime,
     samples = record.samples.map { SeriesSample(it.time, it.speed.inMetersPerSecond) },
@@ -89,7 +90,7 @@ internal fun HealthConnectConverter.convertStepCadence(
     eventSequence: EventSequence,
 ): HealthConnectConversion = convertSampleSeries(
     metadata = record.metadata,
-    recordType = HealthConnectConverter.STEPS_CADENCE_RECORD,
+    recordType = RecordType.stepsCadence.identifier,
     start = record.startTime,
     end = record.endTime,
     samples = record.samples.map { SeriesSample(it.time, it.rate) },
@@ -120,7 +121,7 @@ internal fun HealthConnectConverter.convertSkinTemperature(
     }
     return convertSampleSeries(
         metadata = record.metadata,
-        recordType = HealthConnectConverter.SKIN_TEMPERATURE_RECORD,
+        recordType = RecordType.skinTemperature.identifier,
         start = record.startTime,
         end = record.endTime,
         samples = record.deltas.map { delta ->
