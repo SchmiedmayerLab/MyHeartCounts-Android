@@ -10,6 +10,12 @@ name: Pull Request Checks
 
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
   workflow_dispatch:
 
 concurrency:
@@ -17,7 +23,88 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  scoped_health_fhir:
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == true
+    name: Scoped Health/FHIR Development
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set Up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Test Health Collection and FHIR Conversion
+        run: >-
+          ./gradlew
+          :health:testDebugUnitTest
+          :health-fhir:testDebugUnitTest
+          :health-fhir:lintDebug
+          --console=plain
+
+  fhir_conformance:
+    name: FHIR R4 Conformance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Checkout the Grove FHIR Release Contract
+        uses: actions/checkout@v7
+        with:
+          repository: SchmiedmayerLab/grove-fhir
+          # Pinned so a contract change is a visible edit here, not a silent CI drift.
+          # The commit the immutable grove-fhir 0.6.0 tag names.
+          ref: 444e06fb25680c3af29e5d3ccbebeb0249be7318
+          path: .grove-fhir
+          persist-credentials: false
+      - name: Record the Exact Grove FHIR Revision
+        run: git -C .grove-fhir rev-parse --verify HEAD
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: .grove-fhir/package-lock.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13.15"
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21.0.10+7.0.LTS"
+          cache: gradle
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.12"
+          bundler-cache: false
+      - name: Select the Locked Bundler
+        run: gem install bundler -v 4.0.16 --no-document
+      - name: Build the Applicable Grove FHIR Packages
+        working-directory: .grove-fhir
+        run: |
+          npm ci
+          ./Scripts/build-guides.sh mobile health-connect
+      - name: Validate Emitted Health Connect Resources
+        run: >-
+          ./Scripts/validate-health-connect-fhir-conformance.sh
+          --grove-fhir .grove-fhir
+          --mobile-package .grove-fhir/mobile/output/package.tgz
+          --health-connect-package .grove-fhir/health-connect/output/package.tgz
+          --validator-jar .grove-fhir/.build/fhir-tools/validator_cli.jar
+
   android:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: Android
     uses: SchmiedmayerLab/.github/.github/workflows/android.yml@v0.5
     permissions:
@@ -33,6 +120,7 @@ jobs:
 
   release_bundle:
     name: Signed Release Bundle
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     needs:
       - android
     runs-on: ubuntu-latest
@@ -44,7 +132,7 @@ jobs:
         with:
           submodules: true
       - name: Set Up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"

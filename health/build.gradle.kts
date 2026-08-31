@@ -24,4 +24,6 @@ dependencies {
     implementation(project(":storage-local"))
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.appcompat)
+
+    testImplementation(libs.androidx.health.connect.testing)
 }
