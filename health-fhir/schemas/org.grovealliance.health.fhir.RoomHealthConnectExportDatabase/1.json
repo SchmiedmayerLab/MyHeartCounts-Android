@@ -1,0 +1,375 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "0acae55c94e6e7e8290d420078b2e590",
+    "entities": [
+      {
+        "tableName": "health_connect_export_counter",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`singletonId` INTEGER NOT NULL, `nextEventSequence` TEXT NOT NULL, `nextFence` TEXT NOT NULL, PRIMARY KEY(`singletonId`))",
+        "fields": [
+          {
+            "fieldPath": "singletonId",
+            "columnName": "singletonId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextEventSequence",
+            "columnName": "nextEventSequence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextFence",
+            "columnName": "nextFence",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "singletonId"
+          ]
+        }
+      },
+      {
+        "tableName": "health_connect_export_entries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`repositoryScopeKey` TEXT NOT NULL, `recordType` TEXT NOT NULL, `healthConnectId` TEXT NOT NULL, `revision` TEXT NOT NULL, `encodedEntry` TEXT NOT NULL, PRIMARY KEY(`repositoryScopeKey`, `recordType`, `healthConnectId`))",
+        "fields": [
+          {
+            "fieldPath": "repositoryScopeKey",
+            "columnName": "repositoryScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordType",
+            "columnName": "recordType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthConnectId",
+            "columnName": "healthConnectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encodedEntry",
+            "columnName": "encodedEntry",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "repositoryScopeKey",
+            "recordType",
+            "healthConnectId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_health_connect_export_entries_repositoryScopeKey_recordType",
+            "unique": false,
+            "columnNames": [
+              "repositoryScopeKey",
+              "recordType"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_health_connect_export_entries_repositoryScopeKey_recordType` ON `${TABLE_NAME}` (`repositoryScopeKey`, `recordType`)"
+          }
+        ]
+      },
+      {
+        "tableName": "health_connect_pending_exports",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`repositoryScopeKey` TEXT NOT NULL, `recordType` TEXT NOT NULL, `healthConnectId` TEXT NOT NULL, `eventSequence` TEXT NOT NULL, `encodedPending` TEXT NOT NULL, PRIMARY KEY(`repositoryScopeKey`, `recordType`, `healthConnectId`))",
+        "fields": [
+          {
+            "fieldPath": "repositoryScopeKey",
+            "columnName": "repositoryScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordType",
+            "columnName": "recordType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthConnectId",
+            "columnName": "healthConnectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventSequence",
+            "columnName": "eventSequence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encodedPending",
+            "columnName": "encodedPending",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "repositoryScopeKey",
+            "recordType",
+            "healthConnectId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_health_connect_pending_exports_eventSequence",
+            "unique": true,
+            "columnNames": [
+              "eventSequence"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_health_connect_pending_exports_eventSequence` ON `${TABLE_NAME}` (`eventSequence`)"
+          },
+          {
+            "name": "index_health_connect_pending_exports_repositoryScopeKey_recordType",
+            "unique": false,
+            "columnNames": [
+              "repositoryScopeKey",
+              "recordType"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_health_connect_pending_exports_repositoryScopeKey_recordType` ON `${TABLE_NAME}` (`repositoryScopeKey`, `recordType`)"
+          }
+        ]
+      },
+      {
+        "tableName": "health_connect_source_leases",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`repositoryScopeKey` TEXT NOT NULL, `recordType` TEXT NOT NULL, `healthConnectId` TEXT NOT NULL, `owner` TEXT NOT NULL, `fence` TEXT NOT NULL, `reconciliationFence` TEXT, `expiresAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`repositoryScopeKey`, `recordType`, `healthConnectId`))",
+        "fields": [
+          {
+            "fieldPath": "repositoryScopeKey",
+            "columnName": "repositoryScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordType",
+            "columnName": "recordType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthConnectId",
+            "columnName": "healthConnectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "owner",
+            "columnName": "owner",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fence",
+            "columnName": "fence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reconciliationFence",
+            "columnName": "reconciliationFence",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "expiresAtEpochMillis",
+            "columnName": "expiresAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "repositoryScopeKey",
+            "recordType",
+            "healthConnectId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_health_connect_source_leases_repositoryScopeKey_recordType_expiresAtEpochMillis",
+            "unique": false,
+            "columnNames": [
+              "repositoryScopeKey",
+              "recordType",
+              "expiresAtEpochMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_health_connect_source_leases_repositoryScopeKey_recordType_expiresAtEpochMillis` ON `${TABLE_NAME}` (`repositoryScopeKey`, `recordType`, `expiresAtEpochMillis`)"
+          }
+        ]
+      },
+      {
+        "tableName": "health_connect_reconciliation_leases",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`repositoryScopeKey` TEXT NOT NULL, `recordType` TEXT NOT NULL, `owner` TEXT NOT NULL, `fence` TEXT NOT NULL, `expiresAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`repositoryScopeKey`, `recordType`))",
+        "fields": [
+          {
+            "fieldPath": "repositoryScopeKey",
+            "columnName": "repositoryScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordType",
+            "columnName": "recordType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "owner",
+            "columnName": "owner",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fence",
+            "columnName": "fence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAtEpochMillis",
+            "columnName": "expiresAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "repositoryScopeKey",
+            "recordType"
+          ]
+        }
+      },
+      {
+        "tableName": "health_connect_unmatched_deletions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`repositoryScopeKey` TEXT NOT NULL, `projectionScopeKey` TEXT NOT NULL, `recordType` TEXT NOT NULL, `healthConnectId` TEXT NOT NULL, `observedAt` TEXT NOT NULL, PRIMARY KEY(`repositoryScopeKey`, `recordType`, `healthConnectId`))",
+        "fields": [
+          {
+            "fieldPath": "repositoryScopeKey",
+            "columnName": "repositoryScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "projectionScopeKey",
+            "columnName": "projectionScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordType",
+            "columnName": "recordType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthConnectId",
+            "columnName": "healthConnectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observedAt",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "repositoryScopeKey",
+            "recordType",
+            "healthConnectId"
+          ]
+        }
+      },
+      {
+        "tableName": "health_connect_rejected_records",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`repositoryScopeKey` TEXT NOT NULL, `projectionScopeKey` TEXT NOT NULL, `recordType` TEXT NOT NULL, `healthConnectId` TEXT NOT NULL, `sourceLastModified` TEXT NOT NULL, `observedAt` TEXT NOT NULL, `reason` TEXT NOT NULL, PRIMARY KEY(`repositoryScopeKey`, `recordType`, `healthConnectId`))",
+        "fields": [
+          {
+            "fieldPath": "repositoryScopeKey",
+            "columnName": "repositoryScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "projectionScopeKey",
+            "columnName": "projectionScopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordType",
+            "columnName": "recordType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "healthConnectId",
+            "columnName": "healthConnectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceLastModified",
+            "columnName": "sourceLastModified",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observedAt",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "repositoryScopeKey",
+            "recordType",
+            "healthConnectId"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0acae55c94e6e7e8290d420078b2e590')"
+    ]
+  }
+}

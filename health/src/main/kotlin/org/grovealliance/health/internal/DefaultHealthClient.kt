@@ -132,9 +132,15 @@ internal class DefaultHealthClient(
     override fun resetRecordCollection(type: AnyRecordType) {
         ioScope.launch {
             val collectorsToReset = registeredDataCollectors.filter { it.recordType == type }
-            changesTokenStore.deleteToken(type)
             collectorsToReset.forEach { collector ->
-                collector.stopDataCollection()
+                collector.stopDataCollectionAndJoin()
+            }
+            collectorsToReset.forEach { collector ->
+                changesTokenStore.deleteToken(
+                    type,
+                    collector.collectionScopeId,
+                    collector.collectionRepositoryId,
+                )
             }
             registeredDataCollectors.removeAll(collectorsToReset)
         }
@@ -303,6 +309,8 @@ internal class DefaultHealthClient(
             val existingSetting = existing.deliverySetting
             val newSetting = collector.deliverySetting
             when {
+                existing.collectionRepositoryId != collector.collectionRepositoryId ||
+                    existing.collectionScopeId != collector.collectionScopeId -> CollectorAction.Replace(existingIndex)
                 existingSetting == newSetting -> CollectorAction.Ignore
                 existingSetting.continueInBackground && !newSetting.continueInBackground -> CollectorAction.Ignore
                 !existingSetting.continueInBackground && newSetting.continueInBackground -> CollectorAction.Replace(existingIndex)
@@ -319,7 +327,7 @@ internal class DefaultHealthClient(
 
             is CollectorAction.Replace -> {
                 val existing = registeredDataCollectors.getOrNull(action.index)
-                existing?.stopDataCollection()
+                existing?.stopDataCollectionAndJoin()
                 registeredDataCollectors[action.index] = collector
                 startAutomaticDataCollectionIfPossible(collector)
                 logger.i { "Replaced HealthDataCollector for ${collector.recordType.identifier}" }
@@ -366,7 +374,7 @@ internal class DefaultHealthClient(
                         registeredDataCollectors.forEach { collector ->
                             val continuesInBackground = collector.deliverySetting.continueInBackground
                             if (continuesInBackground.not() || hasBackgroundPermission.not()) {
-                                collector.stopDataCollection()
+                                collector.stopDataCollectionAndJoin()
                                 logger.i { "Stopped collection for ${collector.recordType.identifier} due to to background" }
                             }
                         }

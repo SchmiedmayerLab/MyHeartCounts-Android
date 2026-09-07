@@ -141,6 +141,58 @@ data class RecordType<T : Record>(
         val weight = RecordType(type = WeightRecord::class, identifier = "WeightRecord")
         val wheelchairPushes = RecordType(type = WheelchairPushesRecord::class, identifier = "WheelchairPushesRecord")
 
+        /**
+         * Every Health Connect Record type exposed by this version of Grove Health.
+         *
+         * Adapter contracts use this closed inventory to prove that each source type is either
+         * supported or carries an explicit non-supported status. Adding a new declaration above
+         * therefore requires adding it here and classifying it in every adapter that claims
+         * inventory completeness.
+         */
+        val all: Set<AnyRecordType> = setOf(
+            activeCaloriesBurned,
+            basalBodyTemperature,
+            basalMetabolicRate,
+            bloodGlucose,
+            bloodPressure,
+            bodyFat,
+            bodyTemperature,
+            bodyWaterMass,
+            boneMass,
+            cervicalMucus,
+            cyclingPedalingCadence,
+            distance,
+            elevationGained,
+            exerciseSession,
+            floorsClimbed,
+            heartRate,
+            heartRateVariabilityRmssd,
+            height,
+            hydration,
+            intermenstrualBleeding,
+            leanBodyMass,
+            menstruationFlow,
+            menstruationPeriod,
+            mindfulnessSession,
+            nutrition,
+            ovulationTest,
+            oxygenSaturation,
+            plannedExerciseSession,
+            power,
+            respiratoryRate,
+            restingHeartRate,
+            sexualActivity,
+            sleepSession,
+            speed,
+            skinTemperature,
+            stepsCadence,
+            steps,
+            totalCaloriesBurned,
+            vo2Max,
+            weight,
+            wheelchairPushes,
+        )
+
         @Suppress("ComplexMethod", "LongMethod")
         fun from(record: Record): RecordType<out Record> = when (record) {
             is ActiveCaloriesBurnedRecord -> activeCaloriesBurned
