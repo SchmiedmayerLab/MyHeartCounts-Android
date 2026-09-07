@@ -65,8 +65,8 @@ jobs:
         with:
           repository: SchmiedmayerLab/grove-fhir
           # Pinned so a contract change is a visible edit here, not a silent CI drift.
-          # The commit the immutable grove-fhir 0.6.0 tag names.
-          ref: 83668d2d33325d2c1c9d42638fdc7557314f3d88
+          # Past the 0.6.0 tag: 0.6.0 pins a Validator build upstream has since replaced.
+          ref: 459e016610a94de776953601cc7b65cc445eb3c6
           path: .grove-fhir
           persist-credentials: false
       - name: Record the Exact Grove FHIR Revision
