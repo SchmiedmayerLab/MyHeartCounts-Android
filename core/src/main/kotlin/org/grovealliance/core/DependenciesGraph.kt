@@ -92,7 +92,7 @@ class DependenciesGraph internal constructor(
                     it.parameters.size == 1 && it.parameters[0].type.classifier == Context::class
                 }?.call(appContext)
                 ?: appContext?.let {
-                    (clazz.companionObjectInstance as? DefaultInitializer<T>)?.create(it)
+                    (clazz.companionInstance() as? DefaultInitializer<T>)?.create(it)
                 }
                 ?: groveError("No suitable constructor found for $key")
         }
@@ -108,6 +108,22 @@ class DependenciesGraph internal constructor(
             )
         }
     }
+
+    /**
+     * Returns the companion object of this type, or `null` when it has none.
+     *
+     * Reads the synthetic `Companion` field directly instead of going through
+     * [kotlin.reflect.full.companionObjectInstance]: kotlin-reflect resolves a companion by walking
+     * the owner's Kotlin metadata to a nested classifier, and R8 renames and flattens the companion
+     * so that walk no longer arrives anywhere. It returns `null` rather than throwing, which turned
+     * [createDependencyOrThrow] into a silent "no suitable constructor" in minified builds. The
+     * field survives obfuscation intact, so reading it is both cheaper and R8-proof. kotlin-reflect
+     * remains the fallback for the shapes the field does not cover.
+     */
+    private fun <T : Any> KClass<T>.companionInstance(): Any? =
+        runCatching {
+            java.getDeclaredField(COMPANION_FIELD_NAME).apply { isAccessible = true }.get(null)
+        }.getOrNull() ?: runCatching { companionObjectInstance }.getOrNull()
 
     /** Resolves all registered lazy factories and invokes [Module.configure] on each module. */
     internal fun configure() {
@@ -151,5 +167,10 @@ class DependenciesGraph internal constructor(
             logger.i { "Finished resolving dependency for $key" }
             currentlyResolvingKeys.get()?.remove(key)
         }
+    }
+
+    private companion object {
+        /** The synthetic field Kotlin generates on a type that declares a companion object. */
+        const val COMPANION_FIELD_NAME = "Companion"
     }
 }

@@ -29,17 +29,30 @@ val <T : Any> TypeReference<T>.simpleTypeName: String
  * Base class for [TypeReference]s. Instances of this class are created and returned
  * via the [typeReference] function.
  *
+ * The generic argument is read back from the anonymous subclass' generic signature, which only
+ * survives when the `Signature` attribute is kept and the subclasses are not merged into one
+ * another. [erasure] is the same type as seen by the compiler at the call site and is used both as
+ * a fallback when no signature is present and as a cross-check that the signature that *is* present
+ * actually belongs to this type reference.
+ *
+ * @param erasure The erased type of [T] as captured at the [typeReference] call site.
  */
 @PublishedApi
-internal abstract class TypeReferenceImpl<T : Any> : TypeReference<T> {
+internal abstract class TypeReferenceImpl<T : Any>(private val erasure: Class<*>) : TypeReference<T> {
     override val type: Type by lazy {
-        (javaClass.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.firstOrNull()
-            ?: Any::class.java
+        val captured = (javaClass.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.firstOrNull()
+        if (captured != null && captured.rawClass() == erasure) captured else erasure
     }
 
     override fun equals(other: Any?) = other is TypeReference<*> && type == other.type
     override fun hashCode() = type.hashCode()
     override fun toString(): String = type.typeName
+
+    private fun Type.rawClass(): Class<*>? = when (this) {
+        is Class<*> -> this
+        is ParameterizedType -> rawType as? Class<*>
+        else -> null
+    }
 }
 
 /**
@@ -52,4 +65,5 @@ internal abstract class TypeReferenceImpl<T : Any> : TypeReference<T> {
  *
  * @param T The type to capture.
  */
-inline fun <reified T : Any> typeReference(): TypeReference<T> = object : TypeReferenceImpl<T>() {}
+inline fun <reified T : Any> typeReference(): TypeReference<T> =
+    object : TypeReferenceImpl<T>(T::class.javaObjectType) {}

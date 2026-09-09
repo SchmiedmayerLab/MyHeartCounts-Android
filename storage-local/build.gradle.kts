@@ -12,6 +12,7 @@ plugins {
 
 android {
     namespace = "org.grovealliance.storage.local"
+    defaultConfig { consumerProguardFiles("consumer-rules.pro") }
 }
 
 dependencies {

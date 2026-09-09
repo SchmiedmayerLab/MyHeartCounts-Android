@@ -5,6 +5,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+.claude/worktrees
+
 # Compiled class file
 *.class
 *.dex
