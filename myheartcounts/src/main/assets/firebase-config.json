@@ -1,0 +1,16 @@
+{
+  "US": {
+    "projectId": "myheart-counts-development",
+    "applicationId": "1:000000000000:android:0000000000000000000000",
+    "apiKey": "AIzaSyPLACEHOLDER0000000000000000000000",
+    "gcmSenderId": "000000000000",
+    "storageBucket": "myheart-counts-development.appspot.com"
+  },
+  "GB": {
+    "projectId": "myheart-counts-development",
+    "applicationId": "1:000000000000:android:0000000000000000000000",
+    "apiKey": "AIzaSyPLACEHOLDER0000000000000000000000",
+    "gcmSenderId": "000000000000",
+    "storageBucket": "myheart-counts-development.appspot.com"
+  }
+}

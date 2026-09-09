@@ -26,11 +26,14 @@ import androidx.navigation3.ui.NavDisplay
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
+import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.onboarding.OnboardingScreen
 import edu.stanford.myheartcounts.splash.SplashScreen
 import edu.stanford.myheartcounts.study.StudyScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
+import kotlinx.coroutines.launch
 import org.grovealliance.account.AccountOverviewScreen
+import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
 import org.grovealliance.core.viewmodel.groveViewModel
 import org.grovealliance.ui.ConsumeEvents
@@ -46,14 +49,46 @@ import org.grovealliance.ui.verticalModalEnter
 class MainActivity : AppCompatActivity() {
 
     private val navigator by dependency<Navigator>()
+    private val notificationTracking by dependency<MHCNotificationTracking>()
+    private val concurrency by dependency<Concurrency>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        trackNotificationOpen(intent = intent)
 
         setContent {
             MHCAppTheme {
                 AppContent()
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // The activity is `singleInstance`, so a notification tapped while the app is already
+        // running arrives here rather than through `onCreate`.
+        setIntent(intent)
+        trackNotificationOpen(intent = intent)
+    }
+
+    /**
+     * Records that the participant opened a remote nudge, when this launch came from one.
+     *
+     * Firebase Cloud Messaging puts its own extras on the launch intent of a notification it
+     * displayed, so their presence is what distinguishes a tap on a nudge from an ordinary launch.
+     */
+    private fun trackNotificationOpen(intent: Intent?) {
+        val notificationId = intent?.extras?.getString(FCM_MESSAGE_ID_EXTRA) ?: return
+        val payload = intent.extras
+            ?.keySet()
+            .orEmpty()
+            .filterNot { it.startsWith(FCM_INTERNAL_EXTRA_PREFIX) }
+            .mapNotNull { key -> intent.extras?.getString(key)?.let { key to it } }
+            .toMap()
+
+        concurrency.ioCoroutineScope().launch {
+            notificationTracking.trackDidOpen(notificationId = notificationId, payload = payload)
         }
     }
 
@@ -126,3 +161,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+private const val FCM_MESSAGE_ID_EXTRA = "google.message_id"
+
+/**
+ * Firebase's own bookkeeping extras, which say nothing about the nudge itself.
+ */
+private const val FCM_INTERNAL_EXTRA_PREFIX = "google."

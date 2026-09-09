@@ -10,7 +10,10 @@ plugins {
     alias(libs.plugins.paparazzi)
     alias(libs.plugins.grove.application)
     alias(libs.plugins.grove.compose)
+    // HAPI FHIR, which reaches the app through :questionnaire, needs the desugared java.time APIs.
+    alias(libs.plugins.grove.desugaring)
     alias(libs.plugins.grove.serialization)
+    alias(libs.plugins.google.devtools.ksp)
 }
 
 android {
@@ -34,6 +37,16 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Host of a local Firebase emulator suite to talk to instead of a real project, empty to
+        // use the real one. Opt-in rather than a debug default, because a debug build is also how
+        // the app is run against myheart-counts-development. `10.0.2.2` is the host machine as seen
+        // from an Android emulator.
+        buildConfigField(
+            "String",
+            "FIREBASE_EMULATOR_HOST",
+            "\"${(project.findProperty("mhc.firebaseEmulatorHost") as? String).orEmpty()}\"",
+        )
     }
 
     buildTypes {
@@ -61,12 +74,29 @@ dependencies {
     implementation(project(":ui-scheduler"))
     implementation(project(":onboarding"))
     implementation(project(":account"))
+    implementation(project(":account-firebase"))
+    implementation(project(":firebase"))
+    implementation(project(":core-lifecycle"))
+    implementation(project(":health"))
+    implementation(project(":questionnaire"))
     implementation(project(":scheduler"))
     implementation(project(":storage-local"))
     implementation(project(":study"))
     implementation(project(":study-definition"))
 
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.work.runtime.ktx)
+
     implementation(libs.bundles.navigation3)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.functions.ktx)
+    implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.storage.ktx)
+    // The AAR carries the on-device native libraries; the plain jar carries the desktop ones and is
+    // what the unit tests below pull in.
+    implementation(variantOf(libs.zstd.jni) { artifactType("aar") })
 
     androidTestImplementation(libs.bundles.integration.testing)
     androidTestImplementation(testFixtures(project(":study")))
@@ -80,4 +110,12 @@ dependencies {
     testImplementation(testFixtures(project(":core-time")))
     testImplementation(testFixtures(project(":study")))
     testImplementation(testFixtures(project(":study-definition")))
+}
+
+// HAPI FHIR ships an older Guava than the rest of the graph resolves to; :questionnaire pins it for
+// the same reason.
+configurations.configureEach {
+    resolutionStrategy {
+        force(libs.guava)
+    }
 }

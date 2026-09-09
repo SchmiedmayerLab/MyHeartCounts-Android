@@ -19,11 +19,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
+import edu.stanford.myheartcounts.firebase.MHCFirebaseRegionInitializer
 import edu.stanford.myheartcounts.model.Country
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
+import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
+import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
 import edu.stanford.myheartcounts.study.StudyEnroller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -32,6 +36,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.grovealliance.account.AccountLoginScreen
+import org.grovealliance.account.AccountService
+import org.grovealliance.account.firebase.FirebaseAuthProvider
 import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.consent.ConsentScreen
 import org.grovealliance.core.logging.groveLogger
@@ -69,13 +75,21 @@ private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
  * render. UI interactions arrive as [OnboardingAction]s and one-shot UI requests are emitted as
  * [OnboardingEvent]s; step layouts themselves are produced by the [OnboardingStepLayoutMapper].
  */
-@Suppress("TooManyFunctions")
+// Onboarding is where most of the app's setup happens — eligibility, account, consent, health and
+// notification permissions, enrollment — so this coordinates more collaborators than a screen
+// normally would. Splitting it by step would spread one linear flow across several types.
+@Suppress("TooManyFunctions", "LongParameterList")
 class OnboardingViewModel(
     private val navigator: Navigator,
     private val onboardingStepProvider: OnboardingStepProvider,
     private val onboardingStepLayoutMapper: OnboardingStepLayoutMapper,
     private val notificationPermissionHandler: NotificationPermissionHandler,
     private val studyEnroller: StudyEnroller,
+    private val firebaseRegionInitializer: MHCFirebaseRegionInitializer,
+    private val cloudFunctions: MHCCloudFunctions,
+    private val accountService: AccountService,
+    private val consentUploader: MHCConsentUploader,
+    private val consentDocumentProvider: MHCConsentDocumentProvider,
 ) : ViewModel() {
     private val logger by groveLogger()
     private val actionSource = ActionSource(::onAction)
@@ -209,20 +223,51 @@ class OnboardingViewModel(
         scaffoldState.showBottomSheet(sheet = sheet)
     }
 
+    /**
+     * Uploads the consent form the participant just signed.
+     *
+     * A failure is logged and onboarding continues: the participant has consented either way, and
+     * blocking them here would be worse than a form the study has to chase up. The account fields
+     * the uploader stamps are what say whether it arrived.
+     */
+    private suspend fun uploadConsent() {
+        val responses = answers.value.consentResponses ?: return
+        consentUploader.upload(
+            document = consentDocumentProvider.document(),
+            responses = responses,
+        ).onFailure { logger.e(it) { "Consent upload failed; continuing onboarding." } }
+    }
+
     private suspend fun joinWaitlist() {
         val validation = ValidationRule.minimalEmail.validate(waitlistEmail.value)
         if (validation != null) {
             return scaffoldState.showErrorToast(message = validation.message)
         }
-        delay(2.seconds)
+        val country = answers.value.country ?: return scaffoldState.showErrorToast(
+            message = StringResource(Strings.onboarding_waitlist_error),
+        )
+
+        // The waitlist call requires a signed-in participant, and someone in a country the study has
+        // not launched in has no account. Signing up anonymously is what gets them past the rules,
+        // matching iOS; on failure the anonymous account is discarded again rather than left behind.
+        val joined = accountService.signIn(FirebaseAuthProvider.Anonymous).mapCatching {
+            cloudFunctions.joinWaitlist(regionCode = country.code, email = waitlistEmail.value)
+                .onFailure { accountService.logout() }
+                .getOrThrow()
+        }
+        if (joined.isFailure) {
+            logger.e(joined.exceptionOrNull()) { "Failed to join the launch waitlist" }
+            return scaffoldState.showErrorToast(
+                message = StringResource(Strings.onboarding_waitlist_error),
+            )
+        }
+
         scaffoldState.showToast(
             imageResource = ImageResource(Icons.Outlined.Email),
             message = StringResource(Strings.onboarding_waitlist_success),
             displayStyle = GroveToastDisplayStyle.DefaultLong,
-
         )
-        // TODO: Submit waitlistEmail to the launch waitlist backend.
-        logger.i { "User requested to join the launch waitlist" }
+        logger.i { "The participant joined the launch waitlist for '${country.code}'" }
     }
 
     private fun showCountrySelectionSheet() {
@@ -262,13 +307,38 @@ class OnboardingViewModel(
             else -> 0.seconds
         }
         delay(delay) // TODO: Demo purposes only, remove when real work is done in the step
+        if (step == OnboardingStep.Consent) {
+            uploadConsent()
+        }
         if (step == OnboardingStep.FinalEnrollment) {
             studyEnroller.enroll()
                 .onFailure { logger.e(it) { "Enrollment failed; continuing into the app." } }
         }
         when (step) {
             OnboardingStep.CountryUnavailable -> joinWaitlist()
-            else -> handle(result = onboardingStepProvider.getNext(step, answers.value))
+            else -> {
+                val result = onboardingStepProvider.getNext(step, answers.value)
+                initializeFirebaseIfNeeded(result)
+                handle(result = result)
+            }
+        }
+    }
+
+    /**
+     * Initializes Firebase before entering a step that needs it.
+     *
+     * The participant's country decides which Firebase project the app talks to, so leaving
+     * eligibility is the earliest point at which Firebase can be initialized. Participants who turn
+     * out to be ineligible for reasons other than their country never reach a step that talks to a
+     * backend, so no project is contacted for them at all — matching iOS, which loads Firebase only
+     * on the eligible and country-unavailable paths.
+     */
+    private fun initializeFirebaseIfNeeded(result: OnboardingStepResult) {
+        val next = (result as? OnboardingStepResult.Step)?.step ?: return
+        if (next != OnboardingStep.StudyOverview && next != OnboardingStep.CountryUnavailable) return
+        val country = answers.value.country ?: return
+        if (!firebaseRegionInitializer.initialize(country)) {
+            logger.e { "Failed to initialize Firebase for '${country.code}'." }
         }
     }
 }
