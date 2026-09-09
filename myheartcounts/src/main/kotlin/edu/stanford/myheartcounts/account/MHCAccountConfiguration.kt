@@ -7,10 +7,13 @@
 
 package edu.stanford.myheartcounts.account
 
+import edu.stanford.myheartcounts.firebase.MHCFirebaseEmulator
 import org.grovealliance.account.AccountKeys
-import org.grovealliance.account.InMemoryAccountService
-import org.grovealliance.account.InMemoryAccountStorageProvider
 import org.grovealliance.account.accountConfiguration
+import org.grovealliance.account.firebase.FirebaseAccountService
+import org.grovealliance.account.firebase.FirebaseAuthProvider
+import org.grovealliance.account.firebase.FirebaseAuthProviders
+import org.grovealliance.account.firebase.FirestoreAccountStorage
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.GroveDsl
 
@@ -21,8 +24,17 @@ import org.grovealliance.core.GroveDsl
 @GroveDsl
 fun ConfigurationBuilder.account() {
     accountConfiguration(
-        service = InMemoryAccountService(),
-        storageProvider = InMemoryAccountStorageProvider(),
+        // Email and password is the base `AccountService` path and needs no provider entry.
+        // Anonymous sign-in exists only so participants in a region the study has not launched in
+        // yet can join the waitlist, matching iOS.
+        service = MHCAccountService.wrapping(
+            wrapped = FirebaseAccountService(
+                providers = FirebaseAuthProviders(FirebaseAuthProvider.Anonymous),
+                // Null unless the build targets a local emulator suite; see MHCFirebaseEmulator.
+                emulatorSettings = MHCFirebaseEmulator.authSettings(),
+            ),
+        ),
+        storageProvider = FirestoreAccountStorage(collectionPath = USERS_COLLECTION),
         configuration = {
             requires(key = AccountKeys.accountId)
             collects(key = AccountKeys.name)
@@ -70,6 +82,13 @@ fun ConfigurationBuilder.account() {
             manual(key = AccountKeys.raceEthnicity)
             manual(key = AccountKeys.comorbidities)
             manual(key = AccountKeys.nhsNumber)
+            manual(key = AccountKeys.referralSource)
         },
     )
 }
+
+/**
+ * The Firestore collection holding one account document per participant, shared with the iOS app
+ * and the `MyHeartCounts-Firebase` backend.
+ */
+const val USERS_COLLECTION = "users"

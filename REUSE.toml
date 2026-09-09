@@ -35,6 +35,15 @@ path = [
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"
 
+# Everything under assets/ is packaged verbatim into the APK, so a .license sidecar would ship
+# with the app.
+[[annotations]]
+path = [
+    "myheartcounts/src/main/assets/*.json",
+]
+SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"
+
 # Android's resource merger rejects adjacent .license sidecars in res/.
 [[annotations]]
 path = [

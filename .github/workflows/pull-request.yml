@@ -71,6 +71,15 @@ jobs:
           key: swiftpm-${{ runner.os }}-latest-${{ steps.swiftcache.outputs.submodules }}
           restore-keys: |
             swiftpm-${{ runner.os }}-latest-
+      - name: Inject Firebase Configuration
+        env:
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: |
+          if [ -z "$FIREBASE_CONFIG_JSON" ]; then
+            echo "FIREBASE_CONFIG_JSON is not set; keeping the committed placeholder."
+            exit 0
+          fi
+          printf '%s' "$FIREBASE_CONFIG_JSON" | base64 --decode > myheartcounts/src/main/assets/firebase-config.json
       - name: Generate Disposable CI Signing Key
         env:
           KEY_ALIAS: ci-myheartcounts-upload

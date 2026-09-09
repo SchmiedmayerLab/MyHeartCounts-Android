@@ -43,12 +43,11 @@ data class PromptedAction(
     val title: StringResource,
 )
 
-// TODO: Replace with the Firebase-backed source once notification history and account state exist.
 /**
  * Surfaces nothing above the participant's tasks.
  *
- * Nudges are derived from the notifications a participant has been sent, and prompted actions from
- * account state and device capabilities; the app records neither yet.
+ * Kept for tests and previews, which have no backend to read a nudge from; the app itself uses
+ * [FirebaseHomeSuggestionsSource].
  */
 class NoHomeSuggestionsSource : HomeSuggestionsSource {
     override val nudge: Flow<DailyNudge?> = flowOf(null)

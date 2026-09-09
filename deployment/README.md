@@ -37,6 +37,33 @@ directory except its instructional README.
 | `play-service-account.json` | Google Play Developer API credential | Environment secret `SERVICE_ACCOUNT_JSON_KEY` |
 | `upload-keystore.jks` | App-specific Google Play upload key | Repository secret `KEY_STORE`, base64 encoded |
 | `signing.env` | Local `KEY_ALIAS` and `KEY_PASSWORD` values | Repository secrets with the same names |
+| `firebase-config.json` | Real Firebase project options per region | Repository secret `FIREBASE_CONFIG_JSON`, base64 encoded |
+
+## Firebase Configuration
+
+`myheartcounts/src/main/assets/firebase-config.json` holds the Firebase project options keyed by
+ISO 3166-1 alpha-2 region code. My Heart Counts runs one Firebase project per study region, and
+`MHCFirebaseLoader` selects the entry matching the region the participant picks during onboarding.
+
+The version in git is a **placeholder**: the `projectId` and `storageBucket` are real, but the
+`apiKey`, `applicationId` and `gcmSenderId` are dummy values. A build using it compiles and runs
+but authenticates against nothing. This mirrors the placeholder `GoogleService-Info.plist`
+committed to My Heart Counts for iOS.
+
+Workflows this repository owns decode the repository secret `FIREBASE_CONFIG_JSON` over that path
+before building. The shared `SchmiedmayerLab/.github` Android workflow cannot be modified from
+here, so builds it runs use the committed placeholder — which is fine, because nothing consumes
+the file at build time. The `com.google.gms.google-services` Gradle plugin is deliberately **not**
+applied: Firebase is initialized at runtime from this asset rather than from plugin-generated
+resources, and `FirebaseInitProvider` is removed in the app manifest so that no Firebase project is
+contacted before a participant has chosen their region.
+
+Registering the Android app in each Firebase project requires two SHA-1 fingerprints: the upload
+certificate's, from `deployment/certificates/upload-certificate-fingerprints.txt`, and the Play App
+Signing certificate's, from Play Console. Without the latter, Play-distributed builds fail
+certificate-bound Firebase operations.
+
+To work against a real project locally, overwrite the asset and do not commit the result.
 
 Public certificates exported from the upload key may be kept in `deployment/certificates/`.
 Do not store passwords, private keys, JSON credentials, or base64-encoded private keys there.

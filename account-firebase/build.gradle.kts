@@ -15,6 +15,7 @@ android {
 
 dependencies {
     api(project(":account"))
+    api(project(":firebase"))
     api(libs.firebase.auth.ktx)
     api(libs.firebase.firestore.ktx)
 

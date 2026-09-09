@@ -147,4 +147,7 @@ SPDX-License-Identifier: MIT
     <string name="task_action_take_test">Take Test</string>
     <string name="task_action_take_test_again">Take Test Again</string>
     <string name="task_action_take_ecg">Take ECG</string>
+
+    <string name="health_privacy_title">How My Heart Counts Uses Your Health Data</string>
+    <string name="health_privacy_description">My Heart Counts reads the health data you allow it to from Health Connect — such as steps, heart rate, sleep and workouts — and shares it with the Stanford research team studying cardiovascular health. It never writes anything back to Health Connect.\n\nYour health data is stored separately from the information that identifies you, and anything published is de-identified first. You can change what you share, or stop sharing entirely, at any time in Health Connect.</string>
 </resources>

@@ -50,10 +50,12 @@ import org.grovealliance.account.keys
 import org.grovealliance.core.ApplicationModule
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
+import org.grovealliance.firebase.FirebaseAppConfiguration
 import org.grovealliance.ui.validation.ValidationRule
 import org.grovealliance.ui.validation.intercepting
 import org.grovealliance.ui.validation.minimalEmail
 import org.grovealliance.ui.validation.minimalPassword
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -65,9 +67,16 @@ internal class FirebaseAccountServiceImpl(
 ) : FirebaseAccountService {
 
     private val account by dependency<Account>()
+    private val firebaseAppConfiguration by dependency<FirebaseAppConfiguration>()
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val concurrency by dependency<Concurrency>()
     private val ioScope by lazy { concurrency.ioCoroutineScope() }
+
+    /**
+     * The account the auth state last reported, so that a change can tell the external storage
+     * which account it should stop observing.
+     */
+    private val lastKnownAccountId = AtomicReference<String?>(null)
 
     private val appModule by dependency<ApplicationModule>()
     private val context by lazy { appModule.requireContext() }
@@ -98,6 +107,22 @@ internal class FirebaseAccountServiceImpl(
     }
 
     override fun configure() {
+        // `auth` resolves the default FirebaseApp, which may not exist yet when the app defers
+        // Firebase initialization (see FirebaseAppConfiguration). Wait for it before touching any
+        // Firebase API, otherwise this throws on every launch that precedes initialization.
+        ioScope.launch {
+            firebaseAppConfiguration.awaitConfigured()
+            configureAuth()
+        }
+
+        ioScope.launch {
+            externalAccountStorage.updatedDetails.collect { details ->
+                handleUpdatedDetailsFromExternalStorage(details = details)
+            }
+        }
+    }
+
+    private fun configureAuth() {
         emulatorSettings?.let { auth.useEmulator(it.host, it.port) }
 
         auth.addAuthStateListener { firebaseAuth ->
@@ -113,12 +138,6 @@ internal class FirebaseAccountServiceImpl(
                     account.removeUserDetails()
                 }
             }
-
-        ioScope.launch {
-            externalAccountStorage.updatedDetails.collect { details ->
-                handleUpdatedDetailsFromExternalStorage(details = details)
-            }
-        }
     }
 
     private fun handleUpdatedDetailsFromExternalStorage(details: ExternalAccountStorage.ExternallyStoredDetails) {
@@ -288,6 +307,16 @@ internal class FirebaseAccountServiceImpl(
     }
 
     private suspend fun onAuthStateChanged(user: FirebaseUser?) {
+        // Whoever was signed in before is no longer authorized to observe their own document, so the
+        // external storage has to be told to let go of them. Without this its Firestore snapshot
+        // listener stays attached to the previous account and, from the moment the auth state
+        // changes, is permanently rejected with PERMISSION_DENIED — which the Firestore client
+        // surfaces as an uncaught exception rather than through the listener's error parameter.
+        val previousAccountId = lastKnownAccountId.getAndSet(user?.uid)
+        if (previousAccountId != null && previousAccountId != user?.uid) {
+            externalAccountStorage.userDidDisassociate(accountId = previousAccountId)
+        }
+
         if (user != null) {
             updateUser(user)
         } else {
