@@ -35,6 +35,11 @@ fun ConfigurationBuilder.appViewModels() {
             onboardingStepLayoutMapper = dependency(),
             notificationPermissionHandler = dependency(),
             studyEnroller = dependency(),
+            firebaseRegionInitializer = dependency(),
+            cloudFunctions = dependency(),
+            accountService = dependency(),
+            consentUploader = dependency(),
+            consentDocumentProvider = dependency(),
         )
     }
     viewModel {

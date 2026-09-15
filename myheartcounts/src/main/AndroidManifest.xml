@@ -9,7 +9,9 @@ SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CO
 SPDX-License-Identifier: MIT
 -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,6 +22,30 @@ SPDX-License-Identifier: MIT
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Grove.CardinalRed">
+
+        <!--
+        My Heart Counts runs one Firebase project per study region, and which one to use is only
+        known once the participant picks their country during onboarding. Firebase must therefore
+        not initialize itself at process start: MHCFirebaseLoader initializes it explicitly, from
+        the region the participant chose.
+        -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="${applicationId}.firebaseinitprovider"
+            tools:node="remove" />
+
+        <!--
+        Receives the study's remote nudges. The scheduler's own reminders are local notifications
+        and do not come through here.
+        -->
+        <service
+            android:name=".notification.MHCMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

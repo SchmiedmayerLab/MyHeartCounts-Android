@@ -44,9 +44,13 @@ data object UsZipCodePrefixKey : ManualAccountKey<String>(
 
 /**
  * First half of the user's UK postcode.
+ *
+ * The wire identifier is `ukPostcode` rather than `ukPostcodePrefix`, matching iOS. Both platforms
+ * write into the same participant document, so the identifier is a cross-platform contract; only the
+ * Kotlin name says that just the prefix is collected.
  */
 data object UkPostcodePrefixKey : ManualAccountKey<String>(
-    identifier = "ukPostcodePrefix",
+    identifier = "ukPostcode",
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -224,6 +228,21 @@ data object NhsNumberKey : ManualAccountKey<NHSNumber>(
     valueType = NHSNumber::class,
 )
 
+/**
+ * How the participant heard about the study.
+ *
+ * iOS encodes this as the identifier of one of its `ReferralSource` options — a plain string — so
+ * the key is typed as [String] here. Android has no demographics screen offering the options yet,
+ * but the key exists so a value written on iOS survives a round trip through this app rather than
+ * being dropped from the shared participant document.
+ */
+data object ReferralSourceKey : ManualAccountKey<String>(
+    identifier = "referralSource",
+    serializer = String.serializer(),
+    initialValue = InitialValue.string,
+    valueType = String::class,
+)
+
 // AccountKeys access
 
 val AccountKeys.usZipCodePrefix get() = UsZipCodePrefixKey
@@ -245,6 +264,7 @@ val AccountKeys.ukRegion get() = UkRegionKey
 val AccountKeys.raceEthnicity get() = RaceEthnicityKey
 val AccountKeys.comorbidities get() = ComorbiditiesKey
 val AccountKeys.nhsNumber get() = NhsNumberKey
+val AccountKeys.referralSource get() = ReferralSourceKey
 
 // AccountDetails access
 
@@ -267,3 +287,4 @@ val AccountDetails.ukRegion: UKRegion? get() = this[UkRegionKey::class]
 val AccountDetails.raceEthnicity: RaceEthnicity? get() = this[RaceEthnicityKey::class]
 val AccountDetails.comorbidities: Comorbidities? get() = this[ComorbiditiesKey::class]
 val AccountDetails.nhsNumber: NHSNumber? get() = this[NhsNumberKey::class]
+val AccountDetails.referralSource: String? get() = this[ReferralSourceKey::class]

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+This source file is part of the My Heart Counts Android open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+-->
+
+<!--
+The Firebase emulator suite serves plain HTTP, which the platform blocks by default. This permits it
+for the loopback addresses an emulator suite runs on and nothing else, and lives in the debug source
+set so no release build can carry it.
+
+10.0.2.2 is the host machine as seen from an Android emulator; localhost covers a suite running on
+the device itself or reached through an adb reverse tunnel.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
