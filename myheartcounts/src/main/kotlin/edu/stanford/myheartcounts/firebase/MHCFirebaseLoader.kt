@@ -9,12 +9,8 @@ package edu.stanford.myheartcounts.firebase
 
 import android.content.Context
 import com.google.firebase.FirebaseOptions
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
 import org.grovealliance.core.logging.groveLogger
-import org.grovealliance.foundation.JsonSerializer
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Resolves which Firebase project the app talks to, and remembers the choice across launches.
@@ -33,6 +29,10 @@ import java.util.concurrent.ConcurrentHashMap
  * the Firebase app and telling other modules when it is ready — lives in Grove's
  * [org.grovealliance.firebase.FirebaseAppConfiguration].
  *
+ * The project options come from the standard `google-services.json`, which the
+ * `com.google.gms.google-services` Gradle plugin turns into string resources at build time. Only
+ * the automatic initialization is dropped, not the file itself.
+ *
  * The choice is persisted in a dedicated [android.content.SharedPreferences] file rather than in
  * Grove's `KeyValueStorage`, because it is read while the configuration is being built and Grove's
  * dependency graph does not exist yet.
@@ -42,18 +42,8 @@ object MHCFirebaseLoader {
     private const val PREFERENCES_NAME = "edu.stanford.myheartcounts.FIREBASE"
     private const val KEY_REGION = "region"
     private const val KEY_CLEAR_CACHE = "shouldClearFirestoreCacheOnNextLaunch"
-    private const val CONFIG_ASSET = "firebase-config.json"
 
     private val logger by groveLogger(tag = "MHCFirebase")
-
-    /**
-     * The parsed contents of [CONFIG_ASSET], keyed by ISO 3166-1 alpha-2 region code matching
-     * [edu.stanford.myheartcounts.model.Country].
-     *
-     * Note that iOS keys the equivalent plist on `UK` rather than the ISO code `GB`; each platform
-     * keys on its own internal model, so the two config files intentionally differ in shape.
-     */
-    private val configCache = ConcurrentHashMap<String, MHCFirebaseProjectConfig>()
 
     /**
      * The [FirebaseOptions] for the region the participant previously chose, or `null` on a first
@@ -105,17 +95,23 @@ object MHCFirebaseLoader {
         }
 
     /**
-     * Returns the [FirebaseOptions] shipped for [regionCode], or `null` when the app carries no
-     * configuration for that region.
+     * Returns the [FirebaseOptions] for [regionCode], or `null` when the build carries no Firebase
+     * configuration.
+     *
+     * A build is configured from a single `google-services.json`, so every region currently
+     * resolves to the same project. That covers the study as launched, where only the United
+     * States is enabled and everyone else falls back to it. A second regional project needs its
+     * own configuration source before it can be told apart here.
      */
+    @Suppress("UnusedParameter")
     fun optionsFor(context: Context, regionCode: String): FirebaseOptions? =
-        projectConfig(context = context, regionCode = regionCode)?.toFirebaseOptions()
+        FirebaseOptions.fromResource(context.applicationContext)
 
     /**
-     * Whether the app ships a Firebase configuration for [regionCode].
+     * Whether the build carries a Firebase configuration for [regionCode].
      */
     fun hasConfigFor(context: Context, regionCode: String): Boolean =
-        projectConfig(context = context, regionCode = regionCode) != null
+        optionsFor(context = context, regionCode = regionCode) != null
 
     /**
      * Whether the Firestore cache has to be cleared before Firestore is next used.
@@ -133,24 +129,6 @@ object MHCFirebaseLoader {
      */
     fun setShouldClearCacheOnNextLaunch(context: Context, shouldClear: Boolean) {
         preferences(context).edit().putBoolean(KEY_CLEAR_CACHE, shouldClear).apply()
-    }
-
-    private fun projectConfig(context: Context, regionCode: String): MHCFirebaseProjectConfig? {
-        configCache[regionCode]?.let { return it }
-        val configs = runCatching {
-            val text = context.applicationContext.assets.open(CONFIG_ASSET)
-                .bufferedReader()
-                .use { it.readText() }
-            JsonSerializer.decode(
-                text = text,
-                deserializer = MapSerializer(String.serializer(), MHCFirebaseProjectConfig.serializer()),
-            )
-        }.onFailure { throwable ->
-            logger.e(throwable) { "Failed to read '$CONFIG_ASSET'." }
-        }.getOrNull() ?: return null
-
-        configCache.putAll(configs)
-        return configs[regionCode]
     }
 
     private fun preferences(context: Context) =

@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.grove.desugaring)
     alias(libs.plugins.grove.serialization)
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {

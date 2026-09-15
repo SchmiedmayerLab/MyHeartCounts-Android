@@ -35,11 +35,10 @@ path = [
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"
 
-# Everything under assets/ is packaged verbatim into the APK, so a .license sidecar would ship
-# with the app.
+# JSON has no comment syntax for an inline license header.
 [[annotations]]
 path = [
-    "myheartcounts/src/main/assets/*.json",
+    "myheartcounts/google-services.json",
 ]
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"

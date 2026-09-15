@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.firebase
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
+import com.google.firebase.FirebaseApp
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -70,9 +71,10 @@ class CloudFunctionsTest {
      */
     private fun emulatorDocument(path: String): String {
         val host = requireNotNull(MHCFirebaseEmulator.host)
+        val projectId = FirebaseApp.getInstance().options.projectId
         val url = URL(
             "http://$host:${MHCFirebaseEmulator.FIRESTORE_PORT}" +
-                "/v1/projects/myheart-counts-development/databases/(default)/documents/$path",
+                "/v1/projects/$projectId/databases/(default)/documents/$path",
         )
         val connection = (url.openConnection() as HttpURLConnection).apply {
             // The emulator recognizes the literal bearer token "owner" as its own admin credential,
