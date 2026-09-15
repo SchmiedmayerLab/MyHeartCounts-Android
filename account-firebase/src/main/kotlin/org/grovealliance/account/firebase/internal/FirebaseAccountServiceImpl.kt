@@ -368,6 +368,11 @@ internal class FirebaseAccountServiceImpl(
     }
 
     private suspend fun <T> execute(operation: suspend () -> T): Result<T> {
+        // Only wait while auth setup is merely pending. Without a configured Firebase app it may never
+        // happen, and waiting would hang the caller instead of failing the operation.
+        if (!firebaseAppConfiguration.isConfigured.value) {
+            return Result.failure(FirebaseAccountError.Unknown(IllegalStateException("Firebase is not configured.")))
+        }
         authConfigured.await()
         return authOperationMutex.withLock {
             runCatching { operation() }
