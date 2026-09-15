@@ -9,18 +9,20 @@ package edu.stanford.myheartcounts.firebase
 
 import com.google.firebase.firestore.DocumentSnapshot
 import edu.stanford.myheartcounts.model.Country
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.grovealliance.account.Account
 import org.grovealliance.account.AccountDetails
-import org.grovealliance.account.accountId
 import org.grovealliance.account.AccountService
 import org.grovealliance.account.DateOfBirthKey
-import org.grovealliance.account.UserIdKey
 import org.grovealliance.account.NameKey
 import org.grovealliance.account.PasswordKey
 import org.grovealliance.account.PersonName
+import org.grovealliance.account.UserIdKey
+import org.grovealliance.account.accountId
 import org.grovealliance.core.requireDependency
 import java.time.Instant
 import java.util.UUID
@@ -104,6 +106,18 @@ object FirebaseTestSession {
             withTimeout(READY_TIMEOUT_MILLIS) { account.details.first { it == null } }
         }
     }
+
+    /**
+     * Waits until the account's details satisfy [predicate], and returns them.
+     *
+     * A write the backend accepted only reaches the account once its snapshot listener delivers the
+     * document, so reading the current details straight after a write races that delivery. The wait
+     * runs on a real dispatcher: under `runTest`'s virtual clock the timeout would fire at once.
+     */
+    suspend fun awaitDetails(predicate: (AccountDetails?) -> Boolean): AccountDetails? =
+        withContext(Dispatchers.Default) {
+            withTimeout(READY_TIMEOUT_MILLIS) { account.details.first(predicate) }
+        }
 
     private const val PASSWORD = "TestPassword123!"
     private const val READY_TIMEOUT_MILLIS = 30_000L

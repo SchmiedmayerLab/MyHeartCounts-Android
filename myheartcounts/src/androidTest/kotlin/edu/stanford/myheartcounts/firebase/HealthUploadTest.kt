@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.firebase
 
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.metadata.Metadata
@@ -75,7 +76,8 @@ class HealthUploadTest {
         assertThat(archives.single().name).endsWith(".json.zstd")
 
         // The fresh sample must still be held back rather than swept along with the old one.
-        val remaining = staging.dao().observationsReadyForUpload(
+        val remaining = staging.observations().observationsReadyForUpload(
+            accountId = FirebaseTestSession.firestore.accountId,
             sampleTypeIdentifier = "HKQuantityTypeIdentifierStepCount",
             cutoffMillis = Long.MAX_VALUE,
             limit = 10,
@@ -113,6 +115,56 @@ class HealthUploadTest {
         assertThat(archives.single().name).startsWith("HealthConnectTypeIdentifierSpeed_")
     }
 
+    @Test
+    fun uploadsStagedDeletionsAsOneArchivePerSampleType() = runTest {
+        handler.handleDeletedRecords(recordIds = setOf("deleted-steps"), type = RecordType.steps)
+        handler.handleDeletedRecords(recordIds = setOf("deleted-speed"), type = RecordType.speed)
+
+        handler.uploadStagedData().getOrThrow()
+
+        val names = archivesIn(folder = "healthDeletions").map { it.name }
+        assertThat(names).hasSize(2)
+        assertThat(names.any { it.startsWith("HKQuantityTypeIdentifierStepCount_") }).isTrue()
+        assertThat(names.any { it.startsWith("HealthConnectTypeIdentifierSpeed_") }).isTrue()
+        assertThat(names.all { it.endsWith(".csv.zstd") }).isTrue()
+    }
+
+    @Test
+    fun reportsNothingForARecordDeletedBeforeItLeftTheDevice() = runTest {
+        handler.handleNewRecords(
+            records = setOf(heartRateRecord(id = "heart-rate-record", end = Instant.now())),
+            type = RecordType.heartRate,
+        )
+
+        handler.handleDeletedRecords(recordIds = setOf("heart-rate-record"), type = RecordType.heartRate)
+        handler.uploadStagedData().getOrThrow()
+
+        assertThat(archivesIn(folder = "healthDeletions")).isEmpty()
+        val remaining = staging.observations().observationsReadyForUpload(
+            accountId = FirebaseTestSession.firestore.accountId,
+            sampleTypeIdentifier = "HKQuantityTypeIdentifierHeartRate",
+            cutoffMillis = Long.MAX_VALUE,
+            limit = 10,
+        )
+        assertThat(remaining).isEmpty()
+    }
+
+    @Test
+    fun reportsEveryUploadedReadingOfADeletedSeriesRecord() = runTest {
+        val record = speedRecord(id = "speed-record")
+        handler.handleNewRecords(records = setOf(record), type = RecordType.speed)
+
+        handler.handleDeletedRecords(recordIds = setOf("speed-record"), type = RecordType.speed)
+        handler.uploadStagedData().getOrThrow()
+
+        val archive = archivesIn(folder = "healthDeletions").single()
+        val csv = String(Zstd.decompress(archive.getBytes(MAX_ARCHIVE_BYTES).await(), MAX_DECOMPRESSED))
+        val sampleIds = csv.lines().drop(1).filter { it.isNotBlank() }.map { it.split(",")[1] }
+        assertThat(sampleIds).containsExactlyElementsIn(
+            record.samples.map { "speed-record-${it.time.toEpochMilli()}" },
+        )
+    }
+
     private suspend fun archivesIn(folder: String) = FirebaseStorage.getInstance().reference
         .child("users/${FirebaseTestSession.firestore.accountId}/$folder")
         .listAll()
@@ -128,18 +180,34 @@ class HealthUploadTest {
         metadata = Metadata.manualEntry(),
     )
 
-    private fun speedRecord() = SpeedRecord(
+    private fun speedRecord(id: String? = null) = SpeedRecord(
         startTime = Instant.now().minusSeconds(STEP_INTERVAL_SECONDS),
         startZoneOffset = ZoneOffset.UTC,
         endTime = Instant.now(),
         endZoneOffset = ZoneOffset.UTC,
         samples = listOf(
             SpeedRecord.Sample(
-                time = Instant.now().minusSeconds(1),
+                time = Instant.now().minusSeconds(2),
                 speed = Velocity.metersPerSecond(1.4),
             ),
+            SpeedRecord.Sample(
+                time = Instant.now().minusSeconds(1),
+                speed = Velocity.metersPerSecond(1.6),
+            ),
         ),
-        metadata = Metadata.manualEntry(),
+        metadata = id?.let { Metadata.manualEntryWithId(id = it) } ?: Metadata.manualEntry(),
+    )
+
+    private fun heartRateRecord(id: String, end: Instant) = HeartRateRecord(
+        startTime = end.minusSeconds(STEP_INTERVAL_SECONDS),
+        startZoneOffset = ZoneOffset.UTC,
+        endTime = end,
+        endZoneOffset = ZoneOffset.UTC,
+        samples = listOf(
+            HeartRateRecord.Sample(time = end.minusSeconds(60), beatsPerMinute = 62),
+            HeartRateRecord.Sample(time = end.minusSeconds(30), beatsPerMinute = 64),
+        ),
+        metadata = Metadata.manualEntryWithId(id = id),
     )
 
     private companion object {

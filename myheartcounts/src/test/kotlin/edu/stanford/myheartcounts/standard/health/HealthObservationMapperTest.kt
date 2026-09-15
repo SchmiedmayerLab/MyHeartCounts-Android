@@ -9,9 +9,11 @@ package edu.stanford.myheartcounts.standard.health
 
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Pressure
+import androidx.health.connect.client.units.Velocity
 import com.google.common.truth.Truth.assertThat
 import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.DateTimeType
@@ -133,6 +135,40 @@ class HealthObservationMapperTest {
             .containsExactly(62.0, 71.0)
         // Distinct ids, so a re-upload replaces each reading rather than collapsing the series.
         assertThat(observations.map { it.id }.toSet()).hasSize(2)
+    }
+
+    @Test
+    fun `it should keep same-moment readings of different series types apart without record ids`() {
+        // Staging keys every row by observation id alone, so these must not collide.
+        val heartRate = HeartRateRecord(
+            startTime = start,
+            startZoneOffset = ZoneOffset.UTC,
+            endTime = end,
+            endZoneOffset = ZoneOffset.UTC,
+            samples = listOf(HeartRateRecord.Sample(time = start, beatsPerMinute = 62)),
+            metadata = Metadata.manualEntry(),
+        )
+        val speed = SpeedRecord(
+            startTime = start,
+            startZoneOffset = ZoneOffset.UTC,
+            endTime = end,
+            endZoneOffset = ZoneOffset.UTC,
+            samples = listOf(SpeedRecord.Sample(time = start, speed = Velocity.metersPerSecond(1.4))),
+            metadata = Metadata.manualEntry(),
+        )
+
+        val heartRateId = mapper.map(
+            record = heartRate,
+            sampleType = HealthSampleType.of(recordType = RecordType.heartRate),
+            issuedAt = issuedAt,
+        ).single().id
+        val speedId = mapper.map(
+            record = speed,
+            sampleType = HealthSampleType.of(recordType = RecordType.speed),
+            issuedAt = issuedAt,
+        ).single().id
+
+        assertThat(heartRateId).isNotEqualTo(speedId)
     }
 
     @Test

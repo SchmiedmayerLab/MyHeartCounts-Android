@@ -55,7 +55,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        trackNotificationOpen(intent = intent)
+        // A recreated activity is handed its launch intent again, and that open was already recorded.
+        if (savedInstanceState == null) trackNotificationOpen(intent = intent)
 
         setContent {
             MHCAppTheme {
@@ -86,6 +87,8 @@ class MainActivity : AppCompatActivity() {
             .filterNot { it.startsWith(FCM_INTERNAL_EXTRA_PREFIX) }
             .mapNotNull { key -> intent.extras?.getString(key)?.let { key to it } }
             .toMap()
+        // Consumed, so that nothing handed this intent again can count the same open twice.
+        intent.removeExtra(FCM_MESSAGE_ID_EXTRA)
 
         concurrency.ioCoroutineScope().launch {
             notificationTracking.trackDidOpen(notificationId = notificationId, payload = payload)

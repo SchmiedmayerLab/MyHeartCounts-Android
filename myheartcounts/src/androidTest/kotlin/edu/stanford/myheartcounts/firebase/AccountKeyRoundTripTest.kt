@@ -102,8 +102,9 @@ class AccountKeyRoundTripTest {
     fun readsEveryAwkwardKeyBackWithItsValueIntact() = runTest {
         writeKeys()
 
-        val details = FirebaseTestSession.account.details.value
-        assertThat(details).isNotNull()
+        // The write returns once Firestore accepted it, but the account only reflects it once the
+        // snapshot listener delivers the document.
+        val details = FirebaseTestSession.awaitDetails { it?.nhsNumber == NHS_NUMBER }
         requireNotNull(details)
 
         assertThat(details.preferredWorkoutTypes?.elements).containsExactlyElementsIn(WORKOUTS.elements)

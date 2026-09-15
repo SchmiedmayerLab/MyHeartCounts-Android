@@ -51,7 +51,17 @@ internal class FirebaseAppConfigurationImpl(
 
     override fun configure(options: FirebaseOptions): Result<FirebaseApp> = lock.withLock {
         existingApp()?.let { app ->
+            // Firebase is usable either way, so waiters may proceed — but against the project it
+            // already has, which a caller asking for a different one must not mistake for success.
             _isConfigured.value = true
+            if (app.options.projectId != options.projectId) {
+                val error = IllegalStateException(
+                    "Firebase is already configured for project '${app.options.projectId}' and cannot " +
+                        "switch to '${options.projectId}' within this process.",
+                )
+                logger.e(error) { error.message.orEmpty() }
+                return Result.failure(error)
+            }
             return Result.success(app)
         }
         runCatching {

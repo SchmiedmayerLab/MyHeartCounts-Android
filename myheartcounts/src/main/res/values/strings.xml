@@ -29,6 +29,9 @@ SPDX-License-Identifier: MIT
     <string name="answer_true">True</string>
     <string name="answer_false">False</string>
 
+    <!-- Consent PDF -->
+    <string name="consent_pdf_answer">Answer: %1$s</string>
+
     <!-- Eligibility -->
     <string name="eligibility_title">Eligibility</string>
     <string name="eligibility_subtitle">Before you begin, we’ll ask you a few quick questions to ensure the study is a good fit for you.</string>

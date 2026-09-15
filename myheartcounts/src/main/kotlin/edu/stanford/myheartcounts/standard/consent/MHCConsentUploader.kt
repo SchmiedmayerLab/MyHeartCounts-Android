@@ -32,6 +32,7 @@ import org.grovealliance.markdown.MarkdownMetadata
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Uploads the consent form a participant signed, and records that they signed it.
@@ -56,7 +57,8 @@ class MHCConsentUploader(
      * the participant's account.
      *
      * The account is only updated once the upload succeeds: a participant recorded as consented
-     * whose form never arrived is worse than one asked to sign again.
+     * whose form never arrived is worse than one asked to sign again. A form that arrived without
+     * those fields is reported as a failure too.
      *
      * @param document The consent document, as Grove's markdown module parsed it — the same model
      * the consent screen rendered from, so its frontmatter and version are read rather than passed.
@@ -94,6 +96,8 @@ class MHCConsentUploader(
 
         recordOnAccount(responses = responses, version = version, signedAt = signedAt)
     }.onFailure { throwable ->
+        // A cancelled upload did not fail; onboarding must not carry on as if it had.
+        if (throwable is CancellationException) throw throwable
         logger.e(throwable) { "Failed to upload the signed consent form." }
     }
 
@@ -113,7 +117,7 @@ class MHCConsentUploader(
         }
         AccountModifications(modifiedDetails = modifiedDetails)
             .mapCatching { account.service.updateAccountDetails(it).getOrThrow() }
-            .onFailure { logger.e(it) { "Failed to record the consent on the account." } }
+            .getOrThrow()
     }
 
     /**

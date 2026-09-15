@@ -12,6 +12,7 @@ import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.firebase.FirebaseAppConfiguration
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The callable Cloud Functions the app invokes.
@@ -80,6 +81,8 @@ class MHCCloudFunctionsImpl(
         FirebaseFunctions.getInstance().getHttpsCallable(name).call(data).await()
         Unit
     }.onFailure { throwable ->
+        // Cancellation is not a failed call; it has to keep unwinding the caller's coroutine.
+        if (throwable is CancellationException) throw throwable
         logger.e(throwable) { "Cloud function '$name' failed." }
     }
 }

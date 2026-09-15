@@ -65,6 +65,7 @@ import org.grovealliance.ui.rememberPermissionRequester
 import org.grovealliance.ui.showErrorToast
 import org.grovealliance.ui.validation.ValidationRule
 import org.grovealliance.ui.validation.minimalEmail
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
@@ -255,8 +256,10 @@ class OnboardingViewModel(
                 .onFailure { accountService.logout() }
                 .getOrThrow()
         }
-        if (joined.isFailure) {
-            logger.e(joined.exceptionOrNull()) { "Failed to join the launch waitlist" }
+        joined.exceptionOrNull()?.let { failure ->
+            // `mapCatching` also catches cancellation, which must not surface as a waitlist error.
+            if (failure is CancellationException) throw failure
+            logger.e(failure) { "Failed to join the launch waitlist" }
             return scaffoldState.showErrorToast(
                 message = StringResource(Strings.onboarding_waitlist_error),
             )

@@ -75,7 +75,10 @@ class ConsentUploadTest {
         // The filename is a unix timestamp, which is what the read-back listing sorts on.
         assertThat(uploaded.single().name).matches("""\d+\.pdf""")
 
-        assertThat(FirebaseTestSession.account.details.value?.lastSignedConsentDate).isNotNull()
+        // Stamped by a separate account update, which reaches the account through its snapshot
+        // listener some time after the upload returned.
+        val stamped = FirebaseTestSession.awaitDetails { it?.lastSignedConsentDate != null }
+        assertThat(stamped?.lastSignedConsentDate).isNotNull()
     }
 
     private fun responses() = ConsentResponses(

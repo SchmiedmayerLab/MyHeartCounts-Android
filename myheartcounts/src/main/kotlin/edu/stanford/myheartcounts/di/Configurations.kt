@@ -156,7 +156,7 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
     }
 
     module { MHCConsentDocumentProvider(studyBundleProvider = dependency()) }
-    singleton { ConsentPdfRenderer() }
+    singleton { ConsentPdfRenderer(context = appContext()) }
     module {
         MHCConsentUploader(
             context = appContext(),
@@ -178,6 +178,7 @@ private fun ConfigurationBuilder.healthConfigurations() {
         ManagedFileUpload(
             context = appContext(),
             firestore = dependency(),
+            concurrency = dependency(),
         )
     }
     module {

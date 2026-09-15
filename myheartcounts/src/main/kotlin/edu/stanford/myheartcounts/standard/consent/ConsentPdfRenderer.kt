@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.standard.consent
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
@@ -18,6 +19,7 @@ import android.text.Spanned
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.style.StyleSpan
+import edu.stanford.myheartcounts.MHCStrings
 import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.consent.SignatureMetadata
 import org.grovealliance.markdown.EmphasisStyle
@@ -72,9 +74,12 @@ enum class ConsentPaperSize(val widthPoints: Int, val heightPoints: Int) {
  * this renders and what the consent screen showed cannot drift apart.
  *
  * Interactive elements are rendered with the participant's own answer beside them, because a consent
- * record that omits what they chose is not a record of their consent.
+ * record that omits what they chose is not a record of their consent. Those answer labels come from
+ * string resources, so they follow the same locale as the consent text around them.
+ *
+ * @param context Resolves the answer labels.
  */
-class ConsentPdfRenderer {
+class ConsentPdfRenderer(private val context: Context) {
 
     /**
      * Renders [document] with the participant's [responses] to a PDF.
@@ -148,13 +153,19 @@ class ConsentPdfRenderer {
         if (prompt.isNotEmpty()) writer.writeParagraph(text = prompt)
 
         val answer = when (element.name) {
-            TAG_TOGGLE -> responses.toggles[element.id]?.let { if (it) ANSWER_YES else ANSWER_NO }
+            TAG_TOGGLE -> responses.toggles[element.id]?.let {
+                context.getString(if (it) MHCStrings.answer_yes else MHCStrings.answer_no)
+            }
             TAG_SELECT -> responses.selects[element.id]?.let { optionId ->
                 optionLabel(element = element, optionId = optionId) ?: optionId
             }
             else -> null
         } ?: return
-        writer.writeParagraph(text = "$ANSWER_PREFIX $answer", bold = true, indent = LIST_INDENT)
+        writer.writeParagraph(
+            text = context.getString(MHCStrings.consent_pdf_answer, answer),
+            bold = true,
+            indent = LIST_INDENT,
+        )
     }
 
     /**
@@ -396,9 +407,6 @@ class ConsentPdfRenderer {
         const val MIN_EXTENT = 1f
 
         const val BULLET = "•"
-        const val ANSWER_PREFIX = "Answer:"
-        const val ANSWER_YES = "Yes"
-        const val ANSWER_NO = "No"
 
         const val TAG_TOGGLE = MHCConsentDocumentProvider.TAG_TOGGLE
         const val TAG_SELECT = MHCConsentDocumentProvider.TAG_SELECT

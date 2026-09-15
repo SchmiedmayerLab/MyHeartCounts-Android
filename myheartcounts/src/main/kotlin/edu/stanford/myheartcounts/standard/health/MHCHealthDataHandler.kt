@@ -12,6 +12,8 @@ import ca.uhn.fhir.context.FhirContext
 import com.github.luben.zstd.Zstd
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
 import org.grovealliance.core.logging.groveLogger
@@ -43,6 +45,13 @@ class MHCHealthDataHandler(
     private val fhirParser by lazy { FhirContext.forR4().newJsonParser() }
 
     /**
+     * Serializes upload runs. Signing in both recovers interrupted uploads and starts the upload
+     * worker, whose first run is immediate; two runs reading the same staged rows would each upload
+     * them.
+     */
+    private val uploadLock = Mutex()
+
+    /**
      * Converts [records] to FHIR and routes them by the strategy their sample type calls for.
      */
     suspend fun <T : Record> handleNewRecords(records: Set<T>, type: RecordType<out T>) {
@@ -52,20 +61,25 @@ class MHCHealthDataHandler(
         // Resolved once per batch rather than per observation: it is the same for all of them, and
         // reading it involves a database round trip.
         val provenance = provenance()
-        val observations = records.flatMap { record ->
+        val observationsByRecord = records.associateWith { record ->
             mapper.map(record = record, sampleType = sampleType, issuedAt = issuedAt)
                 .onEach { provenance.applyTo(observation = it) }
         }
+        val observations = observationsByRecord.values.flatten()
         if (observations.isEmpty()) return
+        trackSeriesReadings(sampleType = sampleType, observationsByRecord = observationsByRecord)
 
         when (sampleType.strategy) {
             HealthUploadStrategy.QUEUE_LOCALLY -> stage(
                 sampleType = sampleType,
                 observations = observations,
             )
-            HealthUploadStrategy.FIREBASE_STORAGE -> uploadArchive(
-                sampleType = sampleType,
-                observations = observations,
+            HealthUploadStrategy.FIREBASE_STORAGE -> uploadArchiveJson(
+                accountId = firestore.accountId,
+                sampleTypeIdentifier = sampleType.identifier,
+                json = observations.joinToString(separator = ",", prefix = "[", postfix = "]") {
+                    fhirParser.encodeResourceToString(it)
+                },
                 category = HealthUploadCategory.LIVE,
             )
             HealthUploadStrategy.DIRECT_FIRESTORE -> uploadToFirestore(
@@ -76,17 +90,22 @@ class MHCHealthDataHandler(
     }
 
     /**
-     * Stages the deletions so the backend can retract the samples it already holds.
+     * Drops what is still staged for the deleted records, and stages deletions for whatever of them
+     * already reached the backend.
      */
     suspend fun <T : Record> handleDeletedRecords(recordIds: Set<String>, type: RecordType<out T>) {
         if (recordIds.isEmpty()) return
         val sampleType = HealthSampleType.of(recordType = type)
+        val accountId = firestore.accountId
         val deletedAt = timeProvider.currentTimeMillis()
-        staging.dao().stageDeletions(
-            deletions = recordIds.map { recordId ->
+        val sampleIds = recordIds.flatMap { recordId -> sampleIdsToReport(recordId = recordId, sampleType = sampleType) }
+        if (sampleIds.isEmpty()) return
+        staging.deletions().stageDeletions(
+            deletions = sampleIds.map { sampleId ->
                 StagedDeletion(
-                    sampleId = recordId,
+                    sampleId = sampleId,
                     sampleTypeIdentifier = sampleType.identifier,
+                    accountId = accountId,
                     deletedAtMillis = deletedAt,
                 )
             },
@@ -103,7 +122,7 @@ class MHCHealthDataHandler(
     suspend fun <T : Record> onFullyResyncRequired(type: RecordType<out T>) {
         val sampleType = HealthSampleType.of(recordType = type)
         logger.i { "Re-syncing '${sampleType.identifier}'; dropping what was staged for it." }
-        staging.dao().removeObservationsOfType(sampleTypeIdentifier = sampleType.identifier)
+        staging.observations().removeObservationsOfType(sampleTypeIdentifier = sampleType.identifier)
     }
 
     /**
@@ -111,51 +130,118 @@ class MHCHealthDataHandler(
      *
      * Called from [HealthUploadWorker]; safe to call at any time and a no-op when nothing is due.
      */
-    suspend fun uploadStagedData(): Result<Unit> = runCatching {
-        firestore.awaitReady()
-        val cutoff = timeProvider.nowInstant()
-            .minusMillis(HealthUploadSchedule.RETENTION_OFFSET_DAYS * MILLIS_PER_DAY)
-            .toEpochMilli()
+    suspend fun uploadStagedData(): Result<Unit> = uploadLock.withLock { uploadStagedDataLocked() }
 
-        staging.dao().sampleTypesReadyForUpload(cutoffMillis = cutoff).forEach { identifier ->
-            uploadStagedType(sampleTypeIdentifier = identifier, cutoffMillis = cutoff)
-        }
-        uploadStagedDeletions()
+    private suspend fun uploadStagedDataLocked(): Result<Unit> = runCatching {
+        firestore.awaitReady()
+        // Read once, so a participant signing in while this runs cannot have anyone else's rows
+        // uploaded as theirs.
+        val accountId = firestore.accountId
+        val now = timeProvider.currentTimeMillis()
+        val cutoff = now - HealthUploadSchedule.RETENTION_OFFSET_DAYS * MILLIS_PER_DAY
+
+        staging.observations().sampleTypesReadyForUpload(accountId = accountId, cutoffMillis = cutoff)
+            .forEach { identifier ->
+                uploadStagedType(accountId = accountId, sampleTypeIdentifier = identifier, cutoffMillis = cutoff)
+            }
+        uploadStagedDeletions(accountId = accountId)
+        staging.seriesReadings().removeOlderThan(
+            cutoffMillis = now - HealthUploadSchedule.SERIES_READINGS_RETENTION_DAYS * MILLIS_PER_DAY,
+        )
     }
 
     /**
-     * Re-uploads archives an interrupted session left on disk.
+     * Re-uploads archives an interrupted session left on disk, after dropping whatever another
+     * participant left staged.
      */
     suspend fun recoverInterruptedUploads() {
-        firestore.awaitReady()
-        managedUpload.recoverOrphans()
+        uploadLock.withLock {
+            firestore.awaitReady()
+            val accountId = firestore.accountId
+            staging.observations().removeObservationsNotOwnedBy(accountId = accountId)
+            staging.deletions().removeDeletionsNotOwnedBy(accountId = accountId)
+            managedUpload.recoverOrphans()
+        }
     }
 
     /**
      * Drops everything waiting to be uploaded, for when the participant signs out.
      */
     suspend fun clearPendingUploads() {
-        staging.dao().clearObservations()
-        staging.dao().clearDeletions()
+        staging.observations().clearObservations()
+        staging.deletions().clearDeletions()
+        staging.seriesReadings().clear()
         managedUpload.discardStaged()
     }
 
+    /**
+     * Remembers which observations each record carrying a series produced, merged with what earlier
+     * deliveries of the same record produced, so that deleting the record can name every reading.
+     */
+    private suspend fun trackSeriesReadings(
+        sampleType: HealthSampleType,
+        observationsByRecord: Map<out Record, List<Observation>>,
+    ) {
+        val series = staging.seriesReadings()
+        val now = timeProvider.currentTimeMillis()
+        val readings = observationsByRecord.mapNotNull { (record, observations) ->
+            val recordId = record.metadata.id.ifEmpty { null } ?: return@mapNotNull null
+            val readingIds = observations.map { it.id }.filter { it != recordId }
+            if (readingIds.isEmpty()) return@mapNotNull null
+            val known = series.readings(recordId = recordId, sampleTypeIdentifier = sampleType.identifier)
+                ?.observationIds
+                ?.split(SERIES_ID_SEPARATOR)
+                .orEmpty()
+            SeriesRecordReadings(
+                recordId = recordId,
+                sampleTypeIdentifier = sampleType.identifier,
+                observationIds = (known + readingIds).distinct().joinToString(separator = SERIES_ID_SEPARATOR),
+                updatedAtMillis = now,
+            )
+        }
+        if (readings.isNotEmpty()) series.save(readings = readings)
+    }
+
+    /**
+     * The sample ids the backend has to retract for the deleted [recordId], after dropping whatever
+     * of the record had not left the device yet.
+     *
+     * Matches iOS, which reports nothing for a sample it still held: the backend never received it.
+     */
+    private suspend fun sampleIdsToReport(recordId: String, sampleType: HealthSampleType): List<String> {
+        val series = staging.seriesReadings()
+        val readingIds = series.readings(recordId = recordId, sampleTypeIdentifier = sampleType.identifier)
+            ?.observationIds
+            ?.split(SERIES_ID_SEPARATOR)
+        if (readingIds == null) {
+            val removed = staging.observations().removeObservationsOfRecord(recordId = recordId)
+            return if (removed > 0) emptyList() else listOf(recordId)
+        }
+        val stillStaged = series.stagedObservationIdsAmong(ids = readingIds).toSet()
+        staging.observations().removeObservations(ids = stillStaged.toList())
+        series.remove(recordId = recordId, sampleTypeIdentifier = sampleType.identifier)
+        return readingIds.filterNot { it in stillStaged }
+    }
+
     private suspend fun stage(sampleType: HealthSampleType, observations: List<Observation>) {
-        staging.dao().stage(
+        val accountId = firestore.accountId
+        staging.observations().stage(
             observations = observations.map { observation ->
                 StagedObservation(
                     id = observation.id,
                     sampleTypeIdentifier = sampleType.identifier,
+                    accountId = accountId,
                     json = fhirParser.encodeResourceToString(observation),
-                    effectiveAtMillis = effectiveMillis(observation = observation),
+                    effectiveAtMillis = observation.effectiveEndMillis() ?: timeProvider.currentTimeMillis(),
                 )
             },
         )
     }
 
-    private suspend fun uploadStagedType(sampleTypeIdentifier: String, cutoffMillis: Long) {
+    private suspend fun uploadStagedType(accountId: String, sampleTypeIdentifier: String, cutoffMillis: Long) {
         while (true) {
-            val batch = staging.dao().observationsReadyForUpload(
+            val batch = staging.observations().observationsReadyForUpload(
+                accountId = accountId,
                 sampleTypeIdentifier = sampleTypeIdentifier,
                 cutoffMillis = cutoffMillis,
                 limit = HealthUploadSchedule.ARCHIVE_BATCH_SIZE,
@@ -163,6 +249,7 @@ class MHCHealthDataHandler(
             if (batch.isEmpty()) return
 
             val archived = uploadArchiveJson(
+                accountId = accountId,
                 sampleTypeIdentifier = sampleTypeIdentifier,
                 json = batch.joinToString(separator = ",", prefix = "[", postfix = "]") { it.json },
                 category = HealthUploadCategory.LIVE,
@@ -170,67 +257,44 @@ class MHCHealthDataHandler(
             // Leaving the rows staged on failure is what makes an upload retryable; dropping them
             // here would lose the samples for good.
             if (archived.isFailure) return
-            staging.dao().removeObservations(ids = batch.map { it.id })
+            staging.observations().removeObservations(ids = batch.map { it.id })
         }
     }
 
-    private suspend fun uploadStagedDeletions() {
-        val deletions = staging.dao().allDeletions()
-        if (deletions.isEmpty()) return
-
-        val csv = buildString {
-            appendLine(DELETIONS_CSV_HEADER)
-            deletions.forEach { deletion ->
-                appendLine("${deletion.sampleTypeIdentifier},${deletion.sampleId},${deletion.deletedAtMillis}")
+    /**
+     * Uploads the staged deletions as one archive per sample type, which is the shape iOS uploads
+     * and the backend ingests.
+     */
+    private suspend fun uploadStagedDeletions(accountId: String) {
+        staging.deletions().allDeletions(accountId = accountId)
+            .groupBy { it.sampleTypeIdentifier }
+            .forEach { (sampleTypeIdentifier, deletions) ->
+                val csv = buildString {
+                    appendLine(DELETIONS_CSV_HEADER)
+                    deletions.forEach { deletion ->
+                        appendLine("${deletion.sampleTypeIdentifier},${deletion.sampleId},${deletion.deletedAtMillis}")
+                    }
+                }
+                val uploaded = managedUpload.upload(
+                    accountId = accountId,
+                    category = HealthUploadCategory.DELETIONS,
+                    fileName = "${sampleTypeIdentifier}_${UUID.randomUUID()}.csv.zstd",
+                    bytes = Zstd.compress(csv.toByteArray()),
+                )
+                // Left staged on failure, so the next run reports them again.
+                if (uploaded.isSuccess) {
+                    staging.deletions().removeDeletions(sampleIds = deletions.map { it.sampleId })
+                }
             }
-        }
-        val uploaded = managedUpload.upload(
-            category = HealthUploadCategory.DELETIONS,
-            fileName = "deletions_${UUID.randomUUID()}.csv.zstd",
-            bytes = Zstd.compress(csv.toByteArray()),
-        )
-        if (uploaded.isFailure) return
-
-        // The backend also drains a Firestore queue of deletions, which is what the deletion service
-        // replays against the collections the samples were uploaded to.
-        runCatching {
-            deletions.forEach { deletion ->
-                firestore.pendingHealthSampleDeletions
-                    .document(deletion.sampleId)
-                    .set(
-                        mapOf(
-                            "collectionName" to "HealthObservations_${deletion.sampleTypeIdentifier}",
-                            "sampleId" to deletion.sampleId,
-                        ),
-                    )
-                    .await()
-            }
-        }.onFailure { throwable ->
-            logger.e(throwable) { "Failed to enqueue health sample deletions in Firestore." }
-            return
-        }
-        staging.dao().removeDeletions(sampleIds = deletions.map { it.sampleId })
-    }
-
-    private suspend fun uploadArchive(
-        sampleType: HealthSampleType,
-        observations: List<Observation>,
-        category: HealthUploadCategory,
-    ) {
-        uploadArchiveJson(
-            sampleTypeIdentifier = sampleType.identifier,
-            json = observations.joinToString(separator = ",", prefix = "[", postfix = "]") {
-                fhirParser.encodeResourceToString(it)
-            },
-            category = category,
-        )
     }
 
     private suspend fun uploadArchiveJson(
+        accountId: String,
         sampleTypeIdentifier: String,
         json: String,
         category: HealthUploadCategory,
     ): Result<Unit> = managedUpload.upload(
+        accountId = accountId,
         category = category,
         // The backend splits this name on the underscore to recover the sample type
         // (`onArchivedLiveHealthSampleUploaded.test.ts:91`).
@@ -257,9 +321,6 @@ class MHCHealthDataHandler(
         }
     }
 
-    private fun effectiveMillis(observation: Observation): Long =
-        observation.effectiveEndMillis() ?: timeProvider.currentTimeMillis()
-
     private companion object {
         const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
@@ -267,6 +328,11 @@ class MHCHealthDataHandler(
          * The columns the backend's deletion ingestion expects.
          */
         const val DELETIONS_CSV_HEADER = "sampleType,sampleId,timestamp"
+
+        /**
+         * Joins the observation ids tracked for one series record. Observation ids never contain it.
+         */
+        const val SERIES_ID_SEPARATOR = ","
     }
 }
 
@@ -282,6 +348,15 @@ object HealthUploadSchedule {
      * delete a sample from Health Connect before it ever leaves the device.
      */
     const val RETENTION_OFFSET_DAYS = 3L
+
+    /**
+     * How long the readings a series record produced are remembered after its last delivery.
+     *
+     * Deleting a record older than this reports only the record's own id, which does not match the
+     * readings the backend holds. A year bounds the table while covering the deletions participants
+     * realistically make.
+     */
+    const val SERIES_READINGS_RETENTION_DAYS = 365L
 
     /**
      * How often the uploader runs. iOS schedules its equivalent background task six hours out.

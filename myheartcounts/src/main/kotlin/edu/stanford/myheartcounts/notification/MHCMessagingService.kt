@@ -9,9 +9,6 @@ package edu.stanford.myheartcounts.notification
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.logging.groveLogger
@@ -26,15 +23,16 @@ import org.grovealliance.core.requireDependency
 class MHCMessagingService : FirebaseMessagingService() {
 
     private val logger by groveLogger(tag = "MHCFirebase")
-    private val scope by lazy {
-        CoroutineScope(requireDependency<Concurrency>().ioDispatcher() + SupervisorJob())
-    }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         // The token outlives any one process, so it goes onto the account document rather than being
         // kept here; MHCPushTokenSynchronizer owns reconciling it with what is already stored.
-        scope.launch {
+        //
+        // Deliberately not scoped to this service: the system may destroy it as soon as this
+        // returns, which would cancel the write part-way. A write lost to the process dying is
+        // reconciled by `MHCPushTokenSynchronizer.synchronize()` on the next launch.
+        requireDependency<Concurrency>().ioCoroutineScope().launch {
             requireDependency<MHCPushTokenSynchronizer>().onTokenRefreshed(token = token)
         }
     }
@@ -44,10 +42,5 @@ class MHCMessagingService : FirebaseMessagingService() {
         // Nudges are sent as notification messages, which the system tray displays on its own while
         // the app is backgrounded. Nothing to do here beyond noting that one arrived.
         logger.i { "Received a remote nudge (${message.messageId ?: "no id"})." }
-    }
-
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
     }
 }

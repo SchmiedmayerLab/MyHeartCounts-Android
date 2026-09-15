@@ -15,6 +15,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.account.firebase.FirebaseAuthProvider
 import org.grovealliance.core.requireDependency
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -58,9 +59,10 @@ class CloudFunctionsTest {
         // deliberately not client-readable under firestore.rules, and only the function's admin
         // credentials may touch it. Asserting through the client would be asserting that a rule the
         // study relies on is broken.
-        val entry = emulatorDocument(path = "waitlist/GB_${email.lowercase()}")
-        assertThat(entry).contains("\"stringValue\":\"GB\"")
-        assertThat(entry).contains(email.lowercase())
+        val fields = JSONObject(emulatorDocument(path = "waitlist/GB_${email.lowercase()}"))
+            .getJSONObject("fields")
+        assertThat(fields.getJSONObject("region").getString("stringValue")).isEqualTo("GB")
+        assertThat(fields.getJSONObject("email").getString("stringValue")).isEqualTo(email.lowercase())
     }
 
     /**

@@ -71,13 +71,6 @@ class MHCFirestore : Module {
         get() = userDocument.collection(QUESTIONNAIRE_RESPONSES_COLLECTION)
 
     /**
-     * The queue of health samples the participant deleted, which the backend replays against the
-     * collections the samples were uploaded to.
-     */
-    val pendingHealthSampleDeletions: CollectionReference
-        get() = userDocument.collection(PENDING_HEALTH_SAMPLE_DELETIONS_COLLECTION)
-
-    /**
      * Records of the participant interacting with a notification.
      */
     val notificationTracking: CollectionReference
@@ -104,7 +97,6 @@ class MHCFirestore : Module {
 
     private companion object {
         const val QUESTIONNAIRE_RESPONSES_COLLECTION = "questionnaireResponses"
-        const val PENDING_HEALTH_SAMPLE_DELETIONS_COLLECTION = "pendingHealthSampleDeletions"
         const val NOTIFICATION_TRACKING_COLLECTION = "notificationTracking"
         const val NOTIFICATION_HISTORY_COLLECTION = "notificationHistory"
         const val HEALTH_OBSERVATIONS_PREFIX = "HealthObservations_"

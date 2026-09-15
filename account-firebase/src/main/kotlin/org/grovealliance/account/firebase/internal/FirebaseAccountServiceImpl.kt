@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
@@ -94,6 +95,12 @@ internal class FirebaseAccountServiceImpl(
 
     private val authOperationMutex = Mutex()
 
+    /**
+     * Completes once [configureAuth] ran. Every auth operation waits for it, because the emulator
+     * redirect only applies to requests made after it.
+     */
+    private val authConfigured = CompletableDeferred<Unit>()
+
     override val configuration: AccountServiceConfiguration = accountServiceConfiguration(
         supportedAccountKeys = SupportedAccountKeys.Exactly(SUPPORTED_KEYS),
     ) {
@@ -112,7 +119,11 @@ internal class FirebaseAccountServiceImpl(
         // Firebase API, otherwise this throws on every launch that precedes initialization.
         ioScope.launch {
             firebaseAppConfiguration.awaitConfigured()
-            configureAuth()
+            try {
+                configureAuth()
+            } finally {
+                authConfigured.complete(Unit)
+            }
         }
 
         ioScope.launch {
@@ -356,14 +367,16 @@ internal class FirebaseAccountServiceImpl(
         }
     }
 
-    private suspend fun <T> execute(operation: suspend () -> T): Result<T> =
-        authOperationMutex.withLock {
+    private suspend fun <T> execute(operation: suspend () -> T): Result<T> {
+        authConfigured.await()
+        return authOperationMutex.withLock {
             runCatching { operation() }
                 .fold(
                     onSuccess = { Result.success(it) },
                     onFailure = { Result.failure(FirebaseAccountError.from(it)) }
                 )
         }
+    }
 
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { continuation.resume(it) }

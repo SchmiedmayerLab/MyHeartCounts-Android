@@ -189,9 +189,15 @@ class HealthObservationMapper {
         issuedAt: Instant,
         reading: Reading,
     ): Observation = Observation().apply {
-        id = listOfNotNull(record.metadata.id.ifEmpty { null }, reading.idSuffix)
-            .joinToString(separator = "_")
-            .ifEmpty { "${sampleType.identifier}_${reading.start.toEpochMilli()}" }
+        val recordId = record.metadata.id.ifEmpty { null }
+        // Without a record id, the sample type stands in for it: staged rows share one key space, so
+        // same-moment readings of two types must not end up under the same id. The separator is a
+        // hyphen because a FHIR id allows only letters, digits, `-` and `.`.
+        id = when {
+            recordId == null -> "${sampleType.identifier}-${reading.idSuffix ?: reading.start.toEpochMilli()}"
+            reading.idSuffix == null -> recordId
+            else -> "$recordId-${reading.idSuffix}"
+        }
         status = Observation.ObservationStatus.FINAL
         issued = Date.from(issuedAt)
 

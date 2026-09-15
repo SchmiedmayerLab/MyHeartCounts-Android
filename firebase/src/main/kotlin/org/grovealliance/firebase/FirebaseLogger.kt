@@ -12,4 +12,4 @@ import org.grovealliance.core.logging.groupLogger
 /**
  * Logger for the Grove Firebase module.
  */
-fun firebaseLogger() = groupLogger(tag = "GroveFirebase")
+internal fun firebaseLogger() = groupLogger(tag = "GroveFirebase")

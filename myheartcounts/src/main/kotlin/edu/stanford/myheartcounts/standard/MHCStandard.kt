@@ -24,6 +24,7 @@ import org.grovealliance.firebase.FirebaseAppConfiguration
 import org.grovealliance.health.HealthConstraint
 import org.grovealliance.health.RecordType
 import org.grovealliance.study.StudyManager
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The single place the app's participant data flows through on its way to the backend.
@@ -63,13 +64,20 @@ class MHCStandard : Standard, HealthConstraint {
 
             var wasSignedIn = false
             account.observeIsSignedIn().collect { isSignedIn ->
-                when {
-                    isSignedIn -> onSignedIn()
-                    // Only a real sign-out is worth tearing anything down for. The first emission is
-                    // the state at launch, and for a launch with nobody signed in there is nothing
-                    // running yet to stop.
-                    wasSignedIn -> onSignedOut()
-                    else -> Unit
+                runCatching {
+                    when {
+                        isSignedIn -> onSignedIn()
+                        // Only a real sign-out is worth tearing anything down for. The first emission
+                        // is the state at launch, and for a launch with nobody signed in there is
+                        // nothing running yet to stop.
+                        wasSignedIn -> onSignedOut()
+                        else -> Unit
+                    }
+                }.onFailure { throwable ->
+                    // Letting a failure escape would end this collection, and with it the handling of
+                    // every later sign-in and sign-out.
+                    if (throwable is CancellationException) throw throwable
+                    logger.e(throwable) { "Handling a sign-in state change failed; waiting for the next one." }
                 }
                 wasSignedIn = isSignedIn
             }
@@ -86,6 +94,9 @@ class MHCStandard : Standard, HealthConstraint {
     suspend fun willSignOut() {
         pushTokens.clear()
         healthData.clearPendingUploads()
+        // Enrollments are stored on the device rather than on the account, so the next participant
+        // to sign in would otherwise inherit them. Matches iOS's logout cleanup.
+        studyManager.studyEnrollments().forEach { studyManager.unenroll(enrollment = it) }
         // Firestore refuses to clear its cache while its client is running, so the documents of the
         // participant signing out here can only go on the next process start.
         MHCFirebaseLoader.setShouldClearCacheOnNextLaunch(

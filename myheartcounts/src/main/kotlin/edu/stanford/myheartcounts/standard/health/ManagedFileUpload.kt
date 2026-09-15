@@ -10,9 +10,14 @@ package edu.stanford.myheartcounts.standard.health
 import android.content.Context
 import com.google.firebase.storage.FirebaseStorage
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.logging.groveLogger
 import java.io.File
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The Cloud Storage folder an archive belongs in, under the participant's own prefix.
@@ -41,46 +46,78 @@ enum class HealthUploadCategory(val folderName: String) {
 /**
  * Uploads archives to Cloud Storage so that an interrupted upload resumes rather than losing data.
  *
- * An archive is written into a per-category staging folder on disk first and only deleted once
- * Cloud Storage has acknowledged it, so a process death mid-upload leaves the file behind rather
- * than dropping the samples. [recoverOrphans] re-uploads whatever it finds there at launch. Ports
- * iOS's `ManagedFileUpload`.
+ * An archive is written into a staging folder on disk first and only deleted once Cloud Storage has
+ * acknowledged it, so a process death mid-upload leaves the file behind rather than dropping the
+ * samples. [recoverOrphans] re-uploads whatever it finds there at launch. Ports iOS's
+ * `ManagedFileUpload`.
+ *
+ * Staging folders are per account. Ownership is the path, so an archive can only ever be uploaded
+ * under the participant who produced it — even when the cleanup at sign-out did not get to run.
  */
 class ManagedFileUpload(
     private val context: Context,
     private val firestore: MHCFirestore,
+    private val concurrency: Concurrency,
 ) {
 
     private val logger by groveLogger(tag = "MHCFirebase")
 
     /**
+     * Serializes access to the staging folders, so recovery cannot pick up an archive that is still
+     * being uploaded and send it a second time.
+     */
+    private val lock = Mutex()
+
+    /**
      * Writes [bytes] into [category]'s staging folder and uploads it.
      *
+     * @param accountId The participant the archive belongs to. Passed rather than read from the
+     * current account, so data read out of staging for one participant cannot be uploaded as
+     * whoever happens to be signed in by the time it is sent.
      * @param fileName The name the archive gets, both on disk and in Cloud Storage.
      * @return A [Result] that succeeds once Cloud Storage holds the archive.
      */
-    suspend fun upload(category: HealthUploadCategory, fileName: String, bytes: ByteArray): Result<Unit> {
-        val file = File(stagingDirectory(category = category), fileName)
-        return runCatching {
-            file.writeBytes(bytes)
-        }.mapCatching {
-            uploadStagedFile(category = category, file = file).getOrThrow()
-        }.onFailure { throwable ->
-            logger.e(throwable) { "Failed to upload '$fileName' to ${category.folderName}." }
+    suspend fun upload(
+        accountId: String,
+        category: HealthUploadCategory,
+        fileName: String,
+        bytes: ByteArray,
+    ): Result<Unit> = withContext(concurrency.ioDispatcher()) {
+        lock.withLock {
+            runCatching {
+                File(stagingDirectory(accountId = accountId, category = category), fileName)
+                    .apply { writeBytes(bytes) }
+            }.mapCatching { file ->
+                uploadStagedFile(accountId = accountId, category = category, file = file).getOrThrow()
+            }.onFailure { throwable ->
+                if (throwable is CancellationException) throw throwable
+                logger.e(throwable) { "Failed to upload '$fileName' to ${category.folderName}." }
+            }
         }
     }
 
     /**
-     * Re-uploads every archive an earlier session left behind.
+     * Re-uploads every archive an earlier session of the signed-in participant left behind, and
+     * deletes whatever other participants left behind.
      *
-     * Call this at launch, and only once Firebase is available and the participant is signed in;
-     * an orphan belongs to whoever was signed in when it was written.
+     * Call this at launch, and only once Firebase is available and the participant is signed in.
      */
     suspend fun recoverOrphans() {
-        HealthUploadCategory.entries.forEach { category ->
-            stagingDirectory(category = category).listFiles().orEmpty().forEach { file ->
-                logger.i { "Retrying the interrupted upload of '${file.name}'." }
-                uploadStagedFile(category = category, file = file)
+        withContext(concurrency.ioDispatcher()) {
+            lock.withLock {
+                val accountId = firestore.accountId
+                // Never theirs to upload, and the cleanup that should have removed them at sign-out
+                // did not finish.
+                rootDirectory().listFiles().orEmpty()
+                    .filter { it.name != accountId }
+                    .forEach { it.deleteRecursively() }
+
+                HealthUploadCategory.entries.forEach { category ->
+                    stagingDirectory(accountId = accountId, category = category).listFiles().orEmpty().forEach { file ->
+                        logger.i { "Retrying the interrupted upload of '${file.name}'." }
+                        uploadStagedFile(accountId = accountId, category = category, file = file)
+                    }
+                }
             }
         }
     }
@@ -88,26 +125,32 @@ class ManagedFileUpload(
     /**
      * Deletes every archive still waiting on disk, for when the participant signs out.
      */
-    fun discardStaged() {
-        HealthUploadCategory.entries.forEach { category ->
-            stagingDirectory(category = category).listFiles().orEmpty().forEach { it.delete() }
+    suspend fun discardStaged() {
+        withContext(concurrency.ioDispatcher()) {
+            lock.withLock { rootDirectory().deleteRecursively() }
         }
     }
 
-    private suspend fun uploadStagedFile(category: HealthUploadCategory, file: File): Result<Unit> =
-        runCatching {
-            val path = "${USERS_PREFIX}/${firestore.accountId}/${category.folderName}/${file.name}"
-            FirebaseStorage.getInstance().reference.child(path).putBytes(file.readBytes()).await()
-            // Only now is the archive safe to drop: until Cloud Storage acknowledged it, this file
-            // is the only copy of those samples.
-            file.delete()
-            Unit
-        }.onFailure { throwable ->
-            logger.e(throwable) { "Upload of '${file.name}' failed; it stays staged for a later retry." }
-        }
+    private suspend fun uploadStagedFile(
+        accountId: String,
+        category: HealthUploadCategory,
+        file: File,
+    ): Result<Unit> = runCatching {
+        val path = "${USERS_PREFIX}/$accountId/${category.folderName}/${file.name}"
+        FirebaseStorage.getInstance().reference.child(path).putBytes(file.readBytes()).await()
+        // Only now is the archive safe to drop: until Cloud Storage acknowledged it, this file
+        // is the only copy of those samples.
+        file.delete()
+        Unit
+    }.onFailure { throwable ->
+        if (throwable is CancellationException) throw throwable
+        logger.e(throwable) { "Upload of '${file.name}' failed; it stays staged for a later retry." }
+    }
 
-    private fun stagingDirectory(category: HealthUploadCategory): File =
-        File(context.filesDir, "$STAGING_DIRECTORY/${category.folderName}").apply { mkdirs() }
+    private fun rootDirectory(): File = File(context.filesDir, STAGING_DIRECTORY)
+
+    private fun stagingDirectory(accountId: String, category: HealthUploadCategory): File =
+        File(rootDirectory(), "$accountId/${category.folderName}").apply { mkdirs() }
 
     private companion object {
         const val STAGING_DIRECTORY = "health-uploads"
