@@ -39,8 +39,6 @@ SPDX-License-Identifier = "MIT"
 [[annotations]]
 path = [
     "myheartcounts/src/main/res/mipmap-*/*.png",
-    "sample-app/src/main/res/mipmap-*/*.webp",
-    "ui-theme/src/main/res/font/*.ttf",
 ]
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"

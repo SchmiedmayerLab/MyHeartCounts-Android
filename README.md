@@ -17,15 +17,36 @@ SPDX-License-Identifier: MIT
 
 Kotlin &amp; Android Version of the My Heart Counts ecosystem.
 
+This repository holds the application. The accounts, onboarding, consent, questionnaire, scheduling,
+study, and design system modules it is built from live in
+[Grove Kotlin](https://github.com/SchmiedmayerLab/grove-kotlin).
 
-### Application Structure
+### Grove
 
-- **Design System**: Provides a cohesive user interface and user experience
-  components. [View the UI modules](./ui/)
-- **Account**: Provides Account management components. [View the module](./account/)
-- **Onboarding**: Provides Onboarding screens for the
-  application. [View the module](./onboarding/)
-- **Contact**: Provides Contact screens. [View the module](./contact/)
+Grove is pinned as a submodule and built from source, so a Grove change reaches the app without a
+publishing step in between:
+
+```bash
+git submodule update --init
+```
+
+The application depends on Grove by coordinate — `org.grovealliance:<module>`, declared in
+[`gradle/libs.versions.toml`](gradle/libs.versions.toml) — and the submodule commit decides which Grove
+that is. While a feature is in flight, move the submodule to its branch and commit the new pin alongside
+the code that needs it:
+
+```bash
+git -C grove-kotlin switch feature/the-feature
+git add grove-kotlin
+```
+
+A pin merged into `main` has to be a commit that is on Grove's `main`, which CI verifies: a commit that
+only existed on a branch is gone once Grove squash-merges and deletes it. To build against a Grove
+checkout somewhere else, set `grove.path` in `~/.gradle/gradle.properties` rather than editing the build.
+
+Grove and the application have to pin the same Android Gradle Plugin and Kotlin versions, because a
+composite build loads the plugins of both into one process. Gradle checks this as it configures and says
+so when the two drift apart.
 
 ### Study Bundle
 
@@ -36,19 +57,15 @@ bundled and downloaded bundles unpack through one code path. The bundle is not c
 submodule pins the study definitions, and Gradle exports the archive from them with the same Swift
 exporter the iOS application uses, so both platforms package what the pinned commit describes.
 
-```bash
-git submodule update --init
-```
-
 `./gradlew :myheartcounts:exportStudyBundle` refreshes the assets; any task that assembles the
-application runs the export itself, and re-runs it only once the submodule moves. The
-`:study-definition` unit tests export their archive fixture the same way instead of committing a
-generated artifact. The export needs a Swift toolchain: it uses the one on `PATH`, and otherwise
+application runs the export itself, and re-runs it only once the submodule moves. The unit tests read
+that exported archive rather than a committed artifact, which is what holds the exporter and the Kotlin
+decoder to the same schema. The export needs a Swift toolchain: it uses the one on `PATH`, and otherwise
 runs in the container named by `myHeartCounts.studyBundle.swiftImage`. Force either with
 `-PstudyBundleToolchain=swift` or `-PstudyBundleToolchain=docker`.
 
-Dependabot advances the submodule to the head of `main` weekly, so the bundle moves forward through a
-reviewable commit.
+Dependabot advances both submodules to the head of the branch they track weekly, so the bundle and Grove
+move forward through a reviewable commit.
 
 ### Continuous Integration and Delivery Setup
 

@@ -9,9 +9,13 @@ package edu.stanford.myheartcounts.study
 
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.BuildConfig
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.grovealliance.studydefinition.Component
 import org.grovealliance.studydefinition.FileReference
 import org.grovealliance.studydefinition.StudyBundle
+import org.grovealliance.studydefinition.StudyDefinitionJson
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -44,6 +48,18 @@ class MHCStudyBundleTest {
         assertThat(definition.studyRevision.toLong()).isAtLeast(MINIMUM_REVISION)
         assertThat(definition.components).isNotEmpty()
         assertThat(definition.componentSchedules).isNotEmpty()
+    }
+
+    @Test
+    fun `exports the schema version the definition model decodes`() {
+        // when
+        val schemaVersion = Json.parseToJsonElement(File(bundleDir, DEFINITION_FILENAME).readText())
+            .jsonObject[SCHEMA_VERSION_KEY]
+            ?.jsonPrimitive
+            ?.content
+
+        // then
+        assertThat(schemaVersion).isEqualTo(StudyDefinitionJson.SCHEMA_VERSION)
     }
 
     @Test
@@ -113,6 +129,8 @@ class MHCStudyBundleTest {
          */
         const val GENERATED_ROOT = "build/generated"
         const val ARCHIVE_SUFFIX = ".tar.zst"
+        const val DEFINITION_FILENAME = "definition.json"
+        const val SCHEMA_VERSION_KEY = "schemaVersion"
 
         /**
          * The oldest revision known to decode. Raise this only alongside a bundle update.

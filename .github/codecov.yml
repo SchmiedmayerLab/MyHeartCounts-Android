@@ -8,7 +8,8 @@
 
 coverage:
   status:
-    # Never let overall coverage slip; the project is at 29.20% today.
+    # Never let overall coverage slip. The application module is at roughly 22% now that the Grove
+    # modules and their tests report in their own repository.
     project:
       default:
         target: auto
