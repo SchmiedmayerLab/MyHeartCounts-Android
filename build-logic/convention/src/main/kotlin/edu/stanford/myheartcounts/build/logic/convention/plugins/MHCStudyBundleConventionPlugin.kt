@@ -9,7 +9,6 @@ package edu.stanford.myheartcounts.build.logic.convention.plugins
 
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.BuildConfigField
-import org.grovealliance.build.logic.convention.model.PluginId
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -46,7 +45,7 @@ class MHCStudyBundleConventionPlugin : Plugin<Project> {
         val packageDirectory = rootProject.layout.projectDirectory.dir(gradleProperty(PACKAGE_PATH_PROPERTY))
 
         // Applied independently of where this sits among the module's plugins.
-        pluginManager.withPlugin(PluginId.ANDROID_APPLICATION.id) {
+        pluginManager.withPlugin(ANDROID_APPLICATION_PLUGIN) {
             tasks.register("exportStudyBundle") {
                 group = BUILD_SETUP_GROUP
                 description = "Exports the study bundle into the assets of every application variant."
@@ -83,6 +82,7 @@ class MHCStudyBundleConventionPlugin : Plugin<Project> {
     }
 
     private companion object {
+        const val ANDROID_APPLICATION_PLUGIN = "com.android.application"
         const val ASSET_PATH_FIELD = "STUDY_BUNDLE_ASSET_PATH"
         const val ASSET_PATH_DOC = "Path of the study bundle archive within the app's assets."
     }

@@ -35,7 +35,6 @@ import org.grovealliance.account.AccountLoginScreen
 import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.consent.ConsentScreen
 import org.grovealliance.core.logging.groveLogger
-import org.grovealliance.resources.Strings
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.ComposableContent
@@ -217,7 +216,7 @@ class OnboardingViewModel(
         delay(2.seconds)
         scaffoldState.showToast(
             imageResource = ImageResource(Icons.Outlined.Email),
-            message = StringResource(Strings.onboarding_waitlist_success),
+            message = StringResource(MHCStrings.onboarding_waitlist_success),
             displayStyle = GroveToastDisplayStyle.DefaultLong,
 
         )

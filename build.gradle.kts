@@ -10,18 +10,17 @@ import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.compose.compiler) version libs.versions.kotlin apply false
     alias(libs.plugins.detekt) version libs.versions.detekt
     alias(libs.plugins.dokka) version libs.versions.dokka
-    alias(libs.plugins.google.devtools.ksp) version libs.versions.kspVersion apply false
     jacoco
-    alias(libs.plugins.jetbrains.kotlin.android) apply false
     alias(libs.plugins.google.gms.google.services) apply false
     alias(libs.plugins.kotlin.serialization) apply false
-    alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.paparazzi) apply false
 }
+
+// The detekt configuration is Grove's, so the app is held to the same rules as the modules it builds on.
+val groveDirectory = rootDir.resolve(providers.gradleProperty("grove.path").getOrElse("grove-kotlin"))
 
 subprojects {
     setupDokka()
@@ -32,7 +31,7 @@ subprojects {
 installCustomTasks()
 
 dokka {
-    moduleName.set("Grove Documentation")
+    moduleName.set("My Heart Counts Android Documentation")
     dokkaPublications.html {
         includes.from("README.md")
     }
@@ -41,10 +40,6 @@ dokka {
 // Dokka v2 aggregates by depending on each module rather than by wiring partial tasks together.
 dependencies {
     subprojects.forEach { dokka(project(it.path)) }
-}
-
-tasks.named("dokkaGeneratePublicationHtml") {
-    dependsOn("copyDocumentationImages")
 }
 
 fun Project.setupDokka() {
@@ -74,7 +69,7 @@ fun Project.setupDetekt() {
     apply(plugin = libs.plugins.detekt.get().pluginId)
     detekt {
         toolVersion = libs.versions.detekt.get()
-        config.setFrom("$rootDir/internal/detekt-config.yml")
+        config.setFrom("$groveDirectory/internal/detekt-config.yml")
         autoCorrect = true
         ignoreFailures = false
         source.setFrom(
@@ -103,11 +98,6 @@ fun Project.setupDetekt() {
 }
 
 fun Project.enableAndroidTestCoverage() {
-    plugins.withId("com.android.library") {
-        extensions.configure<com.android.build.api.dsl.LibraryExtension>("android") {
-            buildTypes.getByName("debug").enableAndroidTestCoverage = true
-        }
-    }
     plugins.withId("com.android.application") {
         extensions.configure<com.android.build.api.dsl.ApplicationExtension>("android") {
             buildTypes.getByName("debug").enableAndroidTestCoverage = true
@@ -134,7 +124,13 @@ fun Project.setupJacoco() {
     )
     val reportTask = tasks.register("jacocoCoverageReport", JacocoReport::class.java) {
         classDirectories.setFrom(
-            fileTree("$buildDir/intermediates/classes/debug") {
+            // The Android plugin's built-in Kotlin support writes classes under built_in_kotlinc;
+            // the other two are where it wrote them before, and where Java classes still land.
+            fileTree("$buildDir/intermediates/built_in_kotlinc/debug") {
+                exclude(coverageExclusions)
+            } + fileTree("$buildDir/intermediates/javac/debug") {
+                exclude(coverageExclusions)
+            } + fileTree("$buildDir/intermediates/classes/debug") {
                 exclude(coverageExclusions)
             } + fileTree("$buildDir/tmp/kotlin-classes/debug") {
                 exclude(coverageExclusions)
@@ -174,18 +170,5 @@ fun Project.installCustomTasks() {
     if (tasksDir.exists() && tasksDir.isDirectory) {
         tasksDir.listFiles { file -> file.extension == "kts" }
             ?.forEach { file -> apply(from = file) }
-    }
-
-    tasks.register<Copy>("copyDocumentationImages") {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        fileTree("$rootDir").matching {
-            include("**/screens/*.jpg")
-        }.forEach { file ->
-            val relativePath = file.parentFile.relativeTo(File("$rootDir"))
-            from(file.parentFile) {
-                include("*.jpg")
-            }
-            into("$buildDir/dokka/htmlMultiModule/$relativePath")
-        }
     }
 }

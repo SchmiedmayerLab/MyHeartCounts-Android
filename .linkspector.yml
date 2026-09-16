@@ -8,8 +8,9 @@
 dirs:
   - .
 excludedDirs:
-  # The study definitions submodule is checked by its own repository.
+  # Both submodules are checked by their own repositories.
   - MyHeartCounts-StudyDefinitions
+  - grove-kotlin
 useGitIgnore: true
 ignorePatterns:
   - pattern: '^doc:.*$'
