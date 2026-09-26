@@ -12,7 +12,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "org.grovealliance.build.logic"
+group = "edu.stanford.myheartcounts.build.logic"
 
 val javaVersion = JavaVersion.VERSION_21
 
@@ -39,33 +39,12 @@ tasks {
     }
 }
 
-fun NamedDomainObjectContainer<PluginDeclaration>.conventionPlugin(id: String, className: String) {
-    register(className) {
-        this.id = "grove.$id"
-        implementationClass = "org.grovealliance.build.logic.convention.plugins.$className"
-    }
-}
-
-/**
- * Plugins specific to the My Heart Counts application rather than to the Grove framework modules.
- */
-fun NamedDomainObjectContainer<PluginDeclaration>.applicationPlugin(id: String, className: String) {
-    register(className) {
-        this.id = "mhc.$id"
-        implementationClass = "edu.stanford.myheartcounts.build.logic.convention.plugins.$className"
-    }
-}
-
 gradlePlugin {
     plugins {
-        // Please keep plugins sorted. Select all method calls below and in Android Studio `Edit > Sort Lines`
-        applicationPlugin(id = "studybundle", className = "MHCStudyBundleConventionPlugin")
-        applicationPlugin(id = "studybundlefixture", className = "MHCStudyBundleFixtureConventionPlugin")
-        conventionPlugin(id = "application", className = "GroveApplicationConventionPlugin")
-        conventionPlugin(id = "base", className = "GroveBaseConfigConventionPlugin")
-        conventionPlugin(id = "compose", className = "GroveComposeConventionPlugin")
-        conventionPlugin(id = "desugaring", className = "DesugaringConventionPlugin")
-        conventionPlugin(id = "library", className = "GroveLibraryConventionPlugin")
-        conventionPlugin(id = "serialization", className = "GroveSerializationConventionPlugin")
+        register("MHCStudyBundleConventionPlugin") {
+            id = "mhc.studybundle"
+            implementationClass =
+                "edu.stanford.myheartcounts.build.logic.convention.plugins.MHCStudyBundleConventionPlugin"
+        }
     }
 }

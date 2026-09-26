@@ -63,7 +63,6 @@ out/
 build/
 
 # track build-logic module
-!**/org/grovealliance/build
 !**/edu/stanford/myheartcounts/build
 
 # built application files

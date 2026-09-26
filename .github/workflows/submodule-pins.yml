@@ -1,0 +1,45 @@
+#
+# This source file is part of the My Heart Counts Android open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Submodule Pins
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reachable:
+    name: Reachable From the Tracked Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      # A commit that only ever existed on a feature branch is gone once that branch is
+      # squash-merged and deleted, which would leave this commit unbuildable for good.
+      - name: Verify Every Submodule Pin Is on the Branch It Tracks
+        shell: bash
+        run: |
+          # The variables below are expanded by the shell `git submodule foreach` runs the script in.
+          # shellcheck disable=SC2016
+          git submodule foreach --quiet '
+            branch=$(git config -f "$toplevel/.gitmodules" "submodule.$name.branch" || echo main)
+            git fetch --quiet origin "$branch"
+            if git merge-base --is-ancestor HEAD "origin/$branch"; then
+              echo "$name is pinned to a commit on origin/$branch"
+            else
+              echo "::error::$name is pinned to $(git rev-parse HEAD), which is not on origin/$branch"
+              exit 1
+            fi
+          '

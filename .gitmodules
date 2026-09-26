@@ -2,3 +2,7 @@
 	path = MyHeartCounts-StudyDefinitions
 	url = https://github.com/SchmiedmayerLab/MyHeartCounts-StudyDefinitions.git
 	branch = main
+[submodule "grove-kotlin"]
+	path = grove-kotlin
+	url = https://github.com/SchmiedmayerLab/grove-kotlin.git
+	branch = main

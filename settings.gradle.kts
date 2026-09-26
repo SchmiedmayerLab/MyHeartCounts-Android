@@ -32,38 +32,41 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyHeartCounts-Android"
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+fun catalogVersion(catalog: File, name: String): String =
+    Regex("^$name\\s*=\\s*\"([^\"]+)\"", RegexOption.MULTILINE)
+        .find(catalog.readText())
+        ?.groupValues
+        ?.get(1)
+        ?: error("No '$name' version in $catalog")
 
-// Please keep the projects sorted. Select all method calls below and in Android Studio `Edit > Sort Lines`
-include(":account")
-include(":account-firebase")
-include(":consent")
-include(":contact")
-include(":core")
-include(":core-coroutines")
-include(":core-lifecycle")
-include(":core-logging")
-include(":core-time")
-include(":core-viewmodel")
-include(":foundation")
-include(":health")
-include(":markdown")
+// Grove is built from source out of the submodule, so a Grove change reaches the app without a
+// publishing step in between. `grove.path` builds against a checkout somewhere else instead.
+val groveDirectory = rootDir.resolve(providers.gradleProperty("grove.path").getOrElse("grove-kotlin"))
+
+// Every task needs Grove to configure, so a checkout that skipped submodules populates it here rather
+// than failing. The study bundle export does the same for the study definitions.
+if (!groveDirectory.resolve("settings.gradle.kts").isFile) {
+    runCatching {
+        providers.exec {
+            workingDir = rootDir
+            commandLine("git", "submodule", "update", "--init", "--", groveDirectory.path)
+        }.result.get().assertNormalExitValue()
+    }
+}
+
+require(groveDirectory.resolve("settings.gradle.kts").isFile) {
+    "No Grove Kotlin checkout at $groveDirectory. Run 'git submodule update --init', or set grove.path."
+}
+includeBuild(groveDirectory)
+
+// A composite build loads the plugins of both builds into one process, so the two builds have to
+// agree on the versions that carry them.
+listOf("agp", "kotlin").forEach { name ->
+    val app = catalogVersion(rootDir.resolve("gradle/libs.versions.toml"), name)
+    val grove = catalogVersion(groveDirectory.resolve("gradle/libs.versions.toml"), name)
+    check(app == grove) {
+        "The app pins $name $app and Grove pins $grove. Align both version catalogs."
+    }
+}
+
 include(":myheartcounts")
-include(":onboarding")
-include(":questionnaire")
-include(":resources")
-include(":sample-app")
-include(":scheduler")
-include(":storage-credential")
-include(":storage-local")
-include(":study")
-include(":study-definition")
-include(":testing-concurrency")
-include(":testing-core")
-include(":testing-screenshot")
-include(":testing-ui")
-include(":ui")
-include(":ui-account")
-include(":ui-scheduler")
-include(":ui-theme")
-include(":ui-validation")

@@ -52,6 +52,7 @@ SPDX-License-Identifier: MIT
     <string name="eligibility_region_unavailable_description">The My Heart Counts study isn’t yet available in your region (%1$s).\n\nAdd your email below and we’ll update you when it launches there.</string>
     <string name="eligibility_region_notify_email_hint">Email…</string>
     <string name="eligibility_region_notify_button">Notify Me</string>
+    <string name="onboarding_waitlist_success">We\'ve saved your email and will notify you when My Heart Counts becomes available in your region.</string>
 
     <!-- Welcome -->
     <string name="onboarding_welcome_title">My Heart Counts</string>
