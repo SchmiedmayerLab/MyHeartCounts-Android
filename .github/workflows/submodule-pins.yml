@@ -25,6 +25,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           submodules: true
+          # The ancestry check below needs real history: a shallow checkout fetches the tracked
+          # branch's tip without its parents, so a pin that is merely behind that tip reads as
+          # unreachable rather than as an ancestor.
+          fetch-depth: 0
           persist-credentials: false
       # A commit that only ever existed on a feature branch is gone once that branch is
       # squash-merged and deleted, which would leave this commit unbuildable for good.
