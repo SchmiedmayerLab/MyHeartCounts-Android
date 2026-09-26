@@ -35,6 +35,14 @@ path = [
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"
 
+# JSON has no comment syntax for an inline license header.
+[[annotations]]
+path = [
+    "myheartcounts/google-services.json",
+]
+SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"
+
 # Android's resource merger rejects adjacent .license sidecars in res/.
 [[annotations]]
 path = [
