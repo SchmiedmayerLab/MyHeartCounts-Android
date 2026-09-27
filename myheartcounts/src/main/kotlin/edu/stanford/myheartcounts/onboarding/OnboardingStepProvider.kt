@@ -12,6 +12,7 @@ package edu.stanford.myheartcounts.onboarding
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityVerdict
 import org.grovealliance.account.Account
+import org.grovealliance.account.isAnonymousUser
 
 /**
  * The onboarding step graph: which step comes first, and which step follows or precedes a given one.
@@ -44,7 +45,8 @@ class OnboardingStepProviderImpl(
     private val account: Account,
     private val notificationPermissionHandler: NotificationPermissionHandler,
 ) : OnboardingStepProvider {
-    private val isSignedIn: Boolean get() = account.isSignedIn
+    // An anonymous account exists only to join a launch waitlist, so it must not skip the login step.
+    private val isSignedIn: Boolean get() = account.details.value?.isAnonymousUser == false
     override fun getInitialStep(): OnboardingStep = OnboardingStep.Welcome
 
     override fun getNext(step: OnboardingStep, answers: OnboardingAnswers): OnboardingStepResult = when (step) {

@@ -76,3 +76,4 @@ jobs:
       submodules: 'true'
       swiftversion: 'latest'
       swiftcachepaths: '**/build/studyBundle*'
+      googleservicespath: 'myheartcounts/google-services.json'

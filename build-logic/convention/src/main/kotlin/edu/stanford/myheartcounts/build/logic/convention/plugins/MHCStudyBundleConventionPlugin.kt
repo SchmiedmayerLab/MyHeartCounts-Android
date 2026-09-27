@@ -220,6 +220,7 @@ abstract class MHCExportStudyBundle : DefaultTask() {
         execOperations.exec {
             commandLine(
                 "swift", "run",
+                *BUILD_SYSTEM_ARGUMENTS,
                 "--package-path", packageDirectory.absolutePath,
                 "--scratch-path", scratchDirectory.absolutePath,
                 EXPORTER_PRODUCT, "export", outputDirectory.absolutePath
@@ -249,6 +250,7 @@ abstract class MHCExportStudyBundle : DefaultTask() {
                     addAll(
                         listOf(
                             "swift", "run",
+                            *BUILD_SYSTEM_ARGUMENTS,
                             "--package-path", CONTAINER_PACKAGE_PATH,
                             "--scratch-path", CONTAINER_SCRATCH_PATH,
                             EXPORTER_PRODUCT, "export", CONTAINER_OUTPUT_PATH
@@ -293,5 +295,11 @@ abstract class MHCExportStudyBundle : DefaultTask() {
         const val CONTAINER_SCRATCH_PATH = "/scratch"
         const val CONTAINER_OUTPUT_PATH = "/output"
         const val BUNDLE_NAME_PROPERTY = "myHeartCounts.studyBundle.name"
+
+        /**
+         * Selects the native build engine, which honours platform conditions on transitive
+         * dependencies; the default engine compiles Apple-only targets on Linux.
+         */
+        val BUILD_SYSTEM_ARGUMENTS = arrayOf("--build-system", "native")
     }
 }

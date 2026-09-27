@@ -48,6 +48,50 @@ Grove and the application have to pin the same Android Gradle Plugin and Kotlin 
 composite build loads the plugins of both into one process. Gradle checks this as it configures and says
 so when the two drift apart.
 
+#### Landing a change across both repositories
+
+A change that spans Grove and the application lands in a fixed order, because the pin has to name a
+commit that is on Grove's `main`. Merge the Grove pull request first, then update the clone the pin is
+read from:
+
+```bash
+git -C <grove clone> switch main && git -C <grove clone> pull
+```
+
+A squash merge creates a new commit on `main`, so the branch commit the application was tested against
+never becomes an ancestor of it. That is why the pin cannot move ahead of the merge.
+
+Move the pin and commit it as its own reviewable change:
+
+```bash
+git submodule update --remote grove-kotlin   # follows `branch = main` from .gitmodules
+git add grove-kotlin
+git commit -m "Bump the Grove pin"
+```
+
+`git submodule update --remote` takes the head of the tracked branch, which is always a commit CI will
+accept. `git submodule status` prints the pin, and its leading character is the state — a space means
+the checkout matches the pin, `+` that it differs, `-` that it is not initialised yet.
+
+Then build the application against the pinned snapshot rather than against a local checkout:
+
+```bash
+./gradlew -Pgrove.path=grove-kotlin :myheartcounts:assembleDebug
+```
+
+This is the step that catches a stale or unpushed pin. With `grove.path` pointing at a Grove checkout of
+your own, every ordinary build is green regardless of what the pin names; the flag overrides it for one
+invocation. A pin that predates the Grove change fails while resolving dependencies, because the
+composite build substitutes an `org.grovealliance` coordinate only while a project carrying it is part
+of the included build:
+
+```
+Could not find org.grovealliance:firebase:0.1.0
+```
+
+Open the application pull request once that build passes. Opening it earlier is fine as a draft, but its
+checks fail until the pin moves.
+
 ### Study Bundle
 
 The app packages the My Heart Counts study bundle as a zstd-compressed archive — the same format the
