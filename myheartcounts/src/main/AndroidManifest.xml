@@ -35,6 +35,21 @@ SPDX-License-Identifier: MIT
             tools:node="remove" />
 
         <!--
+        WorkManager initializes on demand from MyHeartCountsApplication's configuration, so its
+        startup initializer must not run at process start.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+        <!--
         Receives the study's remote nudges. The scheduler's own reminders are local notifications
         and do not come through here.
         -->
