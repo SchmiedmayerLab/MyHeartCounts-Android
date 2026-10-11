@@ -8,7 +8,10 @@
 package edu.stanford.myheartcounts.home
 
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.task.AlwaysAvailableTask
+import edu.stanford.myheartcounts.task.EventTileMapperImpl
 import kotlinx.coroutines.test.runTest
+import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.scheduler.AllowedCompletionPolicy
 import org.grovealliance.scheduler.Event
 import org.grovealliance.scheduler.FakeScheduleCalculator
@@ -32,10 +35,18 @@ class HomeContentMapperTest {
         setZone(zone)
         setNow(now)
     }
-    private val mapper = HomeContentMapperImpl(scheduleCalculator = calculator)
+    private val timeProvider = FakeTimeProvider().apply {
+        setZone(zone)
+        setNow(now)
+    }
+    private val mapper = HomeContentMapperImpl(
+        tileMapper = EventTileMapperImpl(
+            scheduleCalculator = calculator,
+            timeProvider = timeProvider,
+        ),
+    )
     private val pushedActions = mutableListOf<HomeAction>()
     private val actionSink = ActionSource<HomeAction> { pushedActions.add(it) }.sink<HomeAction>()
-    private val completedEvents = mutableListOf<Event>()
 
     @Test
     fun `renders a tile per event`() {
@@ -66,7 +77,7 @@ class HomeContentMapperTest {
         val events = listOf(
             eventAt(
                 start = now.plusSeconds(SECONDS_PER_HOUR * 2),
-                category = StudyTaskCategories.questionnaire,
+                category = StudyTaskCategories.informational,
                 completionPolicy = AllowedCompletionPolicy.SAME_DAY_AFTER_START,
             )
         )
@@ -84,7 +95,7 @@ class HomeContentMapperTest {
         val events = listOf(
             eventAt(
                 start = now.plusSeconds(SECONDS_PER_HOUR * 2),
-                category = StudyTaskCategories.questionnaire,
+                category = StudyTaskCategories.informational,
                 completionPolicy = AllowedCompletionPolicy.ANYTIME,
             )
         )
@@ -110,7 +121,19 @@ class HomeContentMapperTest {
     }
 
     @Test
-    fun `keeps a completed active task repeatable`() {
+    fun `disables the action of every task that cannot be performed`() {
+        // given
+        val events = UNPERFORMABLE_CATEGORIES.map { eventAt(now, it) }
+
+        // when
+        val tiles = mapper.map(input(events)).tasks.sections.single().tiles
+
+        // then
+        assertThat(tiles.map { it.action?.enabled }).containsExactly(false, false, false)
+    }
+
+    @Test
+    fun `omits the action of a completed task that cannot be performed`() {
         // given
         val event = eventAt(now, StudyTaskCategories.timedWalkingTest).completed()
 
@@ -118,7 +141,7 @@ class HomeContentMapperTest {
         val tile = mapper.map(input(listOf(event))).tasks.sections.single().tiles.single()
 
         // then
-        assertThat(tile.action?.enabled).isTrue()
+        assertThat(tile.action).isNull()
     }
 
     @Test
@@ -178,16 +201,15 @@ class HomeContentMapperTest {
     }
 
     @Test
-    fun `completes a questionnaire from its tile`() = runTest {
+    fun `raises nothing from the tile of a task that cannot be performed`() = runTest {
         // given
-        val event = eventAt(now, StudyTaskCategories.questionnaire)
-        val tile = mapper.map(input(listOf(event))).tasks.sections.single().tiles.single()
+        val events = UNPERFORMABLE_CATEGORIES.map { eventAt(now, it) }
+        val tiles = mapper.map(input(events)).tasks.sections.single().tiles
 
         // when
-        tile.action?.action?.invoke()
+        tiles.forEach { it.action?.action?.invoke() }
 
         // then
-        assertThat(completedEvents).containsExactly(event)
         assertThat(pushedActions).isEmpty()
     }
 
@@ -201,9 +223,27 @@ class HomeContentMapperTest {
         tile.action?.action?.invoke()
 
         // then
-        assertThat(completedEvents).isEmpty()
         assertThat(pushedActions).containsExactly(
-            HomeAction.ReadArticleSelected(
+            HomeAction.PerformTaskSelected(
+                event = event,
+                completesEvent = true,
+            )
+        )
+    }
+
+    @Test
+    fun `presents a questionnaire rather than completing it from its tile`() = runTest {
+        // given
+        val event = eventAt(now, StudyTaskCategories.questionnaire)
+        val tile = mapper.map(input(listOf(event))).tasks.sections.single().tiles.single()
+
+        // when
+        tile.action?.action?.invoke()
+
+        // then
+        assertThat(tile.action?.enabled).isTrue()
+        assertThat(pushedActions).containsExactly(
+            HomeAction.PerformTaskSelected(
                 event = event,
                 completesEvent = true,
             )
@@ -252,13 +292,15 @@ class HomeContentMapperTest {
         missedEventCount = missedEventCount,
         nudge = null,
         promptedActions = emptyList(),
-        now = now,
-        zone = zone,
         actionSink = actionSink,
-        onCompleteEvent = { completedEvents.add(it) },
     )
 
     private companion object {
         const val SECONDS_PER_HOUR = 3_600L
+        val UNPERFORMABLE_CATEGORIES = listOf(
+            StudyTaskCategories.timedWalkingTest,
+            StudyTaskCategories.timedRunningTest,
+            StudyTaskCategories.customActiveTask(identifier = "edu.stanford.MyHeartCounts.activeTask.ecg"),
+        )
     }
 }

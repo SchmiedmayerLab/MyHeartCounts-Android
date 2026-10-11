@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.standard.health
 
+import edu.stanford.myheartcounts.standard.MHCAppRevision
 import org.hl7.fhir.r4.model.Extension
 import org.hl7.fhir.r4.model.IntegerType
 import org.hl7.fhir.r4.model.Observation
@@ -20,7 +21,7 @@ import java.util.TimeZone
  * dataset be re-analyzed after the study or the app changes. The URLs are a cross-platform contract
  * with iOS's `defaultHealthObservationFHIRExtensions`.
  *
- * @param appRevision The app's version name, recorded as `mhcAppRevision`.
+ * @param appRevision The app build that uploads the sample.
  * @param studyId The identifier of the study the participant is enrolled in, when they are.
  * @param studyRevision The revision of that study.
  * @param platform Which platform produced the sample, so Health Connect and HealthKit data can be
@@ -28,7 +29,7 @@ import java.util.TimeZone
  * distinguishes them.
  */
 data class HealthObservationProvenance(
-    val appRevision: String,
+    val appRevision: MHCAppRevision,
     val studyId: String?,
     val studyRevision: Int?,
     val platform: String = ANDROID_PLATFORM,
@@ -44,8 +45,8 @@ data class HealthObservationProvenance(
             extension = Extension(SAMPLE_UPLOAD_TIME_ZONE_URL, StringType(TimeZone.getDefault().id)),
         )
         observation.replaceExtension(
-            url = APP_REVISION_URL,
-            extension = Extension(APP_REVISION_URL, StringType(appRevision)),
+            url = MHCAppRevision.URL,
+            extension = appRevision.toExtension(),
         )
         observation.replaceExtension(
             url = PLATFORM_URL,
@@ -84,11 +85,6 @@ data class HealthObservationProvenance(
          * The participant's time zone at upload time. Shared with iOS.
          */
         const val SAMPLE_UPLOAD_TIME_ZONE_URL = "https://bdh.stanford.edu/fhir/defs/sampleUploadTimeZone"
-
-        /**
-         * The app version that uploaded the sample. Shared with iOS.
-         */
-        const val APP_REVISION_URL = "https://bdh.stanford.edu/fhir/defs/mhcAppRevision"
 
         /**
          * The study and revision the participant was enrolled in. Shared with iOS, including the

@@ -21,7 +21,7 @@ SPDX-License-Identifier: MIT
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Grove.CardinalRed">
+        android:theme="@style/Theme.MyHeartCounts">
 
         <!--
         My Heart Counts runs one Firebase project per study region, and which one to use is only
@@ -50,6 +50,14 @@ SPDX-License-Identifier: MIT
         </provider>
 
         <!--
+        Remote nudges displayed while the app is in the background use the same channel the app posts
+        foreground nudges on.
+        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/nudge_notification_channel_id" />
+
+        <!--
         Receives the study's remote nudges. The scheduler's own reminders are local notifications
         and do not come through here.
         -->
@@ -65,7 +73,7 @@ SPDX-License-Identifier: MIT
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.Grove.CardinalRed"
+            android:theme="@style/Theme.MyHeartCounts"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

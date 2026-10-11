@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+This source file is part of the My Heart Counts Android open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+-->
+
+<!-- The app palette, for the questionnaire renderer, which reads its colours from an XML theme. -->
+<resources>
+    <color name="questionnaire_primary">#FFBF0036</color>
+    <color name="questionnaire_on_primary">#FFFFFFFF</color>
+    <color name="questionnaire_primary_container">#FFFFDAD9</color>
+    <color name="questionnaire_on_primary_container">#FF420007</color>
+    <color name="questionnaire_secondary">#FF7F5353</color>
+    <color name="questionnaire_on_secondary">#FFFFFFFF</color>
+    <color name="questionnaire_secondary_container">#FFFFDAD9</color>
+    <color name="questionnaire_on_secondary_container">#FF341011</color>
+    <color name="questionnaire_error">#FFBA1A1A</color>
+    <color name="questionnaire_on_error">#FFFFFFFF</color>
+    <color name="questionnaire_background">#FFF8F6F2</color>
+    <color name="questionnaire_on_background">#FF211F1D</color>
+    <color name="questionnaire_surface">#FFF8F6F2</color>
+    <color name="questionnaire_on_surface">#FF211F1D</color>
+    <color name="questionnaire_surface_variant">#FFE7E2D8</color>
+    <color name="questionnaire_on_surface_variant">#FF6D6962</color>
+    <color name="questionnaire_outline">#FF7B776E</color>
+    <color name="questionnaire_outline_variant">#FFE5E3DE</color>
+    <color name="questionnaire_surface_container_lowest">#FFFFFFFF</color>
+    <color name="questionnaire_surface_container_low">#FFF5F3F0</color>
+    <color name="questionnaire_surface_container">#FFEFEEEA</color>
+    <color name="questionnaire_surface_container_high">#FFEAE8E4</color>
+    <color name="questionnaire_surface_container_highest">#FFE4E2DF</color>
+</resources>

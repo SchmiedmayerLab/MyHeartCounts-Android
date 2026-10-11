@@ -90,6 +90,7 @@ class OnboardingViewModel(
     private val accountService: AccountService,
     private val consentUploader: MHCConsentUploader,
     private val consentDocumentProvider: MHCConsentDocumentProvider,
+    private val onboardingCompletion: OnboardingCompletion,
 ) : ViewModel() {
     private val logger by groveLogger()
     private val actionSource = ActionSource(::onAction)
@@ -172,7 +173,10 @@ class OnboardingViewModel(
 
     private fun handle(result: OnboardingStepResult) {
         when (result) {
-            OnboardingStepResult.Completed -> navigator.push(event = NavigationEvent.SwitchRoot(root = MHCRoute.Root.Study))
+            OnboardingStepResult.Completed -> {
+                onboardingCompletion.markComplete()
+                navigator.push(event = NavigationEvent.SwitchRoot(root = MHCRoute.Root.Study))
+            }
             OnboardingStepResult.Dismissed -> navigator.push(event = NavigationEvent.Pop)
             is OnboardingStepResult.Step -> {
                 val step = result.step

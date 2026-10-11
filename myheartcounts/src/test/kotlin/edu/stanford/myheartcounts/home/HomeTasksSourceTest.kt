@@ -8,6 +8,7 @@
 package edu.stanford.myheartcounts.home
 
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.task.MissedEventsSourceImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -15,10 +16,12 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.scheduler.Event
+import org.grovealliance.scheduler.FakeScheduleCalculator
 import org.grovealliance.scheduler.FakeScheduler
 import org.grovealliance.scheduler.Recurrence
 import org.grovealliance.scheduler.RecurrenceFrequency
 import org.grovealliance.scheduler.Schedule
+import org.grovealliance.scheduler.Task
 import org.grovealliance.scheduler.fixtures.EventFixtures
 import org.grovealliance.scheduler.fixtures.OccurrenceFixtures
 import org.grovealliance.scheduler.fixtures.OutcomeFixtures
@@ -44,9 +47,15 @@ class HomeTasksSourceTest {
         setZone(zone)
         setNow(now)
     }
+    private val calculator = FakeScheduleCalculator().apply { setZone(zone) }
     private val source = HomeTasksSourceImpl(
         studyManager = studyManager,
         scheduler = scheduler,
+        missedEventsSource = MissedEventsSourceImpl(
+            scheduler = scheduler,
+            scheduleCalculator = calculator,
+            timeProvider = timeProvider,
+        ),
         timeProvider = timeProvider,
     )
 
@@ -123,21 +132,21 @@ class HomeTasksSourceTest {
     }
 
     @Test
-    fun `counts missed events from the preceding two weeks`() = runTest {
+    fun `counts each recurring task missed in the preceding two weeks once`() = runTest {
         // given
-        scheduler.setMissedEvents(
-            listOf(
-                oneOffAt(lastWeek),
-                oneOffAt(startOfToday.minusSeconds(SECONDS_PER_DAY)),
-                oneOffAt(startOfToday.minusSeconds(SECONDS_PER_DAY * DAYS_BEYOND_MISSED_WINDOW)),
-            )
+        val schedule = dailyFrom(start = lastWeek.plusSeconds(SECONDS_PER_HOUR * 9))
+        val task = TaskFixtures.create(schedule = schedule)
+        scheduler.setEvents(
+            (0..DAYS_IN_WEEK).map { day ->
+                eventOf(task = task, start = schedule.start.plusSeconds(SECONDS_PER_DAY * day))
+            }
         )
 
         // when
         val tasks = source.tasks().first()
 
         // then
-        assertThat(tasks.missedEventCount).isEqualTo(2)
+        assertThat(tasks.missedEventCount).isEqualTo(1)
     }
 
     @Test
@@ -176,6 +185,16 @@ class HomeTasksSourceTest {
         )
     }
 
+    private fun dailyFrom(start: Instant) = Schedule(
+        start = start,
+        recurrence = Recurrence(frequency = RecurrenceFrequency.DAILY),
+    )
+
+    private fun eventOf(task: Task, start: Instant) = EventFixtures.create(
+        task = task,
+        occurrence = OccurrenceFixtures.create(start = start, schedule = task.schedule),
+    )
+
     private fun oneOffAt(start: Instant): Event {
         val schedule = Schedule.once(at = start)
         return EventFixtures.create(
@@ -195,7 +214,6 @@ class HomeTasksSourceTest {
         const val SECONDS_PER_DAY = 86_400L
         const val SECONDS_PER_HOUR = 3_600L
         const val DAYS_IN_WEEK = 7L
-        const val DAYS_BEYOND_MISSED_WINDOW = 20L
         const val MILLIS_PER_SECOND = 1_000L
     }
 }
