@@ -7,15 +7,21 @@
 
 package edu.stanford.myheartcounts.study
 
+import ca.uhn.fhir.context.FhirContext
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.BuildConfig
+import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.grovealliance.markdown.MarkdownBlock
+import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.studydefinition.Component
 import org.grovealliance.studydefinition.FileReference
 import org.grovealliance.studydefinition.StudyBundle
 import org.grovealliance.studydefinition.StudyDefinitionJson
+import org.hl7.fhir.r4.model.CodeableConcept
+import org.hl7.fhir.r4.model.Questionnaire
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -38,6 +44,7 @@ class MHCStudyBundleTest {
     }
 
     private val bundle: StudyBundle by lazy { StudyBundle.open(bundleDir) }
+    private val fhirParser by lazy { FhirContext.forR4().newJsonParser() }
 
     @Test
     fun `decodes the shipped bundle`() {
@@ -105,6 +112,82 @@ class MHCStudyBundleTest {
         assertThat(japanese).isEqualTo(bundle.consentText(Locale.US))
     }
 
+    @Test
+    fun `declares the consent elements mirrored onto the account in every localization`() {
+        // given
+        val locales = listOf(Locale.US, Locale.forLanguageTag("es-US"))
+
+        // when
+        val elementIds = locales.map { locale ->
+            consentElementIds(text = requireNotNull(bundle.consentText(locale = locale)))
+        }
+
+        // then
+        elementIds.forEach { ids ->
+            assertThat(ids).containsAtLeast(
+                MHCConsentDocumentProvider.ID_FUTURE_STUDIES,
+                MHCConsentDocumentProvider.ID_TRIAL_OPT_IN,
+                MHCConsentDocumentProvider.ID_TRIAL_YES,
+            )
+        }
+    }
+
+    @Test
+    fun `prepares every shipped questionnaire into one the renderer fully supports`() {
+        // given
+        val locales = listOf(Locale.US, Locale.forLanguageTag("es-US"))
+        val fileRefs = bundle.studyDefinition.components
+            .filterIsInstance<Component.Questionnaire>()
+            .map { it.fileRef }
+
+        // when
+        val prepared = fileRefs.flatMap { fileRef ->
+            locales.map { locale ->
+                val text = requireNotNull(bundle.resolve(fileRef, locale)).readText()
+                StudyQuestionnaire.prepare(questionnaire = fhirParser.parseResource(Questionnaire::class.java, text))
+            }
+        }
+
+        // then
+        assertThat(prepared).hasSize(fileRefs.size * locales.size)
+        prepared.forEach { questionnaire ->
+            assertThat(questionnaire.questionnaire.url).isNotEmpty()
+            val items = questionnaire.questionnaire.item.flattened()
+            assertThat(items.map { it.type }).doesNotContain(Questionnaire.QuestionnaireItemType.QUANTITY)
+            items.forEach { item ->
+                item.extension
+                    .filter { it.url in StudyQuestionnaire.BOUND_EXTENSION_URLS }
+                    .forEach { bound -> assertThat(bound.value.fhirType()).isEqualTo(item.type.toCode()) }
+                (item.getExtensionByUrl(ITEM_CONTROL_URL)?.value as? CodeableConcept)?.coding?.forEach { coding ->
+                    assertThat(coding.system).isEqualTo(ITEM_CONTROL_SYSTEM)
+                    if (coding.code == CHECK_BOX_CODE) assertThat(item.repeats).isTrue()
+                }
+            }
+        }
+    }
+
+    private fun List<Questionnaire.QuestionnaireItemComponent>.flattened(): List<Questionnaire.QuestionnaireItemComponent> =
+        flatMap { listOf(it) + it.item.flattened() }
+
+    /**
+     * The ids of every consent element in [text], including options nested inside selects.
+     */
+    private fun consentElementIds(text: String): Set<String> {
+        val document = MarkdownDocument.process(
+            text = text,
+            customElementNames = MHCConsentDocumentProvider.CONSENT_ELEMENT_NAMES,
+        )
+        return document.blocks
+            .filterIsInstance<MarkdownBlock.Element>()
+            .flatMap { element ->
+                listOf(element) + element.content
+                    .filterIsInstance<MarkdownBlock.Element.Content.Element>()
+                    .map { it.element }
+            }
+            .mapNotNull { it.id }
+            .toSet()
+    }
+
     /**
      * Every file the definition points at, across its metadata and components.
      */
@@ -131,6 +214,9 @@ class MHCStudyBundleTest {
         const val ARCHIVE_SUFFIX = ".tar.zst"
         const val DEFINITION_FILENAME = "definition.json"
         const val SCHEMA_VERSION_KEY = "schemaVersion"
+        const val ITEM_CONTROL_URL = "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl"
+        const val ITEM_CONTROL_SYSTEM = "http://hl7.org/fhir/questionnaire-item-control"
+        const val CHECK_BOX_CODE = "check-box"
 
         /**
          * The oldest revision known to decode. Raise this only alongside a bundle update.

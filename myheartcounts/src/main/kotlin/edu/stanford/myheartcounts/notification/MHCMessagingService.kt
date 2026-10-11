@@ -11,8 +11,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
+import org.grovealliance.core.dependency
 import org.grovealliance.core.logging.groveLogger
-import org.grovealliance.core.requireDependency
 
 /**
  * Receives the remote nudges the backend's `sendNudges` function pushes.
@@ -23,6 +23,10 @@ import org.grovealliance.core.requireDependency
 class MHCMessagingService : FirebaseMessagingService() {
 
     private val logger by groveLogger(tag = "MHCFirebase")
+    private val concurrency by dependency<Concurrency>()
+    private val ioScope by lazy { concurrency.ioCoroutineScope() }
+    private val pushTokenSynchronizer by dependency<MHCPushTokenSynchronizer>()
+    private val notifications by dependency<MHCNudgeNotifications>()
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -32,15 +36,16 @@ class MHCMessagingService : FirebaseMessagingService() {
         // Deliberately not scoped to this service: the system may destroy it as soon as this
         // returns, which would cancel the write part-way. A write lost to the process dying is
         // reconciled by `MHCPushTokenSynchronizer.synchronize()` on the next launch.
-        requireDependency<Concurrency>().ioCoroutineScope().launch {
-            requireDependency<MHCPushTokenSynchronizer>().onTokenRefreshed(token = token)
+        ioScope.launch {
+            pushTokenSynchronizer.onTokenRefreshed(token = token)
         }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        // Nudges are sent as notification messages, which the system tray displays on its own while
-        // the app is backgrounded. Nothing to do here beyond noting that one arrived.
+        // Nudges are sent as notification messages: Firebase displays them itself while the app is in
+        // the background, but hands them here undisplayed while it is in the foreground.
         logger.i { "Received a remote nudge (${message.messageId ?: "no id"})." }
+        notifications.show(message = message)
     }
 }

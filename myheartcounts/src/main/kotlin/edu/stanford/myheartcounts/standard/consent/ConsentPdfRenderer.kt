@@ -156,7 +156,7 @@ class ConsentPdfRenderer(private val context: Context) {
             TAG_TOGGLE -> responses.toggles[element.id]?.let {
                 context.getString(if (it) MHCStrings.answer_yes else MHCStrings.answer_no)
             }
-            TAG_SELECT -> responses.selects[element.id]?.let { optionId ->
+            TAG_SELECT -> responses.selects[element.id]?.takeIf { it.isNotEmpty() }?.let { optionId ->
                 optionLabel(element = element, optionId = optionId) ?: optionId
             }
             else -> null

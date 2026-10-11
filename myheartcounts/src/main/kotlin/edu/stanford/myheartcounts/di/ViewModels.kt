@@ -8,13 +8,17 @@
 package edu.stanford.myheartcounts.di
 
 import edu.stanford.myheartcounts.MainActivityViewModel
+import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
 import edu.stanford.myheartcounts.home.HomeViewModel
+import edu.stanford.myheartcounts.missed.MissedTasksViewModel
 import edu.stanford.myheartcounts.onboarding.OnboardingViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
+import edu.stanford.myheartcounts.task.PerformTaskViewModel
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksViewModel
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.GroveDsl
+import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.viewmodel.viewModel
 
 /**
@@ -26,6 +30,7 @@ fun ConfigurationBuilder.appViewModels() {
         MainActivityViewModel(
             navigator = dependency(),
             account = dependency(),
+            onboardingCompletion = dependency(),
         )
     }
     viewModel {
@@ -40,8 +45,23 @@ fun ConfigurationBuilder.appViewModels() {
             accountService = dependency(),
             consentUploader = dependency(),
             consentDocumentProvider = dependency(),
+            onboardingCompletion = dependency(),
         )
     }
+    viewModel {
+        MHCAccountOverviewViewModel(
+            navigator = dependency(),
+            studyWithdrawal = dependency(),
+            mapper = dependency(),
+        )
+    }
+    studyViewModels()
+}
+
+/**
+ * Registers the ViewModels of the study phase: its tabs and the task screen.
+ */
+private fun ConfigurationBuilder.studyViewModels() {
     viewModel {
         StudyViewModel(
             savedStateHandle = savedStateHandle(),
@@ -53,14 +73,34 @@ fun ConfigurationBuilder.appViewModels() {
             navigator = dependency(),
             tasksSource = dependency(),
             mapper = dependency(),
-            timeProvider = dependency(),
             suggestionsSource = dependency(),
-            articleSource = dependency(),
+            eventPerformer = dependency(),
+        )
+    }
+    viewModel {
+        MissedTasksViewModel(
+            navigator = dependency(),
+            missedEventsSource = dependency(),
+            mapper = dependency(),
+            timeProvider = dependency(),
+            eventPerformer = dependency(),
+        )
+    }
+    viewModel {
+        PerformTaskViewModel(
+            taskPerformer = dependency(),
+            navigator = dependency(),
+            responseUploader = dependency(),
+            uploadScope = dependency<Concurrency>().ioCoroutineScope(),
         )
     }
     viewModel {
         UpcomingTasksViewModel(
             studyAppBarProvider = dependency(),
+            tileMapper = dependency(),
+            tasksSource = dependency(),
+            mapper = dependency(),
+            eventPerformer = dependency(),
         )
     }
     viewModel {

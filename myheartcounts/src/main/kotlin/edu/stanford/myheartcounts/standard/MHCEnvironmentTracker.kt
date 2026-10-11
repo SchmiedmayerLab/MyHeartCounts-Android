@@ -121,22 +121,23 @@ class MHCEnvironmentTracker(
             .onFailure { logger.e(it) { "Failed to update the account's environment fields." } }
     }
 
-    /**
-     * The measurement system identifier iOS would report for [locale].
-     *
-     * Foundation derives this from the region, and both platforms write into the same field, so the
-     * three identifiers it uses are reproduced here rather than invented.
-     */
-    private fun measurementSystem(locale: Locale): String = when (locale.country) {
-        "US", "LR", "MM" -> "us"
-        "GB" -> "uk"
-        else -> "metric"
-    }
+    internal companion object {
 
-    private companion object {
+        // TODO: Confirm against production Firestore that existing participants' documents hold
+        //  `ussystem` / `uksystem` / `metric` before relying on these values in analysis.
+        /**
+         * The measurement system identifier stored for [locale]: `ussystem` for the United States,
+         * Liberia and Myanmar, `uksystem` for the United Kingdom, and `metric` everywhere else.
+         */
+        fun measurementSystem(locale: Locale): String = when (locale.country) {
+            "US", "LR", "MM" -> "ussystem"
+            "GB" -> "uksystem"
+            else -> "metric"
+        }
+
         /**
          * Matches iOS, which falls back to English when the locale carries no language code.
          */
-        const val FALLBACK_LANGUAGE = "en"
+        private const val FALLBACK_LANGUAGE = "en"
     }
 }

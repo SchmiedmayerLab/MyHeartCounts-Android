@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.standard
 import androidx.health.connect.client.records.Record
 import edu.stanford.myheartcounts.firebase.MHCFirebaseLoader
 import edu.stanford.myheartcounts.notification.MHCPushTokenSynchronizer
+import edu.stanford.myheartcounts.onboarding.OnboardingCompletion
 import edu.stanford.myheartcounts.standard.health.HealthUploadWorker
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import kotlinx.coroutines.launch
@@ -51,6 +52,7 @@ class MHCStandard : Standard, HealthConstraint {
     private val environmentTracker by dependency<MHCEnvironmentTracker>()
     private val healthData by dependency<MHCHealthDataHandler>()
     private val studyManager by dependency<StudyManager>()
+    private val onboardingCompletion by dependency<OnboardingCompletion>()
 
     private val ioScope by lazy { concurrency.ioCoroutineScope() }
     private val logger by groveLogger(tag = "MHCFirebase")
@@ -130,9 +132,17 @@ class MHCStandard : Standard, HealthConstraint {
         HealthUploadWorker.schedule(context = applicationModule.requireContext())
     }
 
-    private fun onSignedOut() {
+    private suspend fun onSignedOut() {
         logger.i { "The participant signed out." }
-        HealthUploadWorker.cancel(context = applicationModule.requireContext())
+        val context = applicationModule.requireContext()
+        // Whoever signs in next starts from the beginning of onboarding, not from the study.
+        onboardingCompletion.reset()
+        // Without an enrollment there is nothing tied to this region, so the next participant picks
+        // their own during onboarding rather than inheriting it.
+        if (studyManager.studyEnrollments().isEmpty()) {
+            MHCFirebaseLoader.clearRegion(context = context)
+        }
+        HealthUploadWorker.cancel(context = context)
     }
 
     /**

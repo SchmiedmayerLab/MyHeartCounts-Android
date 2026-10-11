@@ -76,6 +76,16 @@ object MHCFirebaseLoader {
     }
 
     /**
+     * Forgets the participant's region, so the next launch leaves Firebase uninitialized until
+     * onboarding selects a region again.
+     *
+     * @param context Any context; the application context is used internally.
+     */
+    fun clearRegion(context: Context) {
+        preferences(context).edit().remove(KEY_REGION).apply()
+    }
+
+    /**
      * The region the participant previously chose, or `null` if they have not chosen one yet.
      */
     fun persistedRegionCode(context: Context): String? =

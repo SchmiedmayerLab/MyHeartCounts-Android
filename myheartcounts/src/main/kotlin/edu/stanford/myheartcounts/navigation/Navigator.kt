@@ -71,6 +71,12 @@ sealed interface NavigationEvent {
      * Navigates to a specific route by pushing it onto the back stack
      */
     data class NavigateTo(val route: MHCRoute) : NavigationEvent
+
+    /**
+     * Removes [route] from the back stack if it is there, and does nothing otherwise, so it is safe
+     * to request after the root has already been switched.
+     */
+    data class Close(val route: MHCRoute) : NavigationEvent
 }
 
 /**
@@ -85,12 +91,6 @@ sealed interface MHCRoute : NavKey {
      */
     @Serializable
     sealed interface Root : MHCRoute {
-
-        /**
-         * The launch screen shown while the initial route is being determined.
-         */
-        @Serializable
-        data object Splash : Root
 
         /**
          * The onboarding flow, shown until onboarding is complete.
@@ -110,4 +110,16 @@ sealed interface MHCRoute : NavKey {
      */
     @Serializable
     data object AccountOverview : MHCRoute
+
+    /**
+     * The task being performed, shown over the active root phase.
+     */
+    @Serializable
+    data object PerformTask : MHCRoute
+
+    /**
+     * The tasks the participant missed recently, shown over the study phase.
+     */
+    @Serializable
+    data object MissedTasks : MHCRoute
 }
