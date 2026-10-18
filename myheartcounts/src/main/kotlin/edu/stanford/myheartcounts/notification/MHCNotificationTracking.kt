@@ -9,9 +9,9 @@ package edu.stanford.myheartcounts.notification
 
 import com.google.firebase.Timestamp
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import java.util.TimeZone
 import java.util.UUID
@@ -26,7 +26,7 @@ class MHCNotificationTracking(
     private val timeProvider: TimeProvider,
 ) : Module {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Records that the participant opened the notification identified by [notificationId].

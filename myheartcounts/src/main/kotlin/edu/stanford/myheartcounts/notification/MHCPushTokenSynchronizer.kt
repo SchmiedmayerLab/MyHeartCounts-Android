@@ -10,12 +10,12 @@ package edu.stanford.myheartcounts.notification
 import com.google.firebase.messaging.FirebaseMessaging
 import edu.stanford.myheartcounts.account.FcmTokenKey
 import edu.stanford.myheartcounts.account.fcmToken
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.account.Account
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountModifications
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.firebase.FirebaseAppConfiguration
 
 /**
@@ -29,7 +29,7 @@ class MHCPushTokenSynchronizer(
     private val firebaseAppConfiguration: FirebaseAppConfiguration,
 ) : Module {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Fetches the device's current token and stores it, if it differs from what is stored.

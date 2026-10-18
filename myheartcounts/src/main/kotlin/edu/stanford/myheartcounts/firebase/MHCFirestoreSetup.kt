@@ -7,11 +7,9 @@
 
 package edu.stanford.myheartcounts.firebase
 
-import android.content.Context
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.PersistentCacheSettings
-import org.grovealliance.core.logging.groveLogger
 
 /**
  * Prepares Firestore for use, immediately after the Firebase app is initialized.
@@ -22,24 +20,21 @@ import org.grovealliance.core.logging.groveLogger
  * readiness gate — every coroutine awaiting the gate resumes on the same flip and their order is
  * undefined, so "right after Firebase became ready" is not early enough.
  *
- * Mirrors iOS's `DeferredConfigLoading.firestore` and `FirestoreCacheCleanup`.
+ * @param firebaseLoader Records whether a previous session left a cache behind to clear.
+ * @param emulator Redirects Firestore to a local emulator suite when the build targets one.
  */
-internal object MHCFirestoreSetup {
+class MHCFirestoreSetup(
+    private val firebaseLoader: MHCFirebaseLoader,
+    private val emulator: MHCFirebaseEmulator,
+) {
 
-    /**
-     * The on-device Firestore cache budget, matching iOS.
-     */
-    private const val CACHE_SIZE_BYTES = 100L * 1024 * 1024
-
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Applies the app's Firestore settings and, if a previous session logged out, clears the cache
      * left behind by the participant who was signed in then.
-     *
-     * @param context Any context; the application context is used internally.
      */
-    fun apply(context: Context) {
+    fun apply() {
         val firestore = FirebaseFirestore.getInstance()
         firestore.firestoreSettings = FirebaseFirestoreSettings.Builder()
             .setLocalCacheSettings(
@@ -52,22 +47,29 @@ internal object MHCFirestoreSetup {
         // Strictly after the settings above: `useEmulator` folds the host into whatever settings are
         // current, so redirecting first and replacing them second would quietly undo the redirect
         // and point a verification run at the real project.
-        MHCFirebaseEmulator.host?.let { host ->
+        emulator.host?.let { host ->
             firestore.useEmulator(host, MHCFirebaseEmulator.FIRESTORE_PORT)
         }
 
-        if (!MHCFirebaseLoader.shouldClearCacheOnNextLaunch(context = context)) return
+        if (!firebaseLoader.shouldClearCacheOnNextLaunch()) return
 
         // Only the enqueueing has to happen here, ahead of any other Firestore call; the SDK runs
         // the work itself on its own queue, ahead of everything queued after this point.
         firestore.clearPersistence()
             .addOnSuccessListener {
                 logger.i { "Cleared the Firestore cache left behind by the previous session." }
-                MHCFirebaseLoader.setShouldClearCacheOnNextLaunch(context = context, shouldClear = false)
+                firebaseLoader.setShouldClearCacheOnNextLaunch(shouldClear = false)
             }
             .addOnFailureListener { throwable ->
                 // Deliberately keeps the flag set, so the next launch tries again.
                 logger.e(throwable) { "Failed to clear the Firestore cache." }
             }
+    }
+
+    private companion object {
+        /**
+         * The on-device Firestore cache budget.
+         */
+        const val CACHE_SIZE_BYTES = 100L * 1024 * 1024
     }
 }

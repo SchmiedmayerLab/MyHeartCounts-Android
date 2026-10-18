@@ -27,13 +27,15 @@ fun ConfigurationBuilder.account() {
         // Email and password is the base `AccountService` path and needs no provider entry.
         // Anonymous sign-in exists only so participants in a region the study has not launched in
         // yet can join the waitlist, matching iOS.
-        service = MHCAccountService.wrapping(
-            wrapped = FirebaseAccountService(
-                providers = FirebaseAuthProviders(FirebaseAuthProvider.Anonymous),
-                // Null unless the build targets a local emulator suite; see MHCFirebaseEmulator.
-                emulatorSettings = MHCFirebaseEmulator.authSettings(),
-            ),
-        ),
+        service = {
+            MHCAccountService.wrapping(
+                wrapped = FirebaseAccountService(
+                    providers = FirebaseAuthProviders(FirebaseAuthProvider.Anonymous),
+                    // Null unless the build targets a local emulator suite; see MHCFirebaseEmulator.
+                    emulatorSettings = dependency<MHCFirebaseEmulator>().authSettings(),
+                ),
+            )
+        },
         storageProvider = FirestoreAccountStorage(collectionPath = USERS_COLLECTION),
         configuration = {
             requires(key = AccountKeys.accountId)

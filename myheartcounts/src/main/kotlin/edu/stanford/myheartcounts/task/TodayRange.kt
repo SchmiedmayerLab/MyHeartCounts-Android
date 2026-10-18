@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.flow
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.scheduler.InstantRange
 import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The current day in the current zone, from its start up to the start of the next.
@@ -35,6 +36,6 @@ fun TimeProvider.todayRanges(): Flow<InstantRange> = flow {
         val today = todayRange()
         emit(today)
         val untilTomorrow = Duration.between(nowInstant(), today.endExclusive)
-        delay(untilTomorrow.toMillis().coerceAtLeast(1))
+        delay(untilTomorrow.toMillis().coerceAtLeast(1).milliseconds)
     }
 }

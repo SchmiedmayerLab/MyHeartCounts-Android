@@ -9,10 +9,10 @@ package edu.stanford.myheartcounts.notification
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
-import org.grovealliance.core.logging.groveLogger
 
 /**
  * Receives the remote nudges the backend's `sendNudges` function pushes.
@@ -22,7 +22,7 @@ import org.grovealliance.core.logging.groveLogger
  */
 class MHCMessagingService : FirebaseMessagingService() {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
     private val concurrency by dependency<Concurrency>()
     private val ioScope by lazy { concurrency.ioCoroutineScope() }
     private val pushTokenSynchronizer by dependency<MHCPushTokenSynchronizer>()

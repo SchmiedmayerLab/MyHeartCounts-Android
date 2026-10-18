@@ -15,8 +15,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.RemoteMessage
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 
 /**
  * Shows the study's remote nudges and owns the notification channel they are posted on.
@@ -31,7 +31,7 @@ class MHCNudgeNotifications(
     private val notificationPermissionHandler: NotificationPermissionHandler,
 ) : Module {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override fun configure() {
         val manager = context.getSystemService(NotificationManager::class.java)
