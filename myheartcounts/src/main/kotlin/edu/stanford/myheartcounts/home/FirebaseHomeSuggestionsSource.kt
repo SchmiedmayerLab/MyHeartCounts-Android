@@ -11,11 +11,11 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOf
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.ui.StringResource
 import java.time.Duration
@@ -32,7 +32,7 @@ class FirebaseHomeSuggestionsSource(
     private val timeProvider: TimeProvider,
 ) : HomeSuggestionsSource {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override val nudge: Flow<DailyNudge?> = callbackFlow {
         firestore.awaitReady()

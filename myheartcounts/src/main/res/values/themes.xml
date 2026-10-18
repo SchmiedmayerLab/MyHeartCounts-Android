@@ -15,33 +15,7 @@ SPDX-License-Identifier: MIT
     inflated from XML are Material components, so the questionnaire's buttons take its styles.
     -->
     <style name="Theme.MyHeartCounts" parent="Theme.Grove.CardinalRed">
-        <item name="questionnaire_theme">@style/Theme.MyHeartCounts.Questionnaire</item>
+        <item name="questionnaire_theme">@style/Theme.Grove.Questionnaire</item>
         <item name="viewInflaterClass">com.google.android.material.theme.MaterialComponentsViewInflater</item>
-    </style>
-
-    <style name="Theme.MyHeartCounts.Questionnaire" parent="Theme.Questionnaire">
-        <item name="colorPrimary">@color/questionnaire_primary</item>
-        <item name="colorOnPrimary">@color/questionnaire_on_primary</item>
-        <item name="colorPrimaryContainer">@color/questionnaire_primary_container</item>
-        <item name="colorOnPrimaryContainer">@color/questionnaire_on_primary_container</item>
-        <item name="colorSecondary">@color/questionnaire_secondary</item>
-        <item name="colorOnSecondary">@color/questionnaire_on_secondary</item>
-        <item name="colorSecondaryContainer">@color/questionnaire_secondary_container</item>
-        <item name="colorOnSecondaryContainer">@color/questionnaire_on_secondary_container</item>
-        <item name="colorError">@color/questionnaire_error</item>
-        <item name="colorOnError">@color/questionnaire_on_error</item>
-        <item name="android:colorBackground">@color/questionnaire_background</item>
-        <item name="colorOnBackground">@color/questionnaire_on_background</item>
-        <item name="colorSurface">@color/questionnaire_surface</item>
-        <item name="colorOnSurface">@color/questionnaire_on_surface</item>
-        <item name="colorSurfaceVariant">@color/questionnaire_surface_variant</item>
-        <item name="colorOnSurfaceVariant">@color/questionnaire_on_surface_variant</item>
-        <item name="colorOutline">@color/questionnaire_outline</item>
-        <item name="colorOutlineVariant">@color/questionnaire_outline_variant</item>
-        <item name="colorSurfaceContainerLowest">@color/questionnaire_surface_container_lowest</item>
-        <item name="colorSurfaceContainerLow">@color/questionnaire_surface_container_low</item>
-        <item name="colorSurfaceContainer">@color/questionnaire_surface_container</item>
-        <item name="colorSurfaceContainerHigh">@color/questionnaire_surface_container_high</item>
-        <item name="colorSurfaceContainerHighest">@color/questionnaire_surface_container_highest</item>
     </style>
 </resources>

@@ -15,7 +15,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import org.grovealliance.core.logging.groveLogger
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import org.grovealliance.core.requireDependency
 import java.util.concurrent.TimeUnit
 
@@ -30,7 +30,7 @@ class HealthUploadWorker(
     parameters: WorkerParameters,
 ) : CoroutineWorker(context, parameters) {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override suspend fun doWork(): Result {
         val handler = runCatching { requireDependency<MHCHealthDataHandler>() }.getOrElse { throwable ->

@@ -7,10 +7,10 @@
 
 package edu.stanford.myheartcounts.account
 
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import edu.stanford.myheartcounts.standard.MHCStandard
 import org.grovealliance.account.AccountService
 import org.grovealliance.core.ApplicationModule
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.requireDependency
 
 /**
@@ -32,7 +32,7 @@ class MHCAccountService(
     private val willSignOut: suspend () -> Unit,
 ) : AccountService by wrapped {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override suspend fun logout(): Result<Unit> {
         runWillSignOut()
@@ -56,8 +56,7 @@ class MHCAccountService(
          *
          * The standard is reached through [ApplicationModule] rather than resolved by type, because
          * Grove holds it on the configuration rather than in the dependency graph — the same route
-         * Grove's own `HealthClient` takes. It is resolved only when a sign-out actually happens,
-         * since this runs while the configuration is still being built.
+         * Grove's own `HealthClient` takes. It is resolved only when a sign-out actually happens.
          */
         fun wrapping(wrapped: AccountService): AccountService = MHCAccountService(
             wrapped = wrapped,

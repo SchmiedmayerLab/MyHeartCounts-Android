@@ -46,6 +46,7 @@ fun ConfigurationBuilder.appViewModels() {
             consentUploader = dependency(),
             consentDocumentProvider = dependency(),
             onboardingCompletion = dependency(),
+            healthAccess = dependency(),
         )
     }
     viewModel {

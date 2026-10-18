@@ -40,7 +40,7 @@ object FirebaseTestSession {
     /**
      * Whether this build targets a local emulator suite. See `MHCFirebaseEmulator`.
      */
-    val isEmulatorConfigured: Boolean get() = MHCFirebaseEmulator.host != null
+    val isEmulatorConfigured: Boolean get() = requireDependency<MHCFirebaseEmulator>().host != null
 
     val account: Account get() = requireDependency()
     val accountService: AccountService get() = requireDependency()

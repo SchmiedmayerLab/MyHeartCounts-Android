@@ -87,8 +87,11 @@ SPDX-License-Identifier: MIT
 
     <!-- Health Access & Data Sharing -->
     <string name="onboarding_health_access_title">Health Access &amp; Data Sharing</string>
-    <string name="onboarding_health_access_subtitle">The My Heart Counts Study uses Health Data collected on your phone to further research. Granting access to all fields (or as many as you are comfortable with) ensures the most well powered study possible.</string>
-    <string name="onboarding_health_access_learn_more">My Heart Counts needs read-access to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. Further, granting write-access will give the best user experience with the application for dashboard features. To enhance research and optimize user experience, select **“Turn On All”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
+    <string name="onboarding_health_access_subtitle">The My Heart Counts Study uses health data from Health Connect on your phone to further research. Granting access to all data types (or as many as you are comfortable with) ensures the most well powered study possible.</string>
+    <string name="onboarding_health_access_learn_more">My Heart Counts needs read access to Health Connect to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. It never writes anything to Health Connect. To enhance research, select **“Allow all”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
+    <string name="onboarding_health_access_install_subtitle">My Heart Counts reads your health data through Health Connect, which needs to be installed or updated on this phone. You can also skip this for now.</string>
+    <string name="onboarding_health_access_install">Install Health Connect</string>
+    <string name="onboarding_health_access_install_error">Health Connect could not be opened in the store.</string>
 
     <!-- Consent Survey -->
     <string name="consent_survey_title">Consent Survey</string>
@@ -141,13 +144,45 @@ SPDX-License-Identifier: MIT
     <string name="upcoming_tasks_title">Next 2 Weeks</string>
     <string name="upcoming_tasks_empty_title">No Upcoming Tasks</string>
     <string name="upcoming_tasks_error_title">Unable to load your upcoming tasks</string>
-    <plurals name="task_timing_days_ahead">
-        <item quantity="one">Tomorrow, %2$s</item>
-        <item quantity="other">In %1$d days, %2$s</item>
+    <string name="task_timing_with_offset">%1$s, %2$s</string>
+    <string name="task_timing_time_range">%1$s to %2$s</string>
+    <string name="task_timing_yesterday">Yesterday</string>
+    <string name="task_timing_tomorrow">Tomorrow</string>
+    <string name="task_timing_last_week">Last week</string>
+    <string name="task_timing_next_week">Next week</string>
+    <string name="task_timing_last_month">Last month</string>
+    <string name="task_timing_next_month">Next month</string>
+    <plurals name="task_timing_hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="task_timing_hours_ahead">
+        <item quantity="one">In %d hour</item>
+        <item quantity="other">In %d hours</item>
     </plurals>
     <plurals name="task_timing_days_ago">
-        <item quantity="one">Yesterday, %2$s</item>
-        <item quantity="other">%1$d days ago, %2$s</item>
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="task_timing_days_ahead">
+        <item quantity="one">In %d day</item>
+        <item quantity="other">In %d days</item>
+    </plurals>
+    <plurals name="task_timing_weeks_ago">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="task_timing_weeks_ahead">
+        <item quantity="one">In %d week</item>
+        <item quantity="other">In %d weeks</item>
+    </plurals>
+    <plurals name="task_timing_months_ago">
+        <item quantity="one">%d month ago</item>
+        <item quantity="other">%d months ago</item>
+    </plurals>
+    <plurals name="task_timing_months_ahead">
+        <item quantity="one">In %d month</item>
+        <item quantity="other">In %d months</item>
     </plurals>
 
     <!-- Always-available tasks -->
