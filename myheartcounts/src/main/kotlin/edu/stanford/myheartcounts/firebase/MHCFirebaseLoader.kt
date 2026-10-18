@@ -9,7 +9,8 @@ package edu.stanford.myheartcounts.firebase
 
 import android.content.Context
 import com.google.firebase.FirebaseOptions
-import org.grovealliance.core.logging.groveLogger
+import org.grovealliance.storage.local.KeyValueStorageFactory
+import org.grovealliance.storage.local.KeyValueStorageType
 import java.util.Locale
 
 /**
@@ -20,42 +21,36 @@ import java.util.Locale
  * **not** initialized automatically at process start — `FirebaseInitProvider` is removed in the app
  * manifest — and there are exactly two ways it comes up:
  *
- * - **A returning participant**: [persistedRegionOptions] feeds `firebaseApp(options = …)` when the
- *   app builds its Grove configuration, so Firebase is up before any module is configured.
+ * - **A returning participant**: [persistedRegionOptions] feeds `firebaseApp(options = …)`, so
+ *   Firebase is up before any module awaiting it is configured.
  * - **A new participant**: [MHCFirebaseRegionInitializer] configures it mid-session, once onboarding
  *   knows the country.
  *
- * This mirrors `DeferredConfigLoading` on iOS. The region-agnostic half of the mechanism — owning
- * the Firebase app and telling other modules when it is ready — lives in Grove's
- * [org.grovealliance.firebase.FirebaseAppConfiguration].
+ * The region-agnostic half of the mechanism — owning the Firebase app and telling other modules
+ * when it is ready — lives in Grove's [org.grovealliance.firebase.FirebaseAppConfiguration].
  *
  * The project options come from the standard `google-services.json`, which the
  * `com.google.gms.google-services` Gradle plugin turns into string resources at build time. Only
  * the automatic initialization is dropped, not the file itself.
  *
- * The choice is persisted in a dedicated [android.content.SharedPreferences] file rather than in
- * Grove's `KeyValueStorage`, because it is read while the configuration is being built and Grove's
- * dependency graph does not exist yet.
+ * @param context Reads the project options from the app's resources.
+ * @param storageFactory Creates the storage the region and the cache flag persist in.
  */
-object MHCFirebaseLoader {
+class MHCFirebaseLoader(
+    private val context: Context,
+    storageFactory: KeyValueStorageFactory,
+) {
 
-    private const val PREFERENCES_NAME = "edu.stanford.myheartcounts.FIREBASE"
-    private const val KEY_REGION = "region"
-    private const val KEY_CLEAR_CACHE = "shouldClearFirestoreCacheOnNextLaunch"
-
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
+    private val storage = storageFactory.create(fileName = STORAGE_FILE, type = KeyValueStorageType.UNENCRYPTED)
 
     /**
      * The [FirebaseOptions] for the region the participant previously chose, or `null` on a first
      * launch where they have not chosen one yet.
-     *
-     * The app passes this straight into `firebaseApp(options = …)`, so that a returning participant
-     * has Firebase up before Grove configures any module, while a new one has no Firebase at all
-     * until onboarding reaches region selection.
      */
-    fun persistedRegionOptions(context: Context): FirebaseOptions? =
-        persistedRegionCode(context)?.let { region ->
-            optionsFor(context = context, regionCode = region) ?: run {
+    fun persistedRegionOptions(): FirebaseOptions? =
+        persistedRegionCode()?.let { region ->
+            optionsFor(regionCode = region) ?: run {
                 logger.e { "No Firebase configuration shipped for the persisted region '$region'." }
                 null
             }
@@ -68,39 +63,31 @@ object MHCFirebaseLoader {
      * Initializing Firebase itself goes through [MHCFirebaseRegionInitializer], which routes it via
      * Grove so dependent modules learn that Firebase became available.
      *
-     * @param context Any context; the application context is used internally.
      * @param regionCode An ISO 3166-1 alpha-2 country code.
      */
-    fun persistRegion(context: Context, regionCode: String) {
-        preferences(context).edit().putString(KEY_REGION, regionCode).apply()
+    fun persistRegion(regionCode: String) {
+        storage.putString(key = KEY_REGION, value = regionCode)
     }
 
     /**
      * Forgets the participant's region, so the next launch leaves Firebase uninitialized until
      * onboarding selects a region again.
-     *
-     * @param context Any context; the application context is used internally.
      */
-    fun clearRegion(context: Context) {
-        preferences(context).edit().remove(KEY_REGION).apply()
+    fun clearRegion() {
+        storage.delete(key = KEY_REGION)
     }
 
     /**
      * The region the participant previously chose, or `null` if they have not chosen one yet.
      */
-    fun persistedRegionCode(context: Context): String? =
-        preferences(context).getString(KEY_REGION, null)
+    fun persistedRegionCode(): String? = storage.getString(key = KEY_REGION)
 
     /**
      * The locale used to resolve localized study-bundle resources, derived from the persisted
      * region, or `null` when no region has been chosen yet.
-     *
-     * Grove's `studyManager(preferredLocale = …)` captures its locale when the configuration is
-     * built, so on the very first launch — where the region is only chosen part-way through the
-     * session — the study bundle stays on the default locale until the next process start.
      */
-    fun persistedRegionLocale(context: Context): Locale? =
-        persistedRegionCode(context)?.let { region ->
+    fun persistedRegionLocale(): Locale? =
+        persistedRegionCode()?.let { region ->
             Locale.Builder().setLanguage(Locale.getDefault().language).setRegion(region).build()
         }
 
@@ -114,33 +101,33 @@ object MHCFirebaseLoader {
      * own configuration source before it can be told apart here.
      */
     @Suppress("UnusedParameter")
-    fun optionsFor(context: Context, regionCode: String): FirebaseOptions? =
-        FirebaseOptions.fromResource(context.applicationContext)
+    fun optionsFor(regionCode: String): FirebaseOptions? = FirebaseOptions.fromResource(context)
 
     /**
      * Whether the build carries a Firebase configuration for [regionCode].
      */
-    fun hasConfigFor(context: Context, regionCode: String): Boolean =
-        optionsFor(context = context, regionCode = regionCode) != null
+    fun hasConfigFor(regionCode: String): Boolean = optionsFor(regionCode = regionCode) != null
 
     /**
      * Whether the Firestore cache has to be cleared before Firestore is next used.
      *
      * Set when the participant logs out: their cached documents must not survive into the next
      * session, and `clearPersistence` only works while the Firestore client has not started, which
-     * on Android means the next process launch. Mirrors iOS's `FirestoreCacheCleanup`.
+     * on Android means the next process launch.
      */
-    fun shouldClearCacheOnNextLaunch(context: Context): Boolean =
-        preferences(context).getBoolean(KEY_CLEAR_CACHE, false)
+    fun shouldClearCacheOnNextLaunch(): Boolean = storage.getBoolean(key = KEY_CLEAR_CACHE, default = false)
 
     /**
      * Records whether the Firestore cache has to be cleared on the next launch. See
      * [shouldClearCacheOnNextLaunch].
      */
-    fun setShouldClearCacheOnNextLaunch(context: Context, shouldClear: Boolean) {
-        preferences(context).edit().putBoolean(KEY_CLEAR_CACHE, shouldClear).apply()
+    fun setShouldClearCacheOnNextLaunch(shouldClear: Boolean) {
+        storage.putBoolean(key = KEY_CLEAR_CACHE, value = shouldClear)
     }
 
-    private fun preferences(context: Context) =
-        context.applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private companion object {
+        const val STORAGE_FILE = "edu.stanford.myheartcounts.FIREBASE"
+        const val KEY_REGION = "region"
+        const val KEY_CLEAR_CACHE = "shouldClearFirestoreCacheOnNextLaunch"
+    }
 }

@@ -12,11 +12,11 @@ import ca.uhn.fhir.context.FhirContext
 import com.github.luben.zstd.Zstd
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.DateTimeType
@@ -41,7 +41,7 @@ class MHCHealthDataHandler(
     private val provenance: suspend () -> HealthObservationProvenance,
 ) : Module {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
     private val fhirParser by lazy { FhirContext.forR4().newJsonParser() }
 
     /**

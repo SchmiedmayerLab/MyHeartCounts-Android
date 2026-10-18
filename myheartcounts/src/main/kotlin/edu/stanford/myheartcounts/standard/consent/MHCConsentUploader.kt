@@ -7,7 +7,6 @@
 
 package edu.stanford.myheartcounts.standard.consent
 
-import android.content.Context
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storageMetadata
 import edu.stanford.myheartcounts.account.DidOptInToTrialKey
@@ -16,6 +15,7 @@ import edu.stanford.myheartcounts.account.LastSignedConsentDateKey
 import edu.stanford.myheartcounts.account.LastSignedConsentVersionKey
 import edu.stanford.myheartcounts.firebase.MHCFirebaseLoader
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -24,7 +24,6 @@ import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountModifications
 import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.foundation.JsonSerializer
 import org.grovealliance.markdown.MarkdownBlock
@@ -44,14 +43,14 @@ import kotlin.coroutines.cancellation.CancellationException
  * same custom metadata keys.
  */
 class MHCConsentUploader(
-    private val context: Context,
+    private val firebaseLoader: MHCFirebaseLoader,
     private val account: Account,
     private val firestore: MHCFirestore,
     private val renderer: ConsentPdfRenderer,
     private val timeProvider: TimeProvider,
 ) : Module {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Renders [document] with [responses] to a PDF, uploads it, and stamps the consent fields onto
@@ -80,7 +79,7 @@ class MHCConsentUploader(
             document = document,
             responses = responses,
             paperSize = ConsentPaperSize.forRegion(
-                regionCode = MHCFirebaseLoader.persistedRegionCode(context = context),
+                regionCode = firebaseLoader.persistedRegionCode(),
             ),
         )
 

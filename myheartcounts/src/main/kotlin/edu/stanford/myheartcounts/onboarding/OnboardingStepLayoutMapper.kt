@@ -34,6 +34,7 @@ import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EmailField
 import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
 import edu.stanford.myheartcounts.ui.ExternalLink
+import org.grovealliance.health.HealthConnectAvailability
 import org.grovealliance.onboarding.OnboardingActions
 import org.grovealliance.onboarding.OnboardingArea
 import org.grovealliance.onboarding.OnboardingInformation
@@ -123,13 +124,7 @@ class OnboardingStepLayoutMapperImpl(
             },
         )
 
-        OnboardingStep.HealthAccess -> infoStep(
-            input = input,
-            icon = Icons.Outlined.HealthAndSafety,
-            title = MHCStrings.onboarding_health_access_title,
-            subtitle = MHCStrings.onboarding_health_access_subtitle,
-            learnMore = MHCStrings.onboarding_health_access_learn_more,
-        )
+        OnboardingStep.HealthAccess -> healthAccessStep(input)
 
         OnboardingStep.Notifications -> notificationStep(input = input)
         OnboardingStep.FinalEnrollment -> finalEnrollment(input)
@@ -298,6 +293,42 @@ class OnboardingStepLayoutMapperImpl(
         ),
     )
 
+    /**
+     * Asks for Health Connect access on Continue. While Health Connect must be installed or updated
+     * first, the step offers that instead, and lets the participant skip.
+     */
+    private fun healthAccessStep(input: OnboardingStepInput): OnboardingLayout =
+        if (input.healthConnectAvailability == HealthConnectAvailability.UpdateRequired) {
+            OnboardingLayout(
+                header = OnboardingTitle(
+                    icon = ImageResource(image = Icons.Outlined.HealthAndSafety),
+                    title = StringResource(MHCStrings.onboarding_health_access_title),
+                    subtitle = StringResource(MHCStrings.onboarding_health_access_install_subtitle),
+                ),
+                content = OnboardingInformation(areas = emptyList()),
+                footer = OnboardingActions(
+                    primaryButton = AsyncTextButton(
+                        title = StringResource(MHCStrings.onboarding_health_access_install),
+                        action = { input.push(OnboardingAction.HealthConnectInstallRequested) },
+                    ),
+                    secondaryButton = AsyncTextButton(
+                        title = StringResource(MHCStrings.onboarding_skip),
+                        containerColor = { Colors.transparent },
+                        textColor = { Colors.primary },
+                        action = { input.push(OnboardingAction.Skipped) },
+                    ),
+                ),
+            )
+        } else {
+            infoStep(
+                input = input,
+                icon = Icons.Outlined.HealthAndSafety,
+                title = MHCStrings.onboarding_health_access_title,
+                subtitle = MHCStrings.onboarding_health_access_subtitle,
+                learnMore = MHCStrings.onboarding_health_access_learn_more,
+            )
+        }
+
     private fun notificationStep(
         input: OnboardingStepInput,
     ): OnboardingLayout = OnboardingLayout(
@@ -317,7 +348,7 @@ class OnboardingStepLayoutMapperImpl(
                 title = StringResource(MHCStrings.onboarding_skip),
                 containerColor = { Colors.transparent },
                 textColor = { Colors.primary },
-                action = { input.push(OnboardingAction.NotificationSkipped) },
+                action = { input.push(OnboardingAction.Skipped) },
             )
         ),
     )

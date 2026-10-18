@@ -12,9 +12,8 @@ import android.content.Context
 import edu.stanford.myheartcounts.account.account
 import edu.stanford.myheartcounts.di.appConfigurations
 import edu.stanford.myheartcounts.di.appViewModels
-import edu.stanford.myheartcounts.firebase.MHCFirebaseEmulator
 import edu.stanford.myheartcounts.firebase.MHCFirebaseLoader
-import edu.stanford.myheartcounts.firebase.MHCFirestoreSetup
+import edu.stanford.myheartcounts.firebase.mhcFirebase
 import edu.stanford.myheartcounts.standard.MHCStandard
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import edu.stanford.myheartcounts.standard.health.mhcHealth
@@ -27,9 +26,9 @@ import org.grovealliance.core.Configuration
 import org.grovealliance.core.GroveApplication
 import org.grovealliance.core.dependency
 import org.grovealliance.core.logging.GroveLogger
-import org.grovealliance.firebase.firebaseApp
 import org.grovealliance.scheduler.SchedulerNotificationsConfiguration
 import org.grovealliance.scheduler.scheduler
+import org.grovealliance.study.StudyHealthConfiguration
 import org.grovealliance.study.studyManager
 import java.util.Locale
 import androidx.work.Configuration as WorkConfiguration
@@ -47,25 +46,9 @@ class MyHeartCountsApplication : Application(), GroveApplication, WorkConfigurat
 
     override val workManagerConfiguration: WorkConfiguration = WorkConfiguration.Builder().build()
 
-    /**
-     * Deliberately lazy: Grove reads this from its content provider, after the base context is
-     * attached, whereas an eager property initializer would run while this [Application] is still
-     * being constructed. Resolving the participant's Firebase project needs a context.
-     */
-    override val configuration: Configuration by lazy {
+    override val configuration: Configuration =
         Configuration(standard = MHCStandard()) {
-            // Registered before every Firebase-backed module, so they can await initialization. On a
-            // first launch no region has been picked yet, the options below are null, and Firebase
-            // stays uninitialized until MHCFirebaseRegionInitializer supplies them mid-onboarding.
-            firebaseApp(
-                options = MHCFirebaseLoader.persistedRegionOptions(
-                    context = this@MyHeartCountsApplication,
-                ),
-                onInitialized = {
-                    MHCFirebaseEmulator.redirectIfConfigured()
-                    MHCFirestoreSetup.apply(context = this@MyHeartCountsApplication)
-                },
-            )
+            mhcFirebase()
 
             account()
             appConfigurations()
@@ -74,9 +57,8 @@ class MyHeartCountsApplication : Application(), GroveApplication, WorkConfigurat
 
             scheduler(notifications = SchedulerNotificationsConfiguration.DEFAULT)
             studyManager(
-                preferredLocale = MHCFirebaseLoader.persistedRegionLocale(
-                    context = this@MyHeartCountsApplication,
-                ) ?: Locale.getDefault(),
+                preferredLocale = { dependency<MHCFirebaseLoader>().persistedRegionLocale() ?: Locale.getDefault() },
+                health = StudyHealthConfiguration.DEFAULT,
             )
 
             consent {
@@ -97,7 +79,6 @@ class MyHeartCountsApplication : Application(), GroveApplication, WorkConfigurat
                 }
             }
         }
-    }
 
     /**
      * Enables logging here rather than in `onCreate`, which runs after Grove has already configured

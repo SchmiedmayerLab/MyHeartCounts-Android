@@ -7,10 +7,9 @@
 
 package edu.stanford.myheartcounts.firebase
 
-import android.content.Context
 import edu.stanford.myheartcounts.model.Country
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.firebase.FirebaseAppConfiguration
+import org.grovealliance.study.StudyManager
 
 /**
  * Initializes Firebase for the region a participant selected during onboarding.
@@ -22,7 +21,8 @@ import org.grovealliance.firebase.FirebaseAppConfiguration
 interface MHCFirebaseRegionInitializer {
 
     /**
-     * Initializes Firebase for [country] and remembers the choice for later launches.
+     * Initializes Firebase for [country] and remembers the choice for later launches. The study
+     * content is localized for the resulting region from then on.
      *
      * Participants in a country the study has not launched in still need Firebase, because joining
      * the launch waitlist signs in anonymously and calls a Cloud Function. Those countries fall
@@ -40,21 +40,24 @@ interface MHCFirebaseRegionInitializer {
  * Default [MHCFirebaseRegionInitializer] implementation.
  */
 class MHCFirebaseRegionInitializerImpl(
-    private val context: Context,
+    private val firebaseLoader: MHCFirebaseLoader,
     private val firebaseAppConfiguration: FirebaseAppConfiguration,
+    private val studyManager: StudyManager,
 ) : MHCFirebaseRegionInitializer {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override fun initialize(country: Country): Boolean {
         val region = regionFor(country)
-        val options = MHCFirebaseLoader.optionsFor(context = context, regionCode = region) ?: run {
+        val options = firebaseLoader.optionsFor(regionCode = region) ?: run {
             logger.e { "No Firebase configuration shipped for region '$region'." }
             return false
         }
         val configured = firebaseAppConfiguration.configure(options = options).isSuccess
         if (configured) {
-            MHCFirebaseLoader.persistRegion(context = context, regionCode = region)
+            firebaseLoader.persistRegion(regionCode = region)
+            firebaseLoader.persistedRegionLocale()
+                ?.let { studyManager.updatePreferredLocale(locale = it) }
         }
         return configured
     }
@@ -70,7 +73,7 @@ class MHCFirebaseRegionInitializerImpl(
      * which is why this keys on [Country.isEnabled] rather than on whether a config exists.
      */
     private fun regionFor(country: Country): String =
-        if (country.isEnabled && MHCFirebaseLoader.hasConfigFor(context = context, regionCode = country.code)) {
+        if (country.isEnabled && firebaseLoader.hasConfigFor(regionCode = country.code)) {
             country.code
         } else {
             FALLBACK_REGION
