@@ -10,6 +10,8 @@ package edu.stanford.myheartcounts.firebase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.storage.FirebaseStorage
+import edu.stanford.myheartcounts.account.didOptInToTrial
+import edu.stanford.myheartcounts.account.futureStudies
 import edu.stanford.myheartcounts.account.lastSignedConsentDate
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
@@ -79,11 +81,13 @@ class ConsentUploadTest {
         // listener some time after the upload returned.
         val stamped = FirebaseTestSession.awaitDetails { it?.lastSignedConsentDate != null }
         assertThat(stamped?.lastSignedConsentDate).isNotNull()
+        assertThat(stamped?.futureStudies).isTrue()
+        assertThat(stamped?.didOptInToTrial).isTrue()
     }
 
     private fun responses() = ConsentResponses(
-        toggles = mapOf("futureStudiesOptIn" to true),
-        selects = mapOf("trialOptIn" to "trialYes"),
+        toggles = mapOf(MHCConsentDocumentProvider.ID_FUTURE_STUDIES to true),
+        selects = mapOf(MHCConsentDocumentProvider.ID_TRIAL_OPT_IN to MHCConsentDocumentProvider.ID_TRIAL_YES),
         signatures = mapOf(
             SIGNATURE_ELEMENT_ID to SignatureMetadata(
                 givenName = "Test",

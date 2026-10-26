@@ -7,34 +7,28 @@
 
 package edu.stanford.myheartcounts.home
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.StudyAppBarProvider
+import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
-import edu.stanford.myheartcounts.study.StudyArticleSource
-import edu.stanford.myheartcounts.ui.MarkdownSheet
+import edu.stanford.myheartcounts.task.AlwaysAvailableTask
+import edu.stanford.myheartcounts.task.EventPerformer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.grovealliance.core.logging.groveLogger
-import org.grovealliance.core.time.TimeProvider
-import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.scheduler.Event
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.GroveErrorLayout
 import org.grovealliance.ui.StringResource
-import org.grovealliance.ui.groveAppBar
 import org.grovealliance.ui.mutableScaffoldState
-import org.grovealliance.ui.showErrorToast
-import java.time.Instant
-import java.time.ZoneId
 
 private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
 
@@ -42,14 +36,13 @@ private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
  * Backs the Home tab: waits for the participant's tasks to become available, then renders them and
  * the sections around them, keeping the list current as events are completed.
  */
-class HomeViewModel @Suppress("detekt:LongParameterList") constructor(
+class HomeViewModel(
     studyAppBarProvider: StudyAppBarProvider,
     private val navigator: Navigator,
     private val tasksSource: HomeTasksSource,
     private val mapper: HomeContentMapper,
-    private val timeProvider: TimeProvider,
     private val suggestionsSource: HomeSuggestionsSource,
-    private val articleSource: StudyArticleSource,
+    private val eventPerformer: EventPerformer,
 ) : ViewModel() {
     private val logger by groveLogger()
     private val actionSource = ActionSource(::onAction)
@@ -97,10 +90,7 @@ class HomeViewModel @Suppress("detekt:LongParameterList") constructor(
                     missedEventCount = tasks.missedEventCount,
                     nudge = nudge,
                     promptedActions = promptedActions,
-                    now = timeProvider.nowInstant(),
-                    zone = timeProvider.currentZone(),
                     actionSink = actionSink,
-                    onCompleteEvent = ::completeEvent,
                 )
             )
         }.collect { layout -> layoutState.update { HomeLayoutState.Content(layout) } }
@@ -112,43 +102,18 @@ class HomeViewModel @Suppress("detekt:LongParameterList") constructor(
             HomeAction.PromptedActionsSelected -> showPromptedActions()
             HomeAction.LearnMoreSelected -> showStudyWebsite()
             is HomeAction.AlwaysAvailableTaskSelected -> performAlwaysAvailableTask(action.task)
-            is HomeAction.ReadArticleSelected -> readArticle(action)
+            is HomeAction.PerformTaskSelected -> performTask(action)
         }
     }
 
-    /**
-     * Presents the article of [action], completing its event once the sheet is shown when the
-     * action states that presenting it does.
-     */
-    private fun readArticle(action: HomeAction.ReadArticleSelected) {
+    private fun performTask(action: HomeAction.PerformTaskSelected) {
         viewModelScope.launch {
-            articleSource.article(action.event)
-                .onSuccess { document -> showArticleSheet(document = document, action = action) }
-                .onFailure { throwable ->
-                    logger.e(throwable) { "Failed to load the article of ${action.event.task.id}" }
-                    scaffoldState.showErrorToast(message = StringResource(MHCStrings.home_article_error))
-                }
+            eventPerformer.perform(
+                event = action.event,
+                completesEvent = action.completesEvent,
+                scaffoldState = scaffoldState,
+            )
         }
-    }
-
-    private fun showArticleSheet(document: MarkdownDocument, action: HomeAction.ReadArticleSelected) {
-        val sheet = MarkdownSheet(
-            appBar = groveAppBar {
-                close { scaffoldState.dismissBottomSheet() }
-            },
-            document = document,
-            onDisplayed = {
-                if (action.completesEvent) {
-                    viewModelScope.launch { completeEvent(action.event) }
-                }
-            },
-        )
-        scaffoldState.showBottomSheet(sheet = sheet)
-    }
-
-    private suspend fun completeEvent(event: Event) {
-        tasksSource.complete(event)
-            .onFailure { logger.e(it) { "Failed to complete ${event.task.id}" } }
     }
 
     private fun errorLayout() = GroveErrorLayout(
@@ -161,8 +126,7 @@ class HomeViewModel @Suppress("detekt:LongParameterList") constructor(
     )
 
     private fun showMissedTasks() {
-        // Missed tasks are listed on the Upcoming Tasks tab, which does not yet accept a destination.
-        logger.i { "Missed tasks selected." }
+        navigator.push(event = NavigationEvent.NavigateTo(route = MHCRoute.MissedTasks))
     }
 
     private fun showPromptedActions() {
@@ -186,10 +150,7 @@ data class HomeContentInput(
     val missedEventCount: Int,
     val nudge: DailyNudge?,
     val promptedActions: List<PromptedAction>,
-    val now: Instant,
-    val zone: ZoneId,
     val actionSink: ActionSink<HomeAction>,
-    val onCompleteEvent: suspend (Event) -> Unit,
 )
 
 /**
@@ -212,10 +173,10 @@ sealed interface HomeAction {
     data object LearnMoreSelected : HomeAction
 
     /**
-     * The participant opened the article of [event]; [completesEvent] states whether presenting it
+     * The participant chose to perform [event]; [completesEvent] states whether performing it
      * completes the event.
      */
-    data class ReadArticleSelected(
+    data class PerformTaskSelected(
         val event: Event,
         val completesEvent: Boolean,
     ) : HomeAction
@@ -224,29 +185,4 @@ sealed interface HomeAction {
      * The participant chose one of the tasks that may be performed at any time.
      */
     data class AlwaysAvailableTaskSelected(val task: AlwaysAvailableTask) : HomeAction
-}
-
-/**
- * A task a participant may perform whenever they choose, independently of their schedule.
- */
-enum class AlwaysAvailableTask(
-    @get:StringRes val titleId: Int,
-    @get:StringRes val subtitleId: Int?,
-    @get:StringRes val actionTitleId: Int,
-) {
-    ELECTROCARDIOGRAM(
-        titleId = MHCStrings.always_available_ecg_title,
-        subtitleId = MHCStrings.always_available_ecg_subtitle,
-        actionTitleId = MHCStrings.task_action_take_ecg,
-    ),
-    SIX_MINUTE_WALK(
-        titleId = MHCStrings.always_available_six_minute_walk_title,
-        subtitleId = null,
-        actionTitleId = MHCStrings.task_action_take_test,
-    ),
-    TWELVE_MINUTE_RUN(
-        titleId = MHCStrings.always_available_twelve_minute_run_title,
-        subtitleId = null,
-        actionTitleId = MHCStrings.task_action_take_test,
-    ),
 }

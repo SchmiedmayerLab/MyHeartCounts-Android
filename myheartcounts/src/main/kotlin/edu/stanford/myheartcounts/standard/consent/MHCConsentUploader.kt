@@ -27,6 +27,7 @@ import org.grovealliance.core.Module
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.foundation.JsonSerializer
+import org.grovealliance.markdown.MarkdownBlock
 import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.markdown.MarkdownMetadata
 import java.time.Instant
@@ -62,13 +63,16 @@ class MHCConsentUploader(
      *
      * @param document The consent document, as Grove's markdown module parsed it — the same model
      * the consent screen rendered from, so its frontmatter and version are read rather than passed.
-     * @param responses What the participant answered, including their signature.
+     * @param responses What the participant answered, including their signature. Elements they left
+     * untouched are recorded with the initial value the document gives them.
      */
     suspend fun upload(
         document: MarkdownDocument,
         responses: ConsentResponses,
     ): Result<Unit> = runCatching {
         firestore.awaitReady()
+
+        val responses = responses.withInitialValues(document = document)
 
         val signedAt = timeProvider.nowInstant()
         val version = document.metadata.version?.toString()
@@ -109,15 +113,50 @@ class MHCConsentUploader(
         val modifiedDetails = AccountDetails()
         modifiedDetails[LastSignedConsentDateKey::class] = signedAt
         version?.let { modifiedDetails[LastSignedConsentVersionKey::class] = it }
-        responses.toggles[TOGGLE_FUTURE_STUDIES]?.let {
-            modifiedDetails[FutureStudiesKey::class] = it
-        }
-        responses.selects[SELECT_TRIAL_OPT_IN]?.let {
-            modifiedDetails[DidOptInToTrialKey::class] = it == OPTION_TRIAL_YES
-        }
+        modifiedDetails[FutureStudiesKey::class] =
+            responses.toggles[MHCConsentDocumentProvider.ID_FUTURE_STUDIES] == true
+        modifiedDetails[DidOptInToTrialKey::class] =
+            responses.selects[MHCConsentDocumentProvider.ID_TRIAL_OPT_IN] == MHCConsentDocumentProvider.ID_TRIAL_YES
         AccountModifications(modifiedDetails = modifiedDetails)
             .mapCatching { account.service.updateAccountDetails(it).getOrThrow() }
             .getOrThrow()
+    }
+
+    /**
+     * These responses completed with the initial value [document] gives every toggle and select the
+     * participant left untouched, so they hold each value as the consent screen showed it.
+     *
+     * A toggle without an initial value starts off; a select without one, or with one naming none of
+     * its options, starts with no selection.
+     */
+    private fun ConsentResponses.withInitialValues(document: MarkdownDocument): ConsentResponses {
+        val elements = document.blocks.filterIsInstance<MarkdownBlock.Element>()
+        val initialToggles = elements
+            .filter { it.name == MHCConsentDocumentProvider.TAG_TOGGLE }
+            .mapNotNull { element ->
+                element.id?.let { id -> id to (element.attribute(ATTR_INITIAL_VALUE)?.toBooleanStrictOrNull() ?: false) }
+            }
+            .toMap()
+        val initialSelects = elements
+            .filter { it.name == MHCConsentDocumentProvider.TAG_SELECT }
+            .mapNotNull { element -> element.id?.let { id -> id to initialSelection(select = element) } }
+            .toMap()
+        return copy(
+            toggles = initialToggles + toggles,
+            selects = initialSelects + selects,
+        )
+    }
+
+    /**
+     * The option [select] starts with, or no selection when it names none of its options.
+     */
+    private fun initialSelection(select: MarkdownBlock.Element): String {
+        val optionIds = select.content
+            .filterIsInstance<MarkdownBlock.Element.Content.Element>()
+            .map { it.element }
+            .filter { it.name == MHCConsentDocumentProvider.TAG_OPTION }
+            .mapNotNull { it.id }
+        return select.attribute(ATTR_INITIAL_VALUE)?.takeIf { it in optionIds } ?: NO_SELECTION
     }
 
     /**
@@ -154,13 +193,8 @@ class MHCConsentUploader(
         const val KEY_DATE = "date"
         const val KEY_VERSION = "version"
 
-        /**
-         * The consent document elements whose answers are mirrored onto the account, matching iOS's
-         * `futureStudiesOptIn` and `trialOptIn`.
-         */
-        const val TOGGLE_FUTURE_STUDIES = "futureStudiesOptIn"
-        const val SELECT_TRIAL_OPT_IN = "trialOptIn"
-        const val OPTION_TRIAL_YES = "trialYes"
+        const val ATTR_INITIAL_VALUE = "initial-value"
+        const val NO_SELECTION = ""
 
         /**
          * ISO-8601 in GMT with a dash date separator, matching iOS's `consentDateFormat`.

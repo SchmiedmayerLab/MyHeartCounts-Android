@@ -12,34 +12,31 @@ import androidx.lifecycle.viewModelScope
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
-import kotlinx.coroutines.delay
+import edu.stanford.myheartcounts.onboarding.OnboardingCompletion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.grovealliance.account.Account
 import org.grovealliance.account.observeSignOutEvents
-import kotlin.time.Duration.Companion.seconds
 
 /**
- * Drives the app's top-level route: it determines the initial root and switches back to onboarding
- * whenever the account signs out.
+ * Drives the app's top-level route: the study once onboarding has been completed, onboarding
+ * otherwise, and back to onboarding whenever the account signs out.
  */
 class MainActivityViewModel(
     private val navigator: Navigator,
     private val account: Account,
+    onboardingCompletion: OnboardingCompletion,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(MainActivityState(initialRoot = MHCRoute.Root.Splash))
+    private val _state = MutableStateFlow(
+        MainActivityState(
+            initialRoot = if (onboardingCompletion.isComplete) MHCRoute.Root.Study else MHCRoute.Root.Onboarding,
+        )
+    )
     val state = _state.asStateFlow()
 
     init {
-        // Dummy splash for now, will be replaced by actual logic to determine
-        // the initial screen based on onboarding completion and account status.
-        viewModelScope.launch {
-            delay(2.seconds)
-            navigator.push(NavigationEvent.SwitchRoot(MHCRoute.Root.Onboarding))
-        }
-
         viewModelScope.launch {
             account.observeSignOutEvents().collect {
                 navigator.push(NavigationEvent.SwitchRoot(MHCRoute.Root.Onboarding))
