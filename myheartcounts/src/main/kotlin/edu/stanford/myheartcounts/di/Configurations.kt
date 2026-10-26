@@ -17,8 +17,6 @@ import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapper
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapperImpl
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctionsImpl
-import edu.stanford.myheartcounts.firebase.MHCFirebaseRegionInitializer
-import edu.stanford.myheartcounts.firebase.MHCFirebaseRegionInitializerImpl
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.home.FirebaseHomeSuggestionsSource
 import edu.stanford.myheartcounts.home.HomeContentMapper
@@ -54,6 +52,8 @@ import edu.stanford.myheartcounts.standard.QuestionnaireResponseUploader
 import edu.stanford.myheartcounts.standard.consent.ConsentPdfRenderer
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
+import edu.stanford.myheartcounts.standard.health.HealthAccess
+import edu.stanford.myheartcounts.standard.health.HealthAccessImpl
 import edu.stanford.myheartcounts.standard.health.HealthObservationMapper
 import edu.stanford.myheartcounts.standard.health.HealthObservationProvenance
 import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
@@ -97,13 +97,6 @@ fun ConfigurationBuilder.appConfigurations() {
     taskConfigurations()
     singleton<StudyAppBarProvider> {
         StudyAppBarProviderImpl(navigator = dependency())
-    }
-
-    singleton<MHCFirebaseRegionInitializer> {
-        MHCFirebaseRegionInitializerImpl(
-            context = appContext(),
-            firebaseAppConfiguration = dependency(),
-        )
     }
 
     singleton<PermissionChecker> {
@@ -187,7 +180,7 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
     singleton { ConsentPdfRenderer(context = appContext()) }
     module {
         MHCConsentUploader(
-            context = appContext(),
+            firebaseLoader = dependency(),
             account = dependency(),
             firestore = dependency(),
             renderer = dependency(),
@@ -234,9 +227,15 @@ private fun ConfigurationBuilder.notificationConfigurations() {
 }
 
 /**
- * Registers the Health Connect collection pipeline: staging, FHIR mapping, and upload.
+ * Registers Health Connect access and the collection pipeline: staging, FHIR mapping, and upload.
  */
 private fun ConfigurationBuilder.healthConfigurations() {
+    module<HealthAccess> {
+        HealthAccessImpl(
+            health = dependency(),
+            application = application(),
+        )
+    }
     singleton { HealthStagingDatabase.create(context = appContext()) }
     singleton { HealthObservationMapper() }
     singleton {

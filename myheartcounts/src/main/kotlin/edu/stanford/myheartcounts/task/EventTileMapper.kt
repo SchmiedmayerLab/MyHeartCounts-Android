@@ -7,6 +7,8 @@
 
 package edu.stanford.myheartcounts.task
 
+import androidx.annotation.PluralsRes
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Add
@@ -30,9 +32,17 @@ import org.grovealliance.ui.scheduler.TaskActionsMenu
 import org.grovealliance.ui.scheduler.TaskSection
 import org.grovealliance.ui.scheduler.TaskTile
 import org.grovealliance.ui.scheduler.TaskTileHeader
+import java.time.Duration
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.temporal.ChronoUnit
+import java.time.temporal.WeekFields
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Builds the tiles of the participant's tasks, deciding per event whether its action may be
@@ -190,22 +200,107 @@ class EventTileMapperImpl(
     }
 
     /**
-     * The start time of a timed occurrence, preceded by how many days away it is when it is not
-     * today; all-day occurrences carry no time.
+     * When the occurrence takes place: its start time, or its start and end time when it has a fixed
+     * duration, preceded by how far away its day is when that is not today. All-day occurrences, and
+     * those lasting the whole of today, carry none.
      */
     private fun timing(event: Event): StringResource? {
-        if (event.occurrence.schedule.duration is ScheduleDuration.AllDay) return null
         val zone = timeProvider.currentZone()
-        val time = TIME_FORMAT.withZone(zone).format(event.occurrence.start)
-        val days = ChronoUnit.DAYS.between(
-            timeProvider.nowInstant().atZone(zone).toLocalDate(),
-            event.occurrence.start.atZone(zone).toLocalDate(),
-        ).toInt()
+        val now = timeProvider.nowInstant().atZone(zone)
+        val start = event.occurrence.start.atZone(zone)
+        val time = timeOfDay(
+            event = event,
+            start = start,
+            now = now,
+        ) ?: return null
+        if (start.toLocalDate() == now.toLocalDate()) return time
+        return StringResource(MHCStrings.task_timing_with_offset, distance(start = start, now = now), time)
+    }
+
+    /**
+     * How far [start] is from [now], in the largest unit that applies: hours while less than a day
+     * away, then calendar days, calendar weeks and calendar months, and the year once it differs.
+     * Weeks give way to months from four calendar weeks away.
+     */
+    private fun distance(
+        start: ZonedDateTime,
+        now: ZonedDateTime,
+    ): StringResource {
+        val hours = (Duration.between(now, start).toMinutes() / MINUTES_PER_HOUR).roundToInt()
+        val days = ChronoUnit.DAYS.between(now.toLocalDate(), start.toLocalDate()).toInt()
+        val firstDayOfWeek = WeekFields.of(Locale.getDefault()).dayOfWeek()
+        val weeks = ChronoUnit.DAYS.between(
+            now.toLocalDate().with(firstDayOfWeek, 1),
+            start.toLocalDate().with(firstDayOfWeek, 1),
+        ).toInt() / DAYS_PER_WEEK
+        val months = (start.year - now.year) * MONTHS_PER_YEAR + start.monthValue - now.monthValue
         return when {
-            days > 0 -> StringResource.quantity(MHCPlurals.task_timing_days_ahead, days, days, time)
-            days < 0 -> StringResource.quantity(MHCPlurals.task_timing_days_ago, -days, -days, time)
-            else -> StringResource(time)
+            abs(hours) < HOURS_PER_DAY -> distance(
+                amount = if (hours < 0) min(hours, -1) else max(hours, 1),
+                ago = MHCPlurals.task_timing_hours_ago,
+                ahead = MHCPlurals.task_timing_hours_ahead,
+            )
+            abs(days) < DAYS_PER_WEEK -> distance(
+                amount = days,
+                ago = MHCPlurals.task_timing_days_ago,
+                ahead = MHCPlurals.task_timing_days_ahead,
+                previous = MHCStrings.task_timing_yesterday,
+                next = MHCStrings.task_timing_tomorrow,
+            )
+            abs(weeks) < WEEKS_BEFORE_MONTHS || months == 0 -> distance(
+                amount = weeks,
+                ago = MHCPlurals.task_timing_weeks_ago,
+                ahead = MHCPlurals.task_timing_weeks_ahead,
+                previous = MHCStrings.task_timing_last_week,
+                next = MHCStrings.task_timing_next_week,
+            )
+            start.year != now.year -> StringResource(start.year.toString())
+            else -> distance(
+                amount = months,
+                ago = MHCPlurals.task_timing_months_ago,
+                ahead = MHCPlurals.task_timing_months_ahead,
+                previous = MHCStrings.task_timing_last_month,
+                next = MHCStrings.task_timing_next_month,
+            )
         }
+    }
+
+    /**
+     * [amount] units away, negative in the past; one unit either way reads as [previous] or [next]
+     * when given.
+     */
+    private fun distance(
+        amount: Int,
+        @PluralsRes ago: Int,
+        @PluralsRes ahead: Int,
+        @StringRes previous: Int? = null,
+        @StringRes next: Int? = null,
+    ): StringResource {
+        val count = abs(amount)
+        val adjacent = if (amount < 0) previous else next
+        return when {
+            count == 1 && adjacent != null -> StringResource(adjacent)
+            amount < 0 -> StringResource.quantity(ago, count, count)
+            else -> StringResource.quantity(ahead, count, count)
+        }
+    }
+
+    private fun timeOfDay(
+        event: Event,
+        start: ZonedDateTime,
+        now: ZonedDateTime,
+    ): StringResource? = when (event.occurrence.schedule.duration) {
+        ScheduleDuration.AllDay -> null
+        ScheduleDuration.TillEndOfDay -> if (start == now.toLocalDate().atStartOfDay(start.zone)) {
+            null
+        } else {
+            StringResource(TIME_FORMAT.format(start))
+        }
+        is ScheduleDuration.Fixed -> StringResource(
+            MHCStrings.task_timing_time_range,
+            TIME_FORMAT.format(start),
+            TIME_FORMAT.format(event.occurrence.end.atZone(start.zone)),
+        )
     }
 
     /**
@@ -288,6 +383,11 @@ class EventTileMapperImpl(
 
     private companion object {
         const val MAX_DAYS_TO_COMPLETE_LATE = 14L
+        const val MINUTES_PER_HOUR = 60.0
+        const val HOURS_PER_DAY = 24
+        const val DAYS_PER_WEEK = 7
+        const val MONTHS_PER_YEAR = 12
+        const val WEEKS_BEFORE_MONTHS = 4
         val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
         val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
         val PERFORMABLE_CATEGORIES = setOf(

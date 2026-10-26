@@ -15,6 +15,7 @@ import edu.stanford.myheartcounts.account.LanguageKey
 import edu.stanford.myheartcounts.account.LastActiveDateKey
 import edu.stanford.myheartcounts.account.PreferredMeasurementSystemKey
 import edu.stanford.myheartcounts.account.TimeZoneKey
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -22,7 +23,6 @@ import org.grovealliance.account.Account
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountModifications
 import org.grovealliance.core.lifecycle.AppLifecycle
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import java.util.Locale
 import java.util.TimeZone
@@ -42,7 +42,7 @@ class MHCEnvironmentTracker(
     private val timeProvider: TimeProvider,
 ) {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Starts tracking on [scope].

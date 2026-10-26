@@ -9,9 +9,7 @@ package edu.stanford.myheartcounts.firebase
 
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.storage.FirebaseStorage
-import edu.stanford.myheartcounts.BuildConfig
 import org.grovealliance.account.firebase.FirebaseEmulatorSettings
-import org.grovealliance.core.logging.groveLogger
 
 /**
  * Points the app at a locally running Firebase emulator suite instead of a real project.
@@ -31,21 +29,13 @@ import org.grovealliance.core.logging.groveLogger
  * data appear to vanish. `10.0.2.2` is the address an Android emulator reaches its host machine on.
  *
  * The ports are those in `MyHeartCounts-Firebase/firebase.json`.
+ *
+ * @property host The emulator host this build targets, or `null` when it targets a real Firebase
+ * project.
  */
-internal object MHCFirebaseEmulator {
+class MHCFirebaseEmulator(val host: String?) {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
-
-    /**
-     * The emulator host this build targets, or `null` when it targets a real Firebase project.
-     */
-    val host: String? get() = BuildConfig.FIREBASE_EMULATOR_HOST.takeIf { it.isNotEmpty() }
-
-    /**
-     * The Firestore emulator's port; see [redirectIfConfigured] for why Firestore is not redirected
-     * here along with the rest.
-     */
-    const val FIRESTORE_PORT = 8080
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Redirects Cloud Storage and Cloud Functions, if this build targets an emulator.
@@ -71,7 +61,15 @@ internal object MHCFirebaseEmulator {
     fun authSettings(): FirebaseEmulatorSettings? =
         host?.let { FirebaseEmulatorSettings(host = it, port = AUTH_PORT) }
 
-    private const val AUTH_PORT = 9099
-    private const val FUNCTIONS_PORT = 5001
-    private const val STORAGE_PORT = 9199
+    companion object {
+        /**
+         * The Firestore emulator's port; see [redirectIfConfigured] for why Firestore is not
+         * redirected there along with the rest.
+         */
+        const val FIRESTORE_PORT = 8080
+
+        private const val AUTH_PORT = 9099
+        private const val FUNCTIONS_PORT = 5001
+        private const val STORAGE_PORT = 9199
+    }
 }

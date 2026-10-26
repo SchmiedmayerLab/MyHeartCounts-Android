@@ -72,7 +72,7 @@ class CloudFunctionsTest {
      * usable to check a write only the backend is allowed to make.
      */
     private fun emulatorDocument(path: String): String {
-        val host = requireNotNull(MHCFirebaseEmulator.host)
+        val host = requireNotNull(requireDependency<MHCFirebaseEmulator>().host)
         val projectId = FirebaseApp.getInstance().options.projectId
         val url = URL(
             "http://$host:${MHCFirebaseEmulator.FIRESTORE_PORT}" +

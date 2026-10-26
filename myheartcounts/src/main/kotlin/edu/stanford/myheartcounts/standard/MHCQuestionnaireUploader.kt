@@ -9,10 +9,10 @@ package edu.stanford.myheartcounts.standard
 
 import ca.uhn.fhir.context.FhirContext
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import edu.stanford.myheartcounts.standard.health.FhirJson
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 import org.hl7.fhir.r4.model.Questionnaire
 import org.hl7.fhir.r4.model.QuestionnaireResponse
 import java.util.UUID
@@ -42,7 +42,7 @@ class MHCQuestionnaireUploader(
     private val appRevision: MHCAppRevision,
 ) : QuestionnaireResponseUploader {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
     private val fhirParser by lazy { FhirContext.forR4().newJsonParser() }
 
     /**
