@@ -10,10 +10,10 @@
 activityCompose = "1.13.0"
 agp = "9.4.0"
 androidTools = "32.3.1"
-appcompat = "1.7.1"
+appcompat = "1.8.0"
 coilComposeVersion = "3.5.0"
 compileSdk = "37"
-composeBom = "2026.06.01"
+composeBom = "2026.09.00"
 composeNavigation = "2.9.8"
 coreDesugaringVersion = "2.1.5"
 coreKtx = "1.19.0"
@@ -47,7 +47,7 @@ targetSdk = "36"
 testCoreVersion = "1.7.0"
 truth = "1.4.5"
 work = "2.11.2"
-zstdJni = "1.5.7-13"
+zstdJni = "1.5.7-16"
 
 # Please keep [libraries] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [libraries]
