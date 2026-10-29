@@ -28,19 +28,21 @@ import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
+import edu.stanford.myheartcounts.standard.health.HealthAccess
 import edu.stanford.myheartcounts.study.StudyEnroller
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.grovealliance.account.AccountLoginScreen
 import org.grovealliance.account.AccountService
 import org.grovealliance.account.firebase.FirebaseAuthProvider
 import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.consent.ConsentScreen
 import org.grovealliance.core.logging.groveLogger
+import org.grovealliance.health.HealthConnectAvailability
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.ComposableContent
@@ -65,7 +67,6 @@ import org.grovealliance.ui.showErrorToast
 import org.grovealliance.ui.validation.ValidationRule
 import org.grovealliance.ui.validation.minimalEmail
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.time.Duration.Companion.seconds
 
 private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
 
@@ -90,6 +91,8 @@ class OnboardingViewModel(
     private val accountService: AccountService,
     private val consentUploader: MHCConsentUploader,
     private val consentDocumentProvider: MHCConsentDocumentProvider,
+    private val onboardingCompletion: OnboardingCompletion,
+    private val healthAccess: HealthAccess,
 ) : ViewModel() {
     private val logger by groveLogger()
     private val actionSource = ActionSource(::onAction)
@@ -114,6 +117,18 @@ class OnboardingViewModel(
         currentStep = currentStep.asStateFlow(),
     )
 
+    init {
+        // The HealthAccess step offers to install Health Connect while it is missing; once the
+        // participant returns with it installed, the step offers to continue instead.
+        viewModelScope.launch {
+            healthAccess.availability.collect { _ ->
+                if (currentStep.value.step == OnboardingStep.HealthAccess) {
+                    currentStep.update { stepState(step = it.step) }
+                }
+            }
+        }
+    }
+
     private fun onAction(action: OnboardingAction) {
         when (action) {
             OnboardingAction.Displayed -> onScreenDisplayed()
@@ -125,8 +140,9 @@ class OnboardingViewModel(
             is OnboardingAction.WaitlistEmailChanged -> waitlistEmail.value = action.email
             is OnboardingAction.OnboardingAnswersChanged -> answers.update { action.answers }
             OnboardingAction.NotificationPermissionRequested -> requestNotificationPermission()
-            OnboardingAction.NotificationSkipped -> {
-                logger.i { "User chose to skip notification permission" }
+            OnboardingAction.HealthConnectInstallRequested -> installHealthConnect()
+            OnboardingAction.Skipped -> {
+                logger.i { "User chose to skip ${currentStep.value.step}" }
                 nextStep()
             }
             is OnboardingAction.ShowLearnMore -> showLearnMoreSheet(title = action.title, content = action.content)
@@ -144,6 +160,22 @@ class OnboardingViewModel(
                 else -> nextStep()
             }
         }
+    }
+
+    private fun installHealthConnect() {
+        if (!healthAccess.installHealthConnect()) {
+            scaffoldState.showErrorToast(message = StringResource(MHCStrings.onboarding_health_access_install_error))
+        }
+    }
+
+    /**
+     * Asks for Health Connect access and continues whatever the participant granted, as they may
+     * share as little as they are comfortable with.
+     */
+    private suspend fun requestHealthPermissions() {
+        if (healthAccess.availability.value != HealthConnectAvailability.Available) return
+        val isFullyAuthorized = healthAccess.requestPermissions()
+        logger.i { "Health Connect access requested; fully authorized: $isFullyAuthorized" }
     }
 
     private fun requestNotificationPermission() {
@@ -172,7 +204,10 @@ class OnboardingViewModel(
 
     private fun handle(result: OnboardingStepResult) {
         when (result) {
-            OnboardingStepResult.Completed -> navigator.push(event = NavigationEvent.SwitchRoot(root = MHCRoute.Root.Study))
+            OnboardingStepResult.Completed -> {
+                onboardingCompletion.markComplete()
+                navigator.push(event = NavigationEvent.SwitchRoot(root = MHCRoute.Root.Study))
+            }
             OnboardingStepResult.Dismissed -> navigator.push(event = NavigationEvent.Pop)
             is OnboardingStepResult.Step -> {
                 val step = result.step
@@ -297,24 +332,16 @@ class OnboardingViewModel(
         answers = answers.asStateFlow(),
         waitlistEmail = waitlistEmail.asStateFlow(),
         countries = countries,
+        healthConnectAvailability = healthAccess.availability.value,
     )
 
     private suspend fun advance(step: OnboardingStep) {
-        val delay = when (step) {
-            OnboardingStep.Consent,
-            OnboardingStep.DataCollection,
-            OnboardingStep.FinalEnrollment,
-            -> 1.seconds
-
-            else -> 0.seconds
-        }
-        delay(delay) // TODO: Demo purposes only, remove when real work is done in the step
-        if (step == OnboardingStep.Consent) {
-            uploadConsent()
-        }
-        if (step == OnboardingStep.FinalEnrollment) {
-            studyEnroller.enroll()
+        when (step) {
+            OnboardingStep.Consent -> uploadConsent()
+            OnboardingStep.HealthAccess -> requestHealthPermissions()
+            OnboardingStep.FinalEnrollment -> studyEnroller.enroll()
                 .onFailure { logger.e(it) { "Enrollment failed; continuing into the app." } }
+            else -> Unit
         }
         when (step) {
             OnboardingStep.CountryUnavailable -> joinWaitlist()
@@ -413,7 +440,8 @@ sealed interface OnboardingAction {
     data object Previous : OnboardingAction
     data object BackPressed : OnboardingAction
     data object NotificationPermissionRequested : OnboardingAction
-    data object NotificationSkipped : OnboardingAction
+    data object Skipped : OnboardingAction
+    data object HealthConnectInstallRequested : OnboardingAction
     data object ShowCountrySelectionSheet : OnboardingAction
     data class CountriesSheetDismissed(val selectedCountry: Country?) : OnboardingAction
     data object OpenStudyWebsite : OnboardingAction
@@ -457,7 +485,8 @@ data class ConsentStep(
 /**
  * The data and callbacks a step layout needs in order to render: the current [step] and collected
  * [answers], the coroutine [scope] for suspending actions, the available [countries] and pending
- * [waitlistEmail], plus [advance] to move forward and [push] to dispatch an [OnboardingAction].
+ * [waitlistEmail], whether Health Connect can be used ([healthConnectAvailability]), plus [advance] to
+ * move forward and [push] to dispatch an [OnboardingAction].
  */
 data class OnboardingStepInput(
     val step: OnboardingStep,
@@ -466,6 +495,7 @@ data class OnboardingStepInput(
     val answers: StateFlow<OnboardingAnswers>,
     val waitlistEmail: StateFlow<String>,
     val countries: List<Country>,
+    val healthConnectAvailability: HealthConnectAvailability,
     private val actionSink: ActionSink<OnboardingAction>,
 ) {
 

@@ -130,6 +130,9 @@ class ConsentPdfRenderer(private val context: Context) {
                 text = "$BULLET ${node.text}",
                 indent = node.nestingLevel * LIST_INDENT,
             )
+            is MarkdownNode.Table -> (listOf(node.columns.map { it.header }) + node.rows).forEach { row ->
+                writer.writeParagraph(text = row.joinToString(separator = TABLE_CELL_SEPARATOR))
+            }
         }
     }
 
@@ -156,7 +159,7 @@ class ConsentPdfRenderer(private val context: Context) {
             TAG_TOGGLE -> responses.toggles[element.id]?.let {
                 context.getString(if (it) MHCStrings.answer_yes else MHCStrings.answer_no)
             }
-            TAG_SELECT -> responses.selects[element.id]?.let { optionId ->
+            TAG_SELECT -> responses.selects[element.id]?.takeIf { it.isNotEmpty() }?.let { optionId ->
                 optionLabel(element = element, optionId = optionId) ?: optionId
             }
             else -> null
@@ -407,6 +410,11 @@ class ConsentPdfRenderer(private val context: Context) {
         const val MIN_EXTENT = 1f
 
         const val BULLET = "•"
+
+        /**
+         * Separates the cells of a table row, which the document writes as one line.
+         */
+        const val TABLE_CELL_SEPARATOR = " | "
 
         const val TAG_TOGGLE = MHCConsentDocumentProvider.TAG_TOGGLE
         const val TAG_SELECT = MHCConsentDocumentProvider.TAG_SELECT

@@ -10,7 +10,6 @@ package edu.stanford.myheartcounts.firebase
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.firebase.FirebaseAppConfiguration
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -56,7 +55,7 @@ class MHCCloudFunctionsImpl(
     private val firebaseAppConfiguration: FirebaseAppConfiguration,
 ) : MHCCloudFunctions, Module {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override suspend fun joinWaitlist(regionCode: String, email: String): Result<Unit> =
         call(

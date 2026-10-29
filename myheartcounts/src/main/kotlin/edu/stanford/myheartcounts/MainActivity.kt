@@ -23,16 +23,18 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewScreen
+import edu.stanford.myheartcounts.missed.MissedTasksScreen
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
+import edu.stanford.myheartcounts.notification.MHCNudgeNotifications.Companion.FCM_MESSAGE_ID_EXTRA
 import edu.stanford.myheartcounts.onboarding.OnboardingScreen
-import edu.stanford.myheartcounts.splash.SplashScreen
 import edu.stanford.myheartcounts.study.StudyScreen
+import edu.stanford.myheartcounts.task.PerformTaskScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
 import kotlinx.coroutines.launch
-import org.grovealliance.account.AccountOverviewScreen
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
 import org.grovealliance.core.viewmodel.groveViewModel
@@ -112,9 +114,6 @@ class MainActivity : AppCompatActivity() {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<MHCRoute.Root.Splash> {
-                    SplashScreen()
-                }
                 entry<MHCRoute.Root.Onboarding>(
                     metadata = NavDisplay.transitionSpec { crossFade },
                 ) {
@@ -126,9 +125,13 @@ class MainActivity : AppCompatActivity() {
                     StudyScreen()
                 }
                 entry<MHCRoute.AccountOverview> {
-                    AccountOverviewScreen(
-                        onDismiss = { backStack.remove(MHCRoute.AccountOverview) }
-                    )
+                    MHCAccountOverviewScreen()
+                }
+                entry<MHCRoute.PerformTask> {
+                    PerformTaskScreen()
+                }
+                entry<MHCRoute.MissedTasks> {
+                    MissedTasksScreen()
                 }
             }
         )
@@ -160,12 +163,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 is NavigationEvent.NavigateTo -> backStack.add(event.route)
+                is NavigationEvent.Close -> backStack.remove(event.route)
             }
         }
     }
 }
-
-private const val FCM_MESSAGE_ID_EXTRA = "google.message_id"
 
 /**
  * Firebase's own bookkeeping extras, which say nothing about the nudge itself.

@@ -15,6 +15,7 @@ import edu.stanford.myheartcounts.account.LanguageKey
 import edu.stanford.myheartcounts.account.LastActiveDateKey
 import edu.stanford.myheartcounts.account.PreferredMeasurementSystemKey
 import edu.stanford.myheartcounts.account.TimeZoneKey
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -22,7 +23,6 @@ import org.grovealliance.account.Account
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountModifications
 import org.grovealliance.core.lifecycle.AppLifecycle
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import java.util.Locale
 import java.util.TimeZone
@@ -42,7 +42,7 @@ class MHCEnvironmentTracker(
     private val timeProvider: TimeProvider,
 ) {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Starts tracking on [scope].
@@ -121,22 +121,23 @@ class MHCEnvironmentTracker(
             .onFailure { logger.e(it) { "Failed to update the account's environment fields." } }
     }
 
-    /**
-     * The measurement system identifier iOS would report for [locale].
-     *
-     * Foundation derives this from the region, and both platforms write into the same field, so the
-     * three identifiers it uses are reproduced here rather than invented.
-     */
-    private fun measurementSystem(locale: Locale): String = when (locale.country) {
-        "US", "LR", "MM" -> "us"
-        "GB" -> "uk"
-        else -> "metric"
-    }
+    internal companion object {
 
-    private companion object {
+        // TODO: Confirm against production Firestore that existing participants' documents hold
+        //  `ussystem` / `uksystem` / `metric` before relying on these values in analysis.
+        /**
+         * The measurement system identifier stored for [locale]: `ussystem` for the United States,
+         * Liberia and Myanmar, `uksystem` for the United Kingdom, and `metric` everywhere else.
+         */
+        fun measurementSystem(locale: Locale): String = when (locale.country) {
+            "US", "LR", "MM" -> "ussystem"
+            "GB" -> "uksystem"
+            else -> "metric"
+        }
+
         /**
          * Matches iOS, which falls back to English when the locale carries no language code.
          */
-        const val FALLBACK_LANGUAGE = "en"
+        private const val FALLBACK_LANGUAGE = "en"
     }
 }

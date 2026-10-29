@@ -7,13 +7,16 @@
 
 package edu.stanford.myheartcounts.di
 
+import android.os.Build
 import edu.stanford.myheartcounts.BuildConfig
 import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.StudyAppBarProviderImpl
+import edu.stanford.myheartcounts.account.StudyWithdrawal
+import edu.stanford.myheartcounts.account.StudyWithdrawalImpl
+import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapper
+import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapperImpl
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctionsImpl
-import edu.stanford.myheartcounts.firebase.MHCFirebaseRegionInitializer
-import edu.stanford.myheartcounts.firebase.MHCFirebaseRegionInitializerImpl
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.home.FirebaseHomeSuggestionsSource
 import edu.stanford.myheartcounts.home.HomeContentMapper
@@ -21,14 +24,19 @@ import edu.stanford.myheartcounts.home.HomeContentMapperImpl
 import edu.stanford.myheartcounts.home.HomeSuggestionsSource
 import edu.stanford.myheartcounts.home.HomeTasksSource
 import edu.stanford.myheartcounts.home.HomeTasksSourceImpl
+import edu.stanford.myheartcounts.missed.MissedTasksMapper
+import edu.stanford.myheartcounts.missed.MissedTasksMapperImpl
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.navigation.NavigatorImpl
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
+import edu.stanford.myheartcounts.notification.MHCNudgeNotifications
 import edu.stanford.myheartcounts.notification.MHCPushTokenSynchronizer
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
 import edu.stanford.myheartcounts.notification.NotificationPermissionHandlerImpl
 import edu.stanford.myheartcounts.notification.PermissionChecker
 import edu.stanford.myheartcounts.notification.PermissionCheckerImpl
+import edu.stanford.myheartcounts.onboarding.OnboardingCompletion
+import edu.stanford.myheartcounts.onboarding.OnboardingCompletionImpl
 import edu.stanford.myheartcounts.onboarding.OnboardingStepLayoutMapper
 import edu.stanford.myheartcounts.onboarding.OnboardingStepLayoutMapperImpl
 import edu.stanford.myheartcounts.onboarding.OnboardingStepProvider
@@ -37,11 +45,15 @@ import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMa
 import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMapperImpl
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapperImpl
+import edu.stanford.myheartcounts.standard.MHCAppRevision
 import edu.stanford.myheartcounts.standard.MHCEnvironmentTracker
 import edu.stanford.myheartcounts.standard.MHCQuestionnaireUploader
+import edu.stanford.myheartcounts.standard.QuestionnaireResponseUploader
 import edu.stanford.myheartcounts.standard.consent.ConsentPdfRenderer
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
+import edu.stanford.myheartcounts.standard.health.HealthAccess
+import edu.stanford.myheartcounts.standard.health.HealthAccessImpl
 import edu.stanford.myheartcounts.standard.health.HealthObservationMapper
 import edu.stanford.myheartcounts.standard.health.HealthObservationProvenance
 import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
@@ -53,6 +65,20 @@ import edu.stanford.myheartcounts.study.StudyArticleSource
 import edu.stanford.myheartcounts.study.StudyArticleSourceImpl
 import edu.stanford.myheartcounts.study.StudyEnroller
 import edu.stanford.myheartcounts.study.StudyEnrollerImpl
+import edu.stanford.myheartcounts.study.StudyQuestionnaireSource
+import edu.stanford.myheartcounts.study.StudyQuestionnaireSourceImpl
+import edu.stanford.myheartcounts.task.EventPerformer
+import edu.stanford.myheartcounts.task.EventPerformerImpl
+import edu.stanford.myheartcounts.task.EventTileMapper
+import edu.stanford.myheartcounts.task.EventTileMapperImpl
+import edu.stanford.myheartcounts.task.MissedEventsSource
+import edu.stanford.myheartcounts.task.MissedEventsSourceImpl
+import edu.stanford.myheartcounts.task.TaskPerformer
+import edu.stanford.myheartcounts.task.TaskPerformerImpl
+import edu.stanford.myheartcounts.upcoming.UpcomingTasksMapper
+import edu.stanford.myheartcounts.upcoming.UpcomingTasksMapperImpl
+import edu.stanford.myheartcounts.upcoming.UpcomingTasksSource
+import edu.stanford.myheartcounts.upcoming.UpcomingTasksSourceImpl
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.GroveDsl
 import org.grovealliance.core.coroutines.Concurrency
@@ -68,15 +94,9 @@ import org.grovealliance.study.StudyManager
 fun ConfigurationBuilder.appConfigurations() {
     homeConfigurations()
     singleton<Navigator> { NavigatorImpl() }
+    taskConfigurations()
     singleton<StudyAppBarProvider> {
         StudyAppBarProviderImpl(navigator = dependency())
-    }
-
-    singleton<MHCFirebaseRegionInitializer> {
-        MHCFirebaseRegionInitializerImpl(
-            context = appContext(),
-            firebaseAppConfiguration = dependency(),
-        )
     }
 
     singleton<PermissionChecker> {
@@ -89,6 +109,9 @@ fun ConfigurationBuilder.appConfigurations() {
             permissionChecker = dependency(),
             storage = dependency(),
         )
+    }
+    singleton<OnboardingCompletion> {
+        OnboardingCompletionImpl(storage = dependency())
     }
 
     factory<OnboardingStepProvider> {
@@ -128,22 +151,20 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
     singleton<MHCCloudFunctions> {
         MHCCloudFunctionsImpl(firebaseAppConfiguration = dependency())
     }
-    module {
-        MHCPushTokenSynchronizer(
-            account = dependency(),
-            firebaseAppConfiguration = dependency(),
+    accountOverviewConfigurations()
+    notificationConfigurations()
+    singleton {
+        MHCAppRevision(
+            version = BuildConfig.VERSION_NAME,
+            build = BuildConfig.VERSION_CODE,
+            bundleIdentifier = BuildConfig.APPLICATION_ID,
+            osVersion = Build.VERSION.RELEASE,
         )
     }
-    module {
-        MHCNotificationTracking(
-            firestore = dependency(),
-            timeProvider = dependency(),
-        )
-    }
-    module {
+    module<QuestionnaireResponseUploader> {
         MHCQuestionnaireUploader(
             firestore = dependency(),
-            appRevision = BuildConfig.VERSION_NAME,
+            appRevision = dependency(),
         )
     }
     singleton {
@@ -159,7 +180,7 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
     singleton { ConsentPdfRenderer(context = appContext()) }
     module {
         MHCConsentUploader(
-            context = appContext(),
+            firebaseLoader = dependency(),
             account = dependency(),
             firestore = dependency(),
             renderer = dependency(),
@@ -169,9 +190,52 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
 }
 
 /**
- * Registers the Health Connect collection pipeline: staging, FHIR mapping, and upload.
+ * Registers what the account overview offers beyond the account itself.
+ */
+private fun ConfigurationBuilder.accountOverviewConfigurations() {
+    factory<MHCAccountOverviewMapper> { MHCAccountOverviewMapperImpl() }
+    factory<StudyWithdrawal> {
+        StudyWithdrawalImpl(
+            cloudFunctions = dependency(),
+            accountService = dependency(),
+        )
+    }
+}
+
+/**
+ * Registers remote notifications: the push token, displaying nudges, and tracking their opening.
+ */
+private fun ConfigurationBuilder.notificationConfigurations() {
+    module {
+        MHCPushTokenSynchronizer(
+            account = dependency(),
+            firebaseAppConfiguration = dependency(),
+        )
+    }
+    module {
+        MHCNudgeNotifications(
+            context = appContext(),
+            notificationPermissionHandler = dependency(),
+        )
+    }
+    module {
+        MHCNotificationTracking(
+            firestore = dependency(),
+            timeProvider = dependency(),
+        )
+    }
+}
+
+/**
+ * Registers Health Connect access and the collection pipeline: staging, FHIR mapping, and upload.
  */
 private fun ConfigurationBuilder.healthConfigurations() {
+    module<HealthAccess> {
+        HealthAccessImpl(
+            health = dependency(),
+            application = application(),
+        )
+    }
     singleton { HealthStagingDatabase.create(context = appContext()) }
     singleton { HealthObservationMapper() }
     singleton {
@@ -193,7 +257,7 @@ private fun ConfigurationBuilder.healthConfigurations() {
                 // that changes mid-session shows up on the samples uploaded after it.
                 val enrollment = dependency<StudyManager>().studyEnrollments().firstOrNull()
                 HealthObservationProvenance(
-                    appRevision = BuildConfig.VERSION_NAME,
+                    appRevision = dependency(),
                     studyId = enrollment?.studyId?.toString(),
                     studyRevision = enrollment?.studyRevision?.toInt(),
                 )
@@ -221,6 +285,13 @@ private fun ConfigurationBuilder.studyConfigurations() {
         )
     }
 
+    factory<StudyQuestionnaireSource> {
+        StudyQuestionnaireSourceImpl(
+            studyBundleProvider = dependency(),
+            ioDispatcher = dependency<Concurrency>().ioDispatcher(),
+        )
+    }
+
     factory<StudyEnroller> {
         StudyEnrollerImpl(
             studyBundleProvider = dependency(),
@@ -232,17 +303,54 @@ private fun ConfigurationBuilder.studyConfigurations() {
 }
 
 /**
+ * Registers how tasks are listed and performed, shared by every screen that offers them.
+ */
+private fun ConfigurationBuilder.taskConfigurations() {
+    singleton<TaskPerformer> { TaskPerformerImpl(navigator = dependency()) }
+    factory<EventTileMapper> {
+        EventTileMapperImpl(
+            scheduleCalculator = dependency(),
+            timeProvider = dependency(),
+        )
+    }
+    factory<MissedEventsSource> {
+        MissedEventsSourceImpl(
+            scheduler = dependency(),
+            scheduleCalculator = dependency(),
+            timeProvider = dependency(),
+        )
+    }
+    factory<EventPerformer> {
+        EventPerformerImpl(
+            articleSource = dependency(),
+            questionnaireSource = dependency(),
+            taskPerformer = dependency(),
+            scheduler = dependency(),
+        )
+    }
+}
+
+/**
  * Registers the Home tab's data sources and layout mapper.
  */
 private fun ConfigurationBuilder.homeConfigurations() {
-    factory<HomeContentMapper> { HomeContentMapperImpl(scheduleCalculator = dependency()) }
+    factory<HomeContentMapper> { HomeContentMapperImpl(tileMapper = dependency()) }
     factory<HomeTasksSource> {
         HomeTasksSourceImpl(
             studyManager = dependency(),
             scheduler = dependency(),
+            missedEventsSource = dependency(),
             timeProvider = dependency(),
         )
     }
+    factory<MissedTasksMapper> { MissedTasksMapperImpl(tileMapper = dependency()) }
+    factory<UpcomingTasksSource> {
+        UpcomingTasksSourceImpl(
+            scheduler = dependency(),
+            timeProvider = dependency(),
+        )
+    }
+    factory<UpcomingTasksMapper> { UpcomingTasksMapperImpl(tileMapper = dependency()) }
     singleton<HomeSuggestionsSource> {
         FirebaseHomeSuggestionsSource(
             firestore = dependency(),

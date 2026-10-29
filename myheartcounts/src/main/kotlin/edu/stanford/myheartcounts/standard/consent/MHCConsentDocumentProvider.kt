@@ -62,5 +62,20 @@ class MHCConsentDocumentProvider(
         internal const val TAG_SIGNATURE = "signature"
         internal const val TAG_OPTION = "option"
         internal const val TAG_FOOTNOTE = "footnote"
+
+        /**
+         * The toggle recording whether the participant may be contacted about future studies.
+         */
+        internal const val ID_FUTURE_STUDIES = "future-studies"
+
+        /**
+         * The select recording whether the participant joins the short-term physical activity trial.
+         */
+        internal const val ID_TRIAL_OPT_IN = "short-term-physical-activity-trial"
+
+        /**
+         * The [ID_TRIAL_OPT_IN] option that opts the participant into the trial.
+         */
+        internal const val ID_TRIAL_YES = "short-term-physical-activity-trial-yes"
     }
 }

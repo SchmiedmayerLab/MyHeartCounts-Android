@@ -7,26 +7,24 @@
 
 package edu.stanford.myheartcounts.home
 
+import edu.stanford.myheartcounts.task.MissedEventsSource
+import edu.stanford.myheartcounts.task.todayRanges
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.scheduler.Event
 import org.grovealliance.scheduler.InstantRange
 import org.grovealliance.scheduler.Scheduler
 import org.grovealliance.study.StudyManager
-import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 /**
- * The tasks the Home tab shows: today's events, and how many were missed recently.
+ * The tasks the Home tab shows: today's events, and how many were missed recently; see
+ * [MissedEventsSource].
  */
 data class HomeTasks(
     val events: List<Event>,
@@ -34,18 +32,13 @@ data class HomeTasks(
 )
 
 /**
- * Supplies the participant's current tasks, and records their completion.
+ * Supplies the participant's current tasks.
  */
 interface HomeTasksSource {
     /**
      * A live stream of the participant's tasks.
      */
     suspend fun tasks(): Flow<HomeTasks>
-
-    /**
-     * Records [event] as completed.
-     */
-    suspend fun complete(event: Event): Result<Unit>
 }
 
 /**
@@ -56,6 +49,7 @@ interface HomeTasksSource {
 class HomeTasksSourceImpl(
     private val studyManager: StudyManager,
     private val scheduler: Scheduler,
+    private val missedEventsSource: MissedEventsSource,
     private val timeProvider: TimeProvider,
 ) : HomeTasksSource {
 
@@ -63,12 +57,10 @@ class HomeTasksSourceImpl(
         val enrollmentDate = studyManager.enrollments.first().firstOrNull()?.enrollmentDate
             ?: timeProvider.nowInstant()
 
-        val zone = timeProvider.currentZone()
-
-        return today(zone).flatMapLatest { today ->
+        return timeProvider.todayRanges().flatMapLatest { today ->
             combine(
-                queryTodaysEvents(today = today, enrollmentDate = enrollmentDate, zone = zone),
-                scheduler.queryMissedEvents(range = missedRange(today)),
+                queryTodaysEvents(today = today, enrollmentDate = enrollmentDate),
+                missedEventsSource.missedEvents(today = today),
             ) { events, missed ->
                 HomeTasks(
                     events = events,
@@ -77,22 +69,6 @@ class HomeTasksSourceImpl(
             }
         }
     }
-
-    /**
-     * The day currently being shown, re-emitted as each day ends so that a session left open
-     * overnight moves on rather than holding yesterday.
-     */
-    private fun today(zone: ZoneId): Flow<InstantRange> = flow {
-        while (true) {
-            val today = todayRange(zone)
-            emit(today)
-            val untilTomorrow = Duration.between(timeProvider.nowInstant(), today.endExclusive)
-            delay(untilTomorrow.toMillis().coerceAtLeast(1))
-        }
-    }
-
-    override suspend fun complete(event: Event): Result<Unit> =
-        scheduler.complete(event = event).map { }
 
     /**
      * The events worth prompting the participant to complete today.
@@ -105,8 +81,8 @@ class HomeTasksSourceImpl(
     private fun queryTodaysEvents(
         today: InstantRange,
         enrollmentDate: Instant,
-        zone: ZoneId,
     ): Flow<List<Event>> {
+        val zone = timeProvider.currentZone()
         val enrollmentDayStart = enrollmentDate.atZone(zone).toLocalDate().atStartOfDay(zone).toInstant()
         val widened = InstantRange(
             start = minOf(today.start, enrollmentDayStart),
@@ -123,25 +99,5 @@ class HomeTasksSourceImpl(
         event.occurrence.start in today -> true
         event.occurrence.schedule.recurrence != null -> false
         else -> event.outcome?.completionDate?.let { it in today } ?: true
-    }
-
-    private fun todayRange(zone: ZoneId): InstantRange {
-        val startOfToday = timeProvider.nowInstant().atZone(zone).toLocalDate().atStartOfDay(zone)
-        return InstantRange(
-            start = startOfToday.toInstant(),
-            endExclusive = startOfToday.plusDays(1).toInstant(),
-        )
-    }
-
-    /**
-     * The window searched for missed tasks: the two weeks leading up to [today].
-     */
-    private fun missedRange(today: InstantRange) = InstantRange(
-        start = today.start.minus(MISSED_TASKS_DAYS, ChronoUnit.DAYS),
-        endExclusive = today.start,
-    )
-
-    private companion object {
-        const val MISSED_TASKS_DAYS = 14L
     }
 }

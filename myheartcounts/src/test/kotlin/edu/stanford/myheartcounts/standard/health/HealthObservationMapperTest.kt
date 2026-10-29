@@ -15,6 +15,7 @@ import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Pressure
 import androidx.health.connect.client.units.Velocity
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.standard.MHCAppRevision
 import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.DateTimeType
 import org.hl7.fhir.r4.model.Observation
@@ -30,6 +31,12 @@ class HealthObservationMapperTest {
     private val issuedAt: Instant = Instant.parse("2026-01-05T12:00:00Z")
     private val start: Instant = Instant.parse("2026-01-05T08:00:00Z")
     private val end: Instant = Instant.parse("2026-01-05T09:00:00Z")
+    private val appRevision = MHCAppRevision(
+        version = "1.2.3",
+        build = 42,
+        bundleIdentifier = "edu.stanford.myheartcounts",
+        osVersion = "14",
+    )
 
     @Test
     fun `it should map a steps record onto the LOINC code the backend defines`() {
@@ -180,7 +187,7 @@ class HealthObservationMapperTest {
         ).single()
 
         HealthObservationProvenance(
-            appRevision = "1.2.3",
+            appRevision = appRevision,
             studyId = "study-id",
             studyRevision = 4,
         ).applyTo(observation = observation)
@@ -188,12 +195,16 @@ class HealthObservationMapperTest {
         val byUrl = observation.extension.associateBy { it.url }
         assertThat(byUrl.keys).containsExactly(
             HealthObservationProvenance.SAMPLE_UPLOAD_TIME_ZONE_URL,
-            HealthObservationProvenance.APP_REVISION_URL,
+            MHCAppRevision.URL,
             HealthObservationProvenance.PLATFORM_URL,
             HealthObservationProvenance.STUDY_ENROLLMENT_URL,
         )
-        assertThat(byUrl.getValue(HealthObservationProvenance.APP_REVISION_URL).value.primitiveValue())
-            .isEqualTo("1.2.3")
+        assertThat(byUrl.getValue(MHCAppRevision.URL).extension.map { it.url }).containsExactly(
+            "${MHCAppRevision.URL}/version",
+            "${MHCAppRevision.URL}/build",
+            "${MHCAppRevision.URL}/bundleIdentifier",
+            "${MHCAppRevision.URL}/osVersion",
+        )
         assertThat(byUrl.getValue(HealthObservationProvenance.PLATFORM_URL).value.primitiveValue())
             .isEqualTo(HealthObservationProvenance.ANDROID_PLATFORM)
 
@@ -212,9 +223,9 @@ class HealthObservationMapperTest {
             issuedAt = issuedAt,
         ).single()
 
-        HealthObservationProvenance(appRevision = "1.0.0", studyId = "id", studyRevision = 1)
+        HealthObservationProvenance(appRevision = appRevision, studyId = "id", studyRevision = 1)
             .applyTo(observation = observation)
-        HealthObservationProvenance(appRevision = "1.0.0", studyId = null, studyRevision = null)
+        HealthObservationProvenance(appRevision = appRevision, studyId = null, studyRevision = null)
             .applyTo(observation = observation)
 
         assertThat(observation.extension.map { it.url })

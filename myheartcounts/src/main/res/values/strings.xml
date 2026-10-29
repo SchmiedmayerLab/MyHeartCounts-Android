@@ -14,7 +14,7 @@ SPDX-License-Identifier: MIT
 
     <!-- Home tabs -->
     <string name="home_tab_home">Home</string>
-    <string name="home_tab_upcoming">Upcoming</string>
+    <string name="home_tab_upcoming">Tasks</string>
     <string name="home_tab_heart_health">Heart Health</string>
 
     <!-- Shared onboarding actions -->
@@ -87,8 +87,11 @@ SPDX-License-Identifier: MIT
 
     <!-- Health Access & Data Sharing -->
     <string name="onboarding_health_access_title">Health Access &amp; Data Sharing</string>
-    <string name="onboarding_health_access_subtitle">The My Heart Counts Study uses Health Data collected on your phone to further research. Granting access to all fields (or as many as you are comfortable with) ensures the most well powered study possible.</string>
-    <string name="onboarding_health_access_learn_more">My Heart Counts needs read-access to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. Further, granting write-access will give the best user experience with the application for dashboard features. To enhance research and optimize user experience, select **“Turn On All”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
+    <string name="onboarding_health_access_subtitle">The My Heart Counts Study uses health data from Health Connect on your phone to further research. Granting access to all data types (or as many as you are comfortable with) ensures the most well powered study possible.</string>
+    <string name="onboarding_health_access_learn_more">My Heart Counts needs read access to Health Connect to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. It never writes anything to Health Connect. To enhance research, select **“Allow all”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
+    <string name="onboarding_health_access_install_subtitle">My Heart Counts reads your health data through Health Connect, which needs to be installed or updated on this phone. You can also skip this for now.</string>
+    <string name="onboarding_health_access_install">Install Health Connect</string>
+    <string name="onboarding_health_access_install_error">Health Connect could not be opened in the store.</string>
 
     <!-- Consent Survey -->
     <string name="consent_survey_title">Consent Survey</string>
@@ -129,7 +132,58 @@ SPDX-License-Identifier: MIT
     <string name="home_error_title">Unable to load your tasks</string>
     <string name="home_error_message">Something went wrong while loading the study. Please try again.</string>
     <string name="home_error_retry">Try Again</string>
-    <string name="home_article_error">Unable to open this article. Please try again.</string>
+    <string name="task_article_error">Unable to open this article. Please try again.</string>
+    <string name="task_questionnaire_error">Unable to open this survey. Please try again.</string>
+    <string name="perform_task_error_title">This task is no longer open</string>
+    <string name="perform_task_error_message">Return to your tasks to start it again.</string>
+    <string name="perform_task_error_close">Close</string>
+    <string name="missed_tasks_title">Missed Tasks</string>
+    <string name="missed_tasks_subtitle">Past 2 Weeks</string>
+    <string name="missed_tasks_empty_title">No Missed Tasks</string>
+    <string name="missed_tasks_error_title">Unable to load your missed tasks</string>
+    <string name="upcoming_tasks_title">Next 2 Weeks</string>
+    <string name="upcoming_tasks_empty_title">No Upcoming Tasks</string>
+    <string name="upcoming_tasks_error_title">Unable to load your upcoming tasks</string>
+    <string name="task_timing_with_offset">%1$s, %2$s</string>
+    <string name="task_timing_time_range">%1$s to %2$s</string>
+    <string name="task_timing_yesterday">Yesterday</string>
+    <string name="task_timing_tomorrow">Tomorrow</string>
+    <string name="task_timing_last_week">Last week</string>
+    <string name="task_timing_next_week">Next week</string>
+    <string name="task_timing_last_month">Last month</string>
+    <string name="task_timing_next_month">Next month</string>
+    <plurals name="task_timing_hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="task_timing_hours_ahead">
+        <item quantity="one">In %d hour</item>
+        <item quantity="other">In %d hours</item>
+    </plurals>
+    <plurals name="task_timing_days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="task_timing_days_ahead">
+        <item quantity="one">In %d day</item>
+        <item quantity="other">In %d days</item>
+    </plurals>
+    <plurals name="task_timing_weeks_ago">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="task_timing_weeks_ahead">
+        <item quantity="one">In %d week</item>
+        <item quantity="other">In %d weeks</item>
+    </plurals>
+    <plurals name="task_timing_months_ago">
+        <item quantity="one">%d month ago</item>
+        <item quantity="other">%d months ago</item>
+    </plurals>
+    <plurals name="task_timing_months_ahead">
+        <item quantity="one">In %d month</item>
+        <item quantity="other">In %d months</item>
+    </plurals>
 
     <!-- Always-available tasks -->
     <string name="home_other_tasks_title">Other Tasks</string>
@@ -152,6 +206,21 @@ SPDX-License-Identifier: MIT
     <string name="task_action_take_test">Take Test</string>
     <string name="task_action_take_test_again">Take Test Again</string>
     <string name="task_action_take_ecg">Take ECG</string>
+
+    <!-- Nudge notifications -->
+    <string name="nudge_notification_channel_id" translatable="false">nudges</string>
+    <string name="nudge_notification_channel_name">Activity Nudges</string>
+    <string name="nudge_notification_channel_description">Suggestions from the My Heart Counts study to help you stay active.</string>
+
+    <!-- Account overview -->
+    <string name="account_withdraw_button">Withdraw from Study</string>
+    <string name="account_withdraw_confirm_title">Withdraw from Study</string>
+    <string name="account_withdraw_confirm_message">Are you sure you want to withdraw from the My Heart Counts study?\nYou can re-enroll later if you choose.</string>
+    <string name="account_withdraw_confirm_action">Withdraw</string>
+    <string name="account_withdraw_cancel">Cancel</string>
+    <string name="account_withdraw_failed_title">Unable to Withdraw</string>
+    <string name="account_withdraw_failed_message">Your withdrawal could not be completed. Please check your connection and try again.</string>
+    <string name="account_withdraw_failed_dismiss">OK</string>
 
     <string name="health_privacy_title">How My Heart Counts Uses Your Health Data</string>
     <string name="health_privacy_description">My Heart Counts reads the health data you allow it to from Health Connect — such as steps, heart rate, sleep and workouts — and shares it with the Stanford research team studying cardiovascular health. It never writes anything back to Health Connect.\n\nYour health data is stored separately from the information that identifies you, and anything published is de-identified first. You can change what you share, or stop sharing entirely, at any time in Health Connect.</string>

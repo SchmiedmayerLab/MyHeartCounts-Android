@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+This source file is part of the My Heart Counts Android open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+-->
+
+<resources>
+    <!--
+    The app theme: Grove's Cardinal Red theme, rendering questionnaires in the app palette. Views
+    inflated from XML are Material components, so the questionnaire's buttons take its styles.
+    -->
+    <style name="Theme.MyHeartCounts" parent="Theme.Grove.CardinalRed">
+        <item name="questionnaire_theme">@style/Theme.Grove.Questionnaire</item>
+        <item name="viewInflaterClass">com.google.android.material.theme.MaterialComponentsViewInflater</item>
+    </style>
+</resources>

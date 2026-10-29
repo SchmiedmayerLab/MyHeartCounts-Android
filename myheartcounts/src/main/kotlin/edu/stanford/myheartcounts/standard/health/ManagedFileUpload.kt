@@ -10,12 +10,12 @@ package edu.stanford.myheartcounts.standard.health
 import android.content.Context
 import com.google.firebase.storage.FirebaseStorage
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.grovealliance.core.coroutines.Concurrency
-import org.grovealliance.core.logging.groveLogger
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -60,7 +60,7 @@ class ManagedFileUpload(
     private val concurrency: Concurrency,
 ) {
 
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     /**
      * Serializes access to the staging folders, so recovery cannot pick up an archive that is still

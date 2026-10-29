@@ -9,7 +9,9 @@ package edu.stanford.myheartcounts.standard
 
 import androidx.health.connect.client.records.Record
 import edu.stanford.myheartcounts.firebase.MHCFirebaseLoader
+import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import edu.stanford.myheartcounts.notification.MHCPushTokenSynchronizer
+import edu.stanford.myheartcounts.onboarding.OnboardingCompletion
 import edu.stanford.myheartcounts.standard.health.HealthUploadWorker
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import kotlinx.coroutines.launch
@@ -19,7 +21,6 @@ import org.grovealliance.core.ApplicationModule
 import org.grovealliance.core.Standard
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
-import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.firebase.FirebaseAppConfiguration
 import org.grovealliance.health.HealthConstraint
 import org.grovealliance.health.RecordType
@@ -51,9 +52,11 @@ class MHCStandard : Standard, HealthConstraint {
     private val environmentTracker by dependency<MHCEnvironmentTracker>()
     private val healthData by dependency<MHCHealthDataHandler>()
     private val studyManager by dependency<StudyManager>()
+    private val onboardingCompletion by dependency<OnboardingCompletion>()
+    private val firebaseLoader by dependency<MHCFirebaseLoader>()
 
     private val ioScope by lazy { concurrency.ioCoroutineScope() }
-    private val logger by groveLogger(tag = "MHCFirebase")
+    private val logger by mhcFirebaseLogger()
 
     override fun configure() {
         ioScope.launch {
@@ -99,10 +102,7 @@ class MHCStandard : Standard, HealthConstraint {
         studyManager.studyEnrollments().forEach { studyManager.unenroll(enrollment = it) }
         // Firestore refuses to clear its cache while its client is running, so the documents of the
         // participant signing out here can only go on the next process start.
-        MHCFirebaseLoader.setShouldClearCacheOnNextLaunch(
-            context = applicationModule.requireContext(),
-            shouldClear = true,
-        )
+        firebaseLoader.setShouldClearCacheOnNextLaunch(shouldClear = true)
     }
 
     override suspend fun <T : Record> handleNewRecords(addedRecords: Set<T>, type: RecordType<out T>) {
@@ -130,9 +130,17 @@ class MHCStandard : Standard, HealthConstraint {
         HealthUploadWorker.schedule(context = applicationModule.requireContext())
     }
 
-    private fun onSignedOut() {
+    private suspend fun onSignedOut() {
         logger.i { "The participant signed out." }
-        HealthUploadWorker.cancel(context = applicationModule.requireContext())
+        val context = applicationModule.requireContext()
+        // Whoever signs in next starts from the beginning of onboarding, not from the study.
+        onboardingCompletion.reset()
+        // Without an enrollment there is nothing tied to this region, so the next participant picks
+        // their own during onboarding rather than inheriting it.
+        if (studyManager.studyEnrollments().isEmpty()) {
+            firebaseLoader.clearRegion()
+        }
+        HealthUploadWorker.cancel(context = context)
     }
 
     /**
