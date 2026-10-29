@@ -9,7 +9,9 @@ package edu.stanford.myheartcounts.account.overview
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.account.overview.WithdrawFromStudySection.WithdrawalState
+import edu.stanford.myheartcounts.ui.ToggleSection
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.AsyncTextButton
@@ -68,6 +70,17 @@ class MHCAccountOverviewSectionsScreenshotTest : ScreenshotTest() {
         ),
         customSection = MHCAccountOverviewSections(
             items = listOf(
+                ToggleSection(
+                    title = StringResource(MHCStrings.account_post_trial_nudges_title),
+                    subtitle = StringResource(MHCStrings.account_post_trial_nudges_subtitle),
+                    isOn = MutableStateFlow(value = true),
+                    onToggle = {},
+                ),
+                SupportSection(onSendFeedbackSelected = {}),
+                AppInfoSection(
+                    version = "1.2.0",
+                    onPrivacyPolicySelected = {},
+                ),
                 WithdrawFromStudySection(
                     state = MutableStateFlow(value = state),
                     onWithdrawSelected = {},

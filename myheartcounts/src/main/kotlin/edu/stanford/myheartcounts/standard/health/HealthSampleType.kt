@@ -44,7 +44,7 @@ data class HealthSampleType(
 
         /**
          * Health Connect record types that measure the same thing as the HealthKit sample they are
-         * mapped onto, so their observations join the iOS ones in a shared collection.
+         * mapped onto, so their observations join that sample's shared collection.
          *
          * Cross-checked against the sample types the MHC study definition collects and the LOINC
          * codes the backend defines for them (`functions/src/models/codes/codes.ts`).
@@ -100,10 +100,9 @@ data class HealthSampleType(
          * The sample type [recordType] is delivered as.
          *
          * Everything Grove knows about is collected; a record type with no HealthKit counterpart
-         * simply gets an Android-native identifier. The upload strategy follows from that: a type
-         * both platforms share goes through the local staging queue, exactly as on iOS, while a
-         * type only Android produces goes straight to Cloud Storage — the same route iOS takes for
-         * a sample type it does not recognize.
+         * simply gets an Android-native identifier. The upload strategy follows from that: a shared
+         * type goes through the local staging queue, while an Android-native type goes straight to
+         * Cloud Storage, the route the backend expects for sample types it does not recognize.
          */
         fun of(recordType: AnyRecordType): HealthSampleType {
             SHARED_WITH_HEALTH_KIT[recordType]?.let { identifier ->
@@ -130,8 +129,7 @@ data class HealthSampleType(
 /**
  * Where a batch of health observations is delivered.
  *
- * Ports iOS's `HealthObservationUploadStrategy`, whose three cases the backend expects to see data
- * arrive through.
+ * The backend expects data to arrive through one of these three routes.
  */
 enum class HealthUploadStrategy {
 

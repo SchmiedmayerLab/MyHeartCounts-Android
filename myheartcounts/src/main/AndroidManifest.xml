@@ -34,6 +34,17 @@ SPDX-License-Identifier: MIT
             android:authorities="${applicationId}.firebaseinitprovider"
             tools:node="remove" />
 
+        <!-- Hands files in the app's shared cache folder to the apps the participant shares them with. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/shared_files" />
+        </provider>
+
         <!--
         WorkManager initializes on demand from MyHeartCountsApplication's configuration, so its
         startup initializer must not run at process start.

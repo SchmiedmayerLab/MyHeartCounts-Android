@@ -24,4 +24,6 @@ class FakeStudyQuestionnaireSource : StudyQuestionnaireSource {
     }
 
     override suspend fun questionnaire(event: Event): Result<StudyQuestionnaire> = result
+
+    override suspend fun questionnaire(name: String): Result<StudyQuestionnaire> = result
 }

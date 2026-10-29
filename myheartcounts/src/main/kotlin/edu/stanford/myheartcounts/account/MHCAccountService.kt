@@ -11,6 +11,7 @@ import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import edu.stanford.myheartcounts.standard.MHCStandard
 import org.grovealliance.account.AccountService
 import org.grovealliance.core.ApplicationModule
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.requireDependency
 
 /**
@@ -20,8 +21,7 @@ import org.grovealliance.core.requireDependency
  * gone and the backend rejects every write. Some teardown has to happen before that — most of all
  * removing `fcmToken`, which the backend reads straight off the user document and would otherwise
  * keep pushing nudges to a device nobody is signed in on. Wrapping the service is the only place
- * that sees the intent to log out rather than the aftermath, and it is the counterpart of iOS's
- * `willLogOut` account event.
+ * that sees the intent to log out rather than the aftermath.
  *
  * @param wrapped The service that actually performs the operations, delegated to unchanged.
  * @param willSignOut Teardown to run before logging out or deleting; failures are logged, never
@@ -45,7 +45,7 @@ class MHCAccountService(
     }
 
     private suspend fun runWillSignOut() {
-        runCatching { willSignOut() }
+        runCatchingAsync { willSignOut() }
             .onFailure { logger.e(it) { "Sign-out teardown failed; signing out anyway." } }
     }
 

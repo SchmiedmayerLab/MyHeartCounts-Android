@@ -16,14 +16,15 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.requireDependency
 import java.util.concurrent.TimeUnit
 
 /**
  * Uploads the staged health data in the background.
  *
- * The counterpart of iOS's `BGProcessingTask`: health data is staged as it arrives and shipped later
- * in bulk, so that a participant's battery and data plan are not spent on a stream of small uploads.
+ * Health data is staged as it arrives and shipped later in bulk, so that a participant's battery
+ * and data plan are not spent on a stream of small uploads.
  */
 class HealthUploadWorker(
     context: Context,
@@ -33,7 +34,7 @@ class HealthUploadWorker(
     private val logger by mhcFirebaseLogger()
 
     override suspend fun doWork(): Result {
-        val handler = runCatching { requireDependency<MHCHealthDataHandler>() }.getOrElse { throwable ->
+        val handler = runCatchingAsync { requireDependency<MHCHealthDataHandler>() }.getOrElse { throwable ->
             // Grove's graph is built from a content provider, so it exists by the time any worker
             // runs; if it somehow does not, retrying is right — the data stays staged either way.
             logger.e(throwable) { "Grove is not available yet; retrying the health upload later." }

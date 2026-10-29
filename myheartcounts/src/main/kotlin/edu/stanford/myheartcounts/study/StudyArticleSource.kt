@@ -9,11 +9,11 @@ package edu.stanford.myheartcounts.study
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.scheduler.Event
 import org.grovealliance.study.ScheduledTaskAction
 import org.grovealliance.study.ScheduledTaskActionKey
-import java.util.Locale
 
 /**
  * Supplies the article a participant is asked to read.
@@ -28,14 +28,15 @@ interface StudyArticleSource {
 }
 
 /**
- * Reads articles from the study bundle, resolving each in the device's locale.
+ * Reads articles from the study bundle, resolving each in the [StudyVariantProvider.contentLocale].
  */
 class StudyArticleSourceImpl(
     private val studyBundleProvider: MHCStudyBundleProvider,
+    private val variantProvider: StudyVariantProvider,
     private val ioDispatcher: CoroutineDispatcher,
 ) : StudyArticleSource {
 
-    override suspend fun article(event: Event): Result<MarkdownDocument> = runCatching {
+    override suspend fun article(event: Event): Result<MarkdownDocument> = runCatchingAsync {
         val action = event.task.context[ScheduledTaskActionKey]
         require(action is ScheduledTaskAction.PresentInformational) {
             "The task ${event.task.id} does not present an article."
@@ -44,7 +45,7 @@ class StudyArticleSourceImpl(
         withContext(ioDispatcher) {
             val file = bundle.resolve(
                 fileRef = action.component.fileRef,
-                locale = Locale.getDefault(),
+                locale = variantProvider.contentLocale(),
             )
             requireNotNull(file?.takeIf { it.exists() }) {
                 "The study bundle holds no article for the task ${event.task.id}."

@@ -9,13 +9,96 @@ SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CO
 SPDX-License-Identifier: MIT
 -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
     <string name="app_name">My Heart Counts</string>
 
     <!-- Home tabs -->
     <string name="home_tab_home">Home</string>
     <string name="home_tab_upcoming">Tasks</string>
     <string name="home_tab_heart_health">Heart Health</string>
+
+    <string name="heart_health_score_footnote">Your personalized score reflects your overall health based on the factors listed below. Track it over time to see how lifestyle changes impact your heart health.</string>
+    <string name="heart_health_components_title">Score Components</string>
+    <string name="heart_health_components_footnote">Some metrics, such as Sleep or Exercise Minutes, are only available if a watch or fitness tracker shares them with Health Connect.</string>
+    <string name="heart_health_no_score">—</string>
+    <string name="heart_health_learn_more">Tap to learn more…</string>
+    <string name="heart_health_past_data_title">Past Data</string>
+    <string name="heart_health_past_results">Past Timed Walk/Run Test Results</string>
+    <string name="heart_health_explainer_title">Understanding Your Heart Health Score</string>
+    <string name="heart_health_measured_yesterday">Yesterday</string>
+    <string name="heart_health_error_title">Unable to load your heart health score</string>
+    <string name="heart_health_error_message">Something went wrong while loading your scores. Please try again.</string>
+    <string name="heart_health_error_retry">Try Again</string>
+    <string name="heart_score_exercise_minutes">Exercise Minutes</string>
+    <string name="heart_score_step_count">Steps</string>
+    <string name="heart_score_sleep">Sleep</string>
+    <string name="heart_score_diet">Diet</string>
+    <string name="heart_score_mental_wellbeing">Mental Well-Being</string>
+    <string name="heart_score_blood_pressure">Blood Pressure</string>
+    <string name="heart_score_blood_lipids">LDL Cholesterol</string>
+    <string name="heart_score_blood_glucose">Fasting Blood Glucose</string>
+    <string name="heart_score_body_mass_index">Body Mass Index</string>
+    <string name="heart_score_nicotine_exposure">Nicotine Exposure</string>
+    <string name="participation_stats_title">Stats and Achievements</string>
+    <string name="achievements_title">Achievements</string>
+
+    <!-- Participation stats -->
+    <string name="participation_stats_explainer">Participation Stats cover all engagement and activity recorded since you first enrolled into the study.\n\nYour enrollment date is %1$s.</string>
+    <string name="participation_stats_info">Info</string>
+    <string name="participation_stats_achievements">Achievements</string>
+    <string name="participation_stats_days">days</string>
+    <string name="participation_stats_enrolled_since">Enrolled since</string>
+    <string name="participation_stats_upcoming_achievements">Upcoming Achievements</string>
+    <string name="participation_stats_engagement">Engagement</string>
+    <string name="participation_stats_health_totals">Health Totals</string>
+    <string name="participation_stats_health_highlights">Health Highlights</string>
+    <string name="participation_stats_fun_facts">Fun Facts</string>
+    <string name="participation_stats_tasks_done">Tasks Done</string>
+    <string name="participation_stats_surveys_answered">Surveys Answered</string>
+    <string name="participation_stats_articles_read">Articles Read</string>
+    <string name="participation_stats_ecgs_recorded">ECGs Recorded</string>
+    <string name="participation_stats_walk_run_tests">Walk / Run Tests</string>
+    <string name="participation_stats_steps">Steps</string>
+    <string name="participation_stats_heartbeats">Heartbeats</string>
+    <string name="participation_stats_estimate">Estimate</string>
+    <string name="participation_stats_distance">Distance</string>
+    <string name="participation_stats_active_energy">Active Energy</string>
+    <string name="participation_stats_exercise_time">Exercise Time</string>
+    <string name="participation_stats_sleep">Sleep</string>
+    <string name="participation_stats_workouts">Workouts</string>
+    <string name="participation_stats_flights_climbed">Flights Climbed</string>
+    <string name="participation_stats_best_step_day">Best Step Day</string>
+    <string name="participation_stats_longest_workout">Longest Workout</string>
+    <string name="participation_stats_max_heart_rate">Max Heart Rate</string>
+    <string name="participation_stats_resting_heart_rate">Resting HR</string>
+    <string name="participation_stats_average">Average</string>
+    <string name="participation_stats_fun_fact_steps">Your %1$s steps cover about %2$s — that\'s %3$s lengths of the Golden Gate Bridge.</string>
+    <string name="participation_stats_fun_fact_heartbeats">Your heart has beaten about %1$s times since you enrolled — roughly %2$s of an average lifetime.</string>
+    <string name="participation_stats_fun_fact_active_energy">You\'ve burned %1$s active calories — the equivalent of %2$s slices of pizza.</string>
+    <string name="participation_stats_fun_fact_sleep">You\'ve spent about %1$s full days asleep since enrolling. Rest is part of the work.</string>
+
+    <!-- Achievements -->
+    <string name="achievements_category_general">General</string>
+    <string name="achievements_category_study_participation">Study Participation</string>
+    <string name="achievements_category_health">Health</string>
+    <string name="achievement_first_questionnaire_title">Questionnaire Extraordinaire</string>
+    <string name="achievement_first_questionnaire_description">Complete your first questionnaire</string>
+    <string name="achievement_first_walk_test_title">Pedestrian Pioneer</string>
+    <string name="achievement_first_walk_test_description">Record your first Walk Test</string>
+    <string name="achievement_first_run_test_title">Cooper Trooper</string>
+    <string name="achievement_first_run_test_description">Record your first Run Test</string>
+    <string name="achievement_first_ecg_title">Cardio Connoisseur</string>
+    <string name="achievement_first_ecg_description">Record your first ECG</string>
+    <string name="achievement_initial_enrollment_title">Welcome to the fold</string>
+    <string name="achievement_initial_enrollment_description">Enroll into the study</string>
+    <string name="achievement_enrollment_duration_description">Cross %1$s of study enrollment</string>
+    <string name="achievement_enrollment_1_week">1 week</string>
+    <string name="achievement_anniversary_paper">Paper Anniversary</string>
+    <string name="achievement_daily_steps_description">Walk %1$s steps in a day</string>
+    <string name="achievement_daily_steps_10k">I\'m walking here!</string>
+    <string name="achievement_daily_steps_15k">Super Streaker</string>
+    <string name="achievement_daily_steps_20k">Mega Streaker</string>
+    <string name="achievement_daily_steps_30k">Giga Streaker</string>
 
     <!-- Shared onboarding actions -->
     <string name="onboarding_continue">Continue</string>
@@ -70,6 +153,19 @@ SPDX-License-Identifier: MIT
     <string name="onboarding_study_overview_subtitle">You’re invited to join a Stanford research study that tracks physical activity through your smartphone to improve heart health knowledge. You’ll complete brief health surveys and perform simple fitness assessments like the 6-minute walk test using your phone.</string>
     <string name="onboarding_study_overview_learn_more">This research study is conducted by Stanford University School of Medicine researchers to understand how physical activity relates to cardiovascular health. The app will guide you through various assessments including the 6-minute walk test. Your participation is flexible meaning you can engage with the study as much or as little as you choose. The smartphone-based approach allows us to collect data in your natural environment rather than requiring visits to a clinical facility.</string>
 
+    <!-- Login -->
+    <string name="onboarding_login_privacy_policy">Privacy Policy</string>
+    <string name="account_login_title">Your Account</string>
+    <string name="account_login_description">Please log in to your existing account. If you do not have an existing account, please sign up.\n\nIf you were part of the original My Heart Counts study, your account will not transfer over and you will need to create a new account.</string>
+
+    <!-- Reactivate Account -->
+    <string name="onboarding_reactivate_title">Reactivate Account</string>
+    <string name="onboarding_reactivate_subtitle">You\'ve previously withdrawn from the My Heart Counts study.\nDo you want to reactivate your account?</string>
+    <string name="onboarding_reactivate_confirm">Reactivate Account</string>
+    <string name="onboarding_reactivate_decline">Don\'t reactivate</string>
+    <string name="onboarding_reactivate_error">Your account could not be reactivated. Please check your connection and try again.</string>
+    <string name="onboarding_reactivate_logout_error">You could not be signed out. Please check your connection and try again.</string>
+
     <!-- Trial Component -->
     <string name="onboarding_trial_component_title">Trial Component</string>
     <string name="onboarding_trial_component_subtitle">You have the option to enroll in a 2-week physical activity coaching trial. If you choose to join, you’ll experience both personalized and standard coaching messages for 7 days each, helping us learn which approaches better motivate healthy behaviors.</string>
@@ -88,7 +184,7 @@ SPDX-License-Identifier: MIT
     <!-- Health Access & Data Sharing -->
     <string name="onboarding_health_access_title">Health Access &amp; Data Sharing</string>
     <string name="onboarding_health_access_subtitle">The My Heart Counts Study uses health data from Health Connect on your phone to further research. Granting access to all data types (or as many as you are comfortable with) ensures the most well powered study possible.</string>
-    <string name="onboarding_health_access_learn_more">My Heart Counts needs read access to Health Connect to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. It never writes anything to Health Connect. To enhance research, select **“Allow all”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
+    <string name="onboarding_health_access_learn_more">My Heart Counts needs read access to Health Connect to automatically collect data such as heart rate, step counts, active calories, sleep durations, etc. When you enter measurements, it can save blood pressure, blood glucose, height and weight to Health Connect with your permission. To enhance research, select **“Allow all”**.\n\nWe are committed to protecting your privacy. Your data will be securely shared only among the My Heart Counts Research Team and our trusted research partners. Any data shared publicly will be thoroughly de-identified to ensure it cannot be traced back to you. Additionally, we require all external researchers to prove their qualifications and obtain approval before accessing any shared data for their studies.\n\nYou can revoke this access at any time.</string>
     <string name="onboarding_health_access_install_subtitle">My Heart Counts reads your health data through Health Connect, which needs to be installed or updated on this phone. You can also skip this for now.</string>
     <string name="onboarding_health_access_install">Install Health Connect</string>
     <string name="onboarding_health_access_install_error">Health Connect could not be opened in the store.</string>
@@ -102,6 +198,7 @@ SPDX-License-Identifier: MIT
 
     <!-- Consent -->
     <string name="onboarding_consent_title">Consent</string>
+    <string name="onboarding_consent_share_error">The consent form could not be shared. Please try again.</string>
 
     <!-- Notifications -->
     <string name="onboarding_notifications_title">Allow Notifications</string>
@@ -221,7 +318,388 @@ SPDX-License-Identifier: MIT
     <string name="account_withdraw_failed_title">Unable to Withdraw</string>
     <string name="account_withdraw_failed_message">Your withdrawal could not be completed. Please check your connection and try again.</string>
     <string name="account_withdraw_failed_dismiss">OK</string>
+    <string name="account_post_trial_nudges_title">Post-Trial Activity Nudges</string>
+    <string name="account_post_trial_nudges_subtitle">Enable to continue receiving periodic activity nudges after the initial trial period.</string>
+    <string name="account_post_trial_nudges_error">Your post-trial activity nudges choice could not be saved. Please check your connection and try again.</string>
+    <string name="account_send_feedback">Send Feedback</string>
+    <string name="account_view_participation_stats">View Participation Stats</string>
+    <string name="account_feedback_title">Feedback</string>
+    <string name="account_feedback_send">Send</string>
+    <string name="account_feedback_footer">Your feedback helps us improve My Heart Counts and all feedback is greatly appreciated.\n\nThe feedback you share with us will be associated with your email address. This allows us to reach out to you if required.</string>
+    <string name="account_feedback_error">Your feedback could not be sent. Please check your connection and try again.</string>
+    <string name="account_privacy_policy">Privacy Policy</string>
 
     <string name="health_privacy_title">How My Heart Counts Uses Your Health Data</string>
-    <string name="health_privacy_description">My Heart Counts reads the health data you allow it to from Health Connect — such as steps, heart rate, sleep and workouts — and shares it with the Stanford research team studying cardiovascular health. It never writes anything back to Health Connect.\n\nYour health data is stored separately from the information that identifies you, and anything published is de-identified first. You can change what you share, or stop sharing entirely, at any time in Health Connect.</string>
+    <string name="health_privacy_description">My Heart Counts reads the health data you allow it to from Health Connect — such as steps, heart rate, sleep and workouts — and shares it with the Stanford research team studying cardiovascular health. With your permission, it also saves blood pressure, blood glucose, height and weight that you enter to Health Connect.\n\nYour health data is stored separately from the information that identifies you, and anything published is de-identified first. You can change what you share, or stop sharing entirely, at any time in Health Connect.</string>
+    <string name="heart_detail_last_7_days">Last 7 days</string>
+    <string name="heart_detail_last_14_days">Last 14 days</string>
+    <string name="heart_detail_last_month">Last month</string>
+    <string name="heart_detail_last_3_months">Last 3 months</string>
+    <string name="heart_detail_last_6_months">Last 6 months</string>
+    <string name="heart_detail_last_year">Last 12 months</string>
+    <string name="heart_detail_no_data">No Data</string>
+    <string name="heart_detail_recent_values">Recent Values</string>
+    <string name="heart_detail_time_range">Time range</string>
+    <string name="heart_detail_score_result">Score Result</string>
+    <string name="heart_detail_about">About %1$s</string>
+    <string name="heart_detail_most_recent_night">Most Recent Night</string>
+    <string name="heart_detail_most_recent_score">Most Recent Score</string>
+    <string name="heart_detail_most_recent_response">Most Recent Response</string>
+    <string name="heart_detail_most_recent_sample">Most Recent Sample</string>
+    <string name="heart_detail_last_night">Last Night</string>
+    <string name="heart_detail_header_last_7_days">Last 7 Days</string>
+    <string name="heart_detail_daily_steps">Daily Average, Last 7 Days</string>
+    <string name="heart_detail_band_below">&lt; %1$s</string>
+    <string name="heart_detail_band_at_least_spaced">%1$s +</string>
+    <string name="heart_detail_band_at_least">%1$s+</string>
+    <string name="heart_detail_band_range">%1$s – %2$s</string>
+    <string name="heart_detail_sleep_band_range">%1$s to %2$s hours</string>
+    <string name="heart_detail_sleep_band_at_least">%1$s+ hours</string>
+    <string name="heart_detail_bmi_band">%1$s (%2$s)</string>
+    <string name="heart_detail_bmi_severely_underweight">Severely underweight</string>
+    <string name="heart_detail_bmi_underweight">Underweight</string>
+    <string name="heart_detail_bmi_normal">Normal weight</string>
+    <string name="heart_detail_bmi_overweight">Overweight</string>
+    <string name="heart_detail_bmi_at_risk">Overweight / At risk</string>
+    <string name="heart_detail_bmi_obesity_1">Obesity class I</string>
+    <string name="heart_detail_bmi_obesity_2">Obesity class II</string>
+    <string name="heart_detail_bmi_obesity_3">Obesity class III</string>
+    <string name="heart_detail_never_smoked">Never Smoked</string>
+    <string name="heart_detail_quit_over_5_years">Quit more than 5 years ago</string>
+    <string name="heart_detail_quit_1_to_5_years">Quit 1 to 5 years ago</string>
+    <string name="heart_detail_recent_quit">Quit within last year, or am using NDS</string>
+    <string name="heart_detail_smoking">Actively smoking</string>
+    <string name="heart_detail_pressure_band_1">&lt;120 / &lt;80</string>
+    <string name="heart_detail_pressure_band_2">120–129 / 80–89</string>
+    <string name="heart_detail_pressure_band_3">130–139 / 90–99</string>
+    <string name="heart_detail_pressure_band_4">140+ / 90+</string>
+    <string name="heart_detail_exercise_footer">Your score reflects the total exercise minutes recorded over the last 7 complete days.</string>
+    <string name="heart_detail_chart_description">Recent %1$s measurements</string>
+    <string name="heart_detail_next_point">Next point</string>
+    <string name="heart_detail_previous_point">Previous point</string>
+    <string name="heart_detail_systolic_value">Systolic: %1$s</string>
+    <string name="heart_detail_diastolic_value">Diastolic: %1$s</string>
+    <string name="heart_detail_error_title">Unable to load score details</string>
+    <string name="heart_detail_error_message">Something went wrong while loading this score. Please try again.</string>
+    <string name="heart_detail_pressure_value">%1$s/%2$s</string>
+    <string name="heart_detail_learn_more_host">Learn More · %1$s</string>
+    <string name="heart_detail_debug_samples">Debug · All Samples</string>
+    <string name="heart_detail_debug_fields">ID: %1$s\nType: %2$s\nUnit: %3$s\nValue: %4$s\nStart: %5$s\nEnd: %6$s</string>
+    <string name="heart_detail_sleep_duration">%1$d hr %2$d min</string>
+    <string name="heart_detail_date_range">%1$s – %2$s</string>
+    <string name="heart_entry_title">Add Health Data</string>
+    <string name="heart_entry_add_data">Add Data</string>
+    <string name="heart_entry_save">Save</string>
+    <string name="heart_entry_saving">Saving…</string>
+    <string name="heart_entry_error">Unable to save. Check your connection and try again. Your entry is still here.</string>
+    <string name="heart_entry_permission_error">Unable to save. Allow My Heart Counts to write this measurement in Health Connect settings, then try again.</string>
+    <string name="heart_entry_systolic">Systolic Blood Pressure</string>
+    <string name="heart_entry_diastolic">Diastolic Blood Pressure</string>
+    <string name="heart_entry_weight_height">Weight and Height</string>
+    <string name="heart_entry_weight">Weight</string>
+    <string name="heart_entry_height">Height</string>
+    <string name="heart_entry_feet">Feet</string>
+    <string name="heart_entry_inches">Inches</string>
+    <string name="heart_entry_calculated_bmi">Body Mass Index: %1$s</string>
+    <string name="heart_entry_out_of_range">Only values from %1$s to %2$s are allowed</string>
+    <string name="heart_entry_future_time">Choose a date and time in the past.</string>
+    <string name="heart_entry_confirm">OK</string>
+    <string name="heart_entry_cancel">Cancel</string>
+    <string name="heart_entry_time">Time</string>
+    <string name="heart_entry_date">Date</string>
+    <string name="heart_entry_enter_component">Enter %1$s</string>
+    <string name="heart_entry_bmi_title">Enter BMI</string>
+    <string name="heart_entry_bmi_mode">BMI</string>
+    <string name="heart_entry_feet_value">%1$d ft</string>
+    <string name="heart_entry_inches_value">%1$d in</string>
+
+    <!-- Debug sheet (debug builds only) -->
+    <string name="debug_title" translatable="false">Debug</string>
+    <string name="debug_app_info" translatable="false">App Info</string>
+    <string name="debug_info_version" translatable="false">Version</string>
+    <string name="debug_info_build" translatable="false">Build</string>
+    <string name="debug_info_project_id" translatable="false">Project ID</string>
+    <string name="debug_info_account_id" translatable="false">Account ID</string>
+    <string name="debug_info_enrolled_revision" translatable="false">Study Revision (enrolled)</string>
+    <string name="debug_info_bundled_revision" translatable="false">Study Revision (bundled)</string>
+    <string name="debug_info_consent_version" translatable="false">lastSignedConsentVersion</string>
+    <string name="debug_info_unavailable" translatable="false">n/a</string>
+    <string name="debug_feature_flags" translatable="false">Feature Flags</string>
+    <string name="debug_shake" translatable="false">Debug Sheet</string>
+    <string name="debug_shake_to_open" translatable="false">Open on Shake</string>
+    <string name="debug_shake_to_open_description" translatable="false">Does this sheet keep popping up while you\'re running or moving? Turn this off to stop shaking from opening it. To turn it back on, relaunch the app.</string>
+    <string name="debug_health" translatable="false">Health</string>
+    <string name="debug_health_availability" translatable="false">Health Connect</string>
+    <string name="debug_health_fully_authorized" translatable="false">All permissions granted</string>
+    <string name="debug_health_history_access" translatable="false">History access</string>
+    <string name="debug_health_background_access" translatable="false">Background access</string>
+    <string name="debug_health_granted" translatable="false">Granted</string>
+    <string name="debug_health_not_granted" translatable="false">Not granted</string>
+    <string name="debug_health_none" translatable="false">None</string>
+    <string name="feature_flags_restart" translatable="false">Restart</string>
+    <string name="feature_flags_restart_note" translatable="false">Changes apply once the app restarts.</string>
+    <string name="feature_flag_simplify_onboarding_title" translatable="false">Simplify Onboarding</string>
+    <string name="feature_flag_simplify_onboarding_description" translatable="false">Shortens onboarding to login, Health Connect access and enrollment.</string>
+    <string name="feature_flag_uk_study_testing_title" translatable="false">UK Study Testing</string>
+    <string name="feature_flag_uk_study_testing_description" translatable="false">Lets participants in the United Kingdom join the Imperial study on the US backend instead of the launch waitlist.</string>
+
+
+    <!-- Demographics -->
+    <string name="demographics_condition_diabetes">Diabetes</string>
+    <string name="demographics_conditions_primary">Primary</string>
+    <string name="demographics_condition_heartfailure">Heart Failure</string>
+    <string name="demographics_condition_coronaryarterydisease">Coronary Artery Disease</string>
+    <string name="demographics_condition_pulmonaryarterialhypertension">Pulmonary Arterial Hypertension</string>
+    <string name="demographics_condition_adultcongenitalheartdisease">Adult Congenital Heart Disease (ACHD), Single Ventricle (Fontan) or Systemic Right Ventricle (Mustard, Senning, congenitally corrected transposition of the great arteries)</string>
+    <string name="demographics_condition_congenitalheartdisease2">Congenital Heart Disease OTHER than Single Ventricle or Systemic Right Ventricle</string>
+    <string name="demographics_condition_abdominalaorticaneurysm">Abdominal Aortic Aneurysm</string>
+    <string name="demographics_conditions_secondary">Secondary</string>
+    <string name="demographics_condition_angina">Angina (heart chest pains)</string>
+    <string name="demographics_condition_afib">Atrial fibrillation (Afib)</string>
+    <string name="demographics_condition_carotidarteryblockagestenosis">Carotid Artery Blockage/Stenosis</string>
+    <string name="demographics_condition_carotidarterysurgeryorstent">Carotid Artery Surgery or Stent</string>
+    <string name="demographics_condition_chronickidneydisease">Chronic kidney disease</string>
+    <string name="demographics_condition_chronickidneydisease_detail">Stage 3, 4 or 5</string>
+    <string name="demographics_condition_congenitalheartdefect">Congenital Heart Defect</string>
+    <string name="demographics_condition_coronaryblockagestenosis">Coronary Blockage/Stenosis</string>
+    <string name="demographics_condition_coronarystentangioplasty">Coronary Stent/Angioplasty</string>
+    <string name="demographics_condition_erectiledysfunction">Erectile dysfunction</string>
+    <string name="demographics_condition_heartattackmyocardialinfarction">Heart Attack/Myocardial Infarction</string>
+    <string name="demographics_condition_heartbypasssurgery">Heart Bypass Surgery</string>
+    <string name="demographics_condition_heartfailureorchf">Heart Failure or CHF</string>
+    <string name="demographics_condition_highcoronarycalciumscore">High Coronary Calcium Score</string>
+    <string name="demographics_condition_migraines">Migraines</string>
+    <string name="demographics_condition_otherautoimmunedisease">Other auto-immune disease</string>
+    <string name="demographics_condition_peripheralvasculardisease">Peripheral Vascular Disease</string>
+    <string name="demographics_condition_peripheralvasculardisease_detail">Blockage/Stenosis, Surgery, or Stent</string>
+    <string name="demographics_condition_pulmonaryhypertension">Pulmonary Hypertension</string>
+    <string name="demographics_condition_dilatedcardiomyopathy">Dilated Cardiomyopathy (DCM)</string>
+    <string name="demographics_condition_hypertrophiccardiomyopathy">Hypertrophic Cardiomyopathy (HCM)</string>
+    <string name="demographics_condition_raynaudsphenomenon">Raynaud\'s Phenomenon</string>
+    <string name="demographics_condition_rheumatoidarthritis">Rheumatoid arthritis</string>
+    <string name="demographics_condition_stroke">Stroke</string>
+    <string name="demographics_condition_systemiclupuserythematosus">Systemic lupus erythematosus (SLE)</string>
+    <string name="demographics_condition_systemicsclerosisorscleroderma">Systemic Sclerosis or Scleroderma</string>
+    <string name="demographics_condition_transientischemicattack">Transient Ischemic Attack (TIA)</string>
+    <string name="demographics_field_dateofbirth">Date of Birth</string>
+    <string name="demographics_field_genderidentity">Gender Identity</string>
+    <string name="demographics_field_sexatbirth">Sex Assigned at Birth</string>
+    <string name="demographics_field_bloodtype">Blood Type</string>
+    <string name="demographics_field_height">Height</string>
+    <string name="demographics_field_weight">Weight</string>
+    <string name="demographics_field_raceethnicity">Race / Ethnicity</string>
+    <string name="demographics_field_latinostatus">Hispanic / Latino</string>
+    <string name="demographics_field_comorbidities">Comorbidities</string>
+    <string name="demographics_field_usregion">State / Territory</string>
+    <string name="demographics_field_ukregion">Region</string>
+    <string name="demographics_field_useducation">Education</string>
+    <string name="demographics_field_ukeducation">Education</string>
+    <string name="demographics_field_usincome">Household Income</string>
+    <string name="demographics_field_ukincome">Household Income</string>
+    <string name="demographics_field_nhsnumber">NHS Number</string>
+    <string name="demographics_field_stageofchange">Stage of Change</string>
+    <string name="demographics_field_referralsource">How did you hear about us?</string>
+    <string name="demographics_gender_identity_0">Prefer not to state</string>
+    <string name="demographics_gender_identity_1">Male</string>
+    <string name="demographics_gender_identity_2">Female</string>
+    <string name="demographics_gender_identity_3">Transgender Female</string>
+    <string name="demographics_gender_identity_4">Transgender Male</string>
+    <string name="demographics_gender_identity_5">Gender Variant / Non-Conforming</string>
+    <string name="demographics_sex_at_birth_0">Prefer not to state</string>
+    <string name="demographics_sex_at_birth_1">Male</string>
+    <string name="demographics_sex_at_birth_2">Female</string>
+    <string name="demographics_sex_at_birth_3">Intersex</string>
+    <string name="demographics_blood_type_1">A+</string>
+    <string name="demographics_blood_type_2">A−</string>
+    <string name="demographics_blood_type_3">B+</string>
+    <string name="demographics_blood_type_4">B−</string>
+    <string name="demographics_blood_type_5">AB+</string>
+    <string name="demographics_blood_type_6">AB−</string>
+    <string name="demographics_blood_type_7">O+</string>
+    <string name="demographics_blood_type_8">O−</string>
+    <string name="demographics_race_ethnicity_1">Prefer not to state</string>
+    <string name="demographics_race_ethnicity_2">White</string>
+    <string name="demographics_race_ethnicity_4">African American</string>
+    <string name="demographics_race_ethnicity_8">American Indian</string>
+    <string name="demographics_race_ethnicity_16">Alaska Native</string>
+    <string name="demographics_race_ethnicity_32">Asian Indian</string>
+    <string name="demographics_race_ethnicity_64">Chinese</string>
+    <string name="demographics_race_ethnicity_128">Filipino</string>
+    <string name="demographics_race_ethnicity_256">Japanese</string>
+    <string name="demographics_race_ethnicity_512">Korean</string>
+    <string name="demographics_race_ethnicity_1024">Vietnamese</string>
+    <string name="demographics_race_ethnicity_2048">Pacific Islander</string>
+    <string name="demographics_race_ethnicity_4096">Other</string>
+    <string name="demographics_latino_status_1">No</string>
+    <string name="demographics_latino_status_2">Yes, Mexican, Mexican American, or Chicano</string>
+    <string name="demographics_latino_status_3">Yes, Caribbean Hispanic, including Cuban and Puerto Rican</string>
+    <string name="demographics_latino_status_4">Yes, South American Hispanic</string>
+    <string name="demographics_latino_status_5">Yes, European Hispanic, including Spanish and Portuguese, Hispanic, Latina</string>
+    <string name="demographics_latino_status_6">Yes, other Hispanic, Latino</string>
+    <string name="demographics_latino_status_255">Prefer not to state</string>
+    <string name="demographics_us_education_didnotattendschool">Didn\'t attend school</string>
+    <string name="demographics_us_education_gradeschool">Grade School</string>
+    <string name="demographics_us_education_highschool">High School</string>
+    <string name="demographics_us_education_somecollege">Some College</string>
+    <string name="demographics_us_education_somecollege_detail">Some college or vocational school or associate degree</string>
+    <string name="demographics_us_education_bachelor">Bachelor</string>
+    <string name="demographics_us_education_bachelor_detail">College graduate or Baccalaureate Degree</string>
+    <string name="demographics_us_education_master">Master\'s Degree</string>
+    <string name="demographics_us_education_doctoraldegree">Doctoral Degree</string>
+    <string name="demographics_us_education_doctoraldegree_detail">Ph.D., M.D., J.D., etc.</string>
+    <string name="demographics_us_education_prefernottostate">Prefer not to state</string>
+    <string name="demographics_uk_education_didnotattendschool">Didn\'t attend school</string>
+    <string name="demographics_uk_education_highschool">High School</string>
+    <string name="demographics_uk_education_vocationaltraining">Vocational Training</string>
+    <string name="demographics_uk_education_vocationaltraining_detail">Vocational training / apprenticeship / diploma</string>
+    <string name="demographics_uk_education_somecollege">College/University Graduate Degree</string>
+    <string name="demographics_uk_education_master">Master</string>
+    <string name="demographics_uk_education_doctoraldegree">Doctoral Degree</string>
+    <string name="demographics_uk_education_prefernottostate">Prefer not to state</string>
+    <string name="demographics_us_income_1">Less than $15,000</string>
+    <string name="demographics_us_income_2">$15,000 – $24,999</string>
+    <string name="demographics_us_income_3">$25,000 – $34,999</string>
+    <string name="demographics_us_income_4">$35,000 – $49,999</string>
+    <string name="demographics_us_income_5">$50,000 – $74,999</string>
+    <string name="demographics_us_income_6">$75,000 – $99,999</string>
+    <string name="demographics_us_income_7">$100,000 – $149,999</string>
+    <string name="demographics_us_income_8">$150,000 and above</string>
+    <string name="demographics_us_income_255">Prefer not to state</string>
+    <string name="demographics_uk_income_1">Less than £15,000</string>
+    <string name="demographics_uk_income_2">£15,000 – £24,999</string>
+    <string name="demographics_uk_income_3">£25,000 – £34,999</string>
+    <string name="demographics_uk_income_4">£35,000 – £49,999</string>
+    <string name="demographics_uk_income_5">£50,000 – £74,999</string>
+    <string name="demographics_uk_income_6">£75,000 – £99,999</string>
+    <string name="demographics_uk_income_7">£100,000 – £149,999</string>
+    <string name="demographics_uk_income_8">£150,000 and above</string>
+    <string name="demographics_uk_income_255">Prefer not to state</string>
+    <string name="demographics_stage_of_change_a">I tend to take part in planned physical activity for health, sport, or fitness regularly (e.g. at least 3 times per week, 30 minutes per day), but sometimes I do not.</string>
+    <string name="demographics_stage_of_change_b">I take part in planned physical activity for health, sport, or fitness regularly (e.g. at least 3 times per week, 30 minutes per day); it is part of my routine life.</string>
+    <string name="demographics_stage_of_change_c">I don’t do any planned physical activity for health, sport, or fitness regularly (e.g. at least 3 times per week, 30 minutes per day); and I have not thought about doing planned physical activity at that level. </string>
+    <string name="demographics_stage_of_change_d">I don’t take part in planned physical activity for health, sport, or fitness regularly (at least 3 times per week, 30 minutes per day), but I do think about starting to reach that level of planned physical activity.</string>
+    <string name="demographics_stage_of_change_e">I am planning to begin doing planned physical activity for health, sport, or fitness regularly (at least 3 times per week, 30 minutes per day) but still have not started.</string>
+    <string name="demographics_stage_of_change_f">In the last 6 months I started doing planned physical activity for health, sport, or fitness regularly (at least 3 times per week, 30 minutes per day).</string>
+    <string name="demographics_stage_of_change_g">More than 6 months ago I started take doing planned physical activity for health, sport, or fitness regularly (at least 3 times per week, 30 minutes per day)</string>
+    <string name="demographics_stage_of_change_h">I do take part in planned physical activity for health, sport, or fitness regularly (at least 3 times per week, 30 minutes per day) most of the time; but sometimes I cannot do it 3 times a week or more.</string>
+    <string name="demographics_stage_of_change_i">For several years I have routinely done planned physical activity for health, sport, or fitness regularly (at least 3 times per week, 30 minutes per day); it is part of my lifestyle.</string>
+    <string name="demographics_referral_source_1">Healthcare provider (doctor, cardiologist, nurse)</string>
+    <string name="demographics_referral_source_2">Hospital or clinic</string>
+    <string name="demographics_referral_source_3">Friend or family member</string>
+    <string name="demographics_referral_source_4">Heart health organization or support group</string>
+    <string name="demographics_referral_source_5">Research or clinical trial website (ClinicalTrials.gov, ResearchMatch, etc.)</string>
+    <string name="demographics_referral_source_6">Online ad (Google, Facebook, Instagram, Reddit, etc.)</string>
+    <string name="demographics_referral_source_7">Online search or social media (not an ad)</string>
+    <string name="demographics_referral_source_8">Email invitation or newsletter</string>
+    <string name="demographics_referral_source_9">News media (article, TV, radio, podcast)</string>
+    <string name="demographics_referral_source_10">Flyer or poster</string>
+    <string name="demographics_referral_source_11">Other</string>
+    <string name="demographics_us_region_al">Alabama</string>
+    <string name="demographics_us_region_ak">Alaska</string>
+    <string name="demographics_us_region_az">Arizona</string>
+    <string name="demographics_us_region_ar">Arkansas</string>
+    <string name="demographics_us_region_ca">California</string>
+    <string name="demographics_us_region_co">Colorado</string>
+    <string name="demographics_us_region_ct">Connecticut</string>
+    <string name="demographics_us_region_de">Delaware</string>
+    <string name="demographics_us_region_dc">District Of Columbia</string>
+    <string name="demographics_us_region_fl">Florida</string>
+    <string name="demographics_us_region_ga">Georgia</string>
+    <string name="demographics_us_region_hi">Hawaii</string>
+    <string name="demographics_us_region_id">Idaho</string>
+    <string name="demographics_us_region_il">Illinois</string>
+    <string name="demographics_us_region_in">Indiana</string>
+    <string name="demographics_us_region_ia">Iowa</string>
+    <string name="demographics_us_region_ks">Kansas</string>
+    <string name="demographics_us_region_ky">Kentucky</string>
+    <string name="demographics_us_region_la">Louisiana</string>
+    <string name="demographics_us_region_me">Maine</string>
+    <string name="demographics_us_region_md">Maryland</string>
+    <string name="demographics_us_region_ma">Massachusetts</string>
+    <string name="demographics_us_region_mi">Michigan</string>
+    <string name="demographics_us_region_mn">Minnesota</string>
+    <string name="demographics_us_region_ms">Mississippi</string>
+    <string name="demographics_us_region_mo">Missouri</string>
+    <string name="demographics_us_region_mt">Montana</string>
+    <string name="demographics_us_region_ne">Nebraska</string>
+    <string name="demographics_us_region_nv">Nevada</string>
+    <string name="demographics_us_region_nh">New Hampshire</string>
+    <string name="demographics_us_region_nj">New Jersey</string>
+    <string name="demographics_us_region_nm">New Mexico</string>
+    <string name="demographics_us_region_ny">New York</string>
+    <string name="demographics_us_region_nc">North Carolina</string>
+    <string name="demographics_us_region_nd">North Dakota</string>
+    <string name="demographics_us_region_oh">Ohio</string>
+    <string name="demographics_us_region_ok">Oklahoma</string>
+    <string name="demographics_us_region_or">Oregon</string>
+    <string name="demographics_us_region_pa">Pennsylvania</string>
+    <string name="demographics_us_region_ri">Rhode Island</string>
+    <string name="demographics_us_region_sc">South Carolina</string>
+    <string name="demographics_us_region_sd">South Dakota</string>
+    <string name="demographics_us_region_tn">Tennessee</string>
+    <string name="demographics_us_region_tx">Texas</string>
+    <string name="demographics_us_region_ut">Utah</string>
+    <string name="demographics_us_region_vt">Vermont</string>
+    <string name="demographics_us_region_va">Virginia</string>
+    <string name="demographics_us_region_wa">Washington</string>
+    <string name="demographics_us_region_wv">West Virginia</string>
+    <string name="demographics_us_region_wi">Wisconsin</string>
+    <string name="demographics_us_region_wy">Wyoming</string>
+    <string name="demographics_us_region_as">American Samoa</string>
+    <string name="demographics_us_region_gu">Guam</string>
+    <string name="demographics_us_region_mp">Northern Mariana Islands</string>
+    <string name="demographics_us_region_pr">Puerto Rico</string>
+    <string name="demographics_us_region_tt">Trust Territories</string>
+    <string name="demographics_us_region_vi">Virgin Islands</string>
+    <string name="demographics_uk_region_england">England</string>
+    <string name="demographics_uk_region_scotland">Scotland</string>
+    <string name="demographics_uk_region_wales">Wales</string>
+    <string name="demographics_uk_region_northernireland">Northern Ireland</string>
+    <string name="demographics_title">Demographics</string>
+    <string name="demographics_continue">Continue</string>
+    <string name="demographics_health_import_title">Read from Health Connect</string>
+    <string name="demographics_health_import_description">Use this option to fill in your answers with the data available in Health Connect.\nYou can also tap any field below to enter a value yourself, or to change one filled in from Health Connect.</string>
+    <string name="demographics_label_sex_at_birth">Biological Sex at Birth</string>
+    <string name="demographics_label_latino_status">Are you Hispanic/Latino?</string>
+    <string name="demographics_label_us_region">US State / Territory</string>
+    <string name="demographics_label_education">Education Level</string>
+    <string name="demographics_label_income">Total Household Income</string>
+    <string name="demographics_label_referral_source">Referral Source</string>
+    <string name="demographics_value_empty" translatable="false">-</string>
+    <string name="demographics_value_not_set">Not Set</string>
+    <string name="demographics_optional">Optional</string>
+    <string name="demographics_value_no_selection">No Selection</string>
+    <string name="demographics_date_picker_confirm">Done</string>
+    <string name="demographics_date_picker_dismiss">Cancel</string>
+    <string name="demographics_height_sheet_title">Enter Height</string>
+    <string name="demographics_weight_sheet_title">Enter Weight</string>
+    <string name="demographics_measurement_value">Value</string>
+    <string name="demographics_unit_cm">cm</string>
+    <string name="demographics_unit_kg">kg</string>
+    <string name="demographics_value_cm">%1$s cm</string>
+    <string name="demographics_value_kg">%1$s kg</string>
+    <string name="demographics_value_selected_count">%1$d selected</string>
+    <string name="demographics_race_footer">You can select multiple options.</string>
+    <string name="demographics_comorbidities_sheet_title">Select Comorbidities</string>
+    <string name="demographics_comorbidities_none">None</string>
+    <string name="demographics_us_region_sheet_title">Select your State or Territory</string>
+    <string name="demographics_us_territories">Other Territories</string>
+    <string name="demographics_stage_of_change_prompt">Please select the clause that most closely matches what you do.</string>
+    <string name="demographics_referral_source_prompt">How did you hear about the study?</string>
+    <string name="demographics_comorbidity_since">Since</string>
+    <string name="demographics_comorbidity_since_unknown">Unknown</string>
+    <string name="demographics_diagnosis_year">Year</string>
+    <string name="demographics_diagnosis_month">Month</string>
+    <string name="demographics_label_uk_region">UK Region</string>
+    <string name="demographics_uk_region_sheet_title">Select a Region</string>
+    <string name="demographics_uk_region_england_county">England (%1$s)</string>
+    <string name="demographics_uk_region_scotland_county">Scotland (%1$s)</string>
+    <string name="demographics_uk_region_wales_county">Wales (%1$s)</string>
+    <string name="demographics_uk_region_northernireland_county">Northern Ireland (%1$s)</string>
+    <string name="demographics_nhs_number_sheet_title">Enter NHS Number</string>
+    <string name="demographics_nhs_number_help">Find your NHS Number</string>
+    <string name="demographics_health_import_empty">No data to fill in was found in Health Connect.</string>
+    <string name="demographics_health_import_failed">Data couldn\'t be read from Health Connect.</string>
+    <string name="demographics_save_failed">Your answers couldn\'t be saved. Please check your connection and try again.</string>
+    <string name="demographics_diagnosis_unknown">Don\'t know</string>
 </resources>

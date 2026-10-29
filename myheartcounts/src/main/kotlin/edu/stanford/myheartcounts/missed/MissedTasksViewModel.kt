@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.ui.ActionSource
@@ -70,7 +71,7 @@ class MissedTasksViewModel(
     private fun load() {
         layoutState.update { TaskListScreenState.Loading }
         viewModelScope.launch {
-            runCatching { observeMissedTasks() }
+            runCatchingAsync { observeMissedTasks() }
                 .onFailure { throwable ->
                     logger.e(throwable) { "Failed to load the missed tasks" }
                     layoutState.update { TaskListScreenState.Error(errorLayout()) }

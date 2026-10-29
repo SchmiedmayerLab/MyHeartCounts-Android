@@ -49,7 +49,6 @@ fun ConfigurationBuilder.mhcFirebase() {
         MHCFirebaseRegionInitializerImpl(
             firebaseLoader = dependency(),
             firebaseAppConfiguration = dependency(),
-            studyManager = dependency(),
         )
     }
 }

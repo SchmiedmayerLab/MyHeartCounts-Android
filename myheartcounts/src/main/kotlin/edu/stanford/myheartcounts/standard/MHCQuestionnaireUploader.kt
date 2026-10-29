@@ -13,6 +13,7 @@ import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import edu.stanford.myheartcounts.standard.health.FhirJson
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.hl7.fhir.r4.model.Questionnaire
 import org.hl7.fhir.r4.model.QuestionnaireResponse
 import java.util.UUID
@@ -52,16 +53,14 @@ class MHCQuestionnaireUploader(
     override suspend fun upload(
         response: QuestionnaireResponse,
         questionnaire: Questionnaire,
-    ): Result<Unit> = runCatching {
-        firestore.awaitReady()
-
+    ): Result<Unit> = runCatchingAsync {
         questionnaire.url?.let { response.setQuestionnaire(it) }
         response.extension.removeAll { it.url == MHCAppRevision.URL }
         response.addExtension(appRevision.toExtension())
 
         val documentId = response.identifier?.value?.takeIf { it.isNotBlank() }
             ?: UUID.randomUUID().toString()
-        firestore.questionnaireResponses
+        firestore.questionnaireResponses()
             .document(documentId)
             .set(FhirJson.toFirestoreMap(json = fhirParser.encodeResourceToString(response)))
             .await()

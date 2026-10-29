@@ -16,6 +16,7 @@ import androidx.health.connect.client.units.Pressure
 import androidx.health.connect.client.units.Velocity
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.standard.MHCAppRevision
+import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
 import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.DateTimeType
 import org.hl7.fhir.r4.model.Observation
@@ -31,12 +32,7 @@ class HealthObservationMapperTest {
     private val issuedAt: Instant = Instant.parse("2026-01-05T12:00:00Z")
     private val start: Instant = Instant.parse("2026-01-05T08:00:00Z")
     private val end: Instant = Instant.parse("2026-01-05T09:00:00Z")
-    private val appRevision = MHCAppRevision(
-        version = "1.2.3",
-        build = 42,
-        bundleIdentifier = "edu.stanford.myheartcounts",
-        osVersion = "14",
-    )
+    private val appRevision = MHCAppRevisionFixtures.create()
 
     @Test
     fun `it should map a steps record onto the LOINC code the backend defines`() {

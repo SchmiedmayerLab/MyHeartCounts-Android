@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.onboarding
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import edu.stanford.myheartcounts.onboarding.eligibility.Section
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
 import edu.stanford.myheartcounts.ui.ExternalLink
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.grovealliance.onboarding.OnboardingActions
 import org.grovealliance.onboarding.OnboardingInformation
 import org.grovealliance.onboarding.OnboardingLayout
 import org.grovealliance.onboarding.OnboardingTitle
@@ -33,6 +35,7 @@ import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StaticGroveScaffold
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.theme.Colors
 import org.junit.Test
 
 class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
@@ -67,6 +70,34 @@ class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
                     content = OnboardingInformation(areas = emptyList()),
                     wrapInScrollView = false,
                     footer = null,
+                ).Content(modifier = Modifier.fillMaxSize())
+            }
+        }
+    }
+
+    @Test
+    fun `OnboardingLayout reactivate account screenshot`() {
+        screenshot {
+            Scaffold {
+                OnboardingLayout(
+                    header = OnboardingTitle(
+                        icon = ImageResource(image = Icons.Outlined.AccountCircle),
+                        title = StringResource(MHCStrings.onboarding_reactivate_title),
+                        subtitle = StringResource(MHCStrings.onboarding_reactivate_subtitle),
+                    ),
+                    content = OnboardingInformation(areas = emptyList()),
+                    footer = OnboardingActions(
+                        primaryButton = AsyncTextButton(
+                            title = StringResource(MHCStrings.onboarding_reactivate_confirm),
+                            action = {},
+                        ),
+                        secondaryButton = AsyncTextButton(
+                            title = StringResource(MHCStrings.onboarding_reactivate_decline),
+                            containerColor = { Colors.transparent },
+                            textColor = { Colors.primary },
+                            action = {},
+                        ),
+                    ),
                 ).Content(modifier = Modifier.fillMaxSize())
             }
         }

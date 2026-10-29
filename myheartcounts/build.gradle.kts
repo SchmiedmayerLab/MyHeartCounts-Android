@@ -164,8 +164,11 @@ dependencies {
     // The bundle archive is unpacked in a unit test, which needs the desktop native libraries the
     // plain jar carries rather than the on-device ones in the AAR.
     testImplementation(libs.zstd.jni)
+    testImplementation(testFixtures(libs.grove.account))
     testImplementation(testFixtures(libs.grove.core.time))
+    testImplementation(testFixtures(libs.grove.firebase))
     testImplementation(testFixtures(libs.grove.foundation))
+    testImplementation(testFixtures(libs.grove.health))
     testImplementation(testFixtures(libs.grove.scheduler))
     testImplementation(testFixtures(libs.grove.study))
     testImplementation(testFixtures(libs.grove.study.definition))

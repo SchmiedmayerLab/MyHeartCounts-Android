@@ -7,7 +7,9 @@
 
 package edu.stanford.myheartcounts.account
 
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.model.OnboardingStep
+import edu.stanford.myheartcounts.model.StudyVariant
 import edu.stanford.myheartcounts.model.workout.NotificationTime
 import edu.stanford.myheartcounts.model.workout.WorkoutTypes
 import kotlinx.serialization.builtins.serializer
@@ -27,10 +29,20 @@ import java.time.Instant
 // Study & Enrollment
 
 /**
+ * The study variant the user takes part in.
+ */
+data object StudyVariantKey : ManualAccountKey<StudyVariant>(
+    identifier = FirebaseSchema.User.STUDY_VARIANT,
+    serializer = StudyVariant.serializer(),
+    initialValue = InitialValue.empty(StudyVariant.Stanford),
+    valueType = StudyVariant::class,
+)
+
+/**
  * Whether the user has withdrawn from the study.
  */
 data object HasWithdrawnFromStudyKey : ManualAccountKey<Boolean>(
-    identifier = "hasWithdrawnFromStudy",
+    identifier = FirebaseSchema.User.HAS_WITHDRAWN_FROM_STUDY,
     serializer = Boolean.serializer(),
     initialValue = InitialValue.empty(false),
     valueType = Boolean::class,
@@ -40,7 +52,7 @@ data object HasWithdrawnFromStudyKey : ManualAccountKey<Boolean>(
  * The date the user first enrolled in the study.
  */
 data object DateOfEnrollmentKey : ManualAccountKey<Instant>(
-    identifier = "dateOfEnrollment",
+    identifier = FirebaseSchema.User.DATE_OF_ENROLLMENT,
     serializer = InstantSerializer,
     initialValue = InitialValue.instant,
     valueType = Instant::class,
@@ -50,7 +62,7 @@ data object DateOfEnrollmentKey : ManualAccountKey<Instant>(
  * The version of the most recently signed consent document.
  */
 data object LastSignedConsentVersionKey : ManualAccountKey<String>(
-    identifier = "lastSignedConsentVersion",
+    identifier = FirebaseSchema.User.LAST_SIGNED_CONSENT_VERSION,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -60,7 +72,7 @@ data object LastSignedConsentVersionKey : ManualAccountKey<String>(
  * The date the consent document was most recently signed.
  */
 data object LastSignedConsentDateKey : ManualAccountKey<Instant>(
-    identifier = "lastSignedConsentDate",
+    identifier = FirebaseSchema.User.LAST_SIGNED_CONSENT_DATE,
     serializer = InstantSerializer,
     initialValue = InitialValue.instant,
     valueType = Instant::class,
@@ -70,7 +82,7 @@ data object LastSignedConsentDateKey : ManualAccountKey<Instant>(
  * Whether the user opted in to the coaching trial.
  */
 data object DidOptInToTrialKey : ManualAccountKey<Boolean>(
-    identifier = "didOptInToTrial",
+    identifier = FirebaseSchema.User.DID_OPT_IN_TO_TRIAL,
     serializer = Boolean.serializer(),
     initialValue = InitialValue.empty(false),
     valueType = Boolean::class,
@@ -80,7 +92,7 @@ data object DidOptInToTrialKey : ManualAccountKey<Boolean>(
  * The last date the user was active in the app.
  */
 data object LastActiveDateKey : ManualAccountKey<Instant>(
-    identifier = "lastActiveDate",
+    identifier = FirebaseSchema.User.LAST_ACTIVE_DATE,
     serializer = InstantSerializer,
     initialValue = InitialValue.instant,
     valueType = Instant::class,
@@ -90,7 +102,7 @@ data object LastActiveDateKey : ManualAccountKey<Instant>(
  * The user's preferred workout types.
  */
 data object PreferredWorkoutTypesKey : ManualAccountKey<WorkoutTypes>(
-    identifier = "preferredWorkoutTypes",
+    identifier = FirebaseSchema.User.PREFERRED_WORKOUT_TYPES,
     serializer = WorkoutTypes.serializer(),
     initialValue = InitialValue.default(WorkoutTypes(emptySet())),
     valueType = WorkoutTypes::class,
@@ -100,7 +112,7 @@ data object PreferredWorkoutTypesKey : ManualAccountKey<WorkoutTypes>(
  * The user's preferred time of day for nudge notifications.
  */
 data object PreferredNudgeNotificationTimeKey : ManualAccountKey<NotificationTime>(
-    identifier = "preferredNotificationTime",
+    identifier = FirebaseSchema.User.PREFERRED_NOTIFICATION_TIME,
     serializer = NotificationTime.serializer(),
     initialValue = InitialValue.empty(NotificationTime(hour = 0, minute = 0)),
     valueType = NotificationTime::class,
@@ -112,7 +124,7 @@ data object PreferredNudgeNotificationTimeKey : ManualAccountKey<NotificationTim
  * The Firebase Cloud Messaging token for push notifications.
  */
 data object FcmTokenKey : ManualAccountKey<String>(
-    identifier = "fcmToken",
+    identifier = FirebaseSchema.User.FCM_TOKEN,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -122,7 +134,7 @@ data object FcmTokenKey : ManualAccountKey<String>(
  * Whether the in-app debug mode is enabled.
  */
 data object EnableDebugModeKey : ManualAccountKey<Boolean>(
-    identifier = "enableAppDebugMode",
+    identifier = FirebaseSchema.User.ENABLE_APP_DEBUG_MODE,
     serializer = Boolean.serializer(),
     initialValue = InitialValue.empty(false),
     valueType = Boolean::class,
@@ -132,7 +144,7 @@ data object EnableDebugModeKey : ManualAccountKey<Boolean>(
  * The user's current time zone identifier.
  */
 data object TimeZoneKey : ManualAccountKey<String>(
-    identifier = "timeZone",
+    identifier = FirebaseSchema.User.TIME_ZONE,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -142,7 +154,7 @@ data object TimeZoneKey : ManualAccountKey<String>(
  * The user's current language.
  */
 data object LanguageKey : ManualAccountKey<String>(
-    identifier = "language",
+    identifier = FirebaseSchema.User.LANGUAGE,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -152,7 +164,7 @@ data object LanguageKey : ManualAccountKey<String>(
  * The user's preferred measurement system (e.g. metric / imperial).
  */
 data object PreferredMeasurementSystemKey : ManualAccountKey<String>(
-    identifier = "preferredMeasurementSystem",
+    identifier = FirebaseSchema.User.PREFERRED_MEASUREMENT_SYSTEM,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -162,7 +174,7 @@ data object PreferredMeasurementSystemKey : ManualAccountKey<String>(
  * Whether the user opted in to post-trial activity nudges.
  */
 data object PostTrialNudgesOptInKey : ManualAccountKey<Boolean>(
-    identifier = "extendedActivityNudgesOptIn",
+    identifier = FirebaseSchema.User.EXTENDED_ACTIVITY_NUDGES_OPT_IN,
     serializer = Boolean.serializer(),
     initialValue = InitialValue.empty(false),
     valueType = Boolean::class,
@@ -172,7 +184,7 @@ data object PostTrialNudgesOptInKey : ManualAccountKey<Boolean>(
  * The most recent onboarding step the user reached.
  */
 data object MostRecentOnboardingStepKey : ManualAccountKey<OnboardingStep>(
-    identifier = "mostRecentOnboardingStep",
+    identifier = FirebaseSchema.User.MOST_RECENT_ONBOARDING_STEP,
     serializer = OnboardingStep.serializer(),
     initialValue = InitialValue.default(OnboardingStep.WELCOME),
     valueType = OnboardingStep::class,
@@ -180,6 +192,7 @@ data object MostRecentOnboardingStepKey : ManualAccountKey<OnboardingStep>(
 
 // AccountKeys access
 
+val AccountKeys.studyVariant get() = StudyVariantKey
 val AccountKeys.hasWithdrawnFromStudy get() = HasWithdrawnFromStudyKey
 val AccountKeys.dateOfEnrollment get() = DateOfEnrollmentKey
 val AccountKeys.lastSignedConsentVersion get() = LastSignedConsentVersionKey
@@ -198,6 +211,7 @@ val AccountKeys.mostRecentOnboardingStep get() = MostRecentOnboardingStepKey
 
 // AccountDetails access
 
+val AccountDetails.studyVariant: StudyVariant? get() = this[StudyVariantKey::class]
 val AccountDetails.hasWithdrawnFromStudy: Boolean? get() = this[HasWithdrawnFromStudyKey::class]
 val AccountDetails.dateOfEnrollment: Instant? get() = this[DateOfEnrollmentKey::class]
 val AccountDetails.lastSignedConsentVersion: String? get() = this[LastSignedConsentVersionKey::class]

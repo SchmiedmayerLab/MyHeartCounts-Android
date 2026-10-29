@@ -16,13 +16,14 @@ import org.grovealliance.account.Account
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountModifications
 import org.grovealliance.core.Module
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.firebase.FirebaseAppConfiguration
 
 /**
  * Keeps `fcmToken` on the participant's account document in step with the device's actual token.
  *
  * The backend's `sendNudges` reads the token straight off the user document, so a stale one silently
- * stops that participant's nudges. Ports iOS's `NotificationsManager.setFCMToken`.
+ * stops that participant's nudges.
  */
 class MHCPushTokenSynchronizer(
     private val account: Account,
@@ -38,7 +39,7 @@ class MHCPushTokenSynchronizer(
      * instead.
      */
     suspend fun synchronize() {
-        runCatching {
+        runCatchingAsync {
             firebaseAppConfiguration.awaitConfigured()
             FirebaseMessaging.getInstance().token.await()
         }.onFailure { throwable ->

@@ -48,11 +48,11 @@ import java.time.Instant
 
 /**
  * Verifies that the account keys with non-trivial serializers survive a trip through Firestore, and
- * that they land under the wire identifiers iOS reads.
+ * that they land under the identifiers the shared participant document uses.
  *
- * This is the check the plan singled out as most likely to fail silently: "login works" passes while
- * an individual key quietly fails to encode, and nothing surfaces it until the study tries to analyze
- * a column that is empty for every Android participant.
+ * This is the check most likely to fail silently: "login works" passes while an individual key
+ * quietly fails to encode, and nothing surfaces it until the study tries to analyze a column that is
+ * empty for every Android participant.
  */
 @RunWith(AndroidJUnit4::class)
 class AccountKeyRoundTripTest {
@@ -89,12 +89,12 @@ class AccountKeyRoundTripTest {
         assertThat(document.get("referralSource")).isNotNull()
         assertThat(document.getDouble("heightInCM")).isEqualTo(HEIGHT_CM)
 
-        // Settled against iOS this session: the identifier is `ukPostcode`, not `ukPostcodePrefix`.
+        // The identifier is `ukPostcode`, not `ukPostcodePrefix`.
         assertThat(document.get("ukPostcode")).isEqualTo(UK_POSTCODE)
         assertThat(document.contains("ukPostcodePrefix")).isFalse()
 
-        // An Instant has to be a native Firestore timestamp, which is what the backend's converters
-        // and iOS both expect — a number here would decode as garbage on the other platform.
+        // An Instant has to be a native Firestore timestamp, which is what every reader of the
+        // document expects — a number here would decode as garbage elsewhere.
         assertThat(document.getTimestamp("dateOfEnrollment")?.toInstant()).isEqualTo(enrolledAt)
     }
 

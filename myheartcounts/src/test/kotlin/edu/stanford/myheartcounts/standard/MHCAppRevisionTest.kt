@@ -14,7 +14,7 @@ import org.junit.Test
 
 class MHCAppRevisionTest {
 
-    private val revision = MHCAppRevision(
+    private val revision = MHCAppRevisionFixtures.create(
         version = "4.2.1",
         build = 123,
         bundleIdentifier = "edu.stanford.myheartcounts",

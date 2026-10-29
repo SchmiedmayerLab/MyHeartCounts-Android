@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.home
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -27,7 +28,7 @@ data class HomeScreenContent(
     override fun Content(modifier: Modifier) {
         GroveScaffold(state = scaffoldState) {
             val layoutState by state.collectAsStateWithLifecycle()
-            layoutState.layout.Content(modifier)
+            layoutState.layout.Content(modifier = modifier.fillMaxSize())
         }
     }
 }

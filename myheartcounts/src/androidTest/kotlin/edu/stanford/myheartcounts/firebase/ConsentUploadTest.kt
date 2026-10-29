@@ -13,8 +13,9 @@ import com.google.firebase.storage.FirebaseStorage
 import edu.stanford.myheartcounts.account.didOptInToTrial
 import edu.stanford.myheartcounts.account.futureStudies
 import edu.stanford.myheartcounts.account.lastSignedConsentDate
+import edu.stanford.myheartcounts.account.lastSignedConsentVersion
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
-import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
+import edu.stanford.myheartcounts.standard.consent.MHCConsentHandler
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.consent.ConsentResponses
@@ -38,8 +39,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ConsentUploadTest {
 
-    private val uploader: MHCConsentUploader get() = requireDependency()
-    private val documentProvider: MHCConsentDocumentProvider get() = requireDependency()
+    private val consentHandler: MHCConsentHandler get() = requireDependency()
 
     @Before
     fun signIn() = runTest {
@@ -55,12 +55,10 @@ class ConsentUploadTest {
 
     @Test
     fun uploadsARenderedConsentPdfAndStampsTheAccount() = runTest {
-        val document = documentProvider.document()
-
-        uploader.upload(document = document, responses = responses()).getOrThrow()
+        consentHandler.upload(responses = responses()).getOrThrow()
 
         val consentFolder = FirebaseStorage.getInstance().reference
-            .child("users/${FirebaseTestSession.firestore.accountId}/consent")
+            .child("users/${FirebaseTestSession.firestore.accountId()}/consent")
         val uploaded = consentFolder.listAll().await().items
         assertThat(uploaded).hasSize(1)
 
@@ -69,10 +67,11 @@ class ConsentUploadTest {
         // A PDF header alone would fit in a handful of bytes; a real rendered document does not.
         assertThat(metadata.sizeBytes).isGreaterThan(MINIMUM_PLAUSIBLE_PDF_BYTES)
 
-        // The four custom metadata keys iOS writes, which the study reads the form back with.
+        // The four custom metadata keys the study reads the form back with.
         assertThat(metadata.getCustomMetadata("consentFormMetadata")).isNotNull()
         assertThat(metadata.getCustomMetadata("responses")).contains(SIGNATURE_ELEMENT_ID)
         assertThat(metadata.getCustomMetadata("date")).isNotNull()
+        assertThat(metadata.getCustomMetadata("version")).isEqualTo(CONSENT_VERSION)
 
         // The filename is a unix timestamp, which is what the read-back listing sorts on.
         assertThat(uploaded.single().name).matches("""\d+\.pdf""")
@@ -81,6 +80,7 @@ class ConsentUploadTest {
         // listener some time after the upload returned.
         val stamped = FirebaseTestSession.awaitDetails { it?.lastSignedConsentDate != null }
         assertThat(stamped?.lastSignedConsentDate).isNotNull()
+        assertThat(stamped?.lastSignedConsentVersion).isEqualTo(CONSENT_VERSION)
         assertThat(stamped?.futureStudies).isTrue()
         assertThat(stamped?.didOptInToTrial).isTrue()
     }
@@ -108,5 +108,6 @@ class ConsentUploadTest {
     private companion object {
         const val SIGNATURE_ELEMENT_ID = "participant-signature"
         const val MINIMUM_PLAUSIBLE_PDF_BYTES = 1_000L
+        const val CONSENT_VERSION = "0.1.0"
     }
 }

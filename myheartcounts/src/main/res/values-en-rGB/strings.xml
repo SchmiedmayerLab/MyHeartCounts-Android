@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+This source file is part of the My Heart Counts Android open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+-->
+
+<resources>
+    <string name="heart_health_score_footnote">Your personalised score reflects your overall health based on the factors listed below. Track it over time to see how lifestyle changes impact your heart health.</string>
+    <string name="participation_stats_explainer">Participation Stats cover all engagement and activity recorded since you first enrolled into the study.\n\nYour enrolment date is %1$s.</string>
+    <string name="achievement_initial_enrollment_description">Enrol into the study</string>
+    <string name="achievement_enrollment_duration_description">Cross %1$s of study enrolment</string>
+    <string name="onboarding_welcome_area_involvement">Your involvement helps Stanford researchers understand how personalised digital coaching can improve physical activity and your overall health today and in the future.</string>
+    <string name="onboarding_trial_component_subtitle">You have the option to enrol in a 2-week physical activity coaching trial. If you choose to join, you’ll experience both personalised and standard coaching messages for 7 days each, helping us learn which approaches better motivate healthy behaviours.</string>
+    <string name="onboarding_trial_component_learn_more">The optional trial uses a \"randomised crossover\" design where you\'ll experience both types of coaching interventions - personalised activity prompts and standard activity prompts - for 7 days each (total of 14 days). This will begin after the baseline monitoring week. The order in which you receive these interventions will be randomly assigned, similar to flipping a coin. This design allows researchers to compare how the different coaching approaches affect your activity levels while controlling for individual differences, as each participant serves as their own control. You can choose not to participate in this trial component and still be part of the main My Heart Counts study.</string>
+    <string name="onboarding_final_enrollment_area_tasks">Each day, you’ll see a personalised list of tasks in your dashboard. These typically take just 5–10 minutes to complete.</string>
+    <string name="onboarding_final_enrollment_area_collection">The app will begin collecting activity data from your phone and any connected wearable devices you’ve authorised.</string>
+    <string name="account_withdraw_confirm_message">Are you sure you want to withdraw from the My Heart Counts study?\nYou can re-enrol later if you choose.</string>
+    <string name="demographics_condition_transientischemicattack">Transient Ischaemic Attack (TIA)</string>
+</resources>

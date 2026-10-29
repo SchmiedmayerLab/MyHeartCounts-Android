@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.account
 
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCFirebaseEmulator
 import org.grovealliance.account.AccountKeys
 import org.grovealliance.account.accountConfiguration
@@ -26,7 +27,7 @@ fun ConfigurationBuilder.account() {
     accountConfiguration(
         // Email and password is the base `AccountService` path and needs no provider entry.
         // Anonymous sign-in exists only so participants in a region the study has not launched in
-        // yet can join the waitlist, matching iOS.
+        // yet can join the waitlist.
         service = {
             MHCAccountService.wrapping(
                 wrapped = FirebaseAccountService(
@@ -36,18 +37,17 @@ fun ConfigurationBuilder.account() {
                 ),
             )
         },
-        storageProvider = FirestoreAccountStorage(collectionPath = USERS_COLLECTION),
+        storageProvider = FirestoreAccountStorage(collectionPath = FirebaseSchema.Collection.USERS),
         configuration = {
             requires(key = AccountKeys.accountId)
-            collects(key = AccountKeys.name)
+            requires(key = AccountKeys.name)
             collects(key = AccountKeys.email)
             collects(key = AccountKeys.password)
-            collects(key = AccountKeys.dateOfBirth)
-            supports(key = AccountKeys.genderIdentity)
             manual(key = AccountKeys.userId)
 
             // My Heart Counts specific keys — all app-managed (manual).
             // Study & Enrollment
+            manual(key = AccountKeys.studyVariant)
             manual(key = AccountKeys.hasWithdrawnFromStudy)
             manual(key = AccountKeys.dateOfEnrollment)
             manual(key = AccountKeys.lastSignedConsentVersion)
@@ -65,6 +65,7 @@ fun ConfigurationBuilder.account() {
             manual(key = AccountKeys.postTrialNudgesOptIn)
             manual(key = AccountKeys.mostRecentOnboardingStep)
             // Demographics
+            manual(key = AccountKeys.dateOfBirth)
             manual(key = AccountKeys.usZipCodePrefix)
             manual(key = AccountKeys.ukPostcodePrefix)
             manual(key = AccountKeys.heightInCm)
@@ -88,9 +89,3 @@ fun ConfigurationBuilder.account() {
         },
     )
 }
-
-/**
- * The Firestore collection holding one account document per participant, shared with the iOS app
- * and the `MyHeartCounts-Firebase` backend.
- */
-const val USERS_COLLECTION = "users"

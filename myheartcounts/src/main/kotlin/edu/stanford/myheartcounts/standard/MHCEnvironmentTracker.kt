@@ -15,6 +15,7 @@ import edu.stanford.myheartcounts.account.LanguageKey
 import edu.stanford.myheartcounts.account.LastActiveDateKey
 import edu.stanford.myheartcounts.account.PreferredMeasurementSystemKey
 import edu.stanford.myheartcounts.account.TimeZoneKey
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
@@ -32,8 +33,7 @@ import java.util.TimeZone
  *
  * The study uses these to interpret the data a participant sends: `timeZone` places their samples on
  * a local clock, `lastActiveDate` says when they last opened the app, and `language` and
- * `preferredMeasurementSystem` say how their answers were presented to them. Ports iOS's
- * `EnvironmentTracking`.
+ * `preferredMeasurementSystem` say how their answers were presented to them.
  */
 class MHCEnvironmentTracker(
     private val context: Context,
@@ -84,8 +84,7 @@ class MHCEnvironmentTracker(
      * The broadcasts and lifecycle events above only fire on a *change*, so without this a
      * participant whose device settings never change afterwards would have no `timeZone` or
      * `language` recorded at all. It matters most right after a sign-in: [start] runs once, early,
-     * and everything it pushes then is dropped because nobody is signed in yet. iOS calls its
-     * `triggerAll` for the same reason.
+     * and everything it pushes then is dropped because nobody is signed in yet.
      */
     suspend fun pushAll() {
         recordLastActive()
@@ -130,13 +129,13 @@ class MHCEnvironmentTracker(
          * Liberia and Myanmar, `uksystem` for the United Kingdom, and `metric` everywhere else.
          */
         fun measurementSystem(locale: Locale): String = when (locale.country) {
-            "US", "LR", "MM" -> "ussystem"
-            "GB" -> "uksystem"
-            else -> "metric"
+            "US", "LR", "MM" -> FirebaseSchema.MeasurementSystem.US
+            "GB" -> FirebaseSchema.MeasurementSystem.UK
+            else -> FirebaseSchema.MeasurementSystem.METRIC
         }
 
         /**
-         * Matches iOS, which falls back to English when the locale carries no language code.
+         * The language recorded when the locale carries no language code.
          */
         private const val FALLBACK_LANGUAGE = "en"
     }

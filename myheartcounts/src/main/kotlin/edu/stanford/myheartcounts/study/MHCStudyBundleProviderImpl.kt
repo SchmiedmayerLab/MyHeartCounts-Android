@@ -15,6 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.study.StudyManager
 import org.grovealliance.studydefinition.StudyBundle
@@ -52,7 +53,7 @@ class MHCStudyBundleProviderImpl(
     override suspend fun get(): Result<StudyBundle> {
         val load = mutex.withLock {
             loaded?.let { return Result.success(it) }
-            pendingLoad ?: scope.async { runCatching { unpack() } }.also { pendingLoad = it }
+            pendingLoad ?: scope.async { runCatchingAsync { unpack() } }.also { pendingLoad = it }
         }
 
         val result = load.await()

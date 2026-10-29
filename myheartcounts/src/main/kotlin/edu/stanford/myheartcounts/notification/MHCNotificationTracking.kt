@@ -8,10 +8,12 @@
 package edu.stanford.myheartcounts.notification
 
 import com.google.firebase.Timestamp
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.time.TimeProvider
 import java.util.TimeZone
 import java.util.UUID
@@ -19,7 +21,7 @@ import java.util.UUID
 /**
  * Records that the participant acted on a notification, so the study can tell which nudges landed.
  *
- * Ports iOS's `NotificationTracking`, writing the same document shape into the same collection.
+ * Each interaction is one document in the participant's notification tracking collection.
  */
 class MHCNotificationTracking(
     private val firestore: MHCFirestore,
@@ -35,29 +37,21 @@ class MHCNotificationTracking(
      * @param payload Anything else the notification carried, kept verbatim for later analysis.
      */
     suspend fun trackDidOpen(notificationId: String, payload: Map<String, String> = emptyMap()) {
-        runCatching {
-            firestore.awaitReady()
-            firestore.notificationTracking
+        runCatchingAsync {
+            firestore.notificationTracking()
                 .document(UUID.randomUUID().toString())
                 .set(
                     mapOf(
-                        "timestamp" to Timestamp(timeProvider.nowInstant().epochSecond, 0),
-                        "timeZone" to TimeZone.getDefault().id,
-                        "event" to EVENT_OPENED,
-                        "notificationId" to notificationId,
-                        "additionalStuff" to payload.toString(),
+                        FirebaseSchema.NotificationTracking.TIMESTAMP to Timestamp(timeProvider.nowInstant().epochSecond, 0),
+                        FirebaseSchema.NotificationTracking.TIME_ZONE to TimeZone.getDefault().id,
+                        FirebaseSchema.NotificationTracking.EVENT to FirebaseSchema.NotificationTracking.EVENT_OPENED,
+                        FirebaseSchema.NotificationTracking.NOTIFICATION_ID to notificationId,
+                        FirebaseSchema.NotificationTracking.ADDITIONAL_STUFF to payload.toString(),
                     ),
                 )
                 .await()
         }.onFailure { throwable ->
             logger.e(throwable) { "Failed to record that notification '$notificationId' was opened." }
         }
-    }
-
-    private companion object {
-        /**
-         * The only event either platform records today. Matches iOS's `TrackedNotificationEvent`.
-         */
-        const val EVENT_OPENED = "opened"
     }
 }

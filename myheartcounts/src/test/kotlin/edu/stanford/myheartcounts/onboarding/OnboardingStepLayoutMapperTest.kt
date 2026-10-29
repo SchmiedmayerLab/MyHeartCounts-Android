@@ -12,10 +12,15 @@ import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.onboarding.comprehension.ConsentSurveyLayoutMapperImpl
 import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapperImpl
+import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
+import edu.stanford.myheartcounts.ui.FootnoteLink
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import org.grovealliance.consent.ConsentFormState
+import org.grovealliance.consent.ConsentResponses
 import org.grovealliance.health.HealthConnectAvailability
+import org.grovealliance.onboarding.OnboardingInformation
 import org.grovealliance.onboarding.OnboardingLayout
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.StringResource
@@ -111,17 +116,180 @@ class OnboardingStepLayoutMapperTest {
         )
     }
 
+    @Test
+    fun `it should offer reactivating or declining on the reactivation step`() {
+        // when
+        val layout = layout(step = OnboardingStep.ReactivateAccount)
+
+        // then
+        assertThat(layout.header?.title).isEqualTo(StringResource(MHCStrings.onboarding_reactivate_title))
+        assertThat(layout.footer?.primaryButton?.title).isEqualTo(StringResource(MHCStrings.onboarding_reactivate_confirm))
+        assertThat(layout.footer?.secondaryButton?.title).isEqualTo(StringResource(MHCStrings.onboarding_reactivate_decline))
+    }
+
+    @Test
+    fun `it should continue with the step when reactivating`() = runTest {
+        // given
+        val layout = layout(step = OnboardingStep.ReactivateAccount)
+
+        // when
+        layout.footer?.primaryButton?.action?.invoke()
+
+        // then
+        assertThat(advancedSteps).containsExactly(OnboardingStep.ReactivateAccount)
+        assertThat(pushedActions).isEmpty()
+    }
+
+    @Test
+    fun `it should report declining the reactivation`() = runTest {
+        // given
+        val layout = layout(step = OnboardingStep.ReactivateAccount)
+
+        // when
+        layout.footer?.secondaryButton?.action?.invoke()
+
+        // then
+        assertThat(pushedActions).containsExactly(OnboardingAction.ReactivationDeclined)
+        assertThat(advancedSteps).isEmpty()
+    }
+
+    @Test
+    fun `it should mention the trial on the final step when the participant opted in`() {
+        // when
+        val layout = layout(
+            step = OnboardingStep.FinalEnrollment,
+            answers = answers(trialOption = MHCConsentDocumentProvider.ID_TRIAL_YES),
+        )
+
+        // then
+        assertThat(layout.areaDescriptions()).contains(StringResource(MHCStrings.onboarding_final_enrollment_area_trial))
+    }
+
+    @Test
+    fun `it should not mention the trial on the final step when the participant declined it`() {
+        // when
+        val layout = layout(
+            step = OnboardingStep.FinalEnrollment,
+            answers = answers(trialOption = "short-term-physical-activity-trial-no"),
+        )
+
+        // then
+        assertThat(layout.areaDescriptions()).doesNotContain(StringResource(MHCStrings.onboarding_final_enrollment_area_trial))
+        assertThat(layout.areaDescriptions()).hasSize(4)
+    }
+
+    @Test
+    fun `it should not mention the trial on the final step without a signed consent`() {
+        // when
+        val layout = layout(step = OnboardingStep.FinalEnrollment)
+
+        // then
+        assertThat(layout.areaDescriptions()).doesNotContain(StringResource(MHCStrings.onboarding_final_enrollment_area_trial))
+    }
+
+    @Test
+    fun `it should report opening the privacy policy from the login step`() {
+        // given
+        val step = mapper.map(input(step = OnboardingStep.Login)) as LoginStep
+
+        // when
+        (step.footer as FootnoteLink).onClicked()
+
+        // then
+        assertThat(pushedActions).containsExactly(OnboardingAction.OpenPrivacyPolicy)
+    }
+
+    @Test
+    fun `it should report consent form changes from the consent step`() {
+        // given
+        val step = mapper.map(input(step = OnboardingStep.Consent)) as ConsentStep
+        val state = ConsentFormState(
+            responses = ConsentResponses(
+                toggles = emptyMap(),
+                selects = emptyMap(),
+                signatures = emptyMap(),
+            ),
+            isComplete = true,
+        )
+
+        // when
+        step.onFormChanged(state)
+
+        // then
+        assertThat(pushedActions).containsExactly(OnboardingAction.ConsentFormChanged(state = state))
+    }
+
     private fun healthAccessLayout(availability: HealthConnectAvailability): OnboardingLayout =
         mapper.map(input(availability = availability)) as OnboardingLayout
 
-    private fun input(availability: HealthConnectAvailability) = OnboardingStepInput(
-        step = OnboardingStep.HealthAccess,
+    private fun layout(
+        step: OnboardingStep,
+        answers: OnboardingAnswers = OnboardingAnswers.default,
+    ): OnboardingLayout =
+        mapper.map(
+            input(
+                step = step,
+                answers = answers,
+            ),
+        ) as OnboardingLayout
+
+    @Test
+    fun `it should keep the demographics continue button disabled until the answers are complete`() {
+        // when
+        val step = mapper.map(
+            input = input(
+                step = OnboardingStep.Demographics,
+                isDemographicsComplete = false,
+            ),
+        ) as DemographicsStep
+
+        // then
+        assertThat(step.continueButton.value.enabled).isFalse()
+    }
+
+    @Test
+    fun `it should continue from the demographics once the answers are complete`() = runTest {
+        // given
+        val step = mapper.map(
+            input = input(
+                step = OnboardingStep.Demographics,
+                isDemographicsComplete = true,
+            ),
+        ) as DemographicsStep
+
+        // when
+        step.continueButton.value.action()
+
+        // then
+        assertThat(step.continueButton.value.enabled).isTrue()
+        assertThat(advancedSteps).containsExactly(OnboardingStep.Demographics)
+    }
+
+    private fun OnboardingLayout.areaDescriptions() =
+        (content as OnboardingInformation).areas.map { it.description }
+
+    private fun answers(trialOption: String) = OnboardingAnswers.default.copy(
+        consentResponses = ConsentResponses(
+            toggles = emptyMap(),
+            selects = mapOf(MHCConsentDocumentProvider.ID_TRIAL_OPT_IN to trialOption),
+            signatures = emptyMap(),
+        ),
+    )
+
+    private fun input(
+        availability: HealthConnectAvailability = HealthConnectAvailability.Available,
+        step: OnboardingStep = OnboardingStep.HealthAccess,
+        answers: OnboardingAnswers = OnboardingAnswers.default,
+        isDemographicsComplete: Boolean = false,
+    ) = OnboardingStepInput(
+        step = step,
         scope = TestScope(),
         advance = { advancedSteps.add(it) },
-        answers = MutableStateFlow(OnboardingAnswers.default),
+        answers = MutableStateFlow(answers),
         waitlistEmail = MutableStateFlow(""),
         countries = emptyList(),
         healthConnectAvailability = availability,
+        isDemographicsComplete = MutableStateFlow(isDemographicsComplete),
         actionSink = actionSink,
     )
 }

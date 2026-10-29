@@ -21,12 +21,18 @@ import org.hl7.fhir.r4.model.StringType
  * @param build The app's version code.
  * @param bundleIdentifier The app's application id.
  * @param osVersion The operating system release the app runs on, as the system reports it.
+ * @param deviceModel The consumer-facing name of the device the app runs on, e.g. `Pixel 8`. Not
+ * part of the extension.
+ * @param deviceType The hardware identifier of the device the app runs on. Not part of the
+ * extension.
  */
 data class MHCAppRevision(
     val version: String,
     val build: Int,
     val bundleIdentifier: String,
     val osVersion: String,
+    val deviceModel: String,
+    val deviceType: String,
 ) {
 
     /**

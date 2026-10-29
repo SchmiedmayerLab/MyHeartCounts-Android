@@ -77,7 +77,7 @@ class HealthUploadTest {
 
         // The fresh sample must still be held back rather than swept along with the old one.
         val remaining = staging.observations().observationsReadyForUpload(
-            accountId = FirebaseTestSession.firestore.accountId,
+            accountId = FirebaseTestSession.firestore.accountId(),
             sampleTypeIdentifier = "HKQuantityTypeIdentifierStepCount",
             cutoffMillis = Long.MAX_VALUE,
             limit = 10,
@@ -141,7 +141,7 @@ class HealthUploadTest {
 
         assertThat(archivesIn(folder = "healthDeletions")).isEmpty()
         val remaining = staging.observations().observationsReadyForUpload(
-            accountId = FirebaseTestSession.firestore.accountId,
+            accountId = FirebaseTestSession.firestore.accountId(),
             sampleTypeIdentifier = "HKQuantityTypeIdentifierHeartRate",
             cutoffMillis = Long.MAX_VALUE,
             limit = 10,
@@ -166,7 +166,7 @@ class HealthUploadTest {
     }
 
     private suspend fun archivesIn(folder: String) = FirebaseStorage.getInstance().reference
-        .child("users/${FirebaseTestSession.firestore.accountId}/$folder")
+        .child("users/${FirebaseTestSession.firestore.accountId()}/$folder")
         .listAll()
         .await()
         .items

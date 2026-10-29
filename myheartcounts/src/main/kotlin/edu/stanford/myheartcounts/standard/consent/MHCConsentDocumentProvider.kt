@@ -8,9 +8,9 @@
 package edu.stanford.myheartcounts.standard.consent
 
 import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
+import edu.stanford.myheartcounts.study.StudyVariantProvider
 import org.grovealliance.core.Module
 import org.grovealliance.markdown.MarkdownDocument
-import java.util.Locale
 
 /**
  * The consent document the study ships, as text for Grove's consent screen and as a parsed
@@ -20,16 +20,18 @@ import java.util.Locale
  */
 class MHCConsentDocumentProvider(
     private val studyBundleProvider: MHCStudyBundleProvider,
+    private val variantProvider: StudyVariantProvider,
 ) : Module {
 
     /**
-     * The consent markdown for [locale], as Grove's consent configuration consumes it.
+     * The consent markdown in the [StudyVariantProvider.contentLocale], as Grove's consent
+     * configuration consumes it.
      *
      * @throws IllegalArgumentException if the study bundle carries no consent document.
      */
-    suspend fun text(locale: Locale = Locale.getDefault()): String {
+    suspend fun text(): String {
         val bundle = studyBundleProvider.get().getOrThrow()
-        return requireNotNull(bundle.consentText(locale = locale)) {
+        return requireNotNull(bundle.consentText(locale = variantProvider.contentLocale())) {
             "The study bundle carries no consent document."
         }
     }
@@ -38,9 +40,9 @@ class MHCConsentDocumentProvider(
      * The consent document parsed into frontmatter and blocks, with the interactive elements
      * extracted rather than left as literal markup.
      */
-    suspend fun document(locale: Locale = Locale.getDefault()): MarkdownDocument =
+    suspend fun document(): MarkdownDocument =
         MarkdownDocument.process(
-            text = text(locale = locale),
+            text = text(),
             customElementNames = CONSENT_ELEMENT_NAMES,
         )
 

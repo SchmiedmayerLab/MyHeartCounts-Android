@@ -8,6 +8,7 @@
 package edu.stanford.myheartcounts.navigation
 
 import androidx.navigation3.runtime.NavKey
+import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
 import kotlinx.serialization.Serializable
 import org.grovealliance.ui.EventSink
 import org.grovealliance.ui.EventSourceFlow
@@ -68,6 +69,31 @@ sealed interface NavigationEvent {
     data class OpenUrl(val url: String) : NavigationEvent
 
     /**
+     * Opens the homepage of the participant's study variant in an external browser.
+     */
+    data object OpenStudyHomepage : NavigationEvent
+
+    /**
+     * Opens the privacy policy of the participant's study variant in an external browser.
+     */
+    data object OpenPrivacyPolicy : NavigationEvent
+
+    /**
+     * Offers the file at the content [uri], of [mimeType], to other apps through the system share
+     * sheet.
+     */
+    data class ShareFile(
+        val uri: String,
+        val mimeType: String,
+    ) : NavigationEvent
+
+    /**
+     * Relaunches the app in a new process, so that state read at startup, such as feature flags,
+     * is read again.
+     */
+    data object RestartApp : NavigationEvent
+
+    /**
      * Navigates to a specific route by pushing it onto the back stack
      */
     data class NavigateTo(val route: MHCRoute) : NavigationEvent
@@ -112,6 +138,12 @@ sealed interface MHCRoute : NavKey {
     data object AccountOverview : MHCRoute
 
     /**
+     * The participant's editable demographic information.
+     */
+    @Serializable
+    data object Demographics : MHCRoute
+
+    /**
      * The task being performed, shown over the active root phase.
      */
     @Serializable
@@ -122,4 +154,29 @@ sealed interface MHCRoute : NavKey {
      */
     @Serializable
     data object MissedTasks : MHCRoute
+
+    /**
+     * The details of one [component] of the participant's heart health score, shown over the study
+     * phase.
+     */
+    @Serializable
+    data class HeartScoreDetail(val component: HeartScoreComponent) : MHCRoute
+
+    /**
+     * A new measurement for a score component.
+     */
+    @Serializable
+    data class HeartScoreEntry(val component: HeartScoreComponent) : MHCRoute
+
+    /**
+     * The participant's study participation statistics, shown over the study phase.
+     */
+    @Serializable
+    data object ParticipationStats : MHCRoute
+
+    /**
+     * The participant's past timed walking and running test results.
+     */
+    @Serializable
+    data object PastTimedWalkTestResults : MHCRoute
 }

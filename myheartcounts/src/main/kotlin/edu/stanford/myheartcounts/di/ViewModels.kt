@@ -10,9 +10,14 @@ package edu.stanford.myheartcounts.di
 import edu.stanford.myheartcounts.MainActivityViewModel
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
+import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailViewModel
+import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryViewModel
+import edu.stanford.myheartcounts.dashboard.pastdata.PastTimedWalkTestResultsViewModel
+import edu.stanford.myheartcounts.demographics.DemographicsViewModel
 import edu.stanford.myheartcounts.home.HomeViewModel
 import edu.stanford.myheartcounts.missed.MissedTasksViewModel
 import edu.stanford.myheartcounts.onboarding.OnboardingViewModel
+import edu.stanford.myheartcounts.stats.ParticipationStatsViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
 import edu.stanford.myheartcounts.task.PerformTaskViewModel
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksViewModel
@@ -43,20 +48,37 @@ fun ConfigurationBuilder.appViewModels() {
             firebaseRegionInitializer = dependency(),
             cloudFunctions = dependency(),
             accountService = dependency(),
-            consentUploader = dependency(),
-            consentDocumentProvider = dependency(),
+            consentHandler = dependency(),
             onboardingCompletion = dependency(),
             healthAccess = dependency(),
+            onboardingProgressTracker = dependency(),
+            featureFlags = dependency(),
+            demographicsEditor = dependency(),
+            variantProvider = dependency(),
         )
     }
     viewModel {
         MHCAccountOverviewViewModel(
             navigator = dependency(),
             studyWithdrawal = dependency(),
+            postTrialNudges = dependency(),
+            feedback = dependency(),
             mapper = dependency(),
         )
     }
+    viewModel {
+        DemographicsViewModel(
+            savedStateHandle = savedStateHandle(),
+            layoutMapper = dependency(),
+            pickerMapper = dependency(),
+            choiceSheetMapper = dependency(),
+            editor = dependency(),
+            autofill = dependency(),
+            navigator = dependency(),
+        )
+    }
     studyViewModels()
+    dashboardViewModels()
 }
 
 /**
@@ -104,9 +126,53 @@ private fun ConfigurationBuilder.studyViewModels() {
             eventPerformer = dependency(),
         )
     }
+}
+
+/**
+ * Registers the ViewModels of the Heart Health tab and the screens it opens: a score's details and the
+ * participation statistics with their achievements.
+ */
+private fun ConfigurationBuilder.dashboardViewModels() {
     viewModel {
         HeartHealthViewModel(
             studyAppBarProvider = dependency(),
+            navigator = dependency(),
+            scoreSource = dependency(),
+            explainerSource = dependency(),
+            mapper = dependency(),
+        )
+    }
+    viewModel {
+        HeartScoreDetailViewModel(
+            savedStateHandle = savedStateHandle(),
+            navigator = dependency(),
+            scoreSource = dependency(),
+            chartSource = dependency(),
+            explainerSource = dependency(),
+            mapper = dependency(),
+            chartMapper = dependency(),
+            debugSource = dependency(),
+            questionnaires = dependency(),
+            taskPerformer = dependency(),
+            ioDispatcher = dependency<Concurrency>().ioDispatcher(),
+        )
+    }
+    viewModel {
+        HeartScoreEntryViewModel(
+            savedStateHandle = savedStateHandle(),
+            navigator = dependency(),
+            writer = dependency(),
+            healthAccess = dependency(),
+            account = dependency(),
+            timeProvider = dependency(),
+            mapper = dependency(),
+        )
+    }
+    viewModel { PastTimedWalkTestResultsViewModel(navigator = dependency()) }
+    viewModel {
+        ParticipationStatsViewModel(
+            navigator = dependency(),
+            mapper = dependency(),
         )
     }
 }
