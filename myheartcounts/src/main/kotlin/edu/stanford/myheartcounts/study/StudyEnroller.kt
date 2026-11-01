@@ -12,6 +12,7 @@ import edu.stanford.myheartcounts.account.dateOfEnrollment
 import org.grovealliance.account.Account
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountModifications
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.study.StudyEnrollmentException
@@ -43,7 +44,7 @@ class StudyEnrollerImpl(
 ) : StudyEnroller {
     private val logger by groveLogger()
 
-    override suspend fun enroll(): Result<Unit> = runCatching {
+    override suspend fun enroll(): Result<Unit> = runCatchingAsync {
         val bundle = studyBundleProvider.get().getOrThrow()
 
         val knownEnrollmentDate = account.details.value?.dateOfEnrollment

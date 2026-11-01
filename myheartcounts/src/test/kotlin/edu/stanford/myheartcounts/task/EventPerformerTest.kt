@@ -10,9 +10,12 @@ package edu.stanford.myheartcounts.task
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.study.FakeStudyArticleSource
 import edu.stanford.myheartcounts.study.FakeStudyQuestionnaireSource
+import edu.stanford.myheartcounts.study.FakeStudyVariantProvider
+import edu.stanford.myheartcounts.ui.ArticleMapperImpl
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.core.coroutines.CoroutinesLauncher
+import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.scheduler.Event
 import org.grovealliance.scheduler.FakeScheduler
 import org.grovealliance.scheduler.TaskContext
@@ -31,6 +34,10 @@ class EventPerformerTest {
     private val scheduler = FakeScheduler()
     private val performer = EventPerformerImpl(
         articleSource = FakeStudyArticleSource(),
+        articleMapper = ArticleMapperImpl(
+            timeProvider = FakeTimeProvider(),
+            variantProvider = FakeStudyVariantProvider(),
+        ),
         questionnaireSource = questionnaireSource,
         taskPerformer = taskPerformer,
         scheduler = scheduler,

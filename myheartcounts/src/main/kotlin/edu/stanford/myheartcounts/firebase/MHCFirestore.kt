@@ -10,77 +10,65 @@ package edu.stanford.myheartcounts.firebase
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import edu.stanford.myheartcounts.account.USERS_COLLECTION
 import org.grovealliance.account.Account
 import org.grovealliance.account.accountId
 import org.grovealliance.core.Module
-import org.grovealliance.core.dependency
 import org.grovealliance.firebase.FirebaseAppConfiguration
 
 /**
- * Resolves the Firestore locations the app reads and writes, all of them below the signed-in
- * participant's document.
- *
- * The layout is shared with My Heart Counts for iOS and the `MyHeartCounts-Firebase` backend, so
- * the paths here are a contract rather than an implementation detail. This mirrors iOS's
- * `FirebaseConfiguration`.
- *
- * Every accessor needs a signed-in participant and an initialized Firebase app, so a caller has to
- * be behind [awaitReady] — which is why the gate lives here rather than being something each caller
- * has to remember to hold separately.
+ * Resolves the signed-in participant's Firestore locations, waiting for Firebase initialization
+ * internally before returning a reference or account identifier.
  */
-class MHCFirestore : Module {
-
-    private val account by dependency<Account>()
-    private val firebaseAppConfiguration by dependency<FirebaseAppConfiguration>()
-
-    /**
-     * Suspends until Firebase is initialized and the accessors below are safe to use.
-     *
-     * On a first launch that is only once the participant has picked their region during onboarding,
-     * because that is what decides which Firebase project the app talks to.
-     */
-    suspend fun awaitReady() {
-        firebaseAppConfiguration.awaitConfigured()
-    }
+class MHCFirestore(
+    private val account: Account,
+    private val firebaseAppConfiguration: FirebaseAppConfiguration,
+) : Module {
 
     /**
      * The identifier of the signed-in participant.
      *
      * @throws MHCFirebaseError.NotSignedIn if nobody is signed in.
      */
-    val accountId: String
-        get() = account.details.value?.accountId ?: throw MHCFirebaseError.NotSignedIn()
+    suspend fun accountId(): String {
+        firebaseAppConfiguration.awaitConfigured()
+        return account.details.value?.accountId ?: throw MHCFirebaseError.NotSignedIn()
+    }
 
     /**
      * The collection holding one document per participant.
      */
-    val usersCollection: CollectionReference
-        get() = FirebaseFirestore.getInstance().collection(USERS_COLLECTION)
+    suspend fun usersCollection(): CollectionReference {
+        firebaseAppConfiguration.awaitConfigured()
+        return FirebaseFirestore.getInstance().collection(FirebaseSchema.Collection.USERS)
+    }
 
     /**
      * The signed-in participant's document.
      */
-    val userDocument: DocumentReference
-        get() = usersCollection.document(accountId)
+    suspend fun userDocument(): DocumentReference = usersCollection().document(accountId())
 
     /**
      * The participant's questionnaire responses, stored as FHIR `QuestionnaireResponse` documents.
      */
-    val questionnaireResponses: CollectionReference
-        get() = userDocument.collection(QUESTIONNAIRE_RESPONSES_COLLECTION)
+    suspend fun questionnaireResponses(): CollectionReference = userDocument().collection(FirebaseSchema.Collection.QUESTIONNAIRE_RESPONSES)
 
     /**
      * Records of the participant interacting with a notification.
      */
-    val notificationTracking: CollectionReference
-        get() = userDocument.collection(NOTIFICATION_TRACKING_COLLECTION)
+    suspend fun notificationTracking(): CollectionReference = userDocument().collection(FirebaseSchema.Collection.NOTIFICATION_TRACKING)
 
     /**
      * The notifications the backend has sent the participant. Server-written and read-only here.
      */
-    val notificationHistory: CollectionReference
-        get() = userDocument.collection(NOTIFICATION_HISTORY_COLLECTION)
+    suspend fun notificationHistory(): CollectionReference = userDocument().collection(FirebaseSchema.Collection.NOTIFICATION_HISTORY)
+
+    /**
+     * The collection participants' feedback is written to, one document per message.
+     */
+    suspend fun feedback(): CollectionReference {
+        firebaseAppConfiguration.awaitConfigured()
+        return FirebaseFirestore.getInstance().collection(FirebaseSchema.Collection.FEEDBACK)
+    }
 
     /**
      * The collection holding the FHIR `Observation`s for one health sample type.
@@ -92,13 +80,15 @@ class MHCFirestore : Module {
      * @param sampleTypeIdentifier A HealthKit-style sample type identifier, such as
      * `HKQuantityTypeIdentifierStepCount`.
      */
-    fun healthObservations(sampleTypeIdentifier: String): CollectionReference =
-        userDocument.collection("$HEALTH_OBSERVATIONS_PREFIX$sampleTypeIdentifier")
+    suspend fun healthObservations(sampleTypeIdentifier: String): CollectionReference =
+        userDocument().collection("${FirebaseSchema.Collection.HEALTH_OBSERVATIONS_PREFIX}$sampleTypeIdentifier")
 
-    private companion object {
-        const val QUESTIONNAIRE_RESPONSES_COLLECTION = "questionnaireResponses"
-        const val NOTIFICATION_TRACKING_COLLECTION = "notificationTracking"
-        const val NOTIFICATION_HISTORY_COLLECTION = "notificationHistory"
-        const val HEALTH_OBSERVATIONS_PREFIX = "HealthObservations_"
-    }
+    /**
+     * The participant's monthly statistics documents of one metric, each named after its month as
+     * `yyyy-MM`.
+     */
+    suspend fun healthStatsMonths(metricId: String): CollectionReference =
+        userDocument().collection(FirebaseSchema.Collection.STATS)
+            .document(metricId)
+            .collection(FirebaseSchema.Collection.STATS_MONTHS)
 }

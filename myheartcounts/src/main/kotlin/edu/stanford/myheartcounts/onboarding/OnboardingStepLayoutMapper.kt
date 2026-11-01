@@ -13,6 +13,7 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.CompareArrows
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Balance
@@ -34,6 +35,10 @@ import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.onboarding.eligibility.EmailField
 import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
 import edu.stanford.myheartcounts.ui.ExternalLink
+import edu.stanford.myheartcounts.ui.FootnoteLink
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.health.HealthConnectAvailability
 import org.grovealliance.onboarding.OnboardingActions
 import org.grovealliance.onboarding.OnboardingArea
@@ -86,7 +91,13 @@ class OnboardingStepLayoutMapperImpl(
         OnboardingStep.Login -> LoginStep(
             onSuccess = { input.push(OnboardingAction.Next) },
             onDismiss = { input.push(OnboardingAction.Previous) },
+            footer = FootnoteLink(
+                text = StringResource(MHCStrings.onboarding_login_privacy_policy),
+                onClicked = { input.push(OnboardingAction.OpenPrivacyPolicy) },
+            ),
         )
+
+        OnboardingStep.ReactivateAccount -> reactivateAccount(input)
 
         OnboardingStep.TrialComponent -> infoStep(
             input = input,
@@ -122,11 +133,13 @@ class OnboardingStepLayoutMapperImpl(
                 )
                 input.advance(input.step)
             },
+            onFormChanged = { input.push(OnboardingAction.ConsentFormChanged(state = it)) },
         )
 
         OnboardingStep.HealthAccess -> healthAccessStep(input)
 
         OnboardingStep.Notifications -> notificationStep(input = input)
+        OnboardingStep.Demographics -> demographicsStep(input = input)
         OnboardingStep.FinalEnrollment -> finalEnrollment(input)
     }
 
@@ -221,7 +234,7 @@ class OnboardingStepLayoutMapperImpl(
             subtitle = StringResource(MHCStrings.onboarding_final_enrollment_subtitle),
         ),
         content = OnboardingInformation(
-            areas = listOf(
+            areas = listOfNotNull(
                 OnboardingArea(
                     icon = ImageResource(image = Icons.Outlined.CalendarMonth),
                     title = null,
@@ -241,7 +254,7 @@ class OnboardingStepLayoutMapperImpl(
                     icon = ImageResource(image = Icons.AutoMirrored.Outlined.CompareArrows),
                     title = null,
                     description = StringResource(MHCStrings.onboarding_final_enrollment_area_trial),
-                ),
+                ).takeIf { input.answers.value.optedIntoTrial },
                 OnboardingArea(
                     icon = ImageResource(image = Icons.Outlined.Favorite),
                     title = null,
@@ -329,6 +342,32 @@ class OnboardingStepLayoutMapperImpl(
             )
         }
 
+    /**
+     * Asks a participant who withdrew from the study earlier whether to reactivate their account.
+     * Reactivating continues the flow; declining signs them out.
+     */
+    private fun reactivateAccount(input: OnboardingStepInput): OnboardingLayout = OnboardingLayout(
+        header = OnboardingTitle(
+            icon = ImageResource(image = Icons.Outlined.AccountCircle),
+            title = StringResource(MHCStrings.onboarding_reactivate_title),
+            subtitle = StringResource(MHCStrings.onboarding_reactivate_subtitle),
+        ),
+        content = OnboardingInformation(areas = emptyList()),
+        footer = OnboardingActions(
+            primaryButton = AsyncTextButton(
+                title = StringResource(MHCStrings.onboarding_reactivate_confirm),
+                coroutineScope = { input.scope },
+                action = { input.advance(input.step) },
+            ),
+            secondaryButton = AsyncTextButton(
+                title = StringResource(MHCStrings.onboarding_reactivate_decline),
+                containerColor = { Colors.transparent },
+                textColor = { Colors.primary },
+                action = { input.push(OnboardingAction.ReactivationDeclined) },
+            ),
+        ),
+    )
+
     private fun notificationStep(
         input: OnboardingStepInput,
     ): OnboardingLayout = OnboardingLayout(
@@ -352,6 +391,25 @@ class OnboardingStepLayoutMapperImpl(
             )
         ),
     )
+
+    private fun demographicsStep(input: OnboardingStepInput): DemographicsStep {
+        fun continueButton(isComplete: Boolean) = AsyncTextButton(
+            title = StringResource(MHCStrings.demographics_continue),
+            enabled = isComplete,
+            coroutineScope = { input.scope },
+            action = { input.advance(input.step) },
+        )
+
+        return DemographicsStep(
+            continueButton = input.isDemographicsComplete
+                .map { continueButton(isComplete = it) }
+                .stateIn(
+                    scope = input.scope,
+                    started = SharingStarted.WhileSubscribed(),
+                    initialValue = continueButton(isComplete = input.isDemographicsComplete.value),
+                ),
+        )
+    }
 
     override fun countrySelectionSheet(input: OnboardingStepInput): CountrySelectionSheet {
         val selectedCode = input.answers.value.country?.code

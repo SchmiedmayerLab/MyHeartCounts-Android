@@ -40,7 +40,7 @@ data class TaskListScreenContent(
                         .verticalScroll(rememberScrollState())
                         .padding(Spacings.medium),
                 )
-                else -> current.layout.Content(modifier)
+                else -> current.layout.Content(modifier = modifier.fillMaxSize())
             }
         }
     }

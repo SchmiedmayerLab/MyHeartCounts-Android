@@ -109,7 +109,7 @@ class CloudFunctionsTest {
             payload = mapOf("category" to "nudge-posttrial"),
         )
 
-        val tracked = FirebaseTestSession.firestore.notificationTracking.get().await()
+        val tracked = FirebaseTestSession.firestore.notificationTracking().get().await()
         val document = tracked.documents.single()
         assertThat(document.getString("notificationId")).isEqualTo(notificationId)
         assertThat(document.getString("event")).isEqualTo("opened")

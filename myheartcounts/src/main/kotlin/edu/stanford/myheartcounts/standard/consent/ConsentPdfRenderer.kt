@@ -45,7 +45,7 @@ enum class ConsentPaperSize(val widthPoints: Int, val heightPoints: Int) {
     US_LETTER(widthPoints = 612, heightPoints = 792),
 
     /**
-     * 210 × 297 mm. Used everywhere else. Matches iOS, which picks the paper size the same way.
+     * 210 × 297 mm. Used everywhere else.
      */
     A4(widthPoints = 595, heightPoints = 842),
     ;
@@ -68,10 +68,9 @@ enum class ConsentPaperSize(val widthPoints: Int, val heightPoints: Int) {
  * Renders a signed consent document to a PDF.
  *
  * The study keeps a copy of what each participant actually agreed to, and a PDF is what the ethics
- * approval and the participant themselves expect to be able to read back. iOS gets its PDF from
- * SpeziOnboarding's export machinery; Android has no equivalent, so the pages are drawn here — but
- * off Grove's own [MarkdownDocument] model rather than a second markdown implementation, so what
- * this renders and what the consent screen showed cannot drift apart.
+ * approval and the participant themselves expect to be able to read back. The pages are drawn off
+ * Grove's own [MarkdownDocument] model rather than a second markdown implementation, so what this
+ * renders and what the consent screen showed cannot drift apart.
  *
  * Interactive elements are rendered with the participant's own answer beside them, because a consent
  * record that omits what they chose is not a record of their consent. Those answer labels come from

@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.scheduler.Event
 import org.grovealliance.ui.ActionSink
@@ -29,8 +30,6 @@ import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.GroveErrorLayout
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.mutableScaffoldState
-
-private const val STUDY_WEBSITE_URL = "https://myheartcounts.stanford.edu"
 
 /**
  * Backs the Home tab: waits for the participant's tasks to become available, then renders them and
@@ -49,7 +48,7 @@ class HomeViewModel(
     private val actionSink = actionSource.sink<HomeAction>()
 
     private val scaffoldState = mutableScaffoldState(
-        appBar = studyAppBarProvider.create { title(MHCStrings.app_name) },
+        appBar = studyAppBarProvider.create(showsParticipationStats = true) { title(MHCStrings.app_name) },
     )
 
     private val layoutState = MutableStateFlow<HomeLayoutState>(HomeLayoutState.Loading)
@@ -66,7 +65,7 @@ class HomeViewModel(
     private fun load() {
         layoutState.update { HomeLayoutState.Loading }
         viewModelScope.launch {
-            runCatching { observeTasks() }
+            runCatchingAsync { observeTasks() }
                 .onFailure { throwable ->
                     logger.e(throwable) { "Failed to load the Home tab" }
                     layoutState.update { HomeLayoutState.Error(errorLayout()) }
@@ -138,7 +137,7 @@ class HomeViewModel(
     }
 
     private fun showStudyWebsite() {
-        navigator.push(event = NavigationEvent.OpenUrl(url = STUDY_WEBSITE_URL))
+        navigator.push(event = NavigationEvent.OpenStudyHomepage)
     }
 }
 

@@ -8,7 +8,6 @@
 package edu.stanford.myheartcounts
 
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.account.FakeAccount
 import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
@@ -19,6 +18,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.grovealliance.account.AccountDetails
+import org.grovealliance.account.FakeAccount
 import org.grovealliance.storage.local.InMemoryKeyValueStorage
 import org.junit.After
 import org.junit.Before

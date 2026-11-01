@@ -53,7 +53,7 @@ object FirebaseTestSession {
     suspend fun initializeFirebase() {
         requireDependency<MHCFirebaseRegionInitializer>()
             .initialize(country = Country(code = "US", name = "United States"))
-        withTimeout(READY_TIMEOUT_MILLIS) { firestore.awaitReady() }
+        withTimeout(READY_TIMEOUT_MILLIS) { firestore.usersCollection() }
     }
 
     /**
@@ -89,9 +89,9 @@ object FirebaseTestSession {
      * the app's decoded view of it.
      *
      * Asserting against this is deliberate: a codec bug that encodes and decodes consistently would
-     * round-trip perfectly through the app and still be invisible to iOS.
+     * round-trip perfectly through the app and still be unreadable to every other reader.
      */
-    suspend fun rawUserDocument(): DocumentSnapshot = firestore.userDocument.get().await()
+    suspend fun rawUserDocument(): DocumentSnapshot = firestore.userDocument().get().await()
 
     /**
      * Signs the participant out and waits until the account reflects it.

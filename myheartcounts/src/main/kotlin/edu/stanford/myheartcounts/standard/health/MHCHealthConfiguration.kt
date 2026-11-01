@@ -21,9 +21,7 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * The Health Connect record types the study reads, and how they are collected.
  *
- * These are the Android counterparts of the HealthKit sample types the MHC study definition asks iOS
- * for. Everything here is read-only: the study observes a participant's health data and never writes
- * to it.
+ * Manual data entry also requests write access to blood pressure, glucose, height and weight.
  */
 @OptIn(ExperimentalMindfulnessSessionApi::class)
 private val COLLECTED_RECORD_TYPES: List<AnyRecordType> = listOf(
@@ -73,6 +71,7 @@ private val POLLING_INTERVAL = 15.minutes
 fun ConfigurationBuilder.mhcHealth() {
     health {
         requestReadAccess(COLLECTED_RECORD_TYPES.toSet())
+        requestWriteAccess(RecordType.bloodPressure, RecordType.bloodGlucose, RecordType.height, RecordType.weight)
         COLLECTED_RECORD_TYPES.forEach { recordType ->
             collectRecord(
                 recordType = recordType,

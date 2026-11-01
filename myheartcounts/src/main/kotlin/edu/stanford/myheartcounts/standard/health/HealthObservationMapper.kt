@@ -34,6 +34,7 @@ import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.WheelchairPushesRecord
+import org.grovealliance.health.RecordType
 import org.hl7.fhir.r4.model.CodeableConcept
 import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.DateTimeType
@@ -47,10 +48,10 @@ import java.util.Date
 /**
  * Turns Health Connect records into the FHIR `Observation`s the study dataset is made of.
  *
- * The output has to match what iOS produces for the equivalent HealthKit sample closely enough that
- * an analyst can treat the two as one series: same code, same unit, same timing fields. Which
- * records may share a collection with iOS at all is decided by [HealthSampleType]; this only decides
- * what the resource looks like once they do.
+ * A record that shares a collection with another platform's samples has to match them closely
+ * enough that an analyst can treat the two as one series: same code, same unit, same timing fields.
+ * Which records share a collection at all is decided by [HealthSampleType]; this only decides what
+ * the resource looks like once they do.
  */
 class HealthObservationMapper {
 
@@ -58,8 +59,7 @@ class HealthObservationMapper {
      * The `Observation`s [record] produces.
      *
      * Usually one, but a record that carries a series of readings — a [HeartRateRecord] holds every
-     * beat measured over its interval — produces one per reading, matching HealthKit, which delivers
-     * those as individual samples.
+     * beat measured over its interval — produces one per reading.
      *
      * @param record The record to convert.
      * @param sampleType How the record is named in the study dataset.
@@ -82,8 +82,8 @@ class HealthObservationMapper {
      * Every measurement [record] carries.
      *
      * Most records hold one. A record that holds a *series* — Health Connect batches heart-rate and
-     * speed readings into one record covering an interval — produces one per reading, matching
-     * HealthKit, which delivers each of those as its own sample.
+     * speed readings into one record covering an interval — produces one per reading, so each
+     * observation is a single measurement.
      */
     private fun readingsOf(record: Record): List<Reading> = when (record) {
         is HeartRateRecord -> record.samples.map { sample ->
@@ -256,7 +256,7 @@ class HealthObservationMapper {
     private fun codingFor(record: Record, sampleType: HealthSampleType): HealthObservationCoding =
         HealthObservationCoding.forSampleType(sampleTypeIdentifier = sampleType.identifier)
             ?: HealthObservationCoding.forHealthConnectRecord(
-                recordTypeIdentifier = record::class.simpleName.orEmpty(),
+                recordTypeIdentifier = RecordType.from(record = record).identifier,
             )
 
     private fun durationMinutes(start: Instant, end: Instant): Double =

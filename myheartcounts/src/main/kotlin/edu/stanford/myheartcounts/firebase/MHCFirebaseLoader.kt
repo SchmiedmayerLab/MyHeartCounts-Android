@@ -11,7 +11,6 @@ import android.content.Context
 import com.google.firebase.FirebaseOptions
 import org.grovealliance.storage.local.KeyValueStorageFactory
 import org.grovealliance.storage.local.KeyValueStorageType
-import java.util.Locale
 
 /**
  * Resolves which Firebase project the app talks to, and remembers the choice across launches.
@@ -81,15 +80,6 @@ class MHCFirebaseLoader(
      * The region the participant previously chose, or `null` if they have not chosen one yet.
      */
     fun persistedRegionCode(): String? = storage.getString(key = KEY_REGION)
-
-    /**
-     * The locale used to resolve localized study-bundle resources, derived from the persisted
-     * region, or `null` when no region has been chosen yet.
-     */
-    fun persistedRegionLocale(): Locale? =
-        persistedRegionCode()?.let { region ->
-            Locale.Builder().setLanguage(Locale.getDefault().language).setRegion(region).build()
-        }
 
     /**
      * Returns the [FirebaseOptions] for [regionCode], or `null` when the build carries no Firebase

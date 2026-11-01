@@ -8,6 +8,7 @@
 package edu.stanford.myheartcounts.onboarding
 
 import edu.stanford.myheartcounts.model.Country
+import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import org.grovealliance.consent.ConsentResponses
 
 /**
@@ -23,6 +24,14 @@ data class OnboardingAnswers(
     val canWithdrawAnytime: Boolean?,
     val consentResponses: ConsentResponses?,
 ) {
+    /**
+     * Whether the participant chose to join the activity coaching trial in the consent form; `false`
+     * until they have signed it.
+     */
+    val optedIntoTrial: Boolean
+        get() = consentResponses?.selects?.get(MHCConsentDocumentProvider.ID_TRIAL_OPT_IN) ==
+            MHCConsentDocumentProvider.ID_TRIAL_YES
+
     companion object {
         /**
          * The initial answers before any onboarding step has been completed.

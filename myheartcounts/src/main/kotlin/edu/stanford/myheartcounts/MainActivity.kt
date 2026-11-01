@@ -24,14 +24,23 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewScreen
+import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailScreen
+import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryScreen
+import edu.stanford.myheartcounts.dashboard.pastdata.PastTimedWalkTestResultsScreen
+import edu.stanford.myheartcounts.debug.DebugHost
+import edu.stanford.myheartcounts.demographics.ui.DemographicsScreen
+import edu.stanford.myheartcounts.demographics.ui.DemographicsScreenMode
 import edu.stanford.myheartcounts.missed.MissedTasksScreen
+import edu.stanford.myheartcounts.navigation.BottomSheetSceneStrategy
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.notification.MHCNudgeNotifications.Companion.FCM_MESSAGE_ID_EXTRA
 import edu.stanford.myheartcounts.onboarding.OnboardingScreen
+import edu.stanford.myheartcounts.stats.ParticipationStatsScreen
 import edu.stanford.myheartcounts.study.StudyScreen
+import edu.stanford.myheartcounts.study.StudyVariantProvider
 import edu.stanford.myheartcounts.task.PerformTaskScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
 import kotlinx.coroutines.launch
@@ -51,8 +60,10 @@ import org.grovealliance.ui.verticalModalEnter
 class MainActivity : AppCompatActivity() {
 
     private val navigator by dependency<Navigator>()
+    private val sceneStrategies = listOf(BottomSheetSceneStrategy<NavKey>())
     private val notificationTracking by dependency<MHCNotificationTracking>()
     private val concurrency by dependency<Concurrency>()
+    private val studyVariants by dependency<StudyVariantProvider>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,6 +108,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Starts the app's launch activity in a new task and ends this process, so the app starts over.
+     */
+    private fun restartApp() {
+        val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return
+        startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finishAffinity()
+        Runtime.getRuntime().exit(0)
+    }
+
     @Composable
     private fun AppContent() {
         val viewModel = groveViewModel<MainActivityViewModel>()
@@ -106,6 +127,7 @@ class MainActivity : AppCompatActivity() {
 
         NavDisplay(
             backStack = backStack,
+            sceneStrategies = sceneStrategies,
             transitionSpec = { horizontalSlideForward },
             popTransitionSpec = { horizontalSlideBackward },
             predictivePopTransitionSpec = { horizontalSlideBackward },
@@ -127,14 +149,31 @@ class MainActivity : AppCompatActivity() {
                 entry<MHCRoute.AccountOverview> {
                     MHCAccountOverviewScreen()
                 }
+                entry<MHCRoute.Demographics> {
+                    DemographicsScreen(mode = DemographicsScreenMode.Complete)
+                }
                 entry<MHCRoute.PerformTask> {
                     PerformTaskScreen()
                 }
                 entry<MHCRoute.MissedTasks> {
                     MissedTasksScreen()
                 }
+                entry<MHCRoute.HeartScoreDetail>(metadata = BottomSheetSceneStrategy.sheet()) { route ->
+                    HeartScoreDetailScreen(component = route.component)
+                }
+                entry<MHCRoute.HeartScoreEntry>(metadata = BottomSheetSceneStrategy.sheet()) { route ->
+                    HeartScoreEntryScreen(component = route.component)
+                }
+                entry<MHCRoute.PastTimedWalkTestResults> {
+                    PastTimedWalkTestResultsScreen()
+                }
+                entry<MHCRoute.ParticipationStats>(metadata = BottomSheetSceneStrategy.sheet()) {
+                    ParticipationStatsScreen()
+                }
             }
         )
+
+        DebugHost()
     }
 
     @Composable
@@ -155,17 +194,32 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
 
-                is NavigationEvent.OpenUrl -> {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(event.url)).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                is NavigationEvent.OpenUrl -> openUrl(url = event.url)
+                NavigationEvent.OpenStudyHomepage -> openUrl(url = studyVariants.currentVariant.homepage)
+                NavigationEvent.OpenPrivacyPolicy -> openUrl(url = studyVariants.currentVariant.privacyPolicy)
+
+                is NavigationEvent.ShareFile -> {
+                    val share = Intent(Intent.ACTION_SEND).apply {
+                        type = event.mimeType
+                        putExtra(Intent.EXTRA_STREAM, Uri.parse(event.uri))
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    startActivity(intent)
+                    startActivity(Intent.createChooser(share, null))
                 }
+
+                NavigationEvent.RestartApp -> restartApp()
 
                 is NavigationEvent.NavigateTo -> backStack.add(event.route)
                 is NavigationEvent.Close -> backStack.remove(event.route)
             }
         }
+    }
+
+    private fun openUrl(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
     }
 }
 

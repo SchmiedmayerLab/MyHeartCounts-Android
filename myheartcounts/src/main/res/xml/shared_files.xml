@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+This source file is part of the My Heart Counts Android open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+-->
+
+<!-- Files the app hands to other apps, such as a consent form to share. -->
+<paths>
+    <cache-path
+        name="shared"
+        path="shared/" />
+</paths>

@@ -10,7 +10,7 @@ package edu.stanford.myheartcounts.task
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.study.StudyArticleSource
 import edu.stanford.myheartcounts.study.StudyQuestionnaireSource
-import edu.stanford.myheartcounts.ui.MarkdownSheet
+import edu.stanford.myheartcounts.ui.ArticleMapper
 import kotlinx.coroutines.CompletableDeferred
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.markdown.MarkdownDocument
@@ -49,6 +49,7 @@ interface EventPerformer {
  */
 class EventPerformerImpl(
     private val articleSource: StudyArticleSource,
+    private val articleMapper: ArticleMapper,
     private val questionnaireSource: StudyQuestionnaireSource,
     private val taskPerformer: TaskPerformer,
     private val scheduler: Scheduler,
@@ -101,7 +102,7 @@ class EventPerformerImpl(
         document: MarkdownDocument,
         scaffoldState: MutableGroveScaffoldState,
         onDisplayed: () -> Unit,
-    ) = MarkdownSheet(
+    ) = articleMapper.map(
         appBar = groveAppBar {
             close { scaffoldState.dismissBottomSheet() }
         },

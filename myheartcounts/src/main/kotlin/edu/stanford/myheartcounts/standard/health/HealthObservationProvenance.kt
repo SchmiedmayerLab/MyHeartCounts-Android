@@ -18,8 +18,8 @@ import java.util.TimeZone
  * The provenance every uploaded observation carries.
  *
  * These say who produced a sample and under what version of the study, which is what lets the
- * dataset be re-analyzed after the study or the app changes. The URLs are a cross-platform contract
- * with iOS's `defaultHealthObservationFHIRExtensions`.
+ * dataset be re-analyzed after the study or the app changes. The URLs are part of the shared
+ * dataset's contract and must not change.
  *
  * @param appRevision The app build that uploads the sample.
  * @param studyId The identifier of the study the participant is enrolled in, when they are.
@@ -82,19 +82,19 @@ data class HealthObservationProvenance(
         const val ANDROID_PLATFORM = "android-health-connect"
 
         /**
-         * The participant's time zone at upload time. Shared with iOS.
+         * The participant's time zone at upload time.
          */
         const val SAMPLE_UPLOAD_TIME_ZONE_URL = "https://bdh.stanford.edu/fhir/defs/sampleUploadTimeZone"
 
         /**
-         * The study and revision the participant was enrolled in. Shared with iOS, including the
-         * `study-id` and `study-revision` sub-extensions.
+         * The study and revision the participant was enrolled in, as the `study-id` and
+         * `study-revision` sub-extensions.
          */
         const val STUDY_ENROLLMENT_URL = "https://myheartcounts.stanford.edu/fhir/StructureDefinition/study-enrollment"
 
         /**
-         * Which platform produced the sample. Android-only: iOS records provenance through
-         * HealthKit's own source metadata, which Health Connect has no equivalent of.
+         * Which platform produced the sample. Health Connect records carry no source metadata that
+         * would tell the platforms apart otherwise.
          */
         const val PLATFORM_URL = "https://myheartcounts.stanford.edu/fhir/StructureDefinition/source-platform"
     }

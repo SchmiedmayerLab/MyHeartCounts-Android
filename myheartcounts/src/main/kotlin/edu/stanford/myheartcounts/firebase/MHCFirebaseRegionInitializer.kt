@@ -9,7 +9,6 @@ package edu.stanford.myheartcounts.firebase
 
 import edu.stanford.myheartcounts.model.Country
 import org.grovealliance.firebase.FirebaseAppConfiguration
-import org.grovealliance.study.StudyManager
 
 /**
  * Initializes Firebase for the region a participant selected during onboarding.
@@ -21,12 +20,11 @@ import org.grovealliance.study.StudyManager
 interface MHCFirebaseRegionInitializer {
 
     /**
-     * Initializes Firebase for [country] and remembers the choice for later launches. The study
-     * content is localized for the resulting region from then on.
+     * Initializes Firebase for [country] and remembers the choice for later launches.
      *
      * Participants in a country the study has not launched in still need Firebase, because joining
      * the launch waitlist signs in anonymously and calls a Cloud Function. Those countries fall
-     * back to the default region's Firebase project, matching iOS.
+     * back to the default region's Firebase project.
      *
      * Calling this repeatedly is safe; the first successful initialization wins.
      *
@@ -42,7 +40,6 @@ interface MHCFirebaseRegionInitializer {
 class MHCFirebaseRegionInitializerImpl(
     private val firebaseLoader: MHCFirebaseLoader,
     private val firebaseAppConfiguration: FirebaseAppConfiguration,
-    private val studyManager: StudyManager,
 ) : MHCFirebaseRegionInitializer {
 
     private val logger by mhcFirebaseLogger()
@@ -56,8 +53,6 @@ class MHCFirebaseRegionInitializerImpl(
         val configured = firebaseAppConfiguration.configure(options = options).isSuccess
         if (configured) {
             firebaseLoader.persistRegion(regionCode = region)
-            firebaseLoader.persistedRegionLocale()
-                ?.let { studyManager.updatePreferredLocale(locale = it) }
         }
         return configured
     }
@@ -81,8 +76,8 @@ class MHCFirebaseRegionInitializerImpl(
 
     private companion object {
         /**
-         * The region serving participants whose country the study has not launched in. Matches
-         * iOS, which loads the United States project before calling `joinWaitlist`.
+         * The region serving participants whose country the study has not launched in, including
+         * their `joinWaitlist` call.
          */
         const val FALLBACK_REGION = "US"
     }
