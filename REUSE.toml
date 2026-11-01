@@ -26,6 +26,11 @@ path = [
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"
 
+[[annotations]]
+path = ["myheartcounts/src/main/res/drawable-nodpi/img_stanford.webp"]
+SPDX-FileCopyrightText = "2025 Stanford University and the project authors (see CONTRIBUTORS.md)"
+SPDX-License-Identifier = "MIT"
+
 # Screenshot baselines are generated per test, so they are covered by pattern rather than by a
 # sidecar each.
 [[annotations]]

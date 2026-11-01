@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.AsyncTextButton
@@ -70,7 +71,7 @@ class UpcomingTasksViewModel(
     private fun load() {
         layoutState.update { TaskListScreenState.Loading }
         viewModelScope.launch {
-            runCatching { observeUpcomingTasks() }
+            runCatchingAsync { observeUpcomingTasks() }
                 .onFailure { throwable ->
                     logger.e(throwable) { "Failed to load the upcoming tasks" }
                     layoutState.update { TaskListScreenState.Error(errorLayout()) }

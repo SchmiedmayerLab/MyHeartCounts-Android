@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.standard.health
 
 import android.content.Context
 import com.google.firebase.storage.FirebaseStorage
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.sync.Mutex
@@ -16,8 +17,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.grovealliance.core.coroutines.Concurrency
+import org.grovealliance.core.coroutines.runCatchingAsync
 import java.io.File
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The Cloud Storage folder an archive belongs in, under the participant's own prefix.
@@ -30,17 +31,17 @@ enum class HealthUploadCategory(val folderName: String) {
     /**
      * Samples measured while the participant has been enrolled.
      */
-    LIVE("liveHealthSamples"),
+    LIVE(FirebaseSchema.Storage.LIVE_HEALTH_SAMPLES),
 
     /**
      * Samples measured before enrollment, backfilled once.
      */
-    HISTORICAL("historicalHealthSamples"),
+    HISTORICAL(FirebaseSchema.Storage.HISTORICAL_HEALTH_SAMPLES),
 
     /**
      * Records of samples the participant deleted from Health Connect after they were uploaded.
      */
-    DELETIONS("healthDeletions"),
+    DELETIONS(FirebaseSchema.Storage.HEALTH_DELETIONS),
 }
 
 /**
@@ -48,8 +49,7 @@ enum class HealthUploadCategory(val folderName: String) {
  *
  * An archive is written into a staging folder on disk first and only deleted once Cloud Storage has
  * acknowledged it, so a process death mid-upload leaves the file behind rather than dropping the
- * samples. [recoverOrphans] re-uploads whatever it finds there at launch. Ports iOS's
- * `ManagedFileUpload`.
+ * samples. [recoverOrphans] re-uploads whatever it finds there at launch.
  *
  * Staging folders are per account. Ownership is the path, so an archive can only ever be uploaded
  * under the participant who produced it — even when the cleanup at sign-out did not get to run.
@@ -84,13 +84,12 @@ class ManagedFileUpload(
         bytes: ByteArray,
     ): Result<Unit> = withContext(concurrency.ioDispatcher()) {
         lock.withLock {
-            runCatching {
-                File(stagingDirectory(accountId = accountId, category = category), fileName)
+            runCatchingAsync {
+                val file = File(stagingDirectory(accountId = accountId, category = category), fileName)
                     .apply { writeBytes(bytes) }
-            }.mapCatching { file ->
                 uploadStagedFile(accountId = accountId, category = category, file = file).getOrThrow()
             }.onFailure { throwable ->
-                if (throwable is CancellationException) throw throwable
+
                 logger.e(throwable) { "Failed to upload '$fileName' to ${category.folderName}." }
             }
         }
@@ -105,7 +104,7 @@ class ManagedFileUpload(
     suspend fun recoverOrphans() {
         withContext(concurrency.ioDispatcher()) {
             lock.withLock {
-                val accountId = firestore.accountId
+                val accountId = firestore.accountId()
                 // Never theirs to upload, and the cleanup that should have removed them at sign-out
                 // did not finish.
                 rootDirectory().listFiles().orEmpty()
@@ -135,15 +134,15 @@ class ManagedFileUpload(
         accountId: String,
         category: HealthUploadCategory,
         file: File,
-    ): Result<Unit> = runCatching {
-        val path = "${USERS_PREFIX}/$accountId/${category.folderName}/${file.name}"
+    ): Result<Unit> = runCatchingAsync {
+        val path = "${FirebaseSchema.Storage.USERS}/$accountId/${category.folderName}/${file.name}"
         FirebaseStorage.getInstance().reference.child(path).putBytes(file.readBytes()).await()
         // Only now is the archive safe to drop: until Cloud Storage acknowledged it, this file
         // is the only copy of those samples.
         file.delete()
         Unit
     }.onFailure { throwable ->
-        if (throwable is CancellationException) throw throwable
+
         logger.e(throwable) { "Upload of '${file.name}' failed; it stays staged for a later retry." }
     }
 
@@ -154,10 +153,5 @@ class ManagedFileUpload(
 
     private companion object {
         const val STAGING_DIRECTORY = "health-uploads"
-
-        /**
-         * Matches the `users/{uid}/…` layout `firebasestorage.rules` grants the participant.
-         */
-        const val USERS_PREFIX = "users"
     }
 }

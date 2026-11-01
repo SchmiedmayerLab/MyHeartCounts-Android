@@ -12,11 +12,11 @@ import android.content.Context
 import edu.stanford.myheartcounts.account.account
 import edu.stanford.myheartcounts.di.appConfigurations
 import edu.stanford.myheartcounts.di.appViewModels
-import edu.stanford.myheartcounts.firebase.MHCFirebaseLoader
 import edu.stanford.myheartcounts.firebase.mhcFirebase
 import edu.stanford.myheartcounts.standard.MHCStandard
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import edu.stanford.myheartcounts.standard.health.mhcHealth
+import edu.stanford.myheartcounts.study.StudyVariantProvider
 import org.grovealliance.account.Account
 import org.grovealliance.account.name
 import org.grovealliance.consent.ConsentDocument
@@ -30,7 +30,6 @@ import org.grovealliance.scheduler.SchedulerNotificationsConfiguration
 import org.grovealliance.scheduler.scheduler
 import org.grovealliance.study.StudyHealthConfiguration
 import org.grovealliance.study.studyManager
-import java.util.Locale
 import androidx.work.Configuration as WorkConfiguration
 
 /**
@@ -57,7 +56,7 @@ class MyHeartCountsApplication : Application(), GroveApplication, WorkConfigurat
 
             scheduler(notifications = SchedulerNotificationsConfiguration.DEFAULT)
             studyManager(
-                preferredLocale = { dependency<MHCFirebaseLoader>().persistedRegionLocale() ?: Locale.getDefault() },
+                preferredLocale = { dependency<StudyVariantProvider>().contentLocale() },
                 health = StudyHealthConfiguration.DEFAULT,
             )
 

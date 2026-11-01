@@ -10,15 +10,15 @@ package edu.stanford.myheartcounts.firebase
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
 import org.grovealliance.core.Module
+import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.firebase.FirebaseAppConfiguration
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The callable Cloud Functions the app invokes.
  *
- * These are the same three iOS calls, against the same `MyHeartCounts-Firebase` deployment. Note
- * that the backend also exports `markAccountForDeletion`, which neither platform calls: account
- * deletion goes through `AccountService.delete()` instead.
+ * They run against the `MyHeartCounts-Firebase` deployment. The backend also exports
+ * `markAccountForDeletion`, which the app does not call: account deletion goes through
+ * `AccountService.delete()` instead.
  */
 interface MHCCloudFunctions {
 
@@ -37,7 +37,7 @@ interface MHCCloudFunctions {
     /**
      * Marks the signed-in participant as withdrawn from the study.
      *
-     * The caller logs out afterwards, matching iOS.
+     * The caller logs out afterwards.
      */
     suspend fun markAccountForStudyWithdrawal(): Result<Unit>
 
@@ -59,15 +59,18 @@ class MHCCloudFunctionsImpl(
 
     override suspend fun joinWaitlist(regionCode: String, email: String): Result<Unit> =
         call(
-            name = "joinWaitlist",
-            data = mapOf("region" to regionCode, "email" to email),
+            name = FirebaseSchema.Function.JOIN_WAITLIST,
+            data = mapOf(
+                FirebaseSchema.Function.PARAMETER_REGION to regionCode,
+                FirebaseSchema.Function.PARAMETER_EMAIL to email,
+            ),
         )
 
     override suspend fun markAccountForStudyWithdrawal(): Result<Unit> =
-        call(name = "markAccountForStudyWithdrawal", data = emptyMap<String, Any>())
+        call(name = FirebaseSchema.Function.MARK_ACCOUNT_FOR_STUDY_WITHDRAWAL, data = emptyMap<String, Any>())
 
     override suspend fun markAccountForStudyReenrollment(): Result<Unit> =
-        call(name = "markAccountForStudyReenrollment", data = emptyMap<String, Any>())
+        call(name = FirebaseSchema.Function.MARK_ACCOUNT_FOR_STUDY_REENROLLMENT, data = emptyMap<String, Any>())
 
     /**
      * Invokes the callable [name] with [data], waiting for Firebase to be initialized first.
@@ -75,13 +78,12 @@ class MHCCloudFunctionsImpl(
      * Awaiting rather than failing fast is deliberate: the waitlist call happens during onboarding,
      * moments after region selection kicked off initialization.
      */
-    private suspend fun call(name: String, data: Any): Result<Unit> = runCatching {
+    private suspend fun call(name: String, data: Any): Result<Unit> = runCatchingAsync {
         firebaseAppConfiguration.awaitConfigured()
         FirebaseFunctions.getInstance().getHttpsCallable(name).call(data).await()
         Unit
     }.onFailure { throwable ->
-        // Cancellation is not a failed call; it has to keep unwinding the caller's coroutine.
-        if (throwable is CancellationException) throw throwable
+
         logger.e(throwable) { "Cloud function '$name' failed." }
     }
 }

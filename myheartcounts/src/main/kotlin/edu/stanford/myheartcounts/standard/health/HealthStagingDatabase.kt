@@ -295,9 +295,8 @@ interface StagedDeletionDao {
 /**
  * The on-device queue of health data waiting to reach the backend.
  *
- * The Kotlin counterpart of iOS's GRDB-backed `HealthUploadStaging`. It exists because health data
- * arrives continuously in small batches while uploading is worth doing rarely and in bulk, and
- * because the study deliberately holds samples back for
+ * It exists because health data arrives continuously in small batches while uploading is worth
+ * doing rarely and in bulk, and because the study deliberately holds samples back for
  * [HealthUploadSchedule.RETENTION_OFFSET_DAYS] before uploading them.
  */
 @Database(

@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.account
 
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
 import edu.stanford.myheartcounts.model.demographics.BloodType
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
@@ -36,7 +37,7 @@ import org.grovealliance.account.InitialValue
  * First 3 digits of the user's US ZIP code.
  */
 data object UsZipCodePrefixKey : ManualAccountKey<String>(
-    identifier = "usZipCodePrefix",
+    identifier = FirebaseSchema.User.US_ZIP_CODE_PREFIX,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -45,12 +46,12 @@ data object UsZipCodePrefixKey : ManualAccountKey<String>(
 /**
  * First half of the user's UK postcode.
  *
- * The wire identifier is `ukPostcode` rather than `ukPostcodePrefix`, matching iOS. Both platforms
- * write into the same participant document, so the identifier is a cross-platform contract; only the
- * Kotlin name says that just the prefix is collected.
+ * The identifier is `ukPostcode` rather than `ukPostcodePrefix`, because the participant document
+ * is shared and that identifier is fixed; only the Kotlin name says that just the prefix is
+ * collected.
  */
 data object UkPostcodePrefixKey : ManualAccountKey<String>(
-    identifier = "ukPostcode",
+    identifier = FirebaseSchema.User.UK_POSTCODE,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,
@@ -60,7 +61,7 @@ data object UkPostcodePrefixKey : ManualAccountKey<String>(
  * The user's height in centimeters.
  */
 data object HeightInCmKey : ManualAccountKey<Double>(
-    identifier = "heightInCM",
+    identifier = FirebaseSchema.User.HEIGHT_IN_CM,
     serializer = Double.serializer(),
     initialValue = InitialValue.empty(0.0),
     valueType = Double::class,
@@ -70,7 +71,7 @@ data object HeightInCmKey : ManualAccountKey<Double>(
  * The user's weight in kilograms.
  */
 data object WeightInKgKey : ManualAccountKey<Double>(
-    identifier = "weightInKG",
+    identifier = FirebaseSchema.User.WEIGHT_IN_KG,
     serializer = Double.serializer(),
     initialValue = InitialValue.empty(0.0),
     valueType = Double::class,
@@ -80,7 +81,7 @@ data object WeightInKgKey : ManualAccountKey<Double>(
  * Whether the user consents to being contacted about future studies.
  */
 data object FutureStudiesKey : ManualAccountKey<Boolean>(
-    identifier = "futureStudies",
+    identifier = FirebaseSchema.User.FUTURE_STUDIES,
     serializer = Boolean.serializer(),
     initialValue = InitialValue.empty(false),
     valueType = Boolean::class,
@@ -92,7 +93,7 @@ data object FutureStudiesKey : ManualAccountKey<Boolean>(
  * The user's gender identity.
  */
 data object MHCGenderIdentityKey : ManualAccountKey<MHCGenderIdentity>(
-    identifier = "mhcGenderIdentity",
+    identifier = FirebaseSchema.User.MHC_GENDER_IDENTITY,
     serializer = MHCGenderIdentity.serializer(),
     initialValue = InitialValue.empty(MHCGenderIdentity.PREFER_NOT_TO_STATE),
     valueType = MHCGenderIdentity::class,
@@ -102,7 +103,7 @@ data object MHCGenderIdentityKey : ManualAccountKey<MHCGenderIdentity>(
  * The user's US state / region.
  */
 data object UsRegionKey : ManualAccountKey<USRegion>(
-    identifier = "usRegion",
+    identifier = FirebaseSchema.User.US_REGION,
     serializer = USRegion.serializer(),
     initialValue = InitialValue.empty(USRegion.NOT_SET),
     valueType = USRegion::class,
@@ -112,7 +113,7 @@ data object UsRegionKey : ManualAccountKey<USRegion>(
  * The user's US household income bracket.
  */
 data object HouseholdIncomeUSKey : ManualAccountKey<HouseholdIncomeUS>(
-    identifier = "householdIncomeUS",
+    identifier = FirebaseSchema.User.HOUSEHOLD_INCOME_US,
     serializer = HouseholdIncomeUS.serializer(),
     initialValue = InitialValue.empty(HouseholdIncomeUS.NOT_SET),
     valueType = HouseholdIncomeUS::class,
@@ -122,7 +123,7 @@ data object HouseholdIncomeUSKey : ManualAccountKey<HouseholdIncomeUS>(
  * The user's UK household income bracket.
  */
 data object HouseholdIncomeUKKey : ManualAccountKey<HouseholdIncomeUK>(
-    identifier = "householdIncomeUK",
+    identifier = FirebaseSchema.User.HOUSEHOLD_INCOME_UK,
     serializer = HouseholdIncomeUK.serializer(),
     initialValue = InitialValue.empty(HouseholdIncomeUK.NOT_SET),
     valueType = HouseholdIncomeUK::class,
@@ -132,7 +133,7 @@ data object HouseholdIncomeUKKey : ManualAccountKey<HouseholdIncomeUK>(
  * The user's US educational level.
  */
 data object EducationUSKey : ManualAccountKey<EducationStatusUS>(
-    identifier = "educationUS",
+    identifier = FirebaseSchema.User.EDUCATION_US,
     serializer = EducationStatusUS.serializer(),
     initialValue = InitialValue.empty(EducationStatusUS.NOT_SET),
     valueType = EducationStatusUS::class,
@@ -142,7 +143,7 @@ data object EducationUSKey : ManualAccountKey<EducationStatusUS>(
  * The user's UK educational level.
  */
 data object EducationUKKey : ManualAccountKey<EducationStatusUK>(
-    identifier = "educationUK",
+    identifier = FirebaseSchema.User.EDUCATION_UK,
     serializer = EducationStatusUK.serializer(),
     initialValue = InitialValue.empty(EducationStatusUK.NOT_SET),
     valueType = EducationStatusUK::class,
@@ -152,7 +153,7 @@ data object EducationUKKey : ManualAccountKey<EducationStatusUK>(
  * Whether the user identifies as Latino / Hispanic.
  */
 data object LatinoStatusKey : ManualAccountKey<LatinoStatusOption>(
-    identifier = "latinoStatus",
+    identifier = FirebaseSchema.User.LATINO_STATUS,
     serializer = LatinoStatusOption.serializer(),
     initialValue = InitialValue.empty(LatinoStatusOption.NOT_SET),
     valueType = LatinoStatusOption::class,
@@ -162,7 +163,7 @@ data object LatinoStatusKey : ManualAccountKey<LatinoStatusOption>(
  * The user's biological sex at birth.
  */
 data object BiologicalSexAtBirthKey : ManualAccountKey<BiologicalSex>(
-    identifier = "biologicalSexAtBirth",
+    identifier = FirebaseSchema.User.BIOLOGICAL_SEX_AT_BIRTH,
     serializer = BiologicalSex.serializer(),
     initialValue = InitialValue.empty(BiologicalSex.PREFER_NOT_TO_STATE),
     valueType = BiologicalSex::class,
@@ -172,7 +173,7 @@ data object BiologicalSexAtBirthKey : ManualAccountKey<BiologicalSex>(
  * The user's blood type.
  */
 data object BloodTypeKey : ManualAccountKey<BloodType>(
-    identifier = "bloodType",
+    identifier = FirebaseSchema.User.BLOOD_TYPE,
     serializer = BloodType.serializer(),
     initialValue = InitialValue.empty(BloodType.NOT_SET),
     valueType = BloodType::class,
@@ -182,7 +183,7 @@ data object BloodTypeKey : ManualAccountKey<BloodType>(
  * The user's behaviour-change stage.
  */
 data object StageOfChangeKey : ManualAccountKey<StageOfChangeOption>(
-    identifier = "stageOfChange",
+    identifier = FirebaseSchema.User.STAGE_OF_CHANGE,
     serializer = StageOfChangeOption.serializer(),
     initialValue = InitialValue.empty(StageOfChangeOption.NOT_SET),
     valueType = StageOfChangeOption::class,
@@ -192,7 +193,7 @@ data object StageOfChangeKey : ManualAccountKey<StageOfChangeOption>(
  * The user's UK region.
  */
 data object UkRegionKey : ManualAccountKey<UKRegion>(
-    identifier = "ukRegion",
+    identifier = FirebaseSchema.User.UK_REGION,
     serializer = UKRegion.serializer(),
     initialValue = InitialValue.empty(UKRegion.NotSet),
     valueType = UKRegion::class,
@@ -202,7 +203,7 @@ data object UkRegionKey : ManualAccountKey<UKRegion>(
  * The user's race / ethnicity (a set of options).
  */
 data object RaceEthnicityKey : ManualAccountKey<RaceEthnicity>(
-    identifier = "raceEthnicity",
+    identifier = FirebaseSchema.User.RACE_ETHNICITY,
     serializer = RaceEthnicity.serializer(),
     initialValue = InitialValue.empty(RaceEthnicity.NONE),
     valueType = RaceEthnicity::class,
@@ -212,7 +213,7 @@ data object RaceEthnicityKey : ManualAccountKey<RaceEthnicity>(
  * The user's selected comorbidities.
  */
 data object ComorbiditiesKey : ManualAccountKey<Comorbidities>(
-    identifier = "comorbidities",
+    identifier = FirebaseSchema.User.COMORBIDITIES,
     serializer = Comorbidities.serializer(),
     initialValue = InitialValue.empty(Comorbidities(emptyMap())),
     valueType = Comorbidities::class,
@@ -222,7 +223,7 @@ data object ComorbiditiesKey : ManualAccountKey<Comorbidities>(
  * The user's NHS number (UK only).
  */
 data object NhsNumberKey : ManualAccountKey<NHSNumber>(
-    identifier = "nhsNumber",
+    identifier = FirebaseSchema.User.NHS_NUMBER,
     serializer = NHSNumber.serializer(),
     initialValue = InitialValue.empty(NHSNumber("")),
     valueType = NHSNumber::class,
@@ -231,13 +232,12 @@ data object NhsNumberKey : ManualAccountKey<NHSNumber>(
 /**
  * How the participant heard about the study.
  *
- * iOS encodes this as the identifier of one of its `ReferralSource` options — a plain string — so
- * the key is typed as [String] here. Android has no demographics screen offering the options yet,
- * but the key exists so a value written on iOS survives a round trip through this app rather than
- * being dropped from the shared participant document.
+ * The value is the identifier of one of the referral options, a plain string. No screen offers the
+ * options; the key exists so a value already in the shared participant document survives a round
+ * trip through this app rather than being dropped.
  */
 data object ReferralSourceKey : ManualAccountKey<String>(
-    identifier = "referralSource",
+    identifier = FirebaseSchema.User.REFERRAL_SOURCE,
     serializer = String.serializer(),
     initialValue = InitialValue.string,
     valueType = String::class,

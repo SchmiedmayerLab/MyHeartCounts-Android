@@ -11,13 +11,74 @@ import android.os.Build
 import edu.stanford.myheartcounts.BuildConfig
 import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.StudyAppBarProviderImpl
+import edu.stanford.myheartcounts.account.PostTrialNudges
+import edu.stanford.myheartcounts.account.PostTrialNudgesImpl
 import edu.stanford.myheartcounts.account.StudyWithdrawal
 import edu.stanford.myheartcounts.account.StudyWithdrawalImpl
+import edu.stanford.myheartcounts.account.feedback.MHCFeedback
+import edu.stanford.myheartcounts.account.feedback.MHCFeedbackImpl
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapper
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapperImpl
+import edu.stanford.myheartcounts.customsamples.CustomSampleDecoder
+import edu.stanford.myheartcounts.customsamples.CustomSampleDecoderImpl
+import edu.stanford.myheartcounts.customsamples.CustomSampleSource
+import edu.stanford.myheartcounts.customsamples.CustomSampleSourceImpl
+import edu.stanford.myheartcounts.dashboard.HeartHealthContentMapper
+import edu.stanford.myheartcounts.dashboard.HeartHealthContentMapperImpl
+import edu.stanford.myheartcounts.dashboard.HeartHealthExplainerSource
+import edu.stanford.myheartcounts.dashboard.HeartHealthExplainerSourceImpl
+import edu.stanford.myheartcounts.dashboard.HeartHealthQueryRanges
+import edu.stanford.myheartcounts.dashboard.HeartHealthQueryRangesImpl
+import edu.stanford.myheartcounts.dashboard.HeartHealthScoreCalculator
+import edu.stanford.myheartcounts.dashboard.HeartHealthScoreCalculatorImpl
+import edu.stanford.myheartcounts.dashboard.HeartHealthScoreSource
+import edu.stanford.myheartcounts.dashboard.HeartHealthScoreSourceImpl
+import edu.stanford.myheartcounts.dashboard.HeartScoreDateFormatter
+import edu.stanford.myheartcounts.dashboard.HeartScoreDateFormatterImpl
+import edu.stanford.myheartcounts.featureflag.AppEnvironment
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctionsImpl
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.healthstats.HealthStatsCheckpointStore
+import edu.stanford.myheartcounts.healthstats.HealthStatsCheckpointStoreImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsDocumentDecoder
+import edu.stanford.myheartcounts.healthstats.HealthStatsDocumentDecoderImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsDocumentEncoder
+import edu.stanford.myheartcounts.healthstats.HealthStatsDocumentEncoderImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsEntryDecoder
+import edu.stanford.myheartcounts.healthstats.HealthStatsEntryDecoderImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsHistory
+import edu.stanford.myheartcounts.healthstats.HealthStatsHistoryImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsIntervalReducer
+import edu.stanford.myheartcounts.healthstats.HealthStatsIntervalReducerImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsMonthCollector
+import edu.stanford.myheartcounts.healthstats.HealthStatsMonthCollectorImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsMonthlySync
+import edu.stanford.myheartcounts.healthstats.HealthStatsMonthlySyncImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsMonths
+import edu.stanford.myheartcounts.healthstats.HealthStatsMonthsImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsPersistence
+import edu.stanford.myheartcounts.healthstats.HealthStatsPersistenceImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsProcessor
+import edu.stanford.myheartcounts.healthstats.HealthStatsProcessorImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsRefresher
+import edu.stanford.myheartcounts.healthstats.HealthStatsRefresherImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsSourceSelector
+import edu.stanford.myheartcounts.healthstats.HealthStatsSourceSelectorImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsStore
+import edu.stanford.myheartcounts.healthstats.HealthStatsStoreImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsSync
+import edu.stanford.myheartcounts.healthstats.HealthStatsSyncConfiguration
+import edu.stanford.myheartcounts.healthstats.HealthStatsSyncEnvironment
+import edu.stanford.myheartcounts.healthstats.HealthStatsSyncEnvironmentImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsSyncImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsSyncScheduler
+import edu.stanford.myheartcounts.healthstats.HealthStatsSyncSchedulerImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsWorkoutMapper
+import edu.stanford.myheartcounts.healthstats.HealthStatsWorkoutMapperImpl
+import edu.stanford.myheartcounts.healthstats.HealthStatsWriter
+import edu.stanford.myheartcounts.healthstats.HealthStatsWriterImpl
 import edu.stanford.myheartcounts.home.FirebaseHomeSuggestionsSource
 import edu.stanford.myheartcounts.home.HomeContentMapper
 import edu.stanford.myheartcounts.home.HomeContentMapperImpl
@@ -31,12 +92,10 @@ import edu.stanford.myheartcounts.navigation.NavigatorImpl
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.notification.MHCNudgeNotifications
 import edu.stanford.myheartcounts.notification.MHCPushTokenSynchronizer
-import edu.stanford.myheartcounts.notification.NotificationPermissionHandler
-import edu.stanford.myheartcounts.notification.NotificationPermissionHandlerImpl
-import edu.stanford.myheartcounts.notification.PermissionChecker
-import edu.stanford.myheartcounts.notification.PermissionCheckerImpl
 import edu.stanford.myheartcounts.onboarding.OnboardingCompletion
 import edu.stanford.myheartcounts.onboarding.OnboardingCompletionImpl
+import edu.stanford.myheartcounts.onboarding.OnboardingProgressTracker
+import edu.stanford.myheartcounts.onboarding.OnboardingProgressTrackerImpl
 import edu.stanford.myheartcounts.onboarding.OnboardingStepLayoutMapper
 import edu.stanford.myheartcounts.onboarding.OnboardingStepLayoutMapperImpl
 import edu.stanford.myheartcounts.onboarding.OnboardingStepProvider
@@ -49,9 +108,6 @@ import edu.stanford.myheartcounts.standard.MHCAppRevision
 import edu.stanford.myheartcounts.standard.MHCEnvironmentTracker
 import edu.stanford.myheartcounts.standard.MHCQuestionnaireUploader
 import edu.stanford.myheartcounts.standard.QuestionnaireResponseUploader
-import edu.stanford.myheartcounts.standard.consent.ConsentPdfRenderer
-import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
-import edu.stanford.myheartcounts.standard.consent.MHCConsentUploader
 import edu.stanford.myheartcounts.standard.health.HealthAccess
 import edu.stanford.myheartcounts.standard.health.HealthAccessImpl
 import edu.stanford.myheartcounts.standard.health.HealthObservationMapper
@@ -67,6 +123,9 @@ import edu.stanford.myheartcounts.study.StudyEnroller
 import edu.stanford.myheartcounts.study.StudyEnrollerImpl
 import edu.stanford.myheartcounts.study.StudyQuestionnaireSource
 import edu.stanford.myheartcounts.study.StudyQuestionnaireSourceImpl
+import edu.stanford.myheartcounts.study.StudyVariantProvider
+import edu.stanford.myheartcounts.study.StudyVariantProviderImpl
+import edu.stanford.myheartcounts.study.StudyVariantSynchronizer
 import edu.stanford.myheartcounts.task.EventPerformer
 import edu.stanford.myheartcounts.task.EventPerformerImpl
 import edu.stanford.myheartcounts.task.EventTileMapper
@@ -75,6 +134,8 @@ import edu.stanford.myheartcounts.task.MissedEventsSource
 import edu.stanford.myheartcounts.task.MissedEventsSourceImpl
 import edu.stanford.myheartcounts.task.TaskPerformer
 import edu.stanford.myheartcounts.task.TaskPerformerImpl
+import edu.stanford.myheartcounts.ui.ArticleMapper
+import edu.stanford.myheartcounts.ui.ArticleMapperImpl
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksMapper
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksMapperImpl
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksSource
@@ -92,32 +153,32 @@ import org.grovealliance.study.StudyManager
  */
 @GroveDsl
 fun ConfigurationBuilder.appConfigurations() {
-    homeConfigurations()
+    demographicsConfigurations()
+    participationStatsConfigurations()
     singleton<Navigator> { NavigatorImpl() }
+    homeConfigurations()
     taskConfigurations()
     singleton<StudyAppBarProvider> {
         StudyAppBarProviderImpl(navigator = dependency())
     }
 
-    singleton<PermissionChecker> {
-        PermissionCheckerImpl(
-            context = appContext(),
-        )
-    }
-    singleton<NotificationPermissionHandler> {
-        NotificationPermissionHandlerImpl(
-            permissionChecker = dependency(),
-            storage = dependency(),
-        )
-    }
+    permissionConfigurations()
     singleton<OnboardingCompletion> {
         OnboardingCompletionImpl(storage = dependency())
+    }
+    factory<OnboardingProgressTracker> {
+        OnboardingProgressTrackerImpl(
+            account = dependency(),
+            accountService = dependency(),
+        )
     }
 
     factory<OnboardingStepProvider> {
         OnboardingStepProviderImpl(
             account = dependency(),
             notificationPermissionHandler = dependency(),
+            consentSigning = dependency(),
+            featureFlags = dependency(),
         )
     }
     factory<EligibilityLayoutMapper> { EligibilityLayoutMapperImpl() }
@@ -137,9 +198,17 @@ fun ConfigurationBuilder.appConfigurations() {
         )
     }
 
+    // Every build, release builds included, runs as Testing for now, so that test builds keep the
+    // changeable feature flags and the debug sheet opened by shaking the device. Keep it as is
+    // until the switch back to Production before the actual release (ROADMAP T65).
+    singleton { AppEnvironment.Testing }
+    featureFlagConfigurations()
+    debugConfigurations()
     studyConfigurations()
     firebaseConfigurations()
     healthConfigurations()
+    healthStatsConfigurations()
+    customSampleConfigurations()
 }
 
 /**
@@ -147,7 +216,12 @@ fun ConfigurationBuilder.appConfigurations() {
  */
 private fun ConfigurationBuilder.firebaseConfigurations() {
     module { AppLifecycle() }
-    module { MHCFirestore() }
+    module {
+        MHCFirestore(
+            account = dependency(),
+            firebaseAppConfiguration = dependency(),
+        )
+    }
     singleton<MHCCloudFunctions> {
         MHCCloudFunctionsImpl(firebaseAppConfiguration = dependency())
     }
@@ -159,6 +233,8 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
             build = BuildConfig.VERSION_CODE,
             bundleIdentifier = BuildConfig.APPLICATION_ID,
             osVersion = Build.VERSION.RELEASE,
+            deviceModel = Build.MODEL,
+            deviceType = Build.DEVICE,
         )
     }
     module<QuestionnaireResponseUploader> {
@@ -176,28 +252,28 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
         )
     }
 
-    module { MHCConsentDocumentProvider(studyBundleProvider = dependency()) }
-    singleton { ConsentPdfRenderer(context = appContext()) }
-    module {
-        MHCConsentUploader(
-            firebaseLoader = dependency(),
-            account = dependency(),
-            firestore = dependency(),
-            renderer = dependency(),
-            timeProvider = dependency(),
-        )
-    }
+    consentConfigurations()
 }
 
 /**
  * Registers what the account overview offers beyond the account itself.
  */
 private fun ConfigurationBuilder.accountOverviewConfigurations() {
-    factory<MHCAccountOverviewMapper> { MHCAccountOverviewMapperImpl() }
+    factory<MHCAccountOverviewMapper> {
+        MHCAccountOverviewMapperImpl(appRevision = dependency())
+    }
     factory<StudyWithdrawal> {
         StudyWithdrawalImpl(
             cloudFunctions = dependency(),
             accountService = dependency(),
+        )
+    }
+    factory<PostTrialNudges> { PostTrialNudgesImpl(account = dependency()) }
+    factory<MHCFeedback> {
+        MHCFeedbackImpl(
+            firestore = dependency(),
+            appRevision = dependency(),
+            timeProvider = dependency(),
         )
     }
 }
@@ -267,9 +343,64 @@ private fun ConfigurationBuilder.healthConfigurations() {
 }
 
 /**
+ * Registers the reading of the participant's monthly health statistics.
+ */
+private fun ConfigurationBuilder.healthStatsConfigurations() {
+    factory<HealthStatsEntryDecoder> { HealthStatsEntryDecoderImpl() }
+    factory<HealthStatsDocumentDecoder> { HealthStatsDocumentDecoderImpl(entryDecoder = dependency()) }
+    factory<HealthStatsMonths> { HealthStatsMonthsImpl(timeProvider = dependency()) }
+    factory<HealthStatsIntervalReducer> { HealthStatsIntervalReducerImpl(timeProvider = dependency()) }
+    factory<HealthStatsSourceSelector> { HealthStatsSourceSelectorImpl() }
+    factory<HealthStatsProcessor> {
+        HealthStatsProcessorImpl(
+            sourceSelector = dependency(),
+            intervalReducer = dependency(),
+        )
+    }
+    singleton<HealthStatsStore> {
+        HealthStatsStoreImpl(
+            account = dependency(),
+            firestore = dependency(),
+            months = dependency(),
+            decoder = dependency(),
+            processor = dependency(),
+            processingDispatcher = dependency<Concurrency>().defaultDispatcher(),
+        )
+    }
+    healthStatsPersistenceConfigurations()
+    healthStatsCollectionConfigurations()
+    healthStatsSyncConfigurations()
+}
+
+/**
+ * Registers the reading of the participant's survey-derived and entered health values.
+ */
+private fun ConfigurationBuilder.customSampleConfigurations() {
+    factory<CustomSampleDecoder> { CustomSampleDecoderImpl(timeProvider = dependency()) }
+    singleton<CustomSampleSource> {
+        CustomSampleSourceImpl(
+            account = dependency(),
+            firestore = dependency(),
+            decoder = dependency(),
+            processingDispatcher = dependency<Concurrency>().defaultDispatcher(),
+        )
+    }
+}
+
+/**
  * Registers study bundle loading and enrollment.
  */
 private fun ConfigurationBuilder.studyConfigurations() {
+    singleton<StudyVariantProvider> { StudyVariantProviderImpl(storageFactory = dependency()) }
+    module {
+        StudyVariantSynchronizer(
+            account = dependency(),
+            accountService = dependency(),
+            variantProvider = dependency(),
+            studyManager = dependency(),
+            scope = dependency<Concurrency>().ioCoroutineScope(),
+        )
+    }
     module<MHCStudyBundleProvider> {
         MHCStudyBundleProviderImpl(
             context = appContext(),
@@ -281,6 +412,7 @@ private fun ConfigurationBuilder.studyConfigurations() {
     factory<StudyArticleSource> {
         StudyArticleSourceImpl(
             studyBundleProvider = dependency(),
+            variantProvider = dependency(),
             ioDispatcher = dependency<Concurrency>().ioDispatcher(),
         )
     }
@@ -288,6 +420,7 @@ private fun ConfigurationBuilder.studyConfigurations() {
     factory<StudyQuestionnaireSource> {
         StudyQuestionnaireSourceImpl(
             studyBundleProvider = dependency(),
+            variantProvider = dependency(),
             ioDispatcher = dependency<Concurrency>().ioDispatcher(),
         )
     }
@@ -306,6 +439,12 @@ private fun ConfigurationBuilder.studyConfigurations() {
  * Registers how tasks are listed and performed, shared by every screen that offers them.
  */
 private fun ConfigurationBuilder.taskConfigurations() {
+    factory<ArticleMapper> {
+        ArticleMapperImpl(
+            timeProvider = dependency(),
+            variantProvider = dependency(),
+        )
+    }
     singleton<TaskPerformer> { TaskPerformerImpl(navigator = dependency()) }
     factory<EventTileMapper> {
         EventTileMapperImpl(
@@ -323,6 +462,7 @@ private fun ConfigurationBuilder.taskConfigurations() {
     factory<EventPerformer> {
         EventPerformerImpl(
             articleSource = dependency(),
+            articleMapper = dependency(),
             questionnaireSource = dependency(),
             taskPerformer = dependency(),
             scheduler = dependency(),
@@ -355,6 +495,130 @@ private fun ConfigurationBuilder.homeConfigurations() {
         FirebaseHomeSuggestionsSource(
             firestore = dependency(),
             timeProvider = dependency(),
+        )
+    }
+    heartHealthConfigurations()
+}
+
+/**
+ * Registers the Heart Health tab's score and explainer sources and its layout mapper.
+ */
+private fun ConfigurationBuilder.heartHealthConfigurations() {
+    factory<HeartHealthQueryRanges> { HeartHealthQueryRangesImpl(timeProvider = dependency()) }
+    factory<HeartHealthScoreCalculator> { HeartHealthScoreCalculatorImpl(timeProvider = dependency()) }
+    singleton<HeartHealthScoreSource> {
+        HeartHealthScoreSourceImpl(
+            account = dependency(),
+            stats = dependency(),
+            customSamples = dependency(),
+            health = dependency(),
+            calculator = dependency(),
+            ranges = dependency(),
+        )
+    }
+    factory<HeartHealthExplainerSource> {
+        HeartHealthExplainerSourceImpl(
+            studyBundleProvider = dependency(),
+            variantProvider = dependency(),
+            ioDispatcher = dependency<Concurrency>().ioDispatcher(),
+        )
+    }
+    factory<HeartScoreDateFormatter> { HeartScoreDateFormatterImpl(timeProvider = dependency()) }
+    factory<HeartHealthContentMapper> { HeartHealthContentMapperImpl(dateFormatter = dependency()) }
+    heartScoreDetailConfigurations()
+}
+
+private fun ConfigurationBuilder.healthStatsPersistenceConfigurations() {
+    singleton {
+        HealthStatsSyncConfiguration(
+            sourceId = FirebaseSchema.StatsSource.HEALTH_CONNECT,
+            deriveExerciseTime = true,
+            deriveBodyMassIndex = true,
+            sleepDataOrigin = null,
+        )
+    }
+    factory<HealthStatsDocumentEncoder> {
+        HealthStatsDocumentEncoderImpl(
+            timeProvider = dependency(),
+            entryDecoder = dependency(),
+        )
+    }
+    factory<HealthStatsHistory> { HealthStatsHistoryImpl(timeProvider = dependency()) }
+    singleton<HealthStatsWriter> {
+        HealthStatsWriterImpl(
+            firestore = dependency(),
+            encoder = dependency(),
+            account = dependency(),
+        )
+    }
+    singleton<HealthStatsCheckpointStore> {
+        HealthStatsCheckpointStoreImpl(
+            storage = dependency<KeyValueStorageFactory>().create(fileName = "mhc-health-stats-sync", type = KeyValueStorageType.ENCRYPTED),
+            account = dependency(),
+        )
+    }
+}
+
+private fun ConfigurationBuilder.healthStatsCollectionConfigurations() {
+    factory<HealthStatsWorkoutMapper> { HealthStatsWorkoutMapperImpl() }
+    factory<HealthStatsMonthCollector> {
+        HealthStatsMonthCollectorImpl(
+            health = dependency(),
+            workoutMapper = dependency(),
+            configuration = dependency(),
+        )
+    }
+    singleton<HealthStatsPersistence> {
+        HealthStatsPersistenceImpl(
+            writer = dependency(),
+            checkpoints = dependency(),
+            account = dependency(),
+        )
+    }
+    factory<HealthStatsSyncEnvironment> {
+        HealthStatsSyncEnvironmentImpl(
+            health = dependency(),
+            timeProvider = dependency(),
+            appLifecycle = dependency(),
+            storage = dependency<KeyValueStorageFactory>().create(
+                fileName = "mhc-health-read-access",
+                type = KeyValueStorageType.UNENCRYPTED,
+            ),
+        )
+    }
+    factory<HealthStatsMonthlySync> {
+        HealthStatsMonthlySyncImpl(
+            health = dependency(),
+            collector = dependency(),
+            persistence = dependency(),
+            environment = dependency(),
+            configuration = dependency(),
+            account = dependency(),
+        )
+    }
+}
+
+private fun ConfigurationBuilder.healthStatsSyncConfigurations() {
+    singleton<HealthStatsRefresher> {
+        HealthStatsRefresherImpl(
+            account = dependency(),
+            history = dependency(),
+            health = dependency(),
+            monthlySync = dependency(),
+            configuration = dependency(),
+            writer = dependency(),
+        )
+    }
+    factory<HealthStatsSyncScheduler> { HealthStatsSyncSchedulerImpl(context = appContext()) }
+    singleton<HealthStatsSync> {
+        HealthStatsSyncImpl(
+            account = dependency(),
+            studyManager = dependency(),
+            appLifecycle = dependency(),
+            refresher = dependency(),
+            scheduler = dependency(),
+            persistence = dependency(),
+            scope = dependency<Concurrency>().ioCoroutineScope(),
         )
     }
 }

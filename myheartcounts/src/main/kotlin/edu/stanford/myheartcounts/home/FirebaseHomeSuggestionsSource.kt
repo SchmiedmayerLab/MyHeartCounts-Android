@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.home
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
+import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import kotlinx.coroutines.channels.awaitClose
@@ -25,7 +26,6 @@ import java.time.Duration
  *
  * The backend writes every nudge it sends into `users/{uid}/notificationHistory`, and the Home tab
  * shows the newest one back so a participant who dismissed or missed the notification still sees it.
- * Ports iOS's `DailyNudge`.
  */
 class FirebaseHomeSuggestionsSource(
     private val firestore: MHCFirestore,
@@ -35,10 +35,9 @@ class FirebaseHomeSuggestionsSource(
     private val logger by mhcFirebaseLogger()
 
     override val nudge: Flow<DailyNudge?> = callbackFlow {
-        firestore.awaitReady()
 
-        val registration = firestore.notificationHistory
-            .orderBy(FIELD_ORIGINAL_TIMESTAMP, Query.Direction.DESCENDING)
+        val registration = firestore.notificationHistory()
+            .orderBy(FirebaseSchema.NotificationHistory.ORIGINAL_TIMESTAMP, Query.Direction.DESCENDING)
             .limit(1)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -54,21 +53,20 @@ class FirebaseHomeSuggestionsSource(
     /**
      * Always empty.
      *
-     * iOS derives prompted actions from account state and device capabilities that have no Android
-     * counterpart yet; there is nothing to prompt until they do.
+     * Prompted actions are not modelled.
      */
     override val pendingActions: Flow<List<PromptedAction>> = flowOf(emptyList())
 
     /**
      * The nudge [document] describes, or `null` when it is too old to still be worth showing.
      *
-     * Matching iOS, a nudge is only surfaced on the day it was sent or the day after: past that it
-     * is history rather than a prompt.
+     * A nudge is only surfaced on the day it was sent or the day after: past that it is history
+     * rather than a prompt.
      */
     private fun nudgeFrom(document: DocumentSnapshot): DailyNudge? {
-        val title = document.getString(FIELD_TITLE)
-        val body = document.getString(FIELD_BODY)
-        val sentAt = (document.get(FIELD_ORIGINAL_TIMESTAMP) as? Timestamp)?.toInstant()
+        val title = document.getString(FirebaseSchema.NotificationHistory.TITLE)
+        val body = document.getString(FirebaseSchema.NotificationHistory.BODY)
+        val sentAt = (document.get(FirebaseSchema.NotificationHistory.ORIGINAL_TIMESTAMP) as? Timestamp)?.toInstant()
         if (title == null || body == null || sentAt == null) return null
 
         val age = Duration.between(sentAt, timeProvider.nowInstant())
@@ -81,13 +79,9 @@ class FirebaseHomeSuggestionsSource(
     }
 
     private companion object {
-        const val FIELD_TITLE = "title"
-        const val FIELD_BODY = "body"
-        const val FIELD_ORIGINAL_TIMESTAMP = "originalTimestamp"
-
         /**
-         * How long a nudge stays on the Home tab. iOS shows one sent today or yesterday; two days is
-         * the same window expressed without needing the participant's calendar.
+         * How long a nudge stays on the Home tab: one sent today or yesterday, expressed without
+         * needing the participant's calendar.
          */
         val MAX_AGE: Duration = Duration.ofDays(2)
     }
