@@ -155,6 +155,7 @@ import org.grovealliance.study.StudyManager
 fun ConfigurationBuilder.appConfigurations() {
     demographicsConfigurations()
     comorbiditiesConfigurations()
+    workoutPreferenceConfigurations()
     participationStatsConfigurations()
     singleton<Navigator> { NavigatorImpl() }
     homeConfigurations()

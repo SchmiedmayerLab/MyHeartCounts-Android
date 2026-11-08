@@ -40,19 +40,19 @@ As of 2026-11-07. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 33 | 65 | 51% |
+| App tickets (`T`) | 35 | 66 | 53% |
 | Grove tickets (`G`) | 11 | 14 | 79% |
-| **All tickets** | **44** | **79** | **56%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only row) | 68 ✅ · 19 🟡 · 32 ❌ | 119 | 57% (65% counting 🟡 as half) |
+| **All tickets** | **46** | **80** | **58%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 69 ✅ · 19 🟡 · 31 ❌ | 119 | 58% (66% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
 | 1. Correctness bugs | 8 / 9 | T57 |
 | 2. Data-collection foundations | 2 / 7 | T08, T09, T11, T12, T13 |
-| 3. Onboarding parity | 10 / 12 | T17, T64 |
+| 3. Onboarding parity | 11 / 12 | T64 |
 | 4. Questionnaires and tasks | 4 / 9 | T24, T27, T54, T55, T59 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
-| 6. Account sheet and prompted actions | 3 / 9 | T33, T35, T38–T40, T58 |
+| 6. Account sheet and prompted actions | 4 / 10 | T33, T35, T38–T40, T58 |
 | 7. Heart Health dashboard | 5 / 6 | T44 |
 | 8. Consent renewal | 0 / 1 | T47 |
 | 9. Localization | 0 / 1 | T48 |
@@ -176,13 +176,13 @@ logic, and the consent PDF.
 | Consent PDF (paper size by region) uploaded with metadata; account keys updated | `MyHeartCountsStandard+Consent.swift`, `Onboarding/Consent.swift` | ✅ Done | `MHCConsentHandler.kt`. B1 fixed (T01). Untouched elements are seeded with their initial values, as iOS does, so `futureStudies` and `didOptInToTrial` are always written. Earlier data: see T57 |
 | Health permissions step (baseline + all study types) | `Onboarding/HealthKitPermissions.swift` | ✅ Done | T10: Continue requests every collected read type plus history and background (`standard/health/HealthAccess.kt`), waits for the screen to close and continues whatever was granted, as iOS does. While Health Connect must be installed or updated, the step offers that, plus Skip (G01). Divergence: no write permissions (iOS also asks to write workouts, height, weight, BMI, glucose, BP; D1) |
 | Health Records permissions step | `Onboarding/HealthRecordPermissions.swift` | 💤 iOS-inactive | `includeInOnboarding = false` |
-| Workout preference (9 workout types, nudge time in 15-min steps), also reusable as a sheet | `Onboarding/WorkoutPreferenceSetting*.swift` | ❌ Missing | Models and account keys exist (`model/workout/*`) |
+| Workout preference (9 workout types, nudge time in 15-min steps) | `Onboarding/WorkoutPreferenceSetting*.swift` | ✅ Done | Onboarding step after health access (T17); iOS's sheet mode has no entry point, Android opens the form standalone from the account sheet (T66) |
 | Notification permission (skipped if already granted) | `Onboarding/NotificationPermissions.swift` | ✅ Done | `NotificationPermissionHandler.kt` |
 | Demographics step (Continue gated on required fields) | `Onboarding/DemographicsStep.swift` | ✅ Done | `DemographicsStep`; completion and successful-save gate before final enrollment (T21) |
 | Final enrollment page (trial row only if opted in) | `Onboarding/FinalEnrollmentStep.swift` | ✅ Done | Trial row only when the consent's trial question was answered yes (T22) |
 | Enroll, reusing the account's `dateOfEnrollment` | `MyHeartCountsStandard.enroll` | ✅ Done | `study/StudyEnroller.kt`; a failed enrollment shows an error toast and keeps the participant on the final step, as on iOS |
 | Record local `studyActivationDate`; start historical export after enrollment | `MyHeartCountsStandard.enroll` | ❌ Missing | |
-| Track `mostRecentOnboardingStep` on the account per step | `Onboarding/ProgressTracking.swift` | ✅ Done | `onboarding/OnboardingProgressTracker` (T16); `demographics` is recorded by T21; `workoutPreference` follows with T17 |
+| Track `mostRecentOnboardingStep` on the account per step | `Onboarding/ProgressTracking.swift` | ✅ Done | `onboarding/OnboardingProgressTracker` (T16); `demographics` is recorded by T21, `workoutPreference` by T17 |
 
 ### 2.3 Consent lifecycle
 
@@ -201,6 +201,7 @@ logic, and the consent PDF.
 | Participation stats: enrollment date; engagement (tasks done, current and longest streak, surveys, articles, ECGs, walk/run tests); health totals (steps, heartbeats, distance, active energy, exercise time, sleep, workouts, flights); highlights (best step day, longest workout, max and resting HR); fun facts | `Account/ParticipationStatsView.swift` (`AccountSheet.studyParticipationSection`) | ❌ Missing | Not in the original audit. Health totals and highlights come from the stats documents (T61, T62), as on iOS (`ParticipationStatsProvider`); ECG count depends on D2 (T58). UI built with sample data behind a DUMMY DATA badge, see T58 |
 | Post-trial activity nudges toggle (`extendedActivityNudgesOptIn`, debounced) | `AccountSheet.PostTrialNudgesToggle` | ✅ Done | `ui/ToggleSection` in the account overview (T34); shown to every signed-in participant until the study participation section exists (T33) |
 | Update comorbidities | `Account/UpdateComorbiditiesButton.swift` | ✅ Done | `comorbidities/`, opened from the account sheet's study section (T37) |
+| Change the workout preference after onboarding | — | ✅ Android-only | The account sheet's study section opens the onboarding form standalone (T66); iOS tells participants they can change it later but offers no entry; the Android copy drops that sentence |
 | SensorKit enable/manage | `SensorKit/SensorKitButton.swift` | ➖ N/A | |
 | Data processing indicator ("Processing Health data…") | `AccountSheet.dataProcessingRow` | ❌ Missing | |
 | Change language | `AccountSheet` → Settings app | ❌ Missing | Android 13+ per-app language settings |
@@ -375,10 +376,10 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 |---|---|---|
 | 1 | T01–T07 ✅, **T10** ✅, T57 | G01 ✅ (for T10) |
 | 2 | T08, T09, T11, T12 🟡, T13, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
-| 3 | T14–T16 ✅, T17, T18–T22 ✅, T56 ✅, T63 ✅, T64 | G09 ✅ (for T08/T16 locale correctness) |
+| 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
-| 6 | T33 🟡, T34 ✅, T35, T36 ✅, T37 ✅, T38–T40, T58 🟡 | G08 ✅ (for T38) |
+| 6 | T33 🟡, T34 ✅, T35, T36 ✅, T37 ✅, T38–T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
 | 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
 | 8 | T47 | — |
 | 9 | T48 🟡 | G10 ✅ (Grove side) |
@@ -512,12 +513,13 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Tags:** `onboarding`, `feature`
 **Description:** Write `mostRecentOnboardingStep` (iOS raw values: `welcome`, `eligibility`, `login`, `disclaimer1-4`, `comprehension`, `consent`, `healthAccess`, `workoutPreference`, `notifications`, `demographics`, `finalStep`) to the account on entering each step while signed in. Map the Android steps to these IDs. iOS: `ProgressTracking.swift`.
 **Acceptance:** Firestore shows the same step IDs for both platforms.
-**As built:** `onboarding/OnboardingProgressTracker` (+Impl) maps the onboarding steps to the iOS identifiers: StudyOverview, TrialComponent, DataCollection and RisksAndBenefits are `disclaimer1`–`disclaimer4` (the same four pages in the same order); Ineligible and CountryUnavailable record nothing, as they belong to the eligibility step on iOS. `OnboardingViewModel` hands it its current step; it writes a step once that step is current while somebody is signed in, which also covers the step shown right after login (the account's details arrive only after the login screen moves on, so checking at the moment the step changed would miss it). A failed write is logged, as on iOS. Differences from iOS: StudyOverview comes before Login for someone not yet signed in, so `disclaimer1` is only recorded for participants who are already signed in; and `login` is recorded only if the account's details arrive before the login screen moves on, which usually they don't (iOS records it when the step appears to someone already signed in, which Android skips). `demographics` is recorded with T21; `workoutPreference` follows with T17. Covered by `OnboardingProgressTrackerTest`; checked on the emulator against the Firebase emulator suite (`healthAccess` after login, `finalStep` on the final step).
+**As built:** `onboarding/OnboardingProgressTracker` (+Impl) maps the onboarding steps to the iOS identifiers: StudyOverview, TrialComponent, DataCollection and RisksAndBenefits are `disclaimer1`–`disclaimer4` (the same four pages in the same order); Ineligible and CountryUnavailable record nothing, as they belong to the eligibility step on iOS. `OnboardingViewModel` hands it its current step; it writes a step once that step is current while somebody is signed in, which also covers the step shown right after login (the account's details arrive only after the login screen moves on, so checking at the moment the step changed would miss it). A failed write is logged, as on iOS. Differences from iOS: StudyOverview comes before Login for someone not yet signed in, so `disclaimer1` is only recorded for participants who are already signed in; and `login` is recorded only if the account's details arrive before the login screen moves on, which usually they don't (iOS records it when the step appears to someone already signed in, which Android skips). `demographics` is recorded with T21, `workoutPreference` with T17. Covered by `OnboardingProgressTrackerTest`; checked on the emulator against the Firebase emulator suite (`healthAccess` after login, `finalStep` on the final step).
 
-#### T17: Workout preference step and editor
+#### T17: Workout preference step ✅ Done
 **Tags:** `onboarding`, `account`, `feature`
-**Description:** Add the WorkoutPreference step after health access: 9 workout types (multi-select, iOS IDs), and a nudge notification time picker in 15-minute steps, default 09:00. Save to `preferredWorkoutTypes` / `preferredNotificationTime`. Make the screen reusable from settings as a sheet. iOS: `WorkoutPreferenceSetting*.swift`.
+**Description:** Add the WorkoutPreference step after health access: 9 workout types (multi-select, iOS IDs), and a nudge notification time picker in 15-minute steps, default 09:00. Save to `preferredWorkoutTypes` / `preferredNotificationTime`. iOS: `WorkoutPreferenceSetting*.swift`.
 **Acceptance:** Values round-trip in the iOS string formats (`walk,run`, `09:00`).
+**As built:** `OnboardingStep.WorkoutPreference` sits between HealthAccess and Notifications (or Demographics when notifications are already allowed), as on iOS, and back navigation follows the same order; the SimplifyOnboarding debug flow is now Login → HealthAccess → WorkoutPreference → FinalEnrollment. The step wraps the reusable `workoutpreference/ui/WorkoutPreferenceScreen(mode, onDismiss, onSaved)`: back goes to the previous step and a successful save to the next. The screen's `WorkoutPreferenceViewModel` owns its app bar ("Workout Preference" with back) and error toast, loads the stored preference into `WorkoutPreferenceEditor` each time the screen is displayed (no types and 09:00 without one), toggles types, rounds a chosen time to the nearest quarter hour, and on Continue stores `preferredWorkoutTypes` and `preferredNotificationTime`, reporting `Saved` or, on failure, showing an error toast and staying (iOS logs and continues). Leaving and saving reach the host as `WorkoutPreferenceEvent`s. The screen doesn't know its host: `WorkoutPreferenceScreenMode.Step` (used by onboarding) ends the form with Continue, `Standalone` has no bottom button and saves with a Save action in the app bar (`ui/AppBarTextAction`, promoted from the heart score entry form's save action). The step records `workoutPreference` as the most recent onboarding step (T16). UI: `workoutpreference/ui/WorkoutPreferenceLayout` (introduction card, "Preferred Workout Types" `ui/choice/ChoiceSection` of `ChoiceRow`s with leading icons, `NotificationTimeRow` with the time as a `ui/ValueBadge` in the locale's short format, in `Step` mode Continue at the end of the scrolling form) and `NotificationTimePicker` (Material time dialog following the device's 12/24-hour setting, with its own `State`), built by `workoutpreference/WorkoutPreferenceLayoutMapper` from `WorkoutPreferenceLayoutInput`; interactions are `WorkoutPreferenceAction`s handled by the screen's view model. Shared along the way: `ChoiceSection` (also the demographics choice sheet), the leading `ChoiceRow` icon, and `ValueBadge` (also `EntryDateRow`, whose dialogs now open from `HeartScoreEntryState.picker`). Material icons stand in for the figure symbols; HIIT and Other have no exact Material match. The settings sheet from the original description was dropped: iOS supports a sheet mode but never opens it. T66 adds an account sheet entry as an Android-only divergence. Covered by `WorkoutPreferenceSerializationTest` (the `walk,run,…` and `09:00` formats both ways), `WorkoutPreferenceEditorTest`, `WorkoutPreferenceLayoutMapperTest`, `WorkoutPreferenceViewModelTest`, `OnboardingStepProviderTest`, `OnboardingProgressTrackerTest` and the `WorkoutPreferenceScreenContentScreenshotTest` and `NotificationTimePickerScreenshotTest` baselines. Checked on the emulator against the seeded Firebase emulator suite in the simplified flow: `mostRecentOnboardingStep` was `workoutPreference` on entry; nothing was stored before Continue; Walking, Running and Yoga / Pilates with 6:35 PM stored `walk,run,yoga/pilates` and `18:30`; going back reloaded them; Cancel in the picker changed nothing; unchecking Running stored `walk,yoga/pilates`; Start enrolled the participant. The failed-save toast wasn't triggered live.
 
 #### T18: Demographics form, core fields and persistence ✅ Done
 **Tags:** `demographics`, `feature`
@@ -545,7 +547,7 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Description:** Insert the Demographics step before FinalEnrollment. Continue stays disabled until all required fields are complete. iOS: `DemographicsStep.swift`. Depends on T18 and T19.
 **Acceptance:** Onboarding can't finish without required demographics.
 
-**As built:** The step, titled Demographics, enters after Notifications (or straight after HealthAccess when notifications are already granted) and before FinalEnrollment; Back from FinalEnrollment returns to it. Continue is enabled once every required answer is given and advances only after the pending answers are stored; if storing fails, an error toast is shown and the participant stays on the step. That second condition is a deliberate difference: iOS advances right away and flushes when the form disappears. Progress tracking records `demographics`. The SimplifyOnboarding debug flow keeps its short path. Covered by `OnboardingStepProviderTest`, `OnboardingStepLayoutMapperTest` and `OnboardingProgressTrackerTest`.
+**As built:** The step, titled Demographics, enters after Notifications (or straight after WorkoutPreference when notifications are already granted) and before FinalEnrollment; Back from FinalEnrollment returns to it. Continue is enabled once every required answer is given and advances only after the pending answers are stored; if storing fails, an error toast is shown and the participant stays on the step. That second condition is a deliberate difference: iOS advances right away and flushes when the form disappears. Progress tracking records `demographics`. The SimplifyOnboarding debug flow keeps its short path. Covered by `OnboardingStepProviderTest`, `OnboardingStepLayoutMapperTest` and `OnboardingProgressTrackerTest`.
 
 #### T64: Height and weight in the participant's measurement system
 **Tags:** `demographics`, `feature`
@@ -676,6 +678,12 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Description:** A settings entry that opens the comorbidities picker and flushes on Done. iOS: `UpdateComorbiditiesButton.swift`. Depends on T19.
 **Acceptance:** Changes persist to `comorbidities`.
 **As built:** An "Update Health Conditions" row in the account sheet's study section (`account/overview/StudyParticipationSection`, below View Participation Stats) opens `MHCRoute.Comorbidities`, a screen of its own in the `comorbidities/` package with a back button and the "Select Comorbidities" title. `ComorbiditiesViewModel` edits a copy of the stored comorbidities: primary and secondary conditions on separate cards, a check on the chosen ones with a "Since" row opening a month/year picker ("Don't know" stores an empty date), and "None" offered only while nothing is chosen. Leaving the screen, by the back button or the system back, stores the comorbidities through `ComorbiditiesStorage` if they changed; storing outlives the screen, and a failure is logged. The conditions come from `comorbidities/ComorbiditiesConditionsProvider` (primary and secondary groups, with the explanations of chronic kidney and peripheral vascular disease). The demographics form's comorbidities sheet reads the same list through `DemographicsCatalog` and shares `comorbidities/ComorbiditiesRules` (choosing, unchoosing and dating a condition, and when "None" is offered), `comorbidities/DiagnosisDateMapper` (the "Since" wording and the month/year picker) and the `ui/choice` components (`ChoiceRow`, `ChoiceFollowUpRow`, `MonthYearPicker`). Divergences: a screen with back navigation instead of a sheet with Done, and the conditions are chosen in one list with a "Since" row rather than on a detail page per condition (as in the demographics form). Covered by `ComorbiditiesViewModelTest`, `ComorbiditiesRulesTest`, `DiagnosisDateMapperTest`, the overview mapper and view-model tests, and the `ComorbiditiesScreenContent` and `StudyParticipationSection` screenshots.
+
+#### T66: Change the workout preference from settings ✅ Done
+**Tags:** `account`, `feature`, `android-only`
+**Description:** The workout preference step (T17) tells participants they can change the notification time later, but iOS offers no way to: its form has a sheet mode that nothing opens. Add an account sheet entry that opens the same form on its own, with its own app bar, saving with an app bar action. The backend plans nudges from `preferredNotificationTime`, so the time should stay editable. Deliberate divergence from iOS. Depends on T17.
+**Acceptance:** Changes made from the account sheet persist to `preferredWorkoutTypes` / `preferredNotificationTime`; leaving without saving keeps the stored values.
+**As built:** A "Workout Preference" row in the account sheet's study section (`account/overview/StudyParticipationSection`, below Update Health Conditions) opens `MHCRoute.WorkoutPreference`, which shows `WorkoutPreferenceScreen` in `Standalone` mode: back and a successful save both close the route. Standalone mode has no bottom button and saves with a Save action in the app bar (`ui/AppBarTextAction`), enabled only once the preference differs from the one the screen was displayed with, showing progress and ignoring repeated taps; a failed save shows an error toast and stays. The screen loads the stored preference each time it is displayed. Covered by `MHCAccountOverviewMapperTest`, `MHCAccountOverviewViewModelTest`, `WorkoutPreferenceViewModelTest`, `WorkoutPreferenceLayoutMapperTest` and the `StudyParticipationSectionScreenshotTest` baseline. Checked on the emulator against the seeded Firebase emulator suite: after onboarding with `walk` / `09:00`, the screen opened on Walking with Save in the app bar and no bottom button; toggling Swimming and going back stored nothing and reopening showed Walking only; Swimming plus 7:00 PM and Save stored `walk,swim` and `19:00`, closed to the account sheet, and reopening showed the saved values. The notification time's subtitle drops iOS's "You can change this later.", since the same form is shown in both places.
 
 #### T38: Verify email sheet
 **Tags:** `account`, `feature`
@@ -1002,7 +1010,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | Group | ✅ | 🟡 | ❌ | ➖ / 💤 |
 |---|---|---|---|---|
 | App shell and lifecycle | 8 | 4 | 4 | – |
-| Onboarding | 19 | 1 | 3 | 1 💤 |
+| Onboarding | 20 | 1 | 2 | 1 💤 |
 | Consent lifecycle | – | – | 2 | – |
 | Account and settings | 6 | 2 | 8 | 1 ➖ |
 | Demographics | 6 | – | 1 | – |
@@ -1015,7 +1023,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | Backend, notifications, environment | 4 | 2 | – | – |
 | Tooling | – | – | 4 | 1 ➖ |
 
-Counts are feature rows from sections 2.1–2.13, excluding the Android-only row; the "verify" row in 2.7
+Counts are feature rows from sections 2.1–2.13, excluding the Android-only rows; the "verify" row in 2.7
 counts as 🟡. The foundations are solid: Firebase per region, account, eligibility and waitlist, consent
 upload, launch routing, withdrawal, the Home and Tasks tabs with missed tasks, questionnaires, push tokens
 and foreground nudges, and the Health Connect permission request with the collection and upload pipeline, most of it built on

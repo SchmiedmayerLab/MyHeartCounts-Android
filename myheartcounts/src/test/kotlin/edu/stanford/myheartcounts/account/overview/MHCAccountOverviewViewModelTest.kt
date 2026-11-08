@@ -90,6 +90,18 @@ class MHCAccountOverviewViewModelTest {
     }
 
     @Test
+    fun `opens the workout preference from the account overview`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        viewModel.studyParticipationSection().onWorkoutPreferenceSelected()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.WorkoutPreference))
+    }
+
+    @Test
     fun `asks for confirmation before withdrawing`() {
         // given
         val viewModel = viewModel()
