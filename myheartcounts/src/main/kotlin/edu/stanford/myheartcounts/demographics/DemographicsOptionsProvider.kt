@@ -8,12 +8,13 @@
 package edu.stanford.myheartcounts.demographics
 
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProvider
 import org.grovealliance.ui.StringResource
 
 /**
  * Provides the title of each demographic question and the responses offered to those answered from
  * a fixed list. Regions and conditions are provided by [DemographicsRegionsProvider] and
- * [DemographicsConditionsProvider].
+ * [ComorbiditiesConditionsProvider].
  */
 interface DemographicsOptionsProvider {
 

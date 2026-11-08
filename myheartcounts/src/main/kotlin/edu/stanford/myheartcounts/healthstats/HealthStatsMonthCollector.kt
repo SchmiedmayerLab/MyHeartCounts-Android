@@ -31,19 +31,19 @@ import java.time.Instant
 import kotlin.math.pow
 
 /**
+ * Collects the device data needed for one metric's monthly contribution.
+ */
+interface HealthStatsMonthCollector {
+    suspend fun collect(metric: HealthStatsSyncMetric, month: HealthStatsMonth): Result<HealthStatsCollectedMonth>
+}
+
+/**
  * A complete monthly snapshot and the device records it represents.
  */
 data class HealthStatsCollectedMonth(
     val entries: List<HealthStatsEntry>,
     val recordIds: Set<String>,
 )
-
-/**
- * Collects the device data needed for one metric's monthly contribution.
- */
-interface HealthStatsMonthCollector {
-    suspend fun collect(metric: HealthStatsSyncMetric, month: HealthStatsMonth): Result<HealthStatsCollectedMonth>
-}
 
 class HealthStatsMonthCollectorImpl(
     private val health: Health,

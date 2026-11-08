@@ -54,6 +54,7 @@ class HeartScoreEntryViewModel(
             state = state.asStateFlow(),
             scope = viewModelScope,
             actionSink = sink,
+            onSave = ::save,
         ),
     )
     private val scaffold = mutableScaffoldState(appBar = mapped.appBar)
@@ -100,24 +101,30 @@ class HeartScoreEntryViewModel(
         if (state.value.saving) return
         val form = state.value.form
         when (action) {
-            is HeartScoreEntryAction.FieldChanged -> {
-                if (form.acceptsWholeNumbersOnly(field = action.field) && !action.value.all { it.isDigit() }) return
-                val form = when (action.field) {
-                    HeartScoreEntryAction.Field.Value -> form.copy(value = action.value)
-                    HeartScoreEntryAction.Field.Diastolic -> form.copy(diastolic = action.value)
-                    HeartScoreEntryAction.Field.Weight -> form.copy(weight = action.value)
-                    HeartScoreEntryAction.Field.Height -> form.copy(height = action.value)
-                    HeartScoreEntryAction.Field.Inches -> form.copy(inches = action.value)
-                }
-                update(form = form)
-            }
+            is HeartScoreEntryAction.FieldChanged -> changeField(
+                form = form,
+                action = action,
+            )
             is HeartScoreEntryAction.DateChanged -> update(form = form.copy(date = action.value))
+            is HeartScoreEntryAction.PickerRequested -> state.value = state.value.copy(picker = action.picker)
+            HeartScoreEntryAction.PickerDismissed -> state.value = state.value.copy(picker = null)
             is HeartScoreEntryAction.ModeChanged -> update(form = form.copy(directBmi = action.direct))
-            HeartScoreEntryAction.Save -> save()
             HeartScoreEntryAction.Close -> navigator.push(
                 event = NavigationEvent.Close(route = MHCRoute.HeartScoreEntry(component = component)),
             )
         }
+    }
+
+    private fun changeField(form: HeartScoreEntryForm, action: HeartScoreEntryAction.FieldChanged) {
+        if (form.acceptsWholeNumbersOnly(field = action.field) && !action.value.all { it.isDigit() }) return
+        val changed = when (action.field) {
+            HeartScoreEntryAction.Field.Value -> form.copy(value = action.value)
+            HeartScoreEntryAction.Field.Diastolic -> form.copy(diastolic = action.value)
+            HeartScoreEntryAction.Field.Weight -> form.copy(weight = action.value)
+            HeartScoreEntryAction.Field.Height -> form.copy(height = action.value)
+            HeartScoreEntryAction.Field.Inches -> form.copy(inches = action.value)
+        }
+        update(form = changed)
     }
 
     private fun update(form: HeartScoreEntryForm) {
@@ -145,8 +152,8 @@ class HeartScoreEntryViewModel(
         )
     }
 
-    private fun save() {
-        if (!state.value.canSave) return
+    private suspend fun save() {
+        if (!state.value.canSave || state.value.saving) return
         val entry = state.value.form.entry() ?: return
         state.value = state.value.copy(saving = true, error = null)
         viewModelScope.launch {
@@ -164,7 +171,7 @@ class HeartScoreEntryViewModel(
                     )
                 },
             )
-        }
+        }.join()
     }
 
     companion object {

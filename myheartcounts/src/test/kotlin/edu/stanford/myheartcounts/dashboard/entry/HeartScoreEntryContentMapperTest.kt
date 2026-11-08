@@ -57,6 +57,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         )
         val rows = mapped.layout.panels.single().rows
@@ -98,6 +99,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         )
         val row = mapped.layout.panels.single().rows.first()
@@ -135,6 +137,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         ).layout
         layout.picker!!.onSelected(0)
@@ -170,6 +173,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         ).layout.panels.single().rows
         runCurrent()
@@ -201,6 +205,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         ).layout.panels[1].rows
 
@@ -227,6 +232,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         ).layout.dateRow
 
@@ -251,6 +257,7 @@ class HeartScoreEntryContentMapperTest {
                 state = state,
                 scope = backgroundScope,
                 actionSink = actions,
+                onSave = {},
             ),
         ).layout.dateRow
 
@@ -263,5 +270,44 @@ class HeartScoreEntryContentMapperTest {
             HeartScoreEntryAction.DateChanged(value = LocalDateTime.of(2026, 1, 1, 9, 15)),
             HeartScoreEntryAction.DateChanged(value = LocalDateTime.of(2026, 1, 2, 8, 30)),
         ).inOrder()
+    }
+
+    @Test
+    fun `date and time badges request their pickers and the time picker opens on the entry's time`() = runTest {
+        // given
+        val state = MutableStateFlow(
+            HeartScoreEntryState(
+                form = form,
+                canSave = false,
+                bmi = null,
+            ),
+        )
+        val row = mapper.map(
+            input = HeartScoreEntryContentInput(
+                state = state,
+                scope = backgroundScope,
+                actionSink = actions,
+                onSave = {},
+            ),
+        ).layout.dateRow
+
+        // when
+        row.date.value.onClick()
+        row.time.value.onClick()
+        state.value = state.value.copy(picker = HeartScoreEntryState.Picker.Time)
+        runCurrent()
+
+        // then
+        assertThat(events).containsExactly(
+            HeartScoreEntryAction.PickerRequested(picker = HeartScoreEntryState.Picker.Date),
+            HeartScoreEntryAction.PickerRequested(picker = HeartScoreEntryState.Picker.Time),
+        ).inOrder()
+        assertThat(row.date.value.text).isEqualTo(StringResource("Jan 2, 2026"))
+        assertThat(row.picker.value).isEqualTo(
+            EntryDateRow.Picker.Time(
+                hour = 9,
+                minute = 15,
+            ),
+        )
     }
 }

@@ -4,7 +4,7 @@
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
-package edu.stanford.myheartcounts.demographics.ui
+package edu.stanford.myheartcounts.ui.choice
 
 import edu.stanford.myheartcounts.MHCStrings
 import org.grovealliance.testing.screenshot.ScreenshotTest
@@ -14,18 +14,18 @@ import java.time.Month
 import java.time.format.TextStyle
 import java.util.Locale
 
-class DemographicsMonthYearPickerScreenshotTest : ScreenshotTest() {
-    private val base = DemographicsMonthYearPicker(
-        title = StringResource(MHCStrings.demographics_condition_diabetes),
+class MonthYearPickerScreenshotTest : ScreenshotTest() {
+    private val base = MonthYearPicker(
+        title = StringResource(MHCStrings.comorbidities_condition_diabetes),
         years = (2026 downTo 1926).toList(),
         months = Month.entries.map { StringResource(it.getDisplayName(TextStyle.FULL, Locale.US)) },
         year = 2020,
         month = 3,
-        yearLabel = StringResource(MHCStrings.demographics_diagnosis_year),
-        monthLabel = StringResource(MHCStrings.demographics_diagnosis_month),
+        yearLabel = StringResource(MHCStrings.comorbidities_diagnosis_year),
+        monthLabel = StringResource(MHCStrings.comorbidities_diagnosis_month),
         noMonth = StringResource(MHCStrings.demographics_value_empty),
         confirmTitle = StringResource(MHCStrings.demographics_date_picker_confirm),
-        clearTitle = StringResource(MHCStrings.demographics_diagnosis_unknown),
+        clearTitle = StringResource(MHCStrings.comorbidities_diagnosis_unknown),
         dismissTitle = StringResource(MHCStrings.demographics_date_picker_dismiss),
         onSelect = { _, _ -> },
         onClear = {},
@@ -33,7 +33,7 @@ class DemographicsMonthYearPickerScreenshotTest : ScreenshotTest() {
     )
 
     @Test
-    fun `DemographicsMonthYearPicker screenshot`() {
+    fun `MonthYearPicker screenshot`() {
         // when / then
         screenshot {
             base.Content()

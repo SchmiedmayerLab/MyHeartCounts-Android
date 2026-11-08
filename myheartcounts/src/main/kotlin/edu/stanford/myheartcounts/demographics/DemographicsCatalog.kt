@@ -7,7 +7,18 @@
 
 package edu.stanford.myheartcounts.demographics
 
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProvider
 import org.grovealliance.ui.StringResource
+
+/**
+ * The available demographic questions and their responses.
+ */
+interface DemographicsCatalog {
+    fun title(field: DemographicsField): StringResource
+    fun options(field: DemographicsField): List<DemographicsOption>
+    fun conditions(): List<ComorbiditiesConditionsProvider.Condition>
+    fun counties(nation: String): List<String>
+}
 
 /**
  * A selectable demographic response.
@@ -16,18 +27,7 @@ data class DemographicsOption(
     val id: String,
     val title: StringResource,
     val subtitle: StringResource? = null,
-    val group: StringResource? = null,
 )
-
-/**
- * The available demographic questions and their responses.
- */
-interface DemographicsCatalog {
-    fun title(field: DemographicsField): StringResource
-    fun options(field: DemographicsField): List<DemographicsOption>
-    fun conditions(): List<DemographicsOption>
-    fun counties(nation: String): List<String>
-}
 
 /**
  * Default [DemographicsCatalog] implementation, combining the questions of [options], the regions of
@@ -36,7 +36,7 @@ interface DemographicsCatalog {
 class DemographicsCatalogImpl(
     private val options: DemographicsOptionsProvider,
     private val regions: DemographicsRegionsProvider,
-    private val conditions: DemographicsConditionsProvider,
+    private val conditions: ComorbiditiesConditionsProvider,
 ) : DemographicsCatalog {
 
     override fun title(field: DemographicsField): StringResource = options.title(field = field)
@@ -47,7 +47,7 @@ class DemographicsCatalogImpl(
         else -> options.options(field = field)
     }
 
-    override fun conditions(): List<DemographicsOption> = conditions.conditions()
+    override fun conditions(): List<ComorbiditiesConditionsProvider.Condition> = conditions.conditions()
 
     override fun counties(nation: String): List<String> = regions.counties(nation = nation)
 }

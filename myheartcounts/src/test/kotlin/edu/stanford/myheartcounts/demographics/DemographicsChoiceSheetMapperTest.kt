@@ -9,6 +9,9 @@ package edu.stanford.myheartcounts.demographics
 
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProviderImpl
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesRules
+import edu.stanford.myheartcounts.comorbidities.DiagnosisDateMapperImpl
 import edu.stanford.myheartcounts.demographics.ui.DemographicsChoiceSheet
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
 import edu.stanford.myheartcounts.model.demographics.EducationStatusUK
@@ -41,7 +44,11 @@ class DemographicsChoiceSheetMapperTest {
         optionIdMapper = DemographicsOptionIdMapperImpl(),
         groupMapper = DemographicsChoiceGroupMapperImpl(catalog = catalog),
         rules = DemographicsRules(),
-        timeProvider = timeProvider,
+        comorbiditiesRules = ComorbiditiesRules(),
+        diagnosisDateMapper = DiagnosisDateMapperImpl(
+            conditionsProvider = ComorbiditiesConditionsProviderImpl(),
+            timeProvider = timeProvider,
+        ),
     )
 
     @Before
@@ -57,7 +64,7 @@ class DemographicsChoiceSheetMapperTest {
         val sheet = mapper.mapRaceEthnicitySheet(input = input())
 
         // when
-        sheet.onSelect(sheet.option(title = StringResource(MHCStrings.demographics_race_ethnicity_4)).index)
+        sheet.option(title = StringResource(MHCStrings.demographics_race_ethnicity_4)).onClick()
 
         // then
         assertThat(pushedActions).containsExactly(DemographicsAction.RaceEthnicityChanged(value = RaceEthnicity(rawValue = 6)))
@@ -70,7 +77,7 @@ class DemographicsChoiceSheetMapperTest {
         val sheet = mapper.mapRaceEthnicitySheet(input = input())
 
         // when
-        sheet.onSelect(sheet.option(title = StringResource(MHCStrings.demographics_race_ethnicity_1)).index)
+        sheet.option(title = StringResource(MHCStrings.demographics_race_ethnicity_1)).onClick()
 
         // then
         assertThat(pushedActions).containsExactly(
@@ -89,8 +96,8 @@ class DemographicsChoiceSheetMapperTest {
         val offeredWith = mapper.mapComorbiditiesSheet(input = input()).titles()
 
         // then
-        assertThat(offeredWithout).contains(StringResource(MHCStrings.demographics_comorbidities_none))
-        assertThat(offeredWith).doesNotContain(StringResource(MHCStrings.demographics_comorbidities_none))
+        assertThat(offeredWithout).contains(StringResource(MHCStrings.comorbidities_none))
+        assertThat(offeredWith).doesNotContain(StringResource(MHCStrings.comorbidities_none))
     }
 
     @Test
@@ -136,7 +143,7 @@ class DemographicsChoiceSheetMapperTest {
         val sheet = mapper.mapRegionSheet(input = input(region = DemographicsRegion.US))
 
         // when
-        sheet.onSelect(sheet.option(detail = StringResource("DC")).index)
+        sheet.option(detail = StringResource("DC")).onClick()
 
         // then
         assertThat(pushedActions).containsExactly(
@@ -153,7 +160,7 @@ class DemographicsChoiceSheetMapperTest {
         val england = sheet.option(title = StringResource(MHCStrings.demographics_uk_region_england))
 
         // when
-        sheet.onSelect(sheet.option(title = StringResource(MHCStrings.demographics_uk_region_wales)).index)
+        sheet.option(title = StringResource(MHCStrings.demographics_uk_region_wales)).onClick()
 
         // then
         assertThat(england.detail).isEqualTo(StringResource("Kent"))
@@ -169,7 +176,7 @@ class DemographicsChoiceSheetMapperTest {
         )
 
         // when
-        sheet.onSelect(sheet.option(title = StringResource("Powys")).index)
+        sheet.option(title = StringResource("Powys")).onClick()
 
         // then
         assertThat(pushedActions).containsExactly(
@@ -185,8 +192,8 @@ class DemographicsChoiceSheetMapperTest {
         val income = mapper.mapIncomeSheet(input = input(region = DemographicsRegion.UK))
 
         // when
-        education.onSelect(education.option(title = StringResource(MHCStrings.demographics_uk_education_master)).index)
-        income.onSelect(income.option(title = StringResource(MHCStrings.demographics_uk_income_8)).index)
+        education.option(title = StringResource(MHCStrings.demographics_uk_education_master)).onClick()
+        income.option(title = StringResource(MHCStrings.demographics_uk_income_8)).onClick()
 
         // then
         assertThat(pushedActions).containsExactly(

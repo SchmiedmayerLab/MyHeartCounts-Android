@@ -33,38 +33,6 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * The page size a consent PDF is rendered at.
- *
- * Dimensions are in PostScript points (1/72 inch), the unit [PdfDocument] works in.
- */
-enum class ConsentPaperSize(val widthPoints: Int, val heightPoints: Int) {
-
-    /**
-     * 8.5 × 11 inches. Used for participants in the United States.
-     */
-    US_LETTER(widthPoints = 612, heightPoints = 792),
-
-    /**
-     * 210 × 297 mm. Used everywhere else.
-     */
-    A4(widthPoints = 595, heightPoints = 842),
-    ;
-
-    companion object {
-
-        /**
-         * The paper size used in [regionCode].
-         *
-         * @param regionCode An ISO 3166-1 alpha-2 country code.
-         */
-        fun forRegion(regionCode: String?): ConsentPaperSize =
-            if (regionCode == US_REGION) US_LETTER else A4
-
-        private const val US_REGION = "US"
-    }
-}
-
-/**
  * Renders a signed consent document to a PDF.
  *
  * The study keeps a copy of what each participant actually agreed to, and a PDF is what the ethics
@@ -419,5 +387,37 @@ class ConsentPdfRenderer(private val context: Context) {
         const val TAG_SELECT = MHCConsentDocumentProvider.TAG_SELECT
         const val TAG_SIGNATURE = MHCConsentDocumentProvider.TAG_SIGNATURE
         const val TAG_OPTION = MHCConsentDocumentProvider.TAG_OPTION
+    }
+}
+
+/**
+ * The page size a consent PDF is rendered at.
+ *
+ * Dimensions are in PostScript points (1/72 inch), the unit [PdfDocument] works in.
+ */
+enum class ConsentPaperSize(val widthPoints: Int, val heightPoints: Int) {
+
+    /**
+     * 8.5 × 11 inches. Used for participants in the United States.
+     */
+    US_LETTER(widthPoints = 612, heightPoints = 792),
+
+    /**
+     * 210 × 297 mm. Used everywhere else.
+     */
+    A4(widthPoints = 595, heightPoints = 842),
+    ;
+
+    companion object {
+
+        /**
+         * The paper size used in [regionCode].
+         *
+         * @param regionCode An ISO 3166-1 alpha-2 country code.
+         */
+        fun forRegion(regionCode: String?): ConsentPaperSize =
+            if (regionCode == US_REGION) US_LETTER else A4
+
+        private const val US_REGION = "US"
     }
 }

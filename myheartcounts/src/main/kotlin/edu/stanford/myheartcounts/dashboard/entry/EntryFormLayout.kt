@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.stanford.myheartcounts.ui.ValueBadge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ComposableContent
@@ -109,14 +110,19 @@ private class EntryFormLayoutPreviewProvider : PreviewParameterProvider<EntryFor
         picker = null,
         dateRow = EntryDateRow(
             label = StringResource("Date"),
-            date = MutableStateFlow(StringResource("Jan 1, 2026")),
-            time = MutableStateFlow(
-                EntryDateRow.Time(
-                    label = StringResource("01:02"),
-                    hour = 1,
-                    minute = 2,
+            date = MutableStateFlow(
+                ValueBadge(
+                    text = StringResource("Jan 1, 2026"),
+                    onClick = {},
                 ),
             ),
+            time = MutableStateFlow(
+                ValueBadge(
+                    text = StringResource("01:02"),
+                    onClick = {},
+                ),
+            ),
+            picker = MutableStateFlow(null),
             dialog = EntryDateRow.DialogLabels(
                 title = StringResource("Time"),
                 confirm = StringResource("OK"),
@@ -125,6 +131,7 @@ private class EntryFormLayoutPreviewProvider : PreviewParameterProvider<EntryFor
             isSelectableDate = { true },
             onDateSelected = {},
             onTimeSelected = { _, _ -> },
+            onPickerDismissed = {},
         ),
         panels = listOf(
             EntryFieldGroup(

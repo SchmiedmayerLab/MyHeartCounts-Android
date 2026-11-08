@@ -103,6 +103,18 @@ class MHCAccountOverviewMapperTest {
     }
 
     @Test
+    fun `reports asking to update the comorbidities through the action sink`() {
+        // given
+        val section = mapper.map(input = input()).sections.items.filterIsInstance<StudyParticipationSection>().single()
+
+        // when
+        section.onUpdateComorbiditiesSelected()
+
+        // then
+        assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.UpdateComorbiditiesSelected)
+    }
+
+    @Test
     fun `reports asking to send feedback through the action sink`() {
         // given
         val section = mapper.map(input = input()).sections.items.filterIsInstance<SupportSection>().single()

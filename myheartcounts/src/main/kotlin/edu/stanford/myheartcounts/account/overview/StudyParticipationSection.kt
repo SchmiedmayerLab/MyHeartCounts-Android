@@ -7,10 +7,12 @@
 
 package edu.stanford.myheartcounts.account.overview
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.outlined.MedicalInformation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,29 +29,44 @@ import org.grovealliance.ui.theme.ThemePreviews
 
 /**
  * The account overview section about the participant's part in the study, opening their
- * participation stats and achievements through [onParticipationStatsSelected].
+ * participation stats and achievements through [onParticipationStatsSelected] and their health
+ * conditions through [onUpdateComorbiditiesSelected].
  */
 data class StudyParticipationSection(
     val onParticipationStatsSelected: () -> Unit,
+    val onUpdateComorbiditiesSelected: () -> Unit,
 ) : ComposableContent {
 
     @Composable
     override fun Content(modifier: Modifier) {
         GroveCard(modifier = modifier) {
-            ItemDisplayRowComposable(
-                modifier = Modifier.fillMaxWidth(),
-                leadingImage = ImageResource(image = Icons.Default.MilitaryTech),
-                label = stringResource(MHCStrings.account_view_participation_stats),
-                valueContent = null,
-                showArrow = true,
-                onClick = onParticipationStatsSelected,
-            )
+            Column {
+                ItemDisplayRowComposable(
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingImage = ImageResource(image = Icons.Default.MilitaryTech),
+                    label = stringResource(MHCStrings.account_view_participation_stats),
+                    valueContent = null,
+                    showArrow = true,
+                    onClick = onParticipationStatsSelected,
+                )
+                ItemDisplayRowComposable(
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingImage = ImageResource(image = Icons.Outlined.MedicalInformation),
+                    label = stringResource(MHCStrings.account_update_comorbidities),
+                    valueContent = null,
+                    showArrow = true,
+                    onClick = onUpdateComorbiditiesSelected,
+                )
+            }
         }
     }
 }
 
 private class StudyParticipationSectionPreviewProvider : PreviewParameterProvider<StudyParticipationSection> {
-    private val base = StudyParticipationSection(onParticipationStatsSelected = {})
+    private val base = StudyParticipationSection(
+        onParticipationStatsSelected = {},
+        onUpdateComorbiditiesSelected = {},
+    )
 
     override val values = sequenceOf(base)
 }

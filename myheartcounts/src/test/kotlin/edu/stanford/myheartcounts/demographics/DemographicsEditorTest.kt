@@ -122,7 +122,7 @@ class DemographicsEditorTest {
     }
 
     @Test
-    fun `every failed save is reported`() = runTest {
+    fun `every failed background save is reported`() = runTest {
         // given
         val editor = editor()
         val failures = mutableListOf<Unit>()
@@ -131,11 +131,30 @@ class DemographicsEditorTest {
         editor.update { it.copy(weightInKg = 80.0) }
 
         // when
-        editor.flush()
-        editor.flush()
+        editor.flushSoon()
+        runCurrent()
+        editor.flushSoon()
+        runCurrent()
 
         // then
         assertThat(failures).hasSize(2)
+    }
+
+    @Test
+    fun `a failed flush is returned without being reported`() = runTest {
+        // given
+        val editor = editor()
+        val failures = mutableListOf<Unit>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { editor.saveFailures.collect { failures.add(it) } }
+        accountService.setUpdateResult(result = Result.failure(IllegalStateException("offline")))
+        editor.update { it.copy(weightInKg = 80.0) }
+
+        // when
+        val result = editor.flush()
+
+        // then
+        assertThat(result.isFailure).isTrue()
+        assertThat(failures).isEmpty()
     }
 
     @Test

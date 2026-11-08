@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.di
 
 import edu.stanford.myheartcounts.MainActivityViewModel
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailViewModel
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryViewModel
@@ -66,6 +67,16 @@ fun ConfigurationBuilder.appViewModels() {
             mapper = dependency(),
         )
     }
+    participantDataViewModels()
+    studyViewModels()
+    dashboardViewModels()
+}
+
+/**
+ * Registers the ViewModels editing what the participant tells about themselves: their demographics
+ * and comorbidities.
+ */
+private fun ConfigurationBuilder.participantDataViewModels() {
     viewModel {
         DemographicsViewModel(
             savedStateHandle = savedStateHandle(),
@@ -77,8 +88,14 @@ fun ConfigurationBuilder.appViewModels() {
             navigator = dependency(),
         )
     }
-    studyViewModels()
-    dashboardViewModels()
+    viewModel {
+        ComorbiditiesViewModel(
+            mapper = dependency(),
+            rules = dependency(),
+            storage = dependency(),
+            navigator = dependency(),
+        )
+    }
 }
 
 /**

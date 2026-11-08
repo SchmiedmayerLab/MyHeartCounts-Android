@@ -11,17 +11,6 @@ import edu.stanford.myheartcounts.model.HealthUnit
 import org.grovealliance.scheduler.InstantRange
 
 /**
- * What a request asks of a month's entries.
- */
-data class HealthStatsInput(
-    val metricId: String,
-    val timeRange: InstantRange,
-    val sourcePolicy: HealthStatsSourcePolicy,
-    val unit: HealthUnit,
-    val aggregation: HealthStatsAggregation,
-)
-
-/**
  * One entry's contribution to a result, in the requested unit.
  *
  * @property secondaryAmount the diastolic value of a blood pressure reading
@@ -34,6 +23,17 @@ data class HealthStatsValue(
     val average: HealthStatsAverage? = null,
     val sources: Set<String>,
     val event: HealthStatsEntry? = null,
+)
+
+/**
+ * What a request asks of a month's entries.
+ */
+data class HealthStatsInput(
+    val metricId: String,
+    val timeRange: InstantRange,
+    val sourcePolicy: HealthStatsSourcePolicy,
+    val unit: HealthUnit,
+    val aggregation: HealthStatsAggregation,
 )
 
 /**
