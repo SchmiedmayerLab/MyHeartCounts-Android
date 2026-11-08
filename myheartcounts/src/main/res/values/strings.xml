@@ -326,6 +326,7 @@ SPDX-License-Identifier: MIT
     <string name="account_send_feedback">Send Feedback</string>
     <string name="account_view_participation_stats">View Participation Stats</string>
     <string name="account_update_comorbidities">Update Health Conditions</string>
+    <string name="account_workout_preference">Workout Preference</string>
     <string name="account_feedback_title">Feedback</string>
     <string name="account_feedback_send">Send</string>
     <string name="account_feedback_footer">Your feedback helps us improve My Heart Counts and all feedback is greatly appreciated.\n\nThe feedback you share with us will be associated with your email address. This allows us to reach out to you if required.</string>
@@ -442,7 +443,7 @@ SPDX-License-Identifier: MIT
     <string name="feature_flags_restart" translatable="false">Restart</string>
     <string name="feature_flags_restart_note" translatable="false">Changes apply once the app restarts.</string>
     <string name="feature_flag_simplify_onboarding_title" translatable="false">Simplify Onboarding</string>
-    <string name="feature_flag_simplify_onboarding_description" translatable="false">Shortens onboarding to login, Health Connect access and enrollment.</string>
+    <string name="feature_flag_simplify_onboarding_description" translatable="false">Shortens onboarding to login, Health Connect access, the workout preference and enrollment.</string>
     <string name="feature_flag_uk_study_testing_title" translatable="false">UK Study Testing</string>
     <string name="feature_flag_uk_study_testing_description" translatable="false">Lets participants in the United Kingdom join the Imperial study on the US backend instead of the launch waitlist.</string>
 
@@ -705,4 +706,25 @@ SPDX-License-Identifier: MIT
     <string name="demographics_health_import_empty">No data to fill in was found in Health Connect.</string>
     <string name="demographics_health_import_failed">Data couldn\'t be read from Health Connect.</string>
     <string name="demographics_save_failed">Your answers couldn\'t be saved. Please check your connection and try again.</string>
+
+    <!-- Workout preference -->
+    <string name="workout_preference_title">Workout Preference</string>
+    <string name="workout_preference_text">My Heart Counts will send you personalized notifications to help you stay active. Tell us which workouts you prefer and when during the day you’d like to receive reminders. This helps us tailor your experience to your schedule and goals.</string>
+    <string name="workout_preference_types_header">Preferred Workout Types</string>
+    <string name="workout_preference_type_walk">Walking</string>
+    <string name="workout_preference_type_run">Running</string>
+    <string name="workout_preference_type_bicycle">Cycling</string>
+    <string name="workout_preference_type_swim">Swimming</string>
+    <string name="workout_preference_type_strength">Strength</string>
+    <string name="workout_preference_type_hiit">High-intensity Training</string>
+    <string name="workout_preference_type_yoga_pilates">Yoga / Pilates</string>
+    <string name="workout_preference_type_sport">Sport</string>
+    <string name="workout_preference_type_other">Other</string>
+    <string name="workout_preference_notification_time">Notification Time</string>
+    <string name="workout_preference_notification_time_subtitle">The preferred time for activity-related notifications.</string>
+    <string name="workout_preference_time_confirm">OK</string>
+    <string name="workout_preference_time_cancel">Cancel</string>
+    <string name="workout_preference_continue">Continue</string>
+    <string name="workout_preference_save">Save</string>
+    <string name="workout_preference_save_failed">Your workout preference couldn\'t be saved. Please check your connection and try again.</string>
 </resources>

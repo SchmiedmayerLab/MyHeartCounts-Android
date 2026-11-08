@@ -130,6 +130,7 @@ class OnboardingProgressTrackerTest {
             OnboardingStep.Comprehension to RecordedOnboardingStep.COMPREHENSION,
             OnboardingStep.Consent to RecordedOnboardingStep.CONSENT,
             OnboardingStep.HealthAccess to RecordedOnboardingStep.HEALTH_ACCESS,
+            OnboardingStep.WorkoutPreference to RecordedOnboardingStep.WORKOUT_PREFERENCE,
             OnboardingStep.Notifications to RecordedOnboardingStep.NOTIFICATIONS,
             OnboardingStep.Demographics to RecordedOnboardingStep.DEMOGRAPHICS,
             OnboardingStep.FinalEnrollment to RecordedOnboardingStep.FINAL_STEP,

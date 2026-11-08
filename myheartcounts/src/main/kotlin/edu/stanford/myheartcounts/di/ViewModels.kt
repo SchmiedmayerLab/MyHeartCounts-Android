@@ -22,6 +22,7 @@ import edu.stanford.myheartcounts.stats.ParticipationStatsViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
 import edu.stanford.myheartcounts.task.PerformTaskViewModel
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksViewModel
+import edu.stanford.myheartcounts.workoutpreference.WorkoutPreferenceViewModel
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.GroveDsl
 import org.grovealliance.core.coroutines.Concurrency
@@ -73,10 +74,17 @@ fun ConfigurationBuilder.appViewModels() {
 }
 
 /**
- * Registers the ViewModels editing what the participant tells about themselves: their demographics
- * and comorbidities.
+ * Registers the ViewModels editing what the participant tells about themselves: their demographics,
+ * comorbidities and workout preference.
  */
 private fun ConfigurationBuilder.participantDataViewModels() {
+    viewModel {
+        WorkoutPreferenceViewModel(
+            savedStateHandle = savedStateHandle(),
+            editor = dependency(),
+            mapper = dependency(),
+        )
+    }
     viewModel {
         DemographicsViewModel(
             savedStateHandle = savedStateHandle(),

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.outlined.MedicalInformation
 import androidx.compose.runtime.Composable
@@ -29,12 +30,14 @@ import org.grovealliance.ui.theme.ThemePreviews
 
 /**
  * The account overview section about the participant's part in the study, opening their
- * participation stats and achievements through [onParticipationStatsSelected] and their health
- * conditions through [onUpdateComorbiditiesSelected].
+ * participation stats and achievements through [onParticipationStatsSelected], their health
+ * conditions through [onUpdateComorbiditiesSelected] and their workout preference through
+ * [onWorkoutPreferenceSelected].
  */
 data class StudyParticipationSection(
     val onParticipationStatsSelected: () -> Unit,
     val onUpdateComorbiditiesSelected: () -> Unit,
+    val onWorkoutPreferenceSelected: () -> Unit,
 ) : ComposableContent {
 
     @Composable
@@ -57,6 +60,14 @@ data class StudyParticipationSection(
                     showArrow = true,
                     onClick = onUpdateComorbiditiesSelected,
                 )
+                ItemDisplayRowComposable(
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingImage = ImageResource(image = Icons.Default.FitnessCenter),
+                    label = stringResource(MHCStrings.account_workout_preference),
+                    valueContent = null,
+                    showArrow = true,
+                    onClick = onWorkoutPreferenceSelected,
+                )
             }
         }
     }
@@ -66,6 +77,7 @@ private class StudyParticipationSectionPreviewProvider : PreviewParameterProvide
     private val base = StudyParticipationSection(
         onParticipationStatsSelected = {},
         onUpdateComorbiditiesSelected = {},
+        onWorkoutPreferenceSelected = {},
     )
 
     override val values = sequenceOf(base)
