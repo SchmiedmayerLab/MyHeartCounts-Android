@@ -8,6 +8,9 @@
 package edu.stanford.myheartcounts.demographics.ui
 
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.ui.choice.ChoiceFollowUpRow
+import edu.stanford.myheartcounts.ui.choice.ChoiceRow
+import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
@@ -15,61 +18,58 @@ import org.grovealliance.ui.groveAppBar
 import org.junit.Test
 
 class DemographicsChoiceSheetScreenshotTest : ScreenshotTest() {
-    private val option = DemographicsChoiceSheet.Option(
-        index = 0,
+    private val option = ChoiceRow(
+        icon = null,
         title = StringResource("Diabetes"),
         subtitle = null,
         detail = null,
         isSelected = false,
         followUp = null,
+        onClick = {},
     )
     private val base = DemographicsChoiceSheet(
         appBar = groveAppBar {
-            title(MHCStrings.demographics_comorbidities_sheet_title)
+            title(MHCStrings.comorbidities_title)
             close {}
         },
         prompt = null,
         sections = MutableStateFlow(
             listOf(
-                DemographicsChoiceSheet.Section(
+                ChoiceSection(
                     header = null,
                     options = listOf(
                         option.copy(
                             isSelected = true,
-                            followUp = DemographicsChoiceSheet.FollowUp(
-                                label = StringResource(MHCStrings.demographics_comorbidity_since),
+                            followUp = ChoiceFollowUpRow(
+                                label = StringResource(MHCStrings.comorbidities_since),
                                 value = StringResource("Mar 2020"),
                                 isSet = true,
                                 onClick = {},
                             ),
                         ),
                         option.copy(
-                            index = 1,
                             title = StringResource("Heart Failure"),
                             isSelected = true,
-                            followUp = DemographicsChoiceSheet.FollowUp(
-                                label = StringResource(MHCStrings.demographics_comorbidity_since),
-                                value = StringResource(MHCStrings.demographics_comorbidity_since_unknown),
+                            followUp = ChoiceFollowUpRow(
+                                label = StringResource(MHCStrings.comorbidities_since),
+                                value = StringResource(MHCStrings.comorbidities_since_unknown),
                                 isSet = false,
                                 onClick = {},
                             ),
                         ),
                         option.copy(
-                            index = 2,
                             title = StringResource("Coronary Artery Disease"),
                         ),
                     ),
                     footer = null,
                 ),
-                DemographicsChoiceSheet.Section(
+                ChoiceSection(
                     header = null,
                     options = listOf(
                         option.copy(
-                            index = 3,
                             title = StringResource("Stroke"),
                         ),
                         option.copy(
-                            index = 4,
                             title = StringResource("Kidney Disease"),
                         ),
                     ),
@@ -78,7 +78,6 @@ class DemographicsChoiceSheetScreenshotTest : ScreenshotTest() {
             ),
         ),
         monthYearPicker = MutableStateFlow(null),
-        onSelect = {},
     )
 
     @Test

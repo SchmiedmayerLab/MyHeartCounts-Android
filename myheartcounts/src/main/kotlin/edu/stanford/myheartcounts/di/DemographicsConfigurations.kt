@@ -19,8 +19,6 @@ import edu.stanford.myheartcounts.demographics.DemographicsChoiceSheetMapper
 import edu.stanford.myheartcounts.demographics.DemographicsChoiceSheetMapperImpl
 import edu.stanford.myheartcounts.demographics.DemographicsCodec
 import edu.stanford.myheartcounts.demographics.DemographicsCodecImpl
-import edu.stanford.myheartcounts.demographics.DemographicsConditionsProvider
-import edu.stanford.myheartcounts.demographics.DemographicsConditionsProviderImpl
 import edu.stanford.myheartcounts.demographics.DemographicsEditor
 import edu.stanford.myheartcounts.demographics.DemographicsEditorImpl
 import edu.stanford.myheartcounts.demographics.DemographicsLayoutMapper
@@ -45,7 +43,6 @@ import org.grovealliance.core.coroutines.Concurrency
 fun ConfigurationBuilder.demographicsConfigurations() {
     singleton<DemographicsOptionsProvider> { DemographicsOptionsProviderImpl() }
     singleton<DemographicsRegionsProvider> { DemographicsRegionsProviderImpl() }
-    singleton<DemographicsConditionsProvider> { DemographicsConditionsProviderImpl() }
     singleton<DemographicsCatalog> {
         DemographicsCatalogImpl(
             options = dependency(),
@@ -57,6 +54,7 @@ fun ConfigurationBuilder.demographicsConfigurations() {
     singleton<DemographicsAnswerMapper> { DemographicsAnswerMapperImpl(optionIdMapper = dependency()) }
     singleton<DemographicsCodec> { DemographicsCodecImpl(timeProvider = dependency()) }
     singleton { DemographicsRules() }
+    demographicsMapperConfigurations()
     singleton<DemographicsRegionSource> {
         DemographicsRegionSourceImpl(variantProvider = dependency())
     }
@@ -70,6 +68,15 @@ fun ConfigurationBuilder.demographicsConfigurations() {
             scope = dependency<Concurrency>().mainImmediateCoroutineScope(),
         )
     }
+    singleton<DemographicsAutofill> {
+        DemographicsAutofillImpl(
+            health = dependency(),
+            healthAccess = dependency(),
+        )
+    }
+}
+
+private fun ConfigurationBuilder.demographicsMapperConfigurations() {
     singleton<DemographicsLayoutMapper> {
         DemographicsLayoutMapperImpl(
             catalog = dependency(),
@@ -91,13 +98,8 @@ fun ConfigurationBuilder.demographicsConfigurations() {
             optionIdMapper = dependency(),
             groupMapper = dependency(),
             rules = dependency(),
-            timeProvider = dependency(),
-        )
-    }
-    singleton<DemographicsAutofill> {
-        DemographicsAutofillImpl(
-            health = dependency(),
-            healthAccess = dependency(),
+            comorbiditiesRules = dependency(),
+            diagnosisDateMapper = dependency(),
         )
     }
 }

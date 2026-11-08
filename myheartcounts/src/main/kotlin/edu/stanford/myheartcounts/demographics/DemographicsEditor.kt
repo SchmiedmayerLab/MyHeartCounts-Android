@@ -8,8 +8,6 @@
 package edu.stanford.myheartcounts.demographics
 
 import edu.stanford.myheartcounts.account.didOptInToTrial
-import edu.stanford.myheartcounts.model.StudyVariant
-import edu.stanford.myheartcounts.study.StudyVariantProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -35,39 +33,6 @@ import org.grovealliance.core.Module
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Resolves the regional demographics form.
- */
-interface DemographicsRegionSource {
-
-    /**
-     * The form of the region the participant's study runs in: the current one, then each change.
-     */
-    val regions: Flow<DemographicsRegion>
-
-    /**
-     * The form of the region the participant's study runs in.
-     */
-    fun region(): DemographicsRegion
-}
-
-/**
- * [DemographicsRegionSource] following the participant's [StudyVariant].
- */
-class DemographicsRegionSourceImpl(
-    private val variantProvider: StudyVariantProvider,
-) : DemographicsRegionSource {
-
-    override val regions: Flow<DemographicsRegion> = variantProvider.variant.map { regionOf(variant = it) }
-
-    override fun region(): DemographicsRegion = regionOf(variant = variantProvider.currentVariant)
-
-    private fun regionOf(variant: StudyVariant): DemographicsRegion = when (variant) {
-        StudyVariant.Stanford -> DemographicsRegion.US
-        StudyVariant.Imperial -> DemographicsRegion.UK
-    }
-}
-
-/**
  * Holds the signed-in participant's demographic answers while they are edited, storing changed
  * answers a second after the last edit and whenever [flush] is called. Edits not stored yet survive
  * a refresh of the account's details; signing in as somebody else discards them.
@@ -90,8 +55,8 @@ interface DemographicsEditor : Module {
     val isComplete: StateFlow<Boolean>
 
     /**
-     * Emits each time storing the answers fails; the answers stay pending until a later attempt
-     * stores them.
+     * Emits each time storing the answers in the background fails, a second after an edit or after
+     * [flushSoon]; the answers stay pending until a later attempt stores them.
      */
     val saveFailures: Flow<Unit>
 
@@ -102,7 +67,8 @@ interface DemographicsEditor : Module {
     fun update(change: (DemographicsResponse) -> DemographicsResponse)
 
     /**
-     * Stores every answer not stored yet, succeeding once none is left.
+     * Stores every answer not stored yet, succeeding once none is left. A failure is returned to the
+     * caller rather than reported through [saveFailures].
      */
     suspend fun flush(): Result<Unit>
 
@@ -194,12 +160,16 @@ class DemographicsEditorImpl(
         debounce = scope.launch {
             delay(SAVE_DELAY)
             debounce = null
-            flush()
+            flushInBackground()
         }
     }
 
     override fun flushSoon() {
-        scope.launch { flush() }
+        scope.launch { flushInBackground() }
+    }
+
+    private suspend fun flushInBackground() {
+        flush().onFailure { mutableSaveFailures.tryEmit(Unit) }
     }
 
     override suspend fun flush(): Result<Unit> = saveMutex.withLock {
@@ -225,7 +195,6 @@ class DemographicsEditorImpl(
             )
         }
         mutableState.value = current.copy(pending = codec.differences(first = baseline, second = current.response))
-        if (result.isFailure) mutableSaveFailures.tryEmit(Unit)
         result
     }
 

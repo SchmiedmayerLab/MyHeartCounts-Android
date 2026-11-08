@@ -11,19 +11,6 @@ import edu.stanford.myheartcounts.model.HealthUnit
 import java.time.Duration
 
 /**
- * A processed result, before the metadata of the documents it came from is attached.
- *
- * @property elements the values, in chronological order
- * @property diagnostics remarks on left-out, approximated or source-selected data
- * @property contributingSourceIds the sources whose data the elements hold
- */
-data class HealthStatsOutput<T>(
-    val elements: List<T>,
-    val diagnostics: List<HealthStatsDiagnostic>,
-    val contributingSourceIds: Set<String>,
-)
-
-/**
  * Turns months of statistics into the values a request asks for.
  *
  * Entries are validated and competing sources resolved by a [HealthStatsSourceSelector];
@@ -37,6 +24,19 @@ interface HealthStatsProcessor {
      */
     fun <T> process(request: HealthStatsRequest<T>, documents: List<HealthStatsDocument>): Result<HealthStatsOutput<T>>
 }
+
+/**
+ * A processed result, before the metadata of the documents it came from is attached.
+ *
+ * @property elements the values, in chronological order
+ * @property diagnostics remarks on left-out, approximated or source-selected data
+ * @property contributingSourceIds the sources whose data the elements hold
+ */
+data class HealthStatsOutput<T>(
+    val elements: List<T>,
+    val diagnostics: List<HealthStatsDiagnostic>,
+    val contributingSourceIds: Set<String>,
+)
 
 class HealthStatsProcessorImpl(
     private val sourceSelector: HealthStatsSourceSelector,

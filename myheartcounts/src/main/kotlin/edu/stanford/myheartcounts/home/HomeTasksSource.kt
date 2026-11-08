@@ -23,15 +23,6 @@ import org.grovealliance.study.StudyManager
 import java.time.Instant
 
 /**
- * The tasks the Home tab shows: today's events, and how many were missed recently; see
- * [MissedEventsSource].
- */
-data class HomeTasks(
-    val events: List<Event>,
-    val missedEventCount: Int,
-)
-
-/**
  * Supplies the participant's current tasks.
  */
 interface HomeTasksSource {
@@ -40,6 +31,15 @@ interface HomeTasksSource {
      */
     suspend fun tasks(): Flow<HomeTasks>
 }
+
+/**
+ * The tasks the Home tab shows: today's events, and how many were missed recently; see
+ * [MissedEventsSource].
+ */
+data class HomeTasks(
+    val events: List<Event>,
+    val missedEventCount: Int,
+)
 
 /**
  * Reads today's tasks from the scheduler, anchoring the query to the participant's enrollment so

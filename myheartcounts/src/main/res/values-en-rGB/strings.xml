@@ -20,5 +20,5 @@ SPDX-License-Identifier: MIT
     <string name="onboarding_final_enrollment_area_tasks">Each day, you’ll see a personalised list of tasks in your dashboard. These typically take just 5–10 minutes to complete.</string>
     <string name="onboarding_final_enrollment_area_collection">The app will begin collecting activity data from your phone and any connected wearable devices you’ve authorised.</string>
     <string name="account_withdraw_confirm_message">Are you sure you want to withdraw from the My Heart Counts study?\nYou can re-enrol later if you choose.</string>
-    <string name="demographics_condition_transientischemicattack">Transient Ischaemic Attack (TIA)</string>
+    <string name="comorbidities_condition_transientischemicattack">Transient Ischaemic Attack (TIA)</string>
 </resources>

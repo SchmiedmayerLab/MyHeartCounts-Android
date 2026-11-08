@@ -129,7 +129,7 @@ class DemographicsAnswerMapperImpl(
     }
 
     override fun mapText(value: Comorbidities): StringResource = if (value.entries.isEmpty()) {
-        StringResource(MHCStrings.demographics_comorbidities_none)
+        StringResource(MHCStrings.comorbidities_none)
     } else {
         StringResource(MHCStrings.demographics_value_selected_count, value.entries.size)
     }

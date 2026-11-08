@@ -21,6 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.grovealliance.account.FakeAccount
 import org.grovealliance.core.time.FakeTimeProvider
@@ -30,6 +31,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HeartScoreEntryViewModelTest {
@@ -53,7 +55,7 @@ class HeartScoreEntryViewModelTest {
     }
 
     @Test
-    fun `incomplete and out of range entries cannot save`() {
+    fun `incomplete and out of range entries cannot save`() = runTest {
         // given
         viewModel()
 
@@ -64,7 +66,7 @@ class HeartScoreEntryViewModelTest {
                 value = "400",
             ),
         )
-        mapper.input.actionSink.push(HeartScoreEntryAction.Save)
+        mapper.input.onSave()
 
         // then
         assertThat(mapper.input.state.value.canSave).isFalse()
@@ -73,7 +75,7 @@ class HeartScoreEntryViewModelTest {
     }
 
     @Test
-    fun `successful native save requests permissions and closes`() {
+    fun `successful native save requests permissions and closes`() = runTest {
         // given
         viewModel()
         mapper.input.actionSink.push(
@@ -84,7 +86,7 @@ class HeartScoreEntryViewModelTest {
         )
 
         // when
-        mapper.input.actionSink.push(HeartScoreEntryAction.Save)
+        mapper.input.onSave()
 
         // then
         assertThat(writer.entries).hasSize(1)
@@ -94,7 +96,7 @@ class HeartScoreEntryViewModelTest {
     }
 
     @Test
-    fun `permission denial keeps the form editable with specific recovery guidance`() {
+    fun `permission denial keeps the form editable with specific recovery guidance`() = runTest {
         // given
         writer.result = Result.failure(SecurityException())
         viewModel()
@@ -106,13 +108,32 @@ class HeartScoreEntryViewModelTest {
         )
 
         // when
-        mapper.input.actionSink.push(HeartScoreEntryAction.Save)
+        mapper.input.onSave()
 
         // then
         assertThat(mapper.input.state.value.error).isEqualTo(StringResource(MHCStrings.heart_entry_permission_error))
         assertThat(mapper.input.state.value.form.value).isEqualTo("90")
         assertThat(mapper.input.state.value.saving).isFalse()
         assertThat(navigator.pushedEvents).isEmpty()
+    }
+
+    @Test
+    fun `a picker stays open until a date is chosen or it is dismissed`() {
+        // given
+        viewModel()
+
+        // when
+        mapper.input.actionSink.push(HeartScoreEntryAction.PickerRequested(picker = HeartScoreEntryState.Picker.Date))
+        val opened = mapper.input.state.value.picker
+        mapper.input.actionSink.push(HeartScoreEntryAction.DateChanged(value = LocalDateTime.of(2025, 10, 25, 8, 0)))
+        val afterSelection = mapper.input.state.value.picker
+        mapper.input.actionSink.push(HeartScoreEntryAction.PickerRequested(picker = HeartScoreEntryState.Picker.Time))
+        mapper.input.actionSink.push(HeartScoreEntryAction.PickerDismissed)
+
+        // then
+        assertThat(opened).isEqualTo(HeartScoreEntryState.Picker.Date)
+        assertThat(afterSelection).isNull()
+        assertThat(mapper.input.state.value.picker).isNull()
     }
 
     @Test
@@ -158,7 +179,7 @@ class HeartScoreEntryViewModelTest {
     }
 
     @Test
-    fun `LDL saves without requesting native write access`() {
+    fun `LDL saves without requesting native write access`() = runTest {
         // given
         saved[HeartScoreEntryViewModel.KEY_COMPONENT] = HeartScoreComponent.BloodLipids.name
         viewModel()
@@ -170,7 +191,7 @@ class HeartScoreEntryViewModelTest {
         )
 
         // when
-        mapper.input.actionSink.push(HeartScoreEntryAction.Save)
+        mapper.input.onSave()
 
         // then
         assertThat(access.requests).isEqualTo(0)

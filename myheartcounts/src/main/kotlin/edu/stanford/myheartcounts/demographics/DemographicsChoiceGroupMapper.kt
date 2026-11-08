@@ -9,6 +9,9 @@ package edu.stanford.myheartcounts.demographics
 
 import androidx.annotation.StringRes
 import edu.stanford.myheartcounts.demographics.ui.DemographicsChoiceSheet
+import edu.stanford.myheartcounts.ui.choice.ChoiceFollowUpRow
+import edu.stanford.myheartcounts.ui.choice.ChoiceRow
+import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -66,7 +69,7 @@ interface DemographicsChoiceGroupMapper {
         closesOnSelect: Boolean,
         input: DemographicsLayoutInput,
         prompt: StringResource? = null,
-        followUp: ((DemographicsResponse, T) -> DemographicsChoiceSheet.FollowUp?)? = null,
+        followUp: ((DemographicsResponse, T) -> ChoiceFollowUpRow?)? = null,
         detail: ((DemographicsResponse, T) -> StringResource?)? = null,
         isOffered: (DemographicsResponse, T) -> Boolean = { _, _ -> true },
         onSelect: ((T) -> Unit)? = null,
@@ -156,36 +159,40 @@ class DemographicsChoiceGroupMapperImpl(
         closesOnSelect: Boolean,
         input: DemographicsLayoutInput,
         prompt: StringResource?,
-        followUp: ((DemographicsResponse, T) -> DemographicsChoiceSheet.FollowUp?)?,
+        followUp: ((DemographicsResponse, T) -> ChoiceFollowUpRow?)?,
         detail: ((DemographicsResponse, T) -> StringResource?)?,
         isOffered: (DemographicsResponse, T) -> Boolean,
         onSelect: ((T) -> Unit)?,
     ): DemographicsChoiceSheet {
-        val values = groups.flatMap { group -> group.choices.map { it.value } }
+        fun select(value: T) {
+            change?.let { input.actionSink.push(it(input.response.value, value)) }
+            onSelect?.invoke(value)
+            if (closesOnSelect) input.actionSink.push(DemographicsAction.SheetClosed)
+        }
 
-        fun sections(response: DemographicsResponse): List<DemographicsChoiceSheet.Section> {
-            var index = 0
-            return groups.mapNotNull { group ->
-                val options = group.choices.mapNotNull { choice ->
-                    val option = DemographicsChoiceSheet.Option(
-                        index = index++,
-                        title = choice.option.title,
-                        subtitle = choice.option.subtitle,
-                        detail = detail?.invoke(response, choice.value) ?: choice.detail,
-                        isSelected = isSelected(response, choice.value),
-                        followUp = followUp?.invoke(response, choice.value),
-                    )
-                    option.takeIf { isOffered(response, choice.value) }
-                }
+        fun sections(response: DemographicsResponse): List<ChoiceSection> =
+            groups.mapNotNull { group ->
+                val options = group.choices
+                    .filter { isOffered(response, it.value) }
+                    .map { choice ->
+                        ChoiceRow(
+                            icon = null,
+                            title = choice.option.title,
+                            subtitle = choice.option.subtitle,
+                            detail = detail?.invoke(response, choice.value) ?: choice.detail,
+                            isSelected = isSelected(response, choice.value),
+                            followUp = followUp?.invoke(response, choice.value),
+                            onClick = { select(value = choice.value) },
+                        )
+                    }
                 options.takeIf { it.isNotEmpty() }?.let {
-                    DemographicsChoiceSheet.Section(
+                    ChoiceSection(
                         header = group.header,
                         options = it,
                         footer = group.footer,
                     )
                 }
             }
-        }
 
         return DemographicsChoiceSheet(
             appBar = groveAppBar {
@@ -201,12 +208,6 @@ class DemographicsChoiceGroupMapperImpl(
                     started = SharingStarted.WhileSubscribed(),
                     initialValue = sections(response = input.response.value),
                 ),
-            onSelect = { index ->
-                val value = values[index]
-                change?.let { input.actionSink.push(it(input.response.value, value)) }
-                onSelect?.invoke(value)
-                if (closesOnSelect) input.actionSink.push(DemographicsAction.SheetClosed)
-            },
         )
     }
 }

@@ -20,6 +20,53 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 
 /**
+ * The on-device queue of health data waiting to reach the backend.
+ *
+ * It exists because health data arrives continuously in small batches while uploading is worth
+ * doing rarely and in bulk, and because the study deliberately holds samples back for
+ * [HealthUploadSchedule.RETENTION_OFFSET_DAYS] before uploading them.
+ */
+@Database(
+    entities = [StagedObservation::class, StagedDeletion::class, SeriesRecordReadings::class],
+    version = 3,
+    exportSchema = false,
+)
+abstract class HealthStagingDatabase : RoomDatabase() {
+
+    /**
+     * Access to the staged observations.
+     */
+    abstract fun observations(): StagedObservationDao
+
+    /**
+     * Access to the staged deletions.
+     */
+    abstract fun deletions(): StagedDeletionDao
+
+    /**
+     * Access to the readings tracked per series record.
+     */
+    abstract fun seriesReadings(): SeriesRecordReadingsDao
+
+    companion object {
+
+        private const val DATABASE_NAME = "mhc-health-staging"
+
+        /**
+         * Opens the staging database for [context].
+         *
+         * No released build shipped an earlier schema, so an outdated one is simply recreated.
+         */
+        fun create(context: Context): HealthStagingDatabase =
+            Room.databaseBuilder(
+                context.applicationContext,
+                HealthStagingDatabase::class.java,
+                DATABASE_NAME,
+            ).fallbackToDestructiveMigration(dropAllTables = true).build()
+    }
+}
+
+/**
  * How many ids one statement binds at most, comfortably below the 999 host parameters SQLite
  * allows on Android 10 and 11.
  */
@@ -290,51 +337,4 @@ interface StagedDeletionDao {
      */
     @Query("DELETE FROM staged_deletions")
     suspend fun clearDeletions()
-}
-
-/**
- * The on-device queue of health data waiting to reach the backend.
- *
- * It exists because health data arrives continuously in small batches while uploading is worth
- * doing rarely and in bulk, and because the study deliberately holds samples back for
- * [HealthUploadSchedule.RETENTION_OFFSET_DAYS] before uploading them.
- */
-@Database(
-    entities = [StagedObservation::class, StagedDeletion::class, SeriesRecordReadings::class],
-    version = 3,
-    exportSchema = false,
-)
-abstract class HealthStagingDatabase : RoomDatabase() {
-
-    /**
-     * Access to the staged observations.
-     */
-    abstract fun observations(): StagedObservationDao
-
-    /**
-     * Access to the staged deletions.
-     */
-    abstract fun deletions(): StagedDeletionDao
-
-    /**
-     * Access to the readings tracked per series record.
-     */
-    abstract fun seriesReadings(): SeriesRecordReadingsDao
-
-    companion object {
-
-        private const val DATABASE_NAME = "mhc-health-staging"
-
-        /**
-         * Opens the staging database for [context].
-         *
-         * No released build shipped an earlier schema, so an outdated one is simply recreated.
-         */
-        fun create(context: Context): HealthStagingDatabase =
-            Room.databaseBuilder(
-                context.applicationContext,
-                HealthStagingDatabase::class.java,
-                DATABASE_NAME,
-            ).fallbackToDestructiveMigration(dropAllTables = true).build()
-    }
 }

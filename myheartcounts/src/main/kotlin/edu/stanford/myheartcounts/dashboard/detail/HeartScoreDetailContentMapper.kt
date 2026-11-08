@@ -29,6 +29,17 @@ import java.net.URI
 import java.text.NumberFormat
 
 /**
+ * Lays out a factor's details.
+ */
+interface HeartScoreDetailContentMapper {
+
+    /**
+     * The details [input] describes.
+     */
+    fun map(input: HeartScoreDetailContentInput): HeartScoreDetailContentLayout
+}
+
+/**
  * What a factor's details show.
  *
  * @property chart the factor's history chart, or `null` for a factor without one
@@ -42,17 +53,6 @@ data class HeartScoreDetailContentInput(
     val debugSamples: List<CustomQuantitySample>?,
     val actionSink: ActionSink<HeartScoreDetailAction>,
 )
-
-/**
- * Lays out a factor's details.
- */
-interface HeartScoreDetailContentMapper {
-
-    /**
-     * The details [input] describes.
-     */
-    fun map(input: HeartScoreDetailContentInput): HeartScoreDetailContentLayout
-}
 
 /**
  * Shows, in order: the most recent value beside the factor's gauge, its history chart, the bands

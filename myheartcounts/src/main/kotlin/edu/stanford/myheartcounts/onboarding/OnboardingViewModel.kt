@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.onboarding
 
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -211,7 +212,7 @@ class OnboardingViewModel(
 
     private fun installHealthConnect() {
         if (!healthAccess.installHealthConnect()) {
-            scaffoldState.showErrorToast(message = StringResource(MHCStrings.onboarding_health_access_install_error))
+            showError(messageId = MHCStrings.onboarding_health_access_install_error)
         }
     }
 
@@ -273,7 +274,7 @@ class OnboardingViewModel(
         viewModelScope.launch {
             consentHandler.share(responses = responses).onFailure {
                 logger.e(it) { "Sharing the consent form failed." }
-                scaffoldState.showErrorToast(message = StringResource(MHCStrings.onboarding_consent_share_error))
+                showError(messageId = MHCStrings.onboarding_consent_share_error)
             }
             isSharingConsent = false
             updateConsentAppBar()
@@ -290,9 +291,13 @@ class OnboardingViewModel(
                 .onSuccess { handle(result = OnboardingStepResult.Step(step = OnboardingStep.Login)) }
                 .onFailure {
                     logger.e(it) { "Signing out after declining reactivation failed." }
-                    scaffoldState.showErrorToast(message = StringResource(MHCStrings.onboarding_reactivate_logout_error))
+                    showError(messageId = MHCStrings.onboarding_reactivate_logout_error)
                 }
         }
+    }
+
+    private fun showError(@StringRes messageId: Int) {
+        scaffoldState.showErrorToast(message = StringResource(messageId))
     }
 
     private fun previousStep() {
@@ -378,9 +383,7 @@ class OnboardingViewModel(
         if (validation != null) {
             return scaffoldState.showErrorToast(message = validation.message)
         }
-        val country = answers.value.country ?: return scaffoldState.showErrorToast(
-            message = StringResource(MHCStrings.onboarding_waitlist_error),
-        )
+        val country = answers.value.country ?: return showError(messageId = MHCStrings.onboarding_waitlist_error)
 
         // The waitlist call requires a signed-in participant, and someone in a country the study has
         // not launched in has no account. Signing up anonymously is what gets them past the rules;
@@ -394,9 +397,7 @@ class OnboardingViewModel(
         joined.exceptionOrNull()?.let { failure ->
 
             logger.e(failure) { "Failed to join the launch waitlist" }
-            return scaffoldState.showErrorToast(
-                message = StringResource(MHCStrings.onboarding_waitlist_error),
-            )
+            return showError(messageId = MHCStrings.onboarding_waitlist_error)
         }
 
         scaffoldState.showToast(
@@ -469,7 +470,7 @@ class OnboardingViewModel(
         OnboardingStep.Consent -> uploadConsent()
             .onFailure {
                 logger.e(it) { "Consent upload failed; staying on the step." }
-                scaffoldState.showErrorToast(message = StringResource(MHCStrings.onboarding_consent_upload_error))
+                showError(messageId = MHCStrings.onboarding_consent_upload_error)
             }
             .isSuccess
         OnboardingStep.HealthAccess -> {
@@ -477,16 +478,21 @@ class OnboardingViewModel(
             true
         }
         OnboardingStep.Demographics -> demographicsEditor.flush()
-            .onFailure { logger.e(it) { "Storing the demographics failed; staying on the step." } }
+            .onFailure {
+                logger.e(it) { "Storing the demographics failed; staying on the step." }
+                showError(messageId = MHCStrings.demographics_save_failed)
+            }
             .isSuccess
-        OnboardingStep.FinalEnrollment -> {
-            studyEnroller.enroll().onFailure { logger.e(it) { "Enrollment failed; continuing into the app." } }
-            true
-        }
+        OnboardingStep.FinalEnrollment -> studyEnroller.enroll()
+            .onFailure {
+                logger.e(it) { "Enrollment failed; staying on the step." }
+                showError(messageId = MHCStrings.onboarding_enrollment_error)
+            }
+            .isSuccess
         OnboardingStep.ReactivateAccount -> cloudFunctions.markAccountForStudyReenrollment()
             .onFailure {
                 logger.e(it) { "Reactivating the account failed." }
-                scaffoldState.showErrorToast(message = StringResource(MHCStrings.onboarding_reactivate_error))
+                showError(messageId = MHCStrings.onboarding_reactivate_error)
             }
             .isSuccess
         else -> true

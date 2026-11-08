@@ -7,9 +7,9 @@
 
 package edu.stanford.myheartcounts.demographics
 
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProviderImpl
 import edu.stanford.myheartcounts.demographics.ui.DemographicsDatePicker
 import edu.stanford.myheartcounts.demographics.ui.DemographicsMenu
-import edu.stanford.myheartcounts.demographics.ui.DemographicsMonthYearPicker
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
 import edu.stanford.myheartcounts.model.demographics.BloodType
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
@@ -24,6 +24,7 @@ import edu.stanford.myheartcounts.model.demographics.RaceEthnicity
 import edu.stanford.myheartcounts.model.demographics.StageOfChangeOption
 import edu.stanford.myheartcounts.model.demographics.UKRegion
 import edu.stanford.myheartcounts.model.demographics.USRegion
+import edu.stanford.myheartcounts.ui.choice.MonthYearPicker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -139,7 +140,7 @@ object DemographicsLayoutInputFixtures {
         completion: StateFlow<Map<DemographicsField, DemographicsCompletion>> = MutableStateFlow(emptyMap()),
         menu: StateFlow<DemographicsMenu?> = MutableStateFlow(null),
         datePicker: StateFlow<DemographicsDatePicker?> = MutableStateFlow(null),
-        monthYearPicker: StateFlow<DemographicsMonthYearPicker?> = MutableStateFlow(null),
+        monthYearPicker: StateFlow<MonthYearPicker?> = MutableStateFlow(null),
     ) = DemographicsLayoutInput(
         region = region,
         response = response,
@@ -160,6 +161,6 @@ object DemographicsCatalogFixtures {
     fun create(): DemographicsCatalog = DemographicsCatalogImpl(
         options = DemographicsOptionsProviderImpl(),
         regions = DemographicsRegionsProviderImpl(),
-        conditions = DemographicsConditionsProviderImpl(),
+        conditions = ComorbiditiesConditionsProviderImpl(),
     )
 }

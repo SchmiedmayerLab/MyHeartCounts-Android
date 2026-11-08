@@ -35,6 +35,18 @@ import java.time.format.FormatStyle
 import java.util.Locale
 
 /**
+ * Lays out a factor's history chart.
+ */
+interface HeartScoreChartMapper {
+
+    /**
+     * The chart [input] describes, with a menu to change its time range, following [input]'s
+     * history and selection; without a history, the chart is empty over the chosen time range.
+     */
+    fun map(input: HeartScoreChartInput): ChartCard
+}
+
+/**
  * What a factor's chart shows.
  *
  * @property data the history over the chosen time range, or `null` while there is none to show
@@ -50,16 +62,69 @@ data class HeartScoreChartInput(
 )
 
 /**
- * Lays out a factor's history chart.
+ * Labels a highlighted point with its value and unit, and titles it with its date.
  */
-interface HeartScoreChartMapper {
+data class HeartScoreHighlightFormat(
+    val coordinates: TimeCoordinates,
+    val zone: ZoneId,
+    val locale: Locale,
+    val component: HeartScoreComponent,
+    val kind: HeartScoreChartSeries.Kind,
+) : HighlightFormat {
+    override fun label(point: CartesianChart.Point): Highlight {
+        val number = NumberFormat.getNumberInstance(locale).apply {
+            maximumFractionDigits = when (component) {
+                HeartScoreComponent.BodyMassIndex -> 1
+                HeartScoreComponent.StepCount, HeartScoreComponent.MentalWellbeing -> 0
+                else -> 2
+            }
+            minimumFractionDigits = if (component == HeartScoreComponent.BodyMassIndex) 1 else 0
+        }.format(point.y)
+        val value = component.displayUnit?.let { "$number $it" } ?: number
+        val formattedValue = if (component == HeartScoreComponent.Sleep) {
+            val minutes = (point.y * MINUTES_PER_HOUR).toInt()
+            StringResource(MHCStrings.heart_detail_sleep_duration, minutes / MINUTES_PER_HOUR, minutes % MINUTES_PER_HOUR)
+        } else {
+            StringResource(value)
+        }
+        val label = when (kind) {
+            HeartScoreChartSeries.Kind.Systolic -> StringResource(MHCStrings.heart_detail_systolic_value, value)
+            HeartScoreChartSeries.Kind.Diastolic -> StringResource(MHCStrings.heart_detail_diastolic_value, value)
+            HeartScoreChartSeries.Kind.Value -> formattedValue
+        }
+        return Highlight(
+            value = label,
+            title = title(point = point),
+        )
+    }
 
-    /**
-     * The chart [input] describes, with a menu to change its time range, following [input]'s
-     * history and selection; without a history, the chart is empty over the chosen time range.
-     */
-    fun map(input: HeartScoreChartInput): ChartCard
+    private fun title(point: CartesianChart.Point): StringResource {
+        val date = coordinates.instant(coordinate = point.x).atZone(zone)
+        val end = point.xEnd?.let { coordinates.instant(coordinate = it).atZone(zone) }
+        val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+        return if (component != HeartScoreComponent.Sleep && end != null && end.toLocalDate() != date.toLocalDate()) {
+            StringResource(MHCStrings.heart_detail_date_range, formatter.format(date), formatter.format(end))
+        } else {
+            StringResource(formatter.format(date))
+        }
+    }
+
+    private companion object {
+        const val MINUTES_PER_HOUR = 60
+    }
 }
+
+/**
+ * The unit a factor's values are shown in, or `null` for a count or score without one.
+ */
+val HeartScoreComponent.displayUnit: String?
+    get() = when (this) {
+        HeartScoreComponent.ExerciseMinutes -> "min"
+        HeartScoreComponent.Sleep -> "hr"
+        HeartScoreComponent.BloodPressure -> "mmHg"
+        HeartScoreComponent.BloodGlucose, HeartScoreComponent.BloodLipids -> "mg/dL"
+        else -> null
+    }
 
 /**
  * Draws steps and sleep as bars from zero and every other factor as a line, blood pressure as one
@@ -162,68 +227,3 @@ class HeartScoreChartMapperImpl(
         }
     }
 }
-
-/**
- * Labels a highlighted point with its value and unit, and titles it with its date.
- */
-data class HeartScoreHighlightFormat(
-    val coordinates: TimeCoordinates,
-    val zone: ZoneId,
-    val locale: Locale,
-    val component: HeartScoreComponent,
-    val kind: HeartScoreChartSeries.Kind,
-) : HighlightFormat {
-    override fun label(point: CartesianChart.Point): Highlight {
-        val number = NumberFormat.getNumberInstance(locale).apply {
-            maximumFractionDigits = when (component) {
-                HeartScoreComponent.BodyMassIndex -> 1
-                HeartScoreComponent.StepCount, HeartScoreComponent.MentalWellbeing -> 0
-                else -> 2
-            }
-            minimumFractionDigits = if (component == HeartScoreComponent.BodyMassIndex) 1 else 0
-        }.format(point.y)
-        val value = component.displayUnit?.let { "$number $it" } ?: number
-        val formattedValue = if (component == HeartScoreComponent.Sleep) {
-            val minutes = (point.y * MINUTES_PER_HOUR).toInt()
-            StringResource(MHCStrings.heart_detail_sleep_duration, minutes / MINUTES_PER_HOUR, minutes % MINUTES_PER_HOUR)
-        } else {
-            StringResource(value)
-        }
-        val label = when (kind) {
-            HeartScoreChartSeries.Kind.Systolic -> StringResource(MHCStrings.heart_detail_systolic_value, value)
-            HeartScoreChartSeries.Kind.Diastolic -> StringResource(MHCStrings.heart_detail_diastolic_value, value)
-            HeartScoreChartSeries.Kind.Value -> formattedValue
-        }
-        return Highlight(
-            value = label,
-            title = title(point = point),
-        )
-    }
-
-    private fun title(point: CartesianChart.Point): StringResource {
-        val date = coordinates.instant(coordinate = point.x).atZone(zone)
-        val end = point.xEnd?.let { coordinates.instant(coordinate = it).atZone(zone) }
-        val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
-        return if (component != HeartScoreComponent.Sleep && end != null && end.toLocalDate() != date.toLocalDate()) {
-            StringResource(MHCStrings.heart_detail_date_range, formatter.format(date), formatter.format(end))
-        } else {
-            StringResource(formatter.format(date))
-        }
-    }
-
-    private companion object {
-        const val MINUTES_PER_HOUR = 60
-    }
-}
-
-/**
- * The unit a factor's values are shown in, or `null` for a count or score without one.
- */
-val HeartScoreComponent.displayUnit: String?
-    get() = when (this) {
-        HeartScoreComponent.ExerciseMinutes -> "min"
-        HeartScoreComponent.Sleep -> "hr"
-        HeartScoreComponent.BloodPressure -> "mmHg"
-        HeartScoreComponent.BloodGlucose, HeartScoreComponent.BloodLipids -> "mg/dL"
-        else -> null
-    }
