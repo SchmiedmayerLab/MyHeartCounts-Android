@@ -22,6 +22,7 @@ class StudyParticipationSectionScreenshotTest : ScreenshotTest() {
         val section = StudyParticipationSection(
             onParticipationStatsSelected = {},
             onUpdateComorbiditiesSelected = {},
+            onWorkoutPreferenceSelected = {},
         )
 
         // when / then

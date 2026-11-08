@@ -76,7 +76,8 @@ class OnboardingStepProviderImpl(
     override suspend fun getNext(step: OnboardingStep, answers: OnboardingAnswers): OnboardingStepResult = when {
         isSimplified -> when (step) {
             OnboardingStep.FinalEnrollment -> OnboardingStepResult.Completed
-            OnboardingStep.HealthAccess -> OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment)
+            OnboardingStep.HealthAccess -> OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference)
+            OnboardingStep.WorkoutPreference -> OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment)
             OnboardingStep.Login -> OnboardingStepResult.Step(step = afterAccount(next = OnboardingStep.HealthAccess))
             else -> OnboardingStepResult.Step(step = OnboardingStep.HealthAccess)
         }
@@ -96,7 +97,8 @@ class OnboardingStepProviderImpl(
         OnboardingStep.RisksAndBenefits -> OnboardingStepResult.Step(OnboardingStep.Comprehension)
         OnboardingStep.Comprehension -> OnboardingStepResult.Step(OnboardingStep.Consent)
         OnboardingStep.Consent -> OnboardingStepResult.Step(OnboardingStep.HealthAccess)
-        OnboardingStep.HealthAccess -> OnboardingStepResult.Step(afterHealthAccess())
+        OnboardingStep.HealthAccess -> OnboardingStepResult.Step(OnboardingStep.WorkoutPreference)
+        OnboardingStep.WorkoutPreference -> OnboardingStepResult.Step(afterWorkoutPreference())
         OnboardingStep.Notifications -> OnboardingStepResult.Step(OnboardingStep.Demographics)
         OnboardingStep.Demographics -> OnboardingStepResult.Step(OnboardingStep.FinalEnrollment)
         OnboardingStep.FinalEnrollment -> OnboardingStepResult.Completed
@@ -159,13 +161,14 @@ class OnboardingStepProviderImpl(
             account.details.first { it != null && !it.isAnonymousUser && !it.isIncomplete }
         } ?: account.details.value
 
-    private fun afterHealthAccess(): OnboardingStep =
+    private fun afterWorkoutPreference(): OnboardingStep =
         if (notificationPermissionHandler.isGranted()) OnboardingStep.Demographics else OnboardingStep.Notifications
 
     override fun getPrevious(step: OnboardingStep): OnboardingStepResult = when {
         isSimplified -> when (step) {
             OnboardingStep.Login -> OnboardingStepResult.Dismissed
-            OnboardingStep.FinalEnrollment -> OnboardingStepResult.Step(step = OnboardingStep.HealthAccess)
+            OnboardingStep.FinalEnrollment -> OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference)
+            OnboardingStep.WorkoutPreference -> OnboardingStepResult.Step(step = OnboardingStep.HealthAccess)
             else -> OnboardingStepResult.Step(step = OnboardingStep.Login)
         }
         else -> previousStep(step = step)
@@ -187,16 +190,17 @@ class OnboardingStepProviderImpl(
         OnboardingStep.HealthAccess -> OnboardingStepResult.Step(
             if (skippedConsent) OnboardingStep.StudyOverview else OnboardingStep.Consent,
         )
-        OnboardingStep.Notifications -> OnboardingStepResult.Step(OnboardingStep.HealthAccess)
-        OnboardingStep.Demographics -> OnboardingStepResult.Step(beforeFinalEnrollment())
+        OnboardingStep.WorkoutPreference -> OnboardingStepResult.Step(OnboardingStep.HealthAccess)
+        OnboardingStep.Notifications -> OnboardingStepResult.Step(OnboardingStep.WorkoutPreference)
+        OnboardingStep.Demographics -> OnboardingStepResult.Step(beforeDemographics())
         OnboardingStep.FinalEnrollment -> OnboardingStepResult.Step(OnboardingStep.Demographics)
     }
 
     private fun beforeTrialComponent(): OnboardingStep =
         if (isSignedIn) OnboardingStep.StudyOverview else OnboardingStep.Login
 
-    private fun beforeFinalEnrollment(): OnboardingStep =
-        if (notificationPermissionHandler.isGranted()) OnboardingStep.HealthAccess else OnboardingStep.Notifications
+    private fun beforeDemographics(): OnboardingStep =
+        if (notificationPermissionHandler.isGranted()) OnboardingStep.WorkoutPreference else OnboardingStep.Notifications
 
     private companion object {
         val ACCOUNT_DETAILS_TIMEOUT = 10.seconds
@@ -242,6 +246,7 @@ enum class OnboardingStep {
     Comprehension,
     Consent,
     HealthAccess,
+    WorkoutPreference,
     Notifications,
     Demographics,
     FinalEnrollment,

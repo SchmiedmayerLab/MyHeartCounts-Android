@@ -115,6 +115,18 @@ class MHCAccountOverviewMapperTest {
     }
 
     @Test
+    fun `reports asking to change the workout preference through the action sink`() {
+        // given
+        val section = mapper.map(input = input()).sections.items.filterIsInstance<StudyParticipationSection>().single()
+
+        // when
+        section.onWorkoutPreferenceSelected()
+
+        // then
+        assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.WorkoutPreferenceSelected)
+    }
+
+    @Test
     fun `reports asking to send feedback through the action sink`() {
         // given
         val section = mapper.map(input = input()).sections.items.filterIsInstance<SupportSection>().single()

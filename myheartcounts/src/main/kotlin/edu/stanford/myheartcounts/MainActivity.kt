@@ -44,6 +44,8 @@ import edu.stanford.myheartcounts.study.StudyScreen
 import edu.stanford.myheartcounts.study.StudyVariantProvider
 import edu.stanford.myheartcounts.task.PerformTaskScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
+import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreen
+import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreenMode
 import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
@@ -155,6 +157,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 entry<MHCRoute.Comorbidities> {
                     ComorbiditiesScreen()
+                }
+                entry<MHCRoute.WorkoutPreference> {
+                    WorkoutPreferenceScreen(
+                        mode = WorkoutPreferenceScreenMode.Standalone,
+                        onDismiss = { navigator.push(event = NavigationEvent.Close(route = MHCRoute.WorkoutPreference)) },
+                        onSaved = { navigator.push(event = NavigationEvent.Close(route = MHCRoute.WorkoutPreference)) },
+                    )
                 }
                 entry<MHCRoute.PerformTask> {
                     PerformTaskScreen()
