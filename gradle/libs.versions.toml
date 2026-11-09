@@ -8,46 +8,46 @@
 # Please keep [versions] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [versions]
 activityCompose = "1.13.0"
-agp = "9.4.0"
+agp = "9.5.1"
 androidTools = "32.3.1"
 appcompat = "1.8.0"
-coilComposeVersion = "3.5.0"
+coilComposeVersion = "3.6.3"
 compileSdk = "37"
 composeBom = "2026.09.00"
-composeNavigation = "2.9.8"
+composeNavigation = "2.10.2"
 coreDesugaringVersion = "2.1.5"
-coreKtx = "1.19.0"
+coreKtx = "1.19.1"
 coreTestingVersion = "2.2.0"
 coroutinesVersion = "1.11.0"
 detekt = "1.23.8" # please adjust github action version as well in case of version change
-dokka = "2.2.0"
+dokka = "2.3.0"
 espressoCore = "3.7.0"
 firebaseFirestoreKtx = "25.1.4"
 firebaseFunctionsKtx = "21.2.1"
 firebaseMessagingKtx = "24.1.2"
 firebaseStorageKtx = "21.0.2"
 googleGmsGoogleServices = "4.5.0"
-guava = "33.7.1-android" # is a fixed version which works with all other dependencies
+guava = "33.8.0-android" # is a fixed version which works with all other dependencies
 # The Grove modules the app builds against. The submodule pin decides which commit that is; the
 # version is what a published artifact would carry.
 grove = "0.1.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 kotlin = "2.4.0" # capped by the CodeQL Kotlin extractor, which supports versions up to 2.4.0
-kspVersion = "2.3.12"
-kotlinxSerializationJson = "1.11.0"
+kspVersion = "2.3.13"
+kotlinxSerializationJson = "1.12.0"
 lifecycleKtx = "2.11.0"
 minSdk = "30"
 room = "2.8.5"
 navigation3 = "1.1.4"
-paparazziVersion = "2.0.0-alpha05"
+paparazziVersion = "2.0.0-alpha05.1"
 rulesVersion = "1.7.0"
 runnerVersion = "1.7.0"
 targetSdk = "36"
 testCoreVersion = "1.7.0"
 truth = "1.4.5"
-work = "2.11.2"
-zstdJni = "1.5.7-16"
+work = "2.12.0"
+zstdJni = "1.5.7-25"
 
 # Please keep [libraries] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [libraries]
