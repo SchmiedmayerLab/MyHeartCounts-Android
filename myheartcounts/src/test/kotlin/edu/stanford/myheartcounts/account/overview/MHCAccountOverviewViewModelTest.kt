@@ -78,6 +78,18 @@ class MHCAccountOverviewViewModelTest {
     }
 
     @Test
+    fun `opens the comorbidities from the account overview`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        viewModel.studyParticipationSection().onUpdateComorbiditiesSelected()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.Comorbidities))
+    }
+
+    @Test
     fun `asks for confirmation before withdrawing`() {
         // given
         val viewModel = viewModel()

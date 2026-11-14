@@ -154,6 +154,7 @@ import org.grovealliance.study.StudyManager
 @GroveDsl
 fun ConfigurationBuilder.appConfigurations() {
     demographicsConfigurations()
+    comorbiditiesConfigurations()
     participationStatsConfigurations()
     singleton<Navigator> { NavigatorImpl() }
     homeConfigurations()

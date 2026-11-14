@@ -16,11 +16,11 @@ tickets to close the gap.
 | | |
 |---|---|
 | iOS baseline | `MyHeartCounts-iOS` @ `0c56672` (whole app, Watch app, `MyHeartCountsShared`, study definitions); the dashboard's data sources, participation stats and achievements re-checked against `5bd8ee3` |
-| Android baseline | `MyHeartCounts-Android` @ `ec8168b` (audit); statuses updated against `bc3cf4a` ([#44](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/44): the G07 dashboard components and the Grove pin bump, on top of #42 and #40) and the work on branch `feature/parity-iteration-2` |
+| Android baseline | `MyHeartCounts-Android` @ `ec8168b` (audit); statuses updated against `19cab4d` ([#45](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/45): the Heart Health dashboard, demographics and study variants, on top of #44, #42 and #40) and the work on branch `feature/parity-iteration-3` |
 | Grove baseline | `grove-kotlin` @ `695fad1` (audit); the app's pin is now `0d302ed` (Grove #13, the login button's loading state, on top of #10), a descendant that contains every G ticket marked done except G07, which was moved into the app (`dashboard/ui`) |
 | Study definition | revision 44 (`MyHeartCounts-StudyDefinitions`) |
 | Compiled | 2026-09-28 |
-| Last updated | 2026-11-01 |
+| Last updated | 2026-11-07 |
 
 **Method.** Every Swift file of the iOS app target, the watchOS app and the shared package was read,
 along with the study definition. It was compared against `myheartcounts/src/main` and the public API of
@@ -36,14 +36,14 @@ against the code before acting on it.
 
 ## Progress
 
-As of 2026-11-01. A ticket counts as done once it is ✅ here.
+As of 2026-11-07. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 32 | 65 | 49% |
+| App tickets (`T`) | 33 | 65 | 51% |
 | Grove tickets (`G`) | 11 | 14 | 79% |
-| **All tickets** | **43** | **79** | **54%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only row) | 67 ✅ · 19 🟡 · 33 ❌ | 119 | 56% (64% counting 🟡 as half) |
+| **All tickets** | **44** | **79** | **56%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only row) | 68 ✅ · 19 🟡 · 32 ❌ | 119 | 57% (65% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
@@ -52,7 +52,7 @@ As of 2026-11-01. A ticket counts as done once it is ✅ here.
 | 3. Onboarding parity | 10 / 12 | T17, T64 |
 | 4. Questionnaires and tasks | 4 / 9 | T24, T27, T54, T55, T59 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
-| 6. Account sheet and prompted actions | 2 / 9 | T33, T35, T37–T40, T58 |
+| 6. Account sheet and prompted actions | 3 / 9 | T33, T35, T38–T40, T58 |
 | 7. Heart Health dashboard | 5 / 6 | T44 |
 | 8. Consent renewal | 0 / 1 | T47 |
 | 9. Localization | 0 / 1 | T48 |
@@ -83,7 +83,7 @@ damage study data or the participant's experience today.
 | B1 | **Consent response keys don't match the consent document.** The uploader reads `futureStudiesOptIn`, `trialOptIn` and `trialYes`, but `Consent+en-US.md` uses `future-studies`, `short-term-physical-activity-trial` and `short-term-physical-activity-trial-yes`. `ConsentUploadTest` uses the same wrong keys, so the test locks the bug in. | `standard/consent/MHCConsentUploader.kt` (companion constants); `androidTest/.../ConsentUploadTest.kt:85-86`; iOS `Onboarding/Consent+MHC.swift` | `futureStudies` and `didOptInToTrial` are **never written** for Android participants. Trial opt-in drives which demographics fields are required and whether the baseline row appears in the final enrollment step. | T01 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
 | B2 | **Home completes tasks the participant never performed.** For questionnaires, the ECG and timed tests, `perform()` calls `onCompleteEvent` directly. No questionnaire is shown and no test is run. | `home/HomeContentMapper.kt` `perform()` / `actionButton()` | Scheduled surveys get marked complete with no response uploaded, so completion data in the scheduler is wrong. | T02 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
 | B3 | **Launch routing is a placeholder.** After a 2-second dummy splash, the app always switches to Onboarding, so returning, enrolled participants land in onboarding on every launch. | `MainActivityViewModel.kt` (`// Dummy splash for now`) | Core flow is broken for returning users. | T03 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
-| B4 | **App-revision FHIR extension diverges from iOS.** Android writes a flat string at `https://bdh.stanford.edu/fhir/defs/mhcAppRevision`. iOS (since #198) writes `https://myheartcounts.stanford.edu/fhir/core/mhcAppRevision` with `version`, `build`, `bundleIdentifier` and `osVersion` children, and adds it to *all* resources, including questionnaire responses. | `standard/health/HealthObservationProvenance.kt`, `standard/MHCQuestionnaireUploader.kt`; iOS `Utils/FHIR/MHCAppRevision.swift` | Backend and analysis code can't treat both platforms the same way. | T05 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
+| B4 | **App-revision FHIR extension diverges from iOS.** Android writes a flat string at `https://bdh.stanford.edu/fhir/defs/mhcAppRevision`. iOS (since #198) writes `https://myheartcounts.stanford.edu/fhir/core/mhcAppRevision` with `version`, `build`, `bundleIdentifier` and `osVersion` children, and adds it to *all* resources, including questionnaire responses. | `standard/health/HealthObservationProvenance.kt`, `standard/QuestionnaireResponseUploader.kt`; iOS `Utils/FHIR/MHCAppRevision.swift` | Backend and analysis code can't treat both platforms the same way. | T05 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
 | B5 | **`preferredMeasurementSystem` values probably differ.** Android writes `us`, `uk` and `metric`. iOS writes `Locale.MeasurementSystem.identifier`, which is `ussystem`, `uksystem` or `metric`. *Verify against Firestore data before changing.* | `standard/MHCEnvironmentTracker.kt` `measurementSystem()`; iOS `Modules/EnvironmentTracking.swift` | The same field holds inconsistent values across platforms. | T06 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
 | B6 | **Nudges aren't shown while the app is in the foreground.** `onMessageReceived` only logs, so FCM notification messages that arrive while the app is open are dropped. iOS presents them as banners in the foreground. | `notification/MHCMessagingService.kt` | Participants miss nudges. | T07 ✅ [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40) |
 | B7 | **Health Connect permissions are never requested, so no health data is collected.** Grove's `health {}` module doesn't prompt on its own; the app has to call `Health.requestPermissionsIfNeeded(activity)`, which covers every configured read type plus `READ_HEALTH_DATA_HISTORY` and `READ_HEALTH_DATA_IN_BACKGROUND`. Nothing in MHC-Android calls it. The HealthAccess onboarding step is an info page with a Continue button, and Grove's own sample app is the only caller. | `onboarding/OnboardingStepLayoutMapper.kt` (`HealthAccess` → `infoStep`); Grove `health/Health.kt:84`, `sample-app/.../HealthViewModel.kt:86` | **Most severe finding.** Unless a participant grants access manually in Health Connect settings, collection runs without permissions and uploads nothing. | T10 ✅ (with G01). Participants onboarded before the fix still have no permissions (T10 follow-up) |
@@ -180,7 +180,7 @@ logic, and the consent PDF.
 | Notification permission (skipped if already granted) | `Onboarding/NotificationPermissions.swift` | ✅ Done | `NotificationPermissionHandler.kt` |
 | Demographics step (Continue gated on required fields) | `Onboarding/DemographicsStep.swift` | ✅ Done | `DemographicsStep`; completion and successful-save gate before final enrollment (T21) |
 | Final enrollment page (trial row only if opted in) | `Onboarding/FinalEnrollmentStep.swift` | ✅ Done | Trial row only when the consent's trial question was answered yes (T22) |
-| Enroll, reusing the account's `dateOfEnrollment` | `MyHeartCountsStandard.enroll` | ✅ Done | `study/StudyEnroller.kt` |
+| Enroll, reusing the account's `dateOfEnrollment` | `MyHeartCountsStandard.enroll` | ✅ Done | `study/StudyEnroller.kt`; a failed enrollment shows an error toast and keeps the participant on the final step, as on iOS |
 | Record local `studyActivationDate`; start historical export after enrollment | `MyHeartCountsStandard.enroll` | ❌ Missing | |
 | Track `mostRecentOnboardingStep` on the account per step | `Onboarding/ProgressTracking.swift` | ✅ Done | `onboarding/OnboardingProgressTracker` (T16); `demographics` is recorded by T21; `workoutPreference` follows with T17 |
 
@@ -200,7 +200,7 @@ logic, and the consent PDF.
 | Study participation section (study title, short explanation, "Enrolled since", website link) | `AccountSheet.studyParticipationSection` | ❌ Missing | The section card exists (`StudyParticipationSection`) but holds only the "View Participation Stats" row; the rows listed here are open (T33) |
 | Participation stats: enrollment date; engagement (tasks done, current and longest streak, surveys, articles, ECGs, walk/run tests); health totals (steps, heartbeats, distance, active energy, exercise time, sleep, workouts, flights); highlights (best step day, longest workout, max and resting HR); fun facts | `Account/ParticipationStatsView.swift` (`AccountSheet.studyParticipationSection`) | ❌ Missing | Not in the original audit. Health totals and highlights come from the stats documents (T61, T62), as on iOS (`ParticipationStatsProvider`); ECG count depends on D2 (T58). UI built with sample data behind a DUMMY DATA badge, see T58 |
 | Post-trial activity nudges toggle (`extendedActivityNudgesOptIn`, debounced) | `AccountSheet.PostTrialNudgesToggle` | ✅ Done | `ui/ToggleSection` in the account overview (T34); shown to every signed-in participant until the study participation section exists (T33) |
-| Update comorbidities | `Account/UpdateComorbiditiesButton.swift` | ❌ Missing | Depends on the comorbidities picker |
+| Update comorbidities | `Account/UpdateComorbiditiesButton.swift` | ✅ Done | `comorbidities/`, opened from the account sheet's study section (T37) |
 | SensorKit enable/manage | `SensorKit/SensorKitButton.swift` | ➖ N/A | |
 | Data processing indicator ("Processing Health data…") | `AccountSheet.dataProcessingRow` | ❌ Missing | |
 | Change language | `AccountSheet` → Settings app | ❌ Missing | Android 13+ per-app language settings |
@@ -256,7 +256,7 @@ logic, and the consent PDF.
 | Feature (iOS) | iOS reference | Android | Evidence / notes |
 |---|---|---|---|
 | Render FHIR questionnaires from the study bundle in the preferred locale (14 surveys: Diet, WHO5, DiseaseQOL, Chronotype, ActivityFitness, GAD7, ExerciseAdequacy, ExerciseMindset, SUS, HeartRisk, ParQ, Fatigue, plus Nicotine and Info without schedules) | `PerformTaskAnchor` → `QuestionnaireView` | ✅ Done | T23: full-screen `task/PerformTaskScreen` with Grove `QuestionnaireComposable`. Content is adapted before rendering (`study/StudyQuestionnaire.prepare`, B10). Resolved in the study variant's content locale, the same locale task titles and instructions use (T63). Dark-mode renderer theme not checked |
-| Upload `QuestionnaireResponse` to `users/{id}/questionnaireResponses/{id}` with canonical URL and app revision | `MyHeartCountsStandard+QuestionnaireResponse.swift` | ✅ Done | `MHCQuestionnaireUploader.kt` (status `completed`, quantity answers as `valueQuantity`, app revision from T05). Divergence: the screen closes and the task completes without waiting for the server acknowledgement; iOS awaits the write |
+| Upload `QuestionnaireResponse` to `users/{id}/questionnaireResponses/{id}` with canonical URL and app revision | `MyHeartCountsStandard+QuestionnaireResponse.swift` | ✅ Done | `QuestionnaireResponseUploader.kt` (status `completed`, quantity answers as `valueQuantity`, app revision from T05). Divergence: the screen closes and the task completes without waiting for the server acknowledgement; iOS awaits the write |
 | HeartRisk extraction (systolic/diastolic BP and glucose written to the health store) | `QuestionnaireParsing/QuestionnaireDataExtractor.swift` | ❌ Missing | Depends on decision D1 |
 
 ### 2.9 Active tasks
@@ -378,7 +378,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | 3 | T14–T16 ✅, T17, T18–T22 ✅, T56 ✅, T63 ✅, T64 | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
-| 6 | T33 🟡, T34 ✅, T35, T36 ✅, T37–T40, T58 🟡 | G08 ✅ (for T38) |
+| 6 | T33 🟡, T34 ✅, T35, T36 ✅, T37 ✅, T38–T40, T58 🟡 | G08 ✅ (for T38) |
 | 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
 | 8 | T47 | — |
 | 9 | T48 🟡 | G10 ✅ (Grove side) |
@@ -524,7 +524,7 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Description:** Build the form with the region- and trial-dependent layout: DOB, gender identity and sex at birth (each inferred from the other), blood type, height and weight, race/ethnicity multi-select ("prefer not to state" is exclusive), Latino (US only), education, income, referral source. Required vs. optional follows iOS `DemographicsLayout.swift`: comorbidities, education and stage of change are required only if the participant opted into the trial. Show red for missing required fields and orange for missing optional ones. Autosave after 1 s of inactivity, writing only changed keys and removing cleared keys. Flush when leaving the screen. iOS: `DemographicsForm.swift`, `DemographicsData.swift`.
 **Acceptance:** Filling the form on Android shows identical values on iOS, and vice versa.
 
-**As built:** `demographics/`: `DemographicsLayout` (one card per section; optional questions say "Optional" in italics below their title, and answers, given or missing, share one secondary colour), built by `DemographicsLayoutMapper` from the `DemographicsRules` field set of the form's region; menus for gender, sex at birth and blood type, a date picker for the date of birth, entry sheets for height and weight, and choice sheets for the rest. `DemographicsEditor` (a shared module) holds the signed-in participant's `DemographicsResponse`, read and written through `DemographicsCodec` (one typed binding per account key; the date of birth is stored as noon in the device's zone). It saves the changed keys one second after the last edit and removes cleared ones, keeps unsaved edits when the account's details refresh, drops them when somebody else signs in, and flushes when the screen goes away; a failed save shows a toast and is retried with the next edit or flush. Gender and sex at birth each fill the other only when it is unanswered (male/trans female → male, female/trans male → female). Opening comorbidities counts as answering "none" until a condition is chosen. The account sheet's Demographics row opens the same form as a screen titled Demographics, closed with its back button. The US or UK form follows the study variant (T63). Height and weight are entered in cm and kg; other units moved to T64. Covered by `DemographicsCodecTest`, `DemographicsRulesTest`, `DemographicsEditorTest`, `DemographicsLayoutMapperTest`, `DemographicsPickerMapperTest` and `DemographicsViewModelTest`, and the `DemographicsLayoutScreenshotTest` baselines.
+**As built:** `demographics/`: `DemographicsLayout` (one card per section; optional questions say "Optional" in italics below their title, and answers, given or missing, share one secondary colour), built by `DemographicsLayoutMapper` from the `DemographicsRules` field set of the form's region; menus for gender, sex at birth and blood type, a date picker for the date of birth, entry sheets for height and weight, and choice sheets for the rest. `DemographicsEditor` (a shared module) holds the signed-in participant's `DemographicsResponse`, read and written through `DemographicsCodec` (one typed binding per account key; the date of birth is stored as noon in the device's zone). It saves the changed keys one second after the last edit and removes cleared ones, keeps unsaved edits when the account's details refresh, drops them when somebody else signs in, and flushes when the screen goes away; a failed background save shows a toast; a failed flush is returned to the caller to report. Either is retried with the next edit or flush. Gender and sex at birth each fill the other only when it is unanswered (male/trans female → male, female/trans male → female). Opening comorbidities counts as answering "none" until a condition is chosen. The account sheet's Demographics row opens the same form as a screen titled Demographics, closed with its back button. The US or UK form follows the study variant (T63). Height and weight are entered in cm and kg; other units moved to T64. Covered by `DemographicsCodecTest`, `DemographicsRulesTest`, `DemographicsEditorTest`, `DemographicsLayoutMapperTest`, `DemographicsPickerMapperTest` and `DemographicsViewModelTest`, and the `DemographicsLayoutScreenshotTest` baselines.
 
 #### T19: Demographics specialized pickers ✅ Done
 **Tags:** `demographics`, `feature`
@@ -545,7 +545,7 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Description:** Insert the Demographics step before FinalEnrollment. Continue stays disabled until all required fields are complete. iOS: `DemographicsStep.swift`. Depends on T18 and T19.
 **Acceptance:** Onboarding can't finish without required demographics.
 
-**As built:** The step, titled Demographics, enters after Notifications (or straight after HealthAccess when notifications are already granted) and before FinalEnrollment; Back from FinalEnrollment returns to it. Continue is enabled once every required answer is given and advances only after the pending answers are stored. That second condition is a deliberate difference: iOS advances right away and flushes when the form disappears. Progress tracking records `demographics`. The SimplifyOnboarding debug flow keeps its short path. Covered by `OnboardingStepProviderTest`, `OnboardingStepLayoutMapperTest` and `OnboardingProgressTrackerTest`.
+**As built:** The step, titled Demographics, enters after Notifications (or straight after HealthAccess when notifications are already granted) and before FinalEnrollment; Back from FinalEnrollment returns to it. Continue is enabled once every required answer is given and advances only after the pending answers are stored; if storing fails, an error toast is shown and the participant stays on the step. That second condition is a deliberate difference: iOS advances right away and flushes when the form disappears. Progress tracking records `demographics`. The SimplifyOnboarding debug flow keeps its short path. Covered by `OnboardingStepProviderTest`, `OnboardingStepLayoutMapperTest` and `OnboardingProgressTrackerTest`.
 
 #### T64: Height and weight in the participant's measurement system
 **Tags:** `demographics`, `feature`
@@ -671,10 +671,11 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Acceptance:** The backend receives documents in the same shape as from iOS.
 **As built:** A "Send Feedback" row (`account/overview/SupportSection`, the card Change Language can join) opens `FeedbackSheet` through the overview's scaffold: a text field focused on open with the iOS footer copy, a close button and a Send button in the app bar that is enabled once the message isn't blank and shows progress while sending. The sheet can't be swiped or tapped away while a message is unsent or sending; the close button discards it, as iOS's Cancel does. `account/feedback/MHCFeedback` (+Impl) writes `feedback/{UUID}` with the iOS fields: `version` 1, `accountId`, `message` (trimmed), `date` as a timestamp, `timeZone`, `appVersion`, `appBuildNumber` and `deviceInfo` (`osVersion`, `model` = the device model, `type` = the device's hardware name, now carried by `MHCAppRevision` alongside the OS version). Success closes the sheet; a failure shows an error toast and keeps the message. `MHCAppRevision` moved from the overview's view model into its mapper, which builds the About row. Covered by view-model, mapper and screenshot tests; checked on the emulator against the Firebase emulator suite, where the project's rules accepted the document.
 
-#### T37: Update comorbidities from settings
+#### T37: Update comorbidities from settings ✅ Done
 **Tags:** `account`, `demographics`, `feature`
 **Description:** A settings entry that opens the comorbidities picker and flushes on Done. iOS: `UpdateComorbiditiesButton.swift`. Depends on T19.
 **Acceptance:** Changes persist to `comorbidities`.
+**As built:** An "Update Health Conditions" row in the account sheet's study section (`account/overview/StudyParticipationSection`, below View Participation Stats) opens `MHCRoute.Comorbidities`, a screen of its own in the `comorbidities/` package with a back button and the "Select Comorbidities" title. `ComorbiditiesViewModel` edits a copy of the stored comorbidities: primary and secondary conditions on separate cards, a check on the chosen ones with a "Since" row opening a month/year picker ("Don't know" stores an empty date), and "None" offered only while nothing is chosen. Leaving the screen, by the back button or the system back, stores the comorbidities through `ComorbiditiesStorage` if they changed; storing outlives the screen, and a failure is logged. The conditions come from `comorbidities/ComorbiditiesConditionsProvider` (primary and secondary groups, with the explanations of chronic kidney and peripheral vascular disease). The demographics form's comorbidities sheet reads the same list through `DemographicsCatalog` and shares `comorbidities/ComorbiditiesRules` (choosing, unchoosing and dating a condition, and when "None" is offered), `comorbidities/DiagnosisDateMapper` (the "Since" wording and the month/year picker) and the `ui/choice` components (`ChoiceRow`, `ChoiceFollowUpRow`, `MonthYearPicker`). Divergences: a screen with back navigation instead of a sheet with Done, and the conditions are chosen in one list with a "Since" row rather than on a detail page per condition (as in the demographics form). Covered by `ComorbiditiesViewModelTest`, `ComorbiditiesRulesTest`, `DiagnosisDateMapperTest`, the overview mapper and view-model tests, and the `ComorbiditiesScreenContent` and `StudyParticipationSection` screenshots.
 
 #### T38: Verify email sheet
 **Tags:** `account`, `feature`
@@ -1003,7 +1004,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | App shell and lifecycle | 8 | 4 | 4 | – |
 | Onboarding | 19 | 1 | 3 | 1 💤 |
 | Consent lifecycle | – | – | 2 | – |
-| Account and settings | 5 | 2 | 9 | 1 ➖ |
+| Account and settings | 6 | 2 | 8 | 1 ➖ |
 | Demographics | 6 | – | 1 | – |
 | Home | 6 | 3 | 0 | – |
 | Tasks tab | 2 | 4 | 1 | – |

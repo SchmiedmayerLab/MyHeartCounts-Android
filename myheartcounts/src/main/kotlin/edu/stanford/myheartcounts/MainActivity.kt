@@ -24,6 +24,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewScreen
+import edu.stanford.myheartcounts.comorbidities.ui.ComorbiditiesScreen
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailScreen
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryScreen
 import edu.stanford.myheartcounts.dashboard.pastdata.PastTimedWalkTestResultsScreen
@@ -151,6 +152,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 entry<MHCRoute.Demographics> {
                     DemographicsScreen(mode = DemographicsScreenMode.Complete)
+                }
+                entry<MHCRoute.Comorbidities> {
+                    ComorbiditiesScreen()
                 }
                 entry<MHCRoute.PerformTask> {
                     PerformTaskScreen()

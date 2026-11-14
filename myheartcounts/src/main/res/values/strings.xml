@@ -200,6 +200,7 @@ SPDX-License-Identifier: MIT
     <string name="onboarding_consent_title">Consent</string>
     <string name="onboarding_consent_share_error">The consent form could not be shared. Please try again.</string>
     <string name="onboarding_consent_upload_error">Your consent could not be saved. Please check your connection and try again.</string>
+    <string name="onboarding_enrollment_error">You could not be enrolled in the study. Please check your connection and try again.</string>
 
     <!-- Notifications -->
     <string name="onboarding_notifications_title">Allow Notifications</string>
@@ -324,6 +325,7 @@ SPDX-License-Identifier: MIT
     <string name="account_post_trial_nudges_error">Your post-trial activity nudges choice could not be saved. Please check your connection and try again.</string>
     <string name="account_send_feedback">Send Feedback</string>
     <string name="account_view_participation_stats">View Participation Stats</string>
+    <string name="account_update_comorbidities">Update Health Conditions</string>
     <string name="account_feedback_title">Feedback</string>
     <string name="account_feedback_send">Send</string>
     <string name="account_feedback_footer">Your feedback helps us improve My Heart Counts and all feedback is greatly appreciated.\n\nThe feedback you share with us will be associated with your email address. This allows us to reach out to you if required.</string>
@@ -445,43 +447,50 @@ SPDX-License-Identifier: MIT
     <string name="feature_flag_uk_study_testing_description" translatable="false">Lets participants in the United Kingdom join the Imperial study on the US backend instead of the launch waitlist.</string>
 
 
+    <!-- Comorbidities -->
+    <string name="comorbidities_title">Select Comorbidities</string>
+    <string name="comorbidities_none">None</string>
+    <string name="comorbidities_since">Since</string>
+    <string name="comorbidities_since_unknown">Unknown</string>
+    <string name="comorbidities_diagnosis_year">Year</string>
+    <string name="comorbidities_diagnosis_month">Month</string>
+    <string name="comorbidities_diagnosis_unknown">Don\'t know</string>
+    <string name="comorbidities_condition_diabetes">Diabetes</string>
+    <string name="comorbidities_condition_heartfailure">Heart Failure</string>
+    <string name="comorbidities_condition_coronaryarterydisease">Coronary Artery Disease</string>
+    <string name="comorbidities_condition_pulmonaryarterialhypertension">Pulmonary Arterial Hypertension</string>
+    <string name="comorbidities_condition_adultcongenitalheartdisease">Adult Congenital Heart Disease (ACHD), Single Ventricle (Fontan) or Systemic Right Ventricle (Mustard, Senning, congenitally corrected transposition of the great arteries)</string>
+    <string name="comorbidities_condition_congenitalheartdisease2">Congenital Heart Disease OTHER than Single Ventricle or Systemic Right Ventricle</string>
+    <string name="comorbidities_condition_abdominalaorticaneurysm">Abdominal Aortic Aneurysm</string>
+    <string name="comorbidities_condition_angina">Angina (heart chest pains)</string>
+    <string name="comorbidities_condition_afib">Atrial fibrillation (Afib)</string>
+    <string name="comorbidities_condition_carotidarteryblockagestenosis">Carotid Artery Blockage/Stenosis</string>
+    <string name="comorbidities_condition_carotidarterysurgeryorstent">Carotid Artery Surgery or Stent</string>
+    <string name="comorbidities_condition_chronickidneydisease">Chronic kidney disease</string>
+    <string name="comorbidities_condition_chronickidneydisease_detail">Stage 3, 4 or 5</string>
+    <string name="comorbidities_condition_congenitalheartdefect">Congenital Heart Defect</string>
+    <string name="comorbidities_condition_coronaryblockagestenosis">Coronary Blockage/Stenosis</string>
+    <string name="comorbidities_condition_coronarystentangioplasty">Coronary Stent/Angioplasty</string>
+    <string name="comorbidities_condition_erectiledysfunction">Erectile dysfunction</string>
+    <string name="comorbidities_condition_heartattackmyocardialinfarction">Heart Attack/Myocardial Infarction</string>
+    <string name="comorbidities_condition_heartbypasssurgery">Heart Bypass Surgery</string>
+    <string name="comorbidities_condition_heartfailureorchf">Heart Failure or CHF</string>
+    <string name="comorbidities_condition_highcoronarycalciumscore">High Coronary Calcium Score</string>
+    <string name="comorbidities_condition_migraines">Migraines</string>
+    <string name="comorbidities_condition_otherautoimmunedisease">Other auto-immune disease</string>
+    <string name="comorbidities_condition_peripheralvasculardisease">Peripheral Vascular Disease</string>
+    <string name="comorbidities_condition_peripheralvasculardisease_detail">Blockage/Stenosis, Surgery, or Stent</string>
+    <string name="comorbidities_condition_pulmonaryhypertension">Pulmonary Hypertension</string>
+    <string name="comorbidities_condition_dilatedcardiomyopathy">Dilated Cardiomyopathy (DCM)</string>
+    <string name="comorbidities_condition_hypertrophiccardiomyopathy">Hypertrophic Cardiomyopathy (HCM)</string>
+    <string name="comorbidities_condition_raynaudsphenomenon">Raynaud\'s Phenomenon</string>
+    <string name="comorbidities_condition_rheumatoidarthritis">Rheumatoid arthritis</string>
+    <string name="comorbidities_condition_stroke">Stroke</string>
+    <string name="comorbidities_condition_systemiclupuserythematosus">Systemic lupus erythematosus (SLE)</string>
+    <string name="comorbidities_condition_systemicsclerosisorscleroderma">Systemic Sclerosis or Scleroderma</string>
+    <string name="comorbidities_condition_transientischemicattack">Transient Ischemic Attack (TIA)</string>
+
     <!-- Demographics -->
-    <string name="demographics_condition_diabetes">Diabetes</string>
-    <string name="demographics_conditions_primary">Primary</string>
-    <string name="demographics_condition_heartfailure">Heart Failure</string>
-    <string name="demographics_condition_coronaryarterydisease">Coronary Artery Disease</string>
-    <string name="demographics_condition_pulmonaryarterialhypertension">Pulmonary Arterial Hypertension</string>
-    <string name="demographics_condition_adultcongenitalheartdisease">Adult Congenital Heart Disease (ACHD), Single Ventricle (Fontan) or Systemic Right Ventricle (Mustard, Senning, congenitally corrected transposition of the great arteries)</string>
-    <string name="demographics_condition_congenitalheartdisease2">Congenital Heart Disease OTHER than Single Ventricle or Systemic Right Ventricle</string>
-    <string name="demographics_condition_abdominalaorticaneurysm">Abdominal Aortic Aneurysm</string>
-    <string name="demographics_conditions_secondary">Secondary</string>
-    <string name="demographics_condition_angina">Angina (heart chest pains)</string>
-    <string name="demographics_condition_afib">Atrial fibrillation (Afib)</string>
-    <string name="demographics_condition_carotidarteryblockagestenosis">Carotid Artery Blockage/Stenosis</string>
-    <string name="demographics_condition_carotidarterysurgeryorstent">Carotid Artery Surgery or Stent</string>
-    <string name="demographics_condition_chronickidneydisease">Chronic kidney disease</string>
-    <string name="demographics_condition_chronickidneydisease_detail">Stage 3, 4 or 5</string>
-    <string name="demographics_condition_congenitalheartdefect">Congenital Heart Defect</string>
-    <string name="demographics_condition_coronaryblockagestenosis">Coronary Blockage/Stenosis</string>
-    <string name="demographics_condition_coronarystentangioplasty">Coronary Stent/Angioplasty</string>
-    <string name="demographics_condition_erectiledysfunction">Erectile dysfunction</string>
-    <string name="demographics_condition_heartattackmyocardialinfarction">Heart Attack/Myocardial Infarction</string>
-    <string name="demographics_condition_heartbypasssurgery">Heart Bypass Surgery</string>
-    <string name="demographics_condition_heartfailureorchf">Heart Failure or CHF</string>
-    <string name="demographics_condition_highcoronarycalciumscore">High Coronary Calcium Score</string>
-    <string name="demographics_condition_migraines">Migraines</string>
-    <string name="demographics_condition_otherautoimmunedisease">Other auto-immune disease</string>
-    <string name="demographics_condition_peripheralvasculardisease">Peripheral Vascular Disease</string>
-    <string name="demographics_condition_peripheralvasculardisease_detail">Blockage/Stenosis, Surgery, or Stent</string>
-    <string name="demographics_condition_pulmonaryhypertension">Pulmonary Hypertension</string>
-    <string name="demographics_condition_dilatedcardiomyopathy">Dilated Cardiomyopathy (DCM)</string>
-    <string name="demographics_condition_hypertrophiccardiomyopathy">Hypertrophic Cardiomyopathy (HCM)</string>
-    <string name="demographics_condition_raynaudsphenomenon">Raynaud\'s Phenomenon</string>
-    <string name="demographics_condition_rheumatoidarthritis">Rheumatoid arthritis</string>
-    <string name="demographics_condition_stroke">Stroke</string>
-    <string name="demographics_condition_systemiclupuserythematosus">Systemic lupus erythematosus (SLE)</string>
-    <string name="demographics_condition_systemicsclerosisorscleroderma">Systemic Sclerosis or Scleroderma</string>
-    <string name="demographics_condition_transientischemicattack">Transient Ischemic Attack (TIA)</string>
     <string name="demographics_field_dateofbirth">Date of Birth</string>
     <string name="demographics_field_genderidentity">Gender Identity</string>
     <string name="demographics_field_sexatbirth">Sex Assigned at Birth</string>
@@ -681,16 +690,10 @@ SPDX-License-Identifier: MIT
     <string name="demographics_value_kg">%1$s kg</string>
     <string name="demographics_value_selected_count">%1$d selected</string>
     <string name="demographics_race_footer">You can select multiple options.</string>
-    <string name="demographics_comorbidities_sheet_title">Select Comorbidities</string>
-    <string name="demographics_comorbidities_none">None</string>
     <string name="demographics_us_region_sheet_title">Select your State or Territory</string>
     <string name="demographics_us_territories">Other Territories</string>
     <string name="demographics_stage_of_change_prompt">Please select the clause that most closely matches what you do.</string>
     <string name="demographics_referral_source_prompt">How did you hear about the study?</string>
-    <string name="demographics_comorbidity_since">Since</string>
-    <string name="demographics_comorbidity_since_unknown">Unknown</string>
-    <string name="demographics_diagnosis_year">Year</string>
-    <string name="demographics_diagnosis_month">Month</string>
     <string name="demographics_label_uk_region">UK Region</string>
     <string name="demographics_uk_region_sheet_title">Select a Region</string>
     <string name="demographics_uk_region_england_county">England (%1$s)</string>
@@ -702,5 +705,4 @@ SPDX-License-Identifier: MIT
     <string name="demographics_health_import_empty">No data to fill in was found in Health Connect.</string>
     <string name="demographics_health_import_failed">Data couldn\'t be read from Health Connect.</string>
     <string name="demographics_save_failed">Your answers couldn\'t be saved. Please check your connection and try again.</string>
-    <string name="demographics_diagnosis_unknown">Don\'t know</string>
 </resources>

@@ -170,7 +170,7 @@ class DemographicsLayoutMapperTest {
         val row = mapper.map(input = input()).row(field = DemographicsField.Comorbidities)
 
         // then
-        assertThat(row.value.value.text).isEqualTo(StringResource(MHCStrings.demographics_comorbidities_none))
+        assertThat(row.value.value.text).isEqualTo(StringResource(MHCStrings.comorbidities_none))
     }
 
     @Test

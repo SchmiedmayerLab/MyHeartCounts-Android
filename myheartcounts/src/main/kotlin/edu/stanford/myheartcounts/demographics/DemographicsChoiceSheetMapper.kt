@@ -8,10 +8,12 @@
 package edu.stanford.myheartcounts.demographics
 
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProvider
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesRules
+import edu.stanford.myheartcounts.comorbidities.DiagnosisDateMapper
 import edu.stanford.myheartcounts.demographics.DemographicsChoiceGroupMapper.Choice
 import edu.stanford.myheartcounts.demographics.DemographicsChoiceGroupMapper.Group
 import edu.stanford.myheartcounts.demographics.ui.DemographicsChoiceSheet
-import edu.stanford.myheartcounts.demographics.ui.DemographicsMonthYearPicker
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
 import edu.stanford.myheartcounts.model.demographics.EducationStatusUK
 import edu.stanford.myheartcounts.model.demographics.EducationStatusUS
@@ -22,13 +24,9 @@ import edu.stanford.myheartcounts.model.demographics.RaceEthnicity
 import edu.stanford.myheartcounts.model.demographics.StageOfChangeOption
 import edu.stanford.myheartcounts.model.demographics.UKRegion
 import edu.stanford.myheartcounts.model.demographics.USRegion
-import org.grovealliance.core.time.TimeProvider
+import edu.stanford.myheartcounts.ui.choice.ChoiceFollowUpRow
+import edu.stanford.myheartcounts.ui.choice.MonthYearPicker
 import org.grovealliance.ui.StringResource
-import java.time.Month
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * Builds the [DemographicsChoiceSheet] answering each question chosen from a list. Every sheet marks
@@ -87,7 +85,7 @@ interface DemographicsChoiceSheetMapper {
      * Maps the picker of the date of diagnosis of the comorbidity [condition], opening on its current
      * date and offering the past hundred years.
      */
-    fun mapDiagnosisDatePicker(condition: String, input: DemographicsLayoutInput): DemographicsMonthYearPicker
+    fun mapDiagnosisDatePicker(condition: String, input: DemographicsLayoutInput): MonthYearPicker
 }
 
 /**
@@ -99,7 +97,8 @@ class DemographicsChoiceSheetMapperImpl(
     private val optionIdMapper: DemographicsOptionIdMapper,
     private val groupMapper: DemographicsChoiceGroupMapper,
     private val rules: DemographicsRules,
-    private val timeProvider: TimeProvider,
+    private val comorbiditiesRules: ComorbiditiesRules,
+    private val diagnosisDateMapper: DiagnosisDateMapper,
 ) : DemographicsChoiceSheetMapper {
 
     override fun mapRaceEthnicitySheet(input: DemographicsLayoutInput): DemographicsChoiceSheet {
@@ -140,37 +139,36 @@ class DemographicsChoiceSheetMapperImpl(
     )
 
     override fun mapComorbiditiesSheet(input: DemographicsLayoutInput): DemographicsChoiceSheet {
-        val conditions = catalog.conditions().map {
-            Choice(
-                value = it.id,
-                option = it,
-            )
-        }
-        val (primary, secondary) = conditions.partition { it.option.group == conditions.first().option.group }
+        val (primary, secondary) = catalog.conditions()
+            .partition { it.group == ComorbiditiesConditionsProvider.Group.Primary }
+            .let { (primary, secondary) -> choices(conditions = primary) to choices(conditions = secondary) }
         val none = Choice(
             value = NO_CONDITIONS,
             option = DemographicsOption(
                 id = NO_CONDITIONS,
-                title = StringResource(MHCStrings.demographics_comorbidities_none),
+                title = StringResource(MHCStrings.comorbidities_none),
             ),
         )
         return groupMapper.mapSheet(
-            title = MHCStrings.demographics_comorbidities_sheet_title,
+            title = MHCStrings.comorbidities_title,
             groups = listOf(
                 Group(choices = primary),
                 Group(choices = secondary),
                 Group(choices = listOf(none)),
             ),
             isSelected = { response, condition ->
-                val entries = response.comorbidities?.entries
-                if (condition == NO_CONDITIONS) entries?.isEmpty() == true else entries?.containsKey(condition) == true
+                if (condition == NO_CONDITIONS) {
+                    comorbiditiesRules.isNone(current = response.comorbidities)
+                } else {
+                    response.comorbidities?.entries?.containsKey(condition) == true
+                }
             },
             change = { response, condition ->
                 DemographicsAction.ComorbiditiesChanged(
                     value = if (condition == NO_CONDITIONS) {
                         Comorbidities(entries = emptyMap())
                     } else {
-                        rules.toggled(
+                        comorbiditiesRules.toggled(
                             current = response.comorbidities,
                             condition = condition,
                         )
@@ -182,10 +180,20 @@ class DemographicsChoiceSheetMapperImpl(
             followUp = { response, condition ->
                 if (condition == NO_CONDITIONS) null else diagnosisFollowUp(condition = condition, response = response, input = input)
             },
-            // Offering "None" only while nothing is chosen keeps a stray tap from clearing every condition.
             isOffered = { response, condition ->
-                condition != NO_CONDITIONS || response.comorbidities?.entries.isNullOrEmpty()
+                condition != NO_CONDITIONS || comorbiditiesRules.offersNone(current = response.comorbidities)
             },
+        )
+    }
+
+    private fun choices(conditions: List<ComorbiditiesConditionsProvider.Condition>) = conditions.map {
+        Choice(
+            value = it.id,
+            option = DemographicsOption(
+                id = it.id,
+                title = it.title,
+                subtitle = it.subtitle,
+            ),
         )
     }
 
@@ -336,71 +344,40 @@ class DemographicsChoiceSheetMapperImpl(
         input = input,
     )
 
-    override fun mapDiagnosisDatePicker(condition: String, input: DemographicsLayoutInput): DemographicsMonthYearPicker {
-        val diagnosis = input.response.value.comorbidities?.entries?.get(condition).orEmpty()
-        val currentYear = timeProvider.nowLocalDate().year
-        val locale = Locale.getDefault()
-        return DemographicsMonthYearPicker(
-            title = catalog.conditions().firstOrNull { it.id == condition }?.title
-                ?: StringResource(MHCStrings.demographics_comorbidity_since),
-            years = (currentYear downTo currentYear - DIAGNOSIS_YEARS).toList(),
-            months = Month.entries.map { StringResource(it.getDisplayName(TextStyle.FULL, locale)) },
-            year = diagnosis.take(YEAR_LENGTH).toIntOrNull(),
-            month = diagnosis.drop(YEAR_LENGTH + 1).toIntOrNull(),
-            yearLabel = StringResource(MHCStrings.demographics_diagnosis_year),
-            monthLabel = StringResource(MHCStrings.demographics_diagnosis_month),
-            noMonth = StringResource(MHCStrings.demographics_value_empty),
-            confirmTitle = StringResource(MHCStrings.demographics_date_picker_confirm),
-            clearTitle = StringResource(MHCStrings.demographics_diagnosis_unknown),
-            dismissTitle = StringResource(MHCStrings.demographics_date_picker_dismiss),
-            onSelect = { year, month ->
-                val date = month?.let { "%04d-%02d".format(year, it) } ?: year.toString()
-                pushDiagnosis(
-                    condition = condition,
-                    date = date,
-                    input = input,
-                )
-            },
-            onClear = {
-                pushDiagnosis(
-                    condition = condition,
-                    date = "",
-                    input = input,
+    override fun mapDiagnosisDatePicker(condition: String, input: DemographicsLayoutInput): MonthYearPicker =
+        diagnosisDateMapper.mapPicker(
+            condition = condition,
+            date = input.response.value.comorbidities?.entries?.get(condition).orEmpty(),
+            onChange = { date ->
+                input.actionSink.push(
+                    DemographicsAction.ComorbiditiesChanged(
+                        value = comorbiditiesRules.diagnosed(
+                            current = input.response.value.comorbidities,
+                            condition = condition,
+                            date = date,
+                        ),
+                    ),
                 )
             },
             onDismiss = { input.actionSink.push(DemographicsAction.MonthYearPickerDismissed) },
         )
-    }
 
     private fun diagnosisFollowUp(
         condition: String,
         response: DemographicsResponse,
         input: DemographicsLayoutInput,
-    ): DemographicsChoiceSheet.FollowUp {
+    ): ChoiceFollowUpRow {
         val diagnosis = response.comorbidities?.entries?.get(condition).orEmpty()
-        return DemographicsChoiceSheet.FollowUp(
-            label = StringResource(MHCStrings.demographics_comorbidity_since),
-            value = when {
-                diagnosis.isEmpty() -> StringResource(MHCStrings.demographics_comorbidity_since_unknown)
-                diagnosis.contains('-') -> StringResource(
-                    YearMonth.parse(diagnosis).format(DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault())),
-                )
-                else -> StringResource(diagnosis)
-            },
+        return ChoiceFollowUpRow(
+            label = StringResource(MHCStrings.comorbidities_since),
+            value = diagnosisDateMapper.mapText(date = diagnosis),
             isSet = diagnosis.isNotEmpty(),
             onClick = { input.actionSink.push(DemographicsAction.DiagnosisDateSelected(condition = condition)) },
         )
     }
 
-    private fun pushDiagnosis(condition: String, date: String, input: DemographicsLayoutInput) {
-        val entries = input.response.value.comorbidities?.entries.orEmpty()
-        input.actionSink.push(DemographicsAction.ComorbiditiesChanged(value = Comorbidities(entries = entries + (condition to date))))
-    }
-
     private companion object {
         const val NO_CONDITIONS = "none"
-        const val DIAGNOSIS_YEARS = 100
-        const val YEAR_LENGTH = 4
         val TERRITORIES = setOf(
             USRegion.AMERICAN_SAMOA,
             USRegion.GUAM,

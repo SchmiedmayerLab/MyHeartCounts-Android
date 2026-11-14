@@ -19,16 +19,6 @@ import org.grovealliance.core.logging.groveLogger
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * An activity a participant performs, such as answering a questionnaire.
- */
-sealed interface PerformableTask {
-    /**
-     * Answering [questionnaire].
-     */
-    data class AnswerQuestionnaire(val questionnaire: StudyQuestionnaire) : PerformableTask
-}
-
-/**
  * Presents tasks for the participant to perform, one at a time, and reports how each ended.
  */
 interface TaskPerformer {
@@ -43,6 +33,16 @@ interface TaskPerformer {
      * Returns `false` without presenting anything while another task is being performed.
      */
     suspend fun perform(task: PerformableTask): Boolean
+}
+
+/**
+ * An activity a participant performs, such as answering a questionnaire.
+ */
+sealed interface PerformableTask {
+    /**
+     * Answering [questionnaire].
+     */
+    data class AnswerQuestionnaire(val questionnaire: StudyQuestionnaire) : PerformableTask
 }
 
 /**
