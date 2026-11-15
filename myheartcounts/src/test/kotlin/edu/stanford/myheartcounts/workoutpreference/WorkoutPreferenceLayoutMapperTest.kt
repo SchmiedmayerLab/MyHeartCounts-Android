@@ -47,11 +47,11 @@ class WorkoutPreferenceLayoutMapperTest {
         preference.value = WorkoutPreferenceFixtures.create(workoutTypes = setOf(WorkoutType.RUN, WorkoutType.OTHER))
 
         // when
-        val section = mapper.map(input = input(scope = backgroundScope)).workoutTypes.value
+        val layout = mapper.map(input = input(scope = backgroundScope))
 
         // then
-        assertThat(section.header).isEqualTo(StringResource(MHCStrings.workout_preference_types_header))
-        assertThat(section.options.map { it.title }).containsExactly(
+        assertThat(layout.section(key = "workout-types").title).isEqualTo(StringResource(MHCStrings.workout_preference_types_header))
+        assertThat(layout.workoutTypes().map { it.title }).containsExactly(
             StringResource(MHCStrings.workout_preference_type_walk),
             StringResource(MHCStrings.workout_preference_type_run),
             StringResource(MHCStrings.workout_preference_type_bicycle),
@@ -62,7 +62,7 @@ class WorkoutPreferenceLayoutMapperTest {
             StringResource(MHCStrings.workout_preference_type_sport),
             StringResource(MHCStrings.workout_preference_type_other),
         ).inOrder()
-        assertThat(section.options.filter { it.isSelected }.map { it.title }).containsExactly(
+        assertThat(layout.workoutTypes().filter { it.isSelected }.map { it.title }).containsExactly(
             StringResource(MHCStrings.workout_preference_type_run),
             StringResource(MHCStrings.workout_preference_type_other),
         )
@@ -71,10 +71,10 @@ class WorkoutPreferenceLayoutMapperTest {
     @Test
     fun `tapping a workout type toggles it`() = runTest {
         // given
-        val section = mapper.map(input = input(scope = backgroundScope)).workoutTypes.value
+        val layout = mapper.map(input = input(scope = backgroundScope))
 
         // when
-        section.options[WorkoutType.SWIM.ordinal].onClick()
+        layout.workoutTypes()[WorkoutType.SWIM.ordinal].onClick()
 
         // then
         assertThat(pushedActions).containsExactly(WorkoutPreferenceAction.TypeToggled(type = WorkoutType.SWIM))
@@ -84,14 +84,14 @@ class WorkoutPreferenceLayoutMapperTest {
     fun `the selection follows the edited preference`() = runTest {
         // given
         val layout = mapper.map(input = input(scope = backgroundScope))
-        subscribe(flow = layout.workoutTypes)
+        subscribe(flow = layout.sections)
 
         // when
         preference.value = WorkoutPreferenceFixtures.create(workoutTypes = setOf(WorkoutType.WALK))
         runCurrent()
 
         // then
-        assertThat(layout.workoutTypes.value.options.filter { it.isSelected }.map { it.title })
+        assertThat(layout.workoutTypes().filter { it.isSelected }.map { it.title })
             .containsExactly(StringResource(MHCStrings.workout_preference_type_walk))
     }
 
@@ -101,7 +101,7 @@ class WorkoutPreferenceLayoutMapperTest {
         val previous = Locale.getDefault()
         Locale.setDefault(Locale.UK)
         val badge = try {
-            mapper.map(input = input(scope = backgroundScope)).notificationTime.badge.value
+            mapper.map(input = input(scope = backgroundScope)).notificationTime().badge.value
         } finally {
             Locale.setDefault(previous)
         }
@@ -172,7 +172,7 @@ class WorkoutPreferenceLayoutMapperTest {
         val layout = mapper.map(input = input(scope = backgroundScope))
 
         // when
-        requireNotNull(layout.continueButton).action()
+        requireNotNull(layout.continueButton()).action()
 
         // then
         assertThat(confirmations).isEqualTo(1)
@@ -212,13 +212,13 @@ class WorkoutPreferenceLayoutMapperTest {
     @Test
     fun `only a step ends with Continue`() = runTest {
         // when
-        val step = mapper.map(input = input(scope = backgroundScope)).continueButton
+        val step = mapper.map(input = input(scope = backgroundScope)).continueButton()
         val standalone = mapper.map(
             input = input(
                 scope = backgroundScope,
                 mode = WorkoutPreferenceScreenMode.Standalone,
             ),
-        ).continueButton
+        ).continueButton()
 
         // then
         assertThat(step?.title).isEqualTo(StringResource(MHCStrings.workout_preference_continue))

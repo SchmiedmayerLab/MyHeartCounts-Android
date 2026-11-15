@@ -8,12 +8,15 @@
 package edu.stanford.myheartcounts.account.overview
 
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.account.overview.WithdrawFromStudySection.WithdrawalState
+import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.WithdrawalState
 import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
-import edu.stanford.myheartcounts.ui.ToggleSection
+import edu.stanford.myheartcounts.ui.ToggleRow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.GroveAlertDialog
 import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.ItemDisplayRow
+import org.grovealliance.ui.StringResource
 import org.junit.Test
 
 class MHCAccountOverviewMapperTest {
@@ -29,18 +32,18 @@ class MHCAccountOverviewMapperTest {
     private val postTrialNudgesOptIn = MutableStateFlow(false)
 
     @Test
-    fun `offers study participation, the post-trial nudges opt-in, support and the app info above withdrawing from the study`() {
+    fun `offers study participation, post-trial nudges, support and the app info above withdrawing from the study`() {
         // when
         val overview = mapper.map(input = input())
 
         // then
-        assertThat(overview.sections.items.map { it::class })
+        assertThat(overview.customSections.sectionKeys())
             .containsExactly(
-                StudyParticipationSection::class,
-                ToggleSection::class,
-                SupportSection::class,
-                AppInfoSection::class,
-                WithdrawFromStudySection::class,
+                "study-participation",
+                "post-trial-nudges",
+                "support",
+                "app-info",
+                "withdraw-from-study",
             )
             .inOrder()
     }
@@ -75,7 +78,7 @@ class MHCAccountOverviewMapperTest {
         val section = mapper.map(input = input()).appInfoSection()
 
         // then
-        assertThat(section.version).isEqualTo(APP_VERSION)
+        assertThat(section.row<ItemDisplayRow>(key = "version").value).isEqualTo(StringResource(APP_VERSION))
     }
 
     @Test
@@ -84,7 +87,7 @@ class MHCAccountOverviewMapperTest {
         val section = mapper.map(input = input()).appInfoSection()
 
         // when
-        section.onPrivacyPolicySelected()
+        section.row<ItemDisplayRow>(key = "privacy-policy").onClick?.invoke()
 
         // then
         assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.PrivacyPolicySelected)
@@ -93,10 +96,10 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports opening the participation stats through the action sink`() {
         // given
-        val section = mapper.map(input = input()).sections.items.filterIsInstance<StudyParticipationSection>().single()
+        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
 
         // when
-        section.onParticipationStatsSelected()
+        section.row<ItemDisplayRow>(key = "participation-stats").onClick?.invoke()
 
         // then
         assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.ParticipationStatsSelected)
@@ -105,10 +108,10 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to update the comorbidities through the action sink`() {
         // given
-        val section = mapper.map(input = input()).sections.items.filterIsInstance<StudyParticipationSection>().single()
+        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
 
         // when
-        section.onUpdateComorbiditiesSelected()
+        section.row<ItemDisplayRow>(key = "comorbidities").onClick?.invoke()
 
         // then
         assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.UpdateComorbiditiesSelected)
@@ -117,22 +120,34 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to change the workout preference through the action sink`() {
         // given
-        val section = mapper.map(input = input()).sections.items.filterIsInstance<StudyParticipationSection>().single()
+        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
 
         // when
-        section.onWorkoutPreferenceSelected()
+        section.row<ItemDisplayRow>(key = "workout-preference").onClick?.invoke()
 
         // then
         assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.WorkoutPreferenceSelected)
     }
 
     @Test
-    fun `reports asking to send feedback through the action sink`() {
+    fun `reports asking to update the demographics through the action sink`() {
         // given
-        val section = mapper.map(input = input()).sections.items.filterIsInstance<SupportSection>().single()
+        val section = mapper.map(input = input()).customSections.section(key = "support")
 
         // when
-        section.onSendFeedbackSelected()
+        section.row<ItemDisplayRow>(key = "demographics").onClick?.invoke()
+
+        // then
+        assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.DemographicsSelected)
+    }
+
+    @Test
+    fun `reports asking to send feedback through the action sink`() {
+        // given
+        val section = mapper.map(input = input()).customSections.section(key = "support")
+
+        // when
+        section.row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
 
         // then
         assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.SendFeedbackSelected)
@@ -144,7 +159,8 @@ class MHCAccountOverviewMapperTest {
         val overview = mapper.map(input = input())
 
         // then
-        assertThat(overview.sections.items.filterIsInstance<WithdrawFromStudySection>()).hasSize(1)
+        val section = overview.customSections.section(key = "withdraw-from-study")
+        assertThat(section.content<WithdrawFromStudyButton>(key = "withdraw-from-study")).isNotNull()
     }
 
     @Test
@@ -166,8 +182,9 @@ class MHCAccountOverviewMapperTest {
 
         // when
         section.onWithdrawSelected()
-        section.onWithdrawConfirmed()
-        section.onDismissed()
+        section.confirmation.confirmButton.action()
+        section.confirmation.onDismiss()
+        section.failure.onDismiss()
 
         // then
         assertThat(pushedActions)
@@ -175,8 +192,20 @@ class MHCAccountOverviewMapperTest {
                 MHCAccountOverviewAction.WithdrawSelected,
                 MHCAccountOverviewAction.WithdrawConfirmed,
                 MHCAccountOverviewAction.WithdrawDialogDismissed,
+                MHCAccountOverviewAction.WithdrawDialogDismissed,
             )
             .inOrder()
+    }
+
+    @Test
+    fun `marks confirming the withdrawal as destructive`() {
+        // when
+        val section = mapper.map(input = input()).withdrawSection()
+
+        // then
+        assertThat(section.confirmation.confirmButton.style).isEqualTo(GroveAlertDialog.Button.Style.Destructive)
+        assertThat(section.confirmation.dismissButton).isNotNull()
+        assertThat(section.failure.dismissButton).isNull()
     }
 
     @Test
@@ -208,13 +237,13 @@ class MHCAccountOverviewMapperTest {
     )
 
     private fun MHCAccountOverview.withdrawSection() =
-        sections.items.filterIsInstance<WithdrawFromStudySection>().single()
+        customSections.section(key = "withdraw-from-study").content<WithdrawFromStudyButton>(key = "withdraw-from-study")
 
     private fun MHCAccountOverview.postTrialNudgesSection() =
-        sections.items.filterIsInstance<ToggleSection>().single()
+        customSections.section(key = "post-trial-nudges").row<ToggleRow>(key = "post-trial-nudges")
 
     private fun MHCAccountOverview.appInfoSection() =
-        sections.items.filterIsInstance<AppInfoSection>().single()
+        customSections.section(key = "app-info")
 
     private companion object {
         const val APP_VERSION = "1.2.0"

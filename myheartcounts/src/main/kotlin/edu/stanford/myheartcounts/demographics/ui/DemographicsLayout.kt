@@ -13,19 +13,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.UnfoldMore
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,12 +39,12 @@ import edu.stanford.myheartcounts.demographics.DemographicsField
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ComposableContent
-import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.GroveScaffold
 import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.Colors
-import org.grovealliance.ui.theme.GroveShapes
 import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.Sizes
 import org.grovealliance.ui.theme.Spacings
@@ -57,17 +52,15 @@ import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * The demographics questions: the [healthImport] card above the question [sections], each shown as
+ * The demographics questions: the health import card above the question [sections], each shown as
  * its own card, with the [datePicker] open on one of the questions, if any.
  *
- * @param healthImport the card offering to fill in answers from health data
- * @param sections the question sections, in display order
+ * @param sections the health import card and the question sections, in display order
  * @param datePicker the date picker currently open
  * @param scaffoldState carries the sheets shown above the layout
  */
 data class DemographicsLayout(
-    val healthImport: HealthImportCard,
-    val sections: List<Section>,
+    val sections: GroveSectionList,
     val datePicker: StateFlow<DemographicsDatePicker?>,
     val scaffoldState: GroveScaffoldState,
 ) : ComposableContent {
@@ -77,47 +70,13 @@ data class DemographicsLayout(
         val datePicker by datePicker.collectAsStateWithLifecycle()
 
         GroveScaffold(state = scaffoldState) {
-            LazyColumn(
+            sections.Content(
                 modifier = modifier
                     .fillMaxSize()
                     .background(Colors.surfaceContainer),
-                contentPadding = PaddingValues(Spacings.medium),
-                verticalArrangement = Arrangement.spacedBy(Spacings.large),
-            ) {
-                item {
-                    healthImport.Content(modifier = Modifier.fillMaxWidth())
-                }
-                items(sections) { section ->
-                    section.Content(modifier = Modifier.fillMaxWidth())
-                }
-            }
+            )
         }
         datePicker?.Content()
-    }
-
-    /**
-     * A card of related question [rows], separated by hairline dividers.
-     */
-    data class Section(
-        val rows: List<Row>,
-    ) : ComposableContent {
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            GroveCard(
-                modifier = modifier,
-                shape = GroveShapes.large,
-            ) {
-                Column {
-                    rows.forEachIndexed { index, row ->
-                        if (index > 0) {
-                            HorizontalDivider(modifier = Modifier.padding(horizontal = Spacings.medium))
-                        }
-                        row.Content(modifier = Modifier.fillMaxWidth())
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -253,79 +212,97 @@ private class DemographicsLayoutPreviewProvider : PreviewParameterProvider<Demog
         accessory = DemographicsLayout.Accessory.Menu,
         onClick = {},
     )
+    private val healthImport = HealthImportCard(
+        title = StringResource("Read from Health Connect"),
+        description = StringResource("Use this option to fill in your answers from Health Connect."),
+        onClick = {},
+    )
     private val base = DemographicsLayout(
-        healthImport = HealthImportCard(
-            title = StringResource("Read from Health Connect"),
-            description = StringResource("Use this option to fill in your answers from Health Connect."),
-            onClick = {},
-        ),
-        sections = listOf(
-            DemographicsLayout.Section(
-                rows = listOf(
-                    row,
-                    row.copy(
-                        field = DemographicsField.BloodType,
-                        label = StringResource("Blood Type"),
-                        value = MutableStateFlow(
-                            DemographicsLayout.Value(
-                                text = StringResource("A+"),
-                                isOptional = true,
+        sections = groveSectionList {
+            section(key = "health-import") {
+                content(
+                    key = "health-import",
+                    content = healthImport,
+                )
+            }
+            section(key = "personal") {
+                card(key = "questions") {
+                    row(
+                        key = "gender-identity",
+                        content = row,
+                    )
+                    row(
+                        key = "blood-type",
+                        content = row.copy(
+                            field = DemographicsField.BloodType,
+                            label = StringResource("Blood Type"),
+                            value = MutableStateFlow(
+                                DemographicsLayout.Value(
+                                    text = StringResource("A+"),
+                                    isOptional = true,
+                                ),
                             ),
                         ),
-                    ),
-                ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
-                    row.copy(
-                        field = DemographicsField.Comorbidities,
-                        label = StringResource("Comorbidities"),
-                        value = MutableStateFlow(
-                            DemographicsLayout.Value(
-                                text = StringResource("Not Set"),
-                                isOptional = true,
+                    )
+                }
+            }
+            section(key = "conditions") {
+                card(key = "questions") {
+                    row(
+                        key = "comorbidities",
+                        content = row.copy(
+                            field = DemographicsField.Comorbidities,
+                            label = StringResource("Comorbidities"),
+                            value = MutableStateFlow(
+                                DemographicsLayout.Value(
+                                    text = StringResource("Not Set"),
+                                    isOptional = true,
+                                ),
                             ),
+                            accessory = DemographicsLayout.Accessory.Disclosure,
                         ),
-                        accessory = DemographicsLayout.Accessory.Disclosure,
-                    ),
-                ),
-            ),
-        ),
+                    )
+                }
+            }
+        },
         datePicker = MutableStateFlow(null),
         scaffoldState = GroveScaffoldState(),
     )
     override val values = sequenceOf(
         base,
         base.copy(
-            sections = listOf(
-                DemographicsLayout.Section(
-                    rows = listOf(
-                        row.copy(
-                            menu = MutableStateFlow(
-                                DemographicsMenu(
-                                    field = DemographicsField.GenderIdentity,
-                                    options = listOf(
-                                        DemographicsMenu.Option(
-                                            index = 0,
-                                            label = StringResource("Female"),
-                                            isSelected = true,
-                                            isFollowedByDivider = false,
+            sections = groveSectionList {
+                section(key = "personal") {
+                    card(key = "questions") {
+                        row(
+                            key = "gender-identity",
+                            content = row.copy(
+                                menu = MutableStateFlow(
+                                    DemographicsMenu(
+                                        field = DemographicsField.GenderIdentity,
+                                        options = listOf(
+                                            DemographicsMenu.Option(
+                                                index = 0,
+                                                label = StringResource("Female"),
+                                                isSelected = true,
+                                                isFollowedByDivider = false,
+                                            ),
+                                            DemographicsMenu.Option(
+                                                index = 1,
+                                                label = StringResource("Male"),
+                                                isSelected = false,
+                                                isFollowedByDivider = false,
+                                            ),
                                         ),
-                                        DemographicsMenu.Option(
-                                            index = 1,
-                                            label = StringResource("Male"),
-                                            isSelected = false,
-                                            isFollowedByDivider = false,
-                                        ),
+                                        onSelect = {},
+                                        onDismiss = {},
                                     ),
-                                    onSelect = {},
-                                    onDismiss = {},
                                 ),
                             ),
-                        ),
-                    ),
-                ),
-            ),
+                        )
+                    }
+                }
+            },
         ),
     )
 }

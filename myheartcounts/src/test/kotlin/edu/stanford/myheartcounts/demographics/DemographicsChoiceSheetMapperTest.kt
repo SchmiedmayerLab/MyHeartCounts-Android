@@ -107,7 +107,7 @@ class DemographicsChoiceSheetMapperTest {
         val sheet = mapper.mapComorbiditiesSheet(input = input())
 
         // when
-        val followUp = sheet.sections.value.flatMap { it.options }.single { it.isSelected }.followUp
+        val followUp = sheet.options().single { it.isSelected }.followUp
         followUp?.onClick?.invoke()
 
         // then
@@ -213,7 +213,7 @@ class DemographicsChoiceSheetMapperTest {
         val sheet = mapper.mapReferralSourceSheet(input = input())
 
         // then
-        assertThat(sheet.sections.value.flatMap { it.options }.single { it.isSelected }.title)
+        assertThat(sheet.options().single { it.isSelected }.title)
             .isEqualTo(StringResource(MHCStrings.demographics_referral_source_3))
     }
 
@@ -224,12 +224,11 @@ class DemographicsChoiceSheetMapperTest {
         response = response,
     )
 
-    private fun DemographicsChoiceSheet.titles() = sections.value.flatMap { section -> section.options.map { it.title } }
+    private fun DemographicsChoiceSheet.titles() = options().map { it.title }
 
     private fun DemographicsChoiceSheet.option(
         title: StringResource? = null,
         detail: StringResource? = null,
-    ) = sections.value
-        .flatMap { it.options }
+    ) = options()
         .first { (title == null || it.title == title) && (detail == null || it.detail == detail) }
 }

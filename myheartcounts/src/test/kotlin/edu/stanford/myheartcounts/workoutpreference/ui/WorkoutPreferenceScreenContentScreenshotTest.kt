@@ -17,9 +17,9 @@ import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.SportsGymnastics
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.ui.AppBarTextAction
+import edu.stanford.myheartcounts.ui.TextRow
 import edu.stanford.myheartcounts.ui.ValueBadge
 import edu.stanford.myheartcounts.ui.choice.ChoiceRow
-import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.AsyncTextButton
@@ -27,6 +27,7 @@ import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.junit.Test
 
 class WorkoutPreferenceScreenContentScreenshotTest : ScreenshotTest() {
@@ -69,11 +70,6 @@ class WorkoutPreferenceScreenContentScreenshotTest : ScreenshotTest() {
     private val chosenOptions = options.mapIndexed { position, row ->
         row.copy(isSelected = position in CHOSEN_POSITIONS)
     }
-    private val workoutTypes = ChoiceSection(
-        header = StringResource(MHCStrings.workout_preference_types_header),
-        options = options,
-        footer = null,
-    )
     private val notificationTime = NotificationTimeRow(
         title = StringResource(MHCStrings.workout_preference_notification_time),
         subtitle = StringResource(MHCStrings.workout_preference_notification_time_subtitle),
@@ -84,15 +80,19 @@ class WorkoutPreferenceScreenContentScreenshotTest : ScreenshotTest() {
             ),
         ),
     )
+    private val continueButton = AsyncTextButton(
+        title = StringResource(MHCStrings.workout_preference_continue),
+        action = {},
+    )
     private val layout = WorkoutPreferenceLayout(
-        introduction = StringResource(MHCStrings.workout_preference_text),
-        workoutTypes = MutableStateFlow(workoutTypes),
-        notificationTime = notificationTime,
-        timePicker = MutableStateFlow(null),
-        continueButton = AsyncTextButton(
-            title = StringResource(MHCStrings.workout_preference_continue),
-            action = {},
+        sections = MutableStateFlow(
+            sections(
+                options = options,
+                notificationTime = notificationTime,
+                continueButton = continueButton,
+            ),
         ),
+        timePicker = MutableStateFlow(null),
     )
     private val base = WorkoutPreferenceScreenContent(
         scaffoldState = GroveScaffoldState(
@@ -116,13 +116,18 @@ class WorkoutPreferenceScreenContentScreenshotTest : ScreenshotTest() {
         // given
         val content = base.copy(
             layout = layout.copy(
-                workoutTypes = MutableStateFlow(workoutTypes.copy(options = chosenOptions)),
-                notificationTime = notificationTime.copy(
-                    badge = MutableStateFlow(
-                        ValueBadge(
-                            text = StringResource("6:30 PM"),
-                            onClick = {},
+                sections = MutableStateFlow(
+                    sections(
+                        options = chosenOptions,
+                        notificationTime = notificationTime.copy(
+                            badge = MutableStateFlow(
+                                ValueBadge(
+                                    text = StringResource("6:30 PM"),
+                                    onClick = {},
+                                ),
+                            ),
                         ),
+                        continueButton = continueButton,
                     ),
                 ),
             ),
@@ -150,13 +155,60 @@ class WorkoutPreferenceScreenContentScreenshotTest : ScreenshotTest() {
                 },
             ),
             layout = layout.copy(
-                workoutTypes = MutableStateFlow(workoutTypes.copy(options = chosenOptions)),
-                continueButton = null,
+                sections = MutableStateFlow(
+                    sections(
+                        options = chosenOptions,
+                        notificationTime = notificationTime,
+                        continueButton = null,
+                    ),
+                ),
             ),
         )
 
         // when / then
         screenshot { content.Content() }
+    }
+
+    private fun sections(
+        options: List<ChoiceRow>,
+        notificationTime: NotificationTimeRow,
+        continueButton: AsyncTextButton?,
+    ) = groveSectionList {
+        section(key = "introduction") {
+            card(key = "introduction") {
+                row(
+                    key = "introduction",
+                    content = TextRow(text = StringResource(MHCStrings.workout_preference_text)),
+                )
+            }
+        }
+        section(key = "workout-types") {
+            title(resId = MHCStrings.workout_preference_types_header)
+            card(key = "workout-types") {
+                options.forEachIndexed { index, option ->
+                    row(
+                        key = "$index",
+                        content = option,
+                    )
+                }
+            }
+        }
+        section(key = "notification-time") {
+            card(key = "notification-time") {
+                row(
+                    key = "notification-time",
+                    content = notificationTime,
+                )
+            }
+        }
+        continueButton?.let {
+            section(key = "continue") {
+                content(
+                    key = "continue",
+                    content = it,
+                )
+            }
+        }
     }
 
     private companion object {

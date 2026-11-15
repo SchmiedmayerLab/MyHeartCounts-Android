@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.VerticalSpacer
@@ -42,7 +42,7 @@ import org.grovealliance.ui.theme.medium
 data class BooleanOptionRow(
     val text: StringResource,
     val subtext: StringResource?,
-    val value: Flow<Boolean?>,
+    val value: StateFlow<Boolean?>,
     val onChange: (Boolean) -> Unit,
     val style: Style,
     val confirmLabel: StringResource,
@@ -74,7 +74,7 @@ data class BooleanOptionRow(
 
     @Composable
     private fun SwitchContent(modifier: Modifier) {
-        val isChecked by value.collectAsStateWithLifecycle(initialValue = false)
+        val isChecked by value.collectAsStateWithLifecycle()
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -97,7 +97,7 @@ data class BooleanOptionRow(
 
     @Composable
     private fun LabelContent(modifier: Modifier) {
-        val current by value.collectAsStateWithLifecycle(initialValue = null)
+        val current by value.collectAsStateWithLifecycle()
         val choices = listOf(true to confirmLabel, false to declineLabel)
         Column(modifier = modifier.fillMaxWidth()) {
             Column(

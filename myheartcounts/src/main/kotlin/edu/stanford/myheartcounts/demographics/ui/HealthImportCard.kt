@@ -26,7 +26,6 @@ import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
-import org.grovealliance.ui.theme.GroveShapes
 import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.Sizes
 import org.grovealliance.ui.theme.Spacings
@@ -48,10 +47,7 @@ data class HealthImportCard(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        GroveCard(
-            modifier = modifier,
-            shape = GroveShapes.large,
-        ) {
+        GroveCard(modifier = modifier) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

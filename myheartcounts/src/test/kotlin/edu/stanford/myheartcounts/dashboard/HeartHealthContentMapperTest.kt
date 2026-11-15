@@ -9,15 +9,16 @@ package edu.stanford.myheartcounts.dashboard
 
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.Gauge
 import edu.stanford.myheartcounts.dashboard.ui.GaugeCard
 import edu.stanford.myheartcounts.dashboard.ui.GaugeTile
 import edu.stanford.myheartcounts.dashboard.ui.GaugeTileGrid
+import edu.stanford.myheartcounts.ui.MHCColors
 import edu.stanford.myheartcounts.ui.MarkdownCard
 import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
 import org.junit.Test
@@ -49,7 +50,7 @@ class HeartHealthContentMapperTest {
 
         // then
         assertThat(gauge.progress).isWithin(TOLERANCE).of(0.7f)
-        assertThat(gauge.colors).isEqualTo(DashboardColorPalette.redToGreen)
+        assertThat(gauge.colors).isEqualTo(MHCColors.redToGreen)
         assertThat(gauge.label?.value).isEqualTo(StringResource("70"))
         assertThat(gauge.size).isEqualTo(Gauge.Size.Large)
     }
@@ -188,7 +189,7 @@ class HeartHealthContentMapperTest {
     private fun map(
         scores: HeartHealthScores,
         explainer: MarkdownDocument? = null,
-    ): HeartHealthContentLayout = mapper.map(
+    ): GroveSectionList = mapper.map(
         input = HeartHealthContentInput(
             scores = scores,
             explainer = explainer,

@@ -13,11 +13,17 @@ import edu.stanford.myheartcounts.onboarding.OnboardingAnswers
 import edu.stanford.myheartcounts.onboarding.OnboardingStep
 import edu.stanford.myheartcounts.onboarding.OnboardingStepInput
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
-import kotlinx.coroutines.flow.Flow
+import edu.stanford.myheartcounts.ui.TextRow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.CardRow
 import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 
 /**
  * Builds the [ComposableContent] for the consent survey step of the onboarding flow.
@@ -36,39 +42,81 @@ class ConsentSurveyLayoutMapperImpl : ConsentSurveyLayoutMapper {
         val onChange: (OnboardingAnswers) -> Unit = {
             input.push(OnboardingAction.OnboardingAnswersChanged(it))
         }
-        return ConsentSurveyLayout(
-            header = StringResource(MHCStrings.consent_survey_header),
-            questions = listOf(
-                trueFalseRow(
+        val questions = listOf(
+            CardRow(
+                key = SEEK_HELP_KEY,
+                content = trueFalseRow(
                     text = StringResource(MHCStrings.consent_survey_question_seek_help),
-                    value = answers.map { it.seeksHelpWhenUnwell },
+                    value = input.answer { it.seeksHelpWhenUnwell },
                     onChange = { onChange(answers.value.copy(seeksHelpWhenUnwell = it)) },
                 ),
-                trueFalseRow(
+            ),
+            CardRow(
+                key = VOLUNTARY_KEY,
+                content = trueFalseRow(
                     text = StringResource(MHCStrings.consent_survey_question_voluntary),
-                    value = answers.map { it.participationIsVoluntary },
+                    value = input.answer { it.participationIsVoluntary },
                     onChange = { onChange(answers.value.copy(participationIsVoluntary = it)) },
                 ),
-                trueFalseRow(
+            ),
+            CardRow(
+                key = WITHDRAW_KEY,
+                content = trueFalseRow(
                     text = StringResource(MHCStrings.consent_survey_question_withdraw),
-                    value = answers.map { it.canWithdrawAnytime },
+                    value = input.answer { it.canWithdrawAnytime },
                     onChange = { onChange(answers.value.copy(canWithdrawAnytime = it)) },
                 ),
             ),
-            primaryButton = answers.map {
-                AsyncTextButton(
+        )
+        return ConsentSurveyLayout(
+            sections = answers
+                .map { sections(input = input, questions = questions, isComplete = isComplete(it)) }
+                .stateIn(
+                    scope = input.scope,
+                    started = SharingStarted.WhileSubscribed(),
+                    initialValue = sections(
+                        input = input,
+                        questions = questions,
+                        isComplete = isComplete(answers.value),
+                    ),
+                ),
+        )
+    }
+
+    private fun sections(
+        input: OnboardingStepInput,
+        questions: List<CardRow<BooleanOptionRow>>,
+        isComplete: Boolean,
+    ): GroveSectionList = groveSectionList {
+        section(key = HEADER_KEY) {
+            card(key = HEADER_KEY) {
+                row(
+                    key = HEADER_KEY,
+                    content = TextRow(text = StringResource(MHCStrings.consent_survey_header)),
+                )
+            }
+        }
+        questions.forEach { question ->
+            section(key = question.key) {
+                card(key = question.key) { row(row = question) }
+            }
+        }
+        section(key = CONTINUE_KEY) {
+            content(
+                key = CONTINUE_KEY,
+                content = AsyncTextButton(
                     title = StringResource(MHCStrings.onboarding_continue),
                     coroutineScope = { input.scope },
                     action = { input.advance(OnboardingStep.Comprehension) },
-                    enabled = isComplete(it),
-                )
-            },
-        )
+                    enabled = isComplete,
+                ),
+            )
+        }
     }
 
     private fun trueFalseRow(
         text: StringResource,
-        value: Flow<Boolean?>,
+        value: StateFlow<Boolean?>,
         onChange: (Boolean) -> Unit,
     ) = BooleanOptionRow(
         text = text,
@@ -80,8 +128,24 @@ class ConsentSurveyLayoutMapperImpl : ConsentSurveyLayoutMapper {
         declineLabel = StringResource(MHCStrings.answer_false),
     )
 
+    private fun OnboardingStepInput.answer(read: (OnboardingAnswers) -> Boolean?): StateFlow<Boolean?> = answers
+        .map(read)
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = read(answers.value),
+        )
+
     private fun isComplete(answers: OnboardingAnswers): Boolean =
         answers.seeksHelpWhenUnwell == true &&
             answers.participationIsVoluntary == true &&
             answers.canWithdrawAnytime == true
+
+    private companion object {
+        const val HEADER_KEY = "header"
+        const val SEEK_HELP_KEY = "seek-help"
+        const val VOLUNTARY_KEY = "voluntary"
+        const val WITHDRAW_KEY = "withdraw"
+        const val CONTINUE_KEY = "continue"
+    }
 }

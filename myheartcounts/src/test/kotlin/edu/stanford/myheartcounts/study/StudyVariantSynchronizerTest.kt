@@ -8,7 +8,6 @@
 package edu.stanford.myheartcounts.study
 
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.account.FakeAccountService
 import edu.stanford.myheartcounts.account.StudyVariantKey
 import edu.stanford.myheartcounts.model.StudyVariant
 import kotlinx.coroutines.test.TestScope
@@ -16,6 +15,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.FakeAccount
+import org.grovealliance.account.FakeAccountService
 import org.grovealliance.account.isAnonymousUser
 import org.grovealliance.study.FakeStudyManager
 import org.junit.Test

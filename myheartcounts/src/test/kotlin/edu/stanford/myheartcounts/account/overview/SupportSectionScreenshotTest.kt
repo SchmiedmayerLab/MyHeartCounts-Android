@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import org.grovealliance.testing.screenshot.ScreenshotTest
+import org.grovealliance.ui.LazyListContentPreview
 import org.grovealliance.ui.theme.Spacings
 import org.junit.Test
 
@@ -18,10 +19,13 @@ class SupportSectionScreenshotTest : ScreenshotTest() {
 
     @Test
     fun `SupportSection screenshot`() {
-        val section = SupportSection(onSendFeedbackSelected = {})
+        // given
+        val section = SupportSectionFixtures.create()
 
+        // when / then
         screenshot {
-            section.Content(
+            LazyListContentPreview(
+                content = section,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(Spacings.medium),

@@ -22,9 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.dashboard.ui.CounterCard
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSectionList
 import edu.stanford.myheartcounts.dashboard.ui.IconTextCard
 import edu.stanford.myheartcounts.dashboard.ui.IconTextCardRow
 import edu.stanford.myheartcounts.dashboard.ui.LabeledValue
@@ -36,13 +33,17 @@ import edu.stanford.myheartcounts.dashboard.ui.ProgressRingRowList
 import edu.stanford.myheartcounts.dashboard.ui.StatTile
 import edu.stanford.myheartcounts.dashboard.ui.StatTileGrid
 import edu.stanford.myheartcounts.dashboard.ui.TextBadge
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSection
 import org.grovealliance.ui.theme.ColorToken
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.resolve
@@ -58,56 +59,57 @@ class ParticipationStatsScreenContentScreenshotTest : ScreenshotTest() {
             },
         ),
         page = MutableStateFlow(ParticipationStatsPage.Stats),
-        stats = DashboardSectionList(
+        stats = GroveSectionList(
             sections = listOf(
-                DashboardSection(
+                section(
+                    key = "section-1",
                     title = null,
                     content = enrollmentCard(),
-                    footnote = null,
                 ),
-                DashboardSection(
+                section(
+                    key = "section-2",
                     title = StringResource(MHCStrings.participation_stats_engagement),
                     content = StatTileGrid(
                         tiles = listOf(
                             tile(
                                 icon = Icons.Default.CheckCircle,
-                                color = DashboardColorPalette.red,
+                                color = MHCColors.red,
                                 title = MHCStrings.participation_stats_tasks_done,
                                 value = "1",
                             ),
                             tile(
                                 icon = Icons.AutoMirrored.Filled.Assignment,
-                                color = DashboardColorPalette.purple,
+                                color = MHCColors.purple,
                                 title = MHCStrings.participation_stats_surveys_answered,
                                 value = "0",
                             ),
                         ),
                     ),
-                    footnote = null,
                 ),
-                DashboardSection(
+                section(
+                    key = "section-3",
                     title = StringResource(MHCStrings.participation_stats_fun_facts),
                     content = IconTextCard(
                         rows = listOf(
                             IconTextCardRow(
                                 icon = ImageResource(
                                     image = Icons.Default.Favorite,
-                                    tint = { DashboardColorPalette.red.resolve() },
+                                    tint = { MHCColors.red.resolve() },
                                 ),
                                 text = StringResource("Your heart has beaten about 681K times since you enrolled."),
                             ),
                         ),
                     ),
-                    footnote = null,
                 ),
             ),
         ),
         explainer = ParticipationStatsExplainer(
             text = StringResource(MHCStrings.participation_stats_explainer, StringResource("January 1, 2026")),
         ),
-        achievements = DashboardSectionList(
+        achievements = GroveSectionList(
             sections = listOf(
-                DashboardSection(
+                section(
+                    key = "section-4",
                     title = StringResource(MHCStrings.achievements_category_study_participation),
                     content = ProgressRingCard(
                         rows = listOf(
@@ -125,9 +127,9 @@ class ParticipationStatsScreenContentScreenshotTest : ScreenshotTest() {
                             ),
                         ),
                     ),
-                    footnote = null,
                 ),
-                DashboardSection(
+                section(
+                    key = "section-5",
                     title = StringResource(MHCStrings.achievements_category_health),
                     content = ProgressRingCard(
                         rows = listOf(
@@ -140,7 +142,6 @@ class ParticipationStatsScreenContentScreenshotTest : ScreenshotTest() {
                             ),
                         ),
                     ),
-                    footnote = null,
                 ),
             ),
         ),
@@ -203,7 +204,7 @@ class ParticipationStatsScreenContentScreenshotTest : ScreenshotTest() {
             ),
             label = StringResource("5 / 20"),
             progress = 0.25f,
-            progressColor = DashboardColorPalette.red,
+            progressColor = MHCColors.red,
         ),
         detail = LabeledValue(
             label = StringResource(MHCStrings.participation_stats_enrolled_since),
@@ -262,7 +263,7 @@ class ParticipationStatsScreenContentScreenshotTest : ScreenshotTest() {
     ) = ProgressRingRow(
         ring = ProgressRing(
             progress = progress,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource(
                 image = icon,
                 tint = { Colors.onSurface },
@@ -273,8 +274,17 @@ class ParticipationStatsScreenContentScreenshotTest : ScreenshotTest() {
         trailingBadge = badge?.let {
             TextBadge(
                 text = StringResource(it),
-                color = DashboardColorPalette.green,
+                color = MHCColors.green,
             )
         },
     )
+
+    private fun section(
+        key: String,
+        title: StringResource?,
+        content: ComposableContent,
+    ) = groveSection(key = key) {
+        title?.let { title(it) }
+        content(key = key, content = content)
+    }
 }

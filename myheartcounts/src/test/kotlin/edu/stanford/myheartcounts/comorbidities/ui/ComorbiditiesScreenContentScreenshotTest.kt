@@ -12,8 +12,10 @@ import edu.stanford.myheartcounts.ui.choice.ChoiceFollowUpRow
 import edu.stanford.myheartcounts.ui.choice.ChoiceRow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
+import org.grovealliance.ui.GroveSectionsBuilderScope
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.junit.Test
 
 class ComorbiditiesScreenContentScreenshotTest : ScreenshotTest() {
@@ -105,11 +107,20 @@ class ComorbiditiesScreenContentScreenshotTest : ScreenshotTest() {
             title(MHCStrings.comorbidities_title)
         },
         sections = MutableStateFlow(
-            listOf(
-                ComorbiditiesScreenContent.Section(conditions = primary),
-                ComorbiditiesScreenContent.Section(conditions = secondary),
-                ComorbiditiesScreenContent.Section(conditions = listOf(none)),
-            ),
+            groveSectionList {
+                conditions(
+                    key = "primary",
+                    conditions = primary,
+                )
+                conditions(
+                    key = "secondary",
+                    conditions = secondary,
+                )
+                conditions(
+                    key = "none",
+                    conditions = listOf(none),
+                )
+            },
         ),
         diagnosisDatePicker = MutableStateFlow(null),
     )
@@ -125,14 +136,36 @@ class ComorbiditiesScreenContentScreenshotTest : ScreenshotTest() {
         // given
         val content = base.copy(
             sections = MutableStateFlow(
-                listOf(
-                    ComorbiditiesScreenContent.Section(conditions = chosen),
-                    ComorbiditiesScreenContent.Section(conditions = secondary),
-                ),
+                groveSectionList {
+                    conditions(
+                        key = "primary",
+                        conditions = chosen,
+                    )
+                    conditions(
+                        key = "secondary",
+                        conditions = secondary,
+                    )
+                },
             ),
         )
 
         // when / then
         screenshot { content.Content() }
+    }
+
+    private fun GroveSectionsBuilderScope.conditions(
+        key: String,
+        conditions: List<ChoiceRow>,
+    ) {
+        section(key = key) {
+            card(key = key) {
+                conditions.forEachIndexed { index, condition ->
+                    row(
+                        key = "$index",
+                        content = condition,
+                    )
+                }
+            }
+        }
     }
 }

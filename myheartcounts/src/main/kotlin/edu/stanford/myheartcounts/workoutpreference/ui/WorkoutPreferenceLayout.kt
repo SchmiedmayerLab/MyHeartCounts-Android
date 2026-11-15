@@ -8,12 +8,7 @@
 package edu.stanford.myheartcounts.workoutpreference.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
@@ -24,7 +19,6 @@ import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.SportsGymnastics
 import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -32,80 +26,44 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.stanford.myheartcounts.ui.TextRow
 import edu.stanford.myheartcounts.ui.ValueBadge
 import edu.stanford.myheartcounts.ui.choice.ChoiceRow
-import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.ComposableContent
-import org.grovealliance.ui.GroveCard
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.Colors
-import org.grovealliance.ui.theme.GroveShapes
 import org.grovealliance.ui.theme.GroveTheme
-import org.grovealliance.ui.theme.Spacings
-import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * The workout preference form: an [introduction] card, the [workoutTypes] to choose from, the
- * [notificationTime] card and, if any, the [continueButton] at the end, scrolling together, with
- * the [timePicker], if any, open above them.
+ * The workout preference form: the introduction, the workout types to choose from, the notification
+ * time and, if any, the continue button in [sections], scrolling together, with the [timePicker], if
+ * any, open above them.
  *
- * @param introduction what the preferences are used for
- * @param workoutTypes the workout types, the preferred ones checked
- * @param notificationTime the card showing the preferred notification time
+ * @param sections the form's sections, following the preference as it changes
  * @param timePicker the notification time picker currently open
- * @param continueButton the button confirming the preferences, after the last card; absent when they
- *   are confirmed elsewhere
  */
 data class WorkoutPreferenceLayout(
-    val introduction: StringResource,
-    val workoutTypes: StateFlow<ChoiceSection>,
-    val notificationTime: NotificationTimeRow,
+    val sections: StateFlow<GroveSectionList>,
     val timePicker: StateFlow<NotificationTimePicker?>,
-    val continueButton: AsyncTextButton?,
 ) : ComposableContent {
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val workoutTypes by workoutTypes.collectAsStateWithLifecycle()
+        val sections by sections.collectAsStateWithLifecycle()
         val timePicker by timePicker.collectAsStateWithLifecycle()
 
-        LazyColumn(
+        sections.Content(
             modifier = modifier
                 .fillMaxSize()
                 .background(Colors.surfaceContainer),
-            contentPadding = PaddingValues(Spacings.medium),
-            verticalArrangement = Arrangement.spacedBy(Spacings.large),
-        ) {
-            item {
-                GroveCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = GroveShapes.large,
-                ) {
-                    Text(
-                        modifier = Modifier.padding(Spacings.medium),
-                        text = introduction.text(),
-                        style = TextStyles.bodyLarge,
-                        color = Colors.onSurface,
-                    )
-                }
-            }
-            item {
-                workoutTypes.Content(modifier = Modifier.fillMaxWidth())
-            }
-            item {
-                notificationTime.Content(modifier = Modifier.fillMaxWidth())
-            }
-            continueButton?.let {
-                item {
-                    it.Content(modifier = Modifier.fillMaxWidth())
-                }
-            }
-        }
+        )
         timePicker?.Content()
     }
 }
@@ -122,32 +80,23 @@ private class WorkoutPreferenceLayoutPreviewProvider : PreviewParameterProvider<
         "Sport" to Icons.Default.SportsSoccer,
         "Other" to Icons.Default.EmojiPeople,
     )
-    private val base = WorkoutPreferenceLayout(
-        introduction = StringResource(
-            "My Heart Counts will send you personalized notifications to help you stay active. Tell us " +
-                "which workouts you prefer and when during the day you’d like to receive reminders. This " +
-                "helps us tailor your experience to your schedule and goals.",
-        ),
-        workoutTypes = MutableStateFlow(section(selected = setOf("Walking", "Running", "Yoga / Pilates"))),
-        notificationTime = NotificationTimeRow(
-            title = StringResource("Notification Time"),
-            subtitle = StringResource("The preferred time for activity-related notifications."),
-            badge = MutableStateFlow(
-                ValueBadge(
-                    text = StringResource("09:00"),
-                    onClick = {},
-                ),
+    private val notificationTime = NotificationTimeRow(
+        title = StringResource("Notification Time"),
+        subtitle = StringResource("The preferred time for activity-related notifications."),
+        badge = MutableStateFlow(
+            ValueBadge(
+                text = StringResource("09:00"),
+                onClick = {},
             ),
         ),
+    )
+    private val base = WorkoutPreferenceLayout(
+        sections = MutableStateFlow(sections(selected = setOf("Walking", "Running", "Yoga / Pilates"))),
         timePicker = MutableStateFlow(null),
-        continueButton = AsyncTextButton(
-            title = StringResource("Continue"),
-            action = {},
-        ),
     )
     override val values = sequenceOf(
         base,
-        base.copy(workoutTypes = MutableStateFlow(section(selected = emptySet()))),
+        base.copy(sections = MutableStateFlow(sections(selected = emptySet()))),
         base.copy(
             timePicker = MutableStateFlow(
                 NotificationTimePicker(
@@ -164,11 +113,53 @@ private class WorkoutPreferenceLayoutPreviewProvider : PreviewParameterProvider<
         ),
     )
 
-    private fun section(selected: Set<String>) = ChoiceSection(
-        header = StringResource("Preferred Workout Types"),
-        options = workoutTypes.map { (title, icon) -> option(title = title, icon = icon, isSelected = title in selected) },
-        footer = null,
-    )
+    private fun sections(selected: Set<String>) = groveSectionList {
+        section(key = "introduction") {
+            card(key = "introduction") {
+                row(
+                    key = "introduction",
+                    content = TextRow(
+                        text = StringResource(
+                            "My Heart Counts will send you personalized notifications to help you stay active. Tell " +
+                                "us which workouts you prefer and when during the day you’d like to receive reminders.",
+                        ),
+                    ),
+                )
+            }
+        }
+        section(key = "workout-types") {
+            title("Preferred Workout Types")
+            card(key = "workout-types") {
+                workoutTypes.forEach { (title, icon) ->
+                    row(
+                        key = title,
+                        content = option(
+                            title = title,
+                            icon = icon,
+                            isSelected = title in selected,
+                        ),
+                    )
+                }
+            }
+        }
+        section(key = "notification-time") {
+            card(key = "notification-time") {
+                row(
+                    key = "notification-time",
+                    content = notificationTime,
+                )
+            }
+        }
+        section(key = "continue") {
+            content(
+                key = "continue",
+                content = AsyncTextButton(
+                    title = StringResource("Continue"),
+                    action = {},
+                ),
+            )
+        }
+    }
 
     private fun option(title: String, icon: ImageVector, isSelected: Boolean) = ChoiceRow(
         icon = ImageResource(image = icon),

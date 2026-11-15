@@ -77,7 +77,7 @@ class ComorbiditiesViewModelTest {
 
         // then
         assertThat(viewModel.condition(title = none).isSelected).isFalse()
-        assertThat(viewModel.screen.sections.value.flatMap { it.conditions }.none { it.isSelected }).isTrue()
+        assertThat(viewModel.screen.sections.value.choiceRows().none { it.isSelected }).isTrue()
     }
 
     @Test
@@ -197,8 +197,8 @@ class ComorbiditiesViewModelTest {
         navigator = navigator,
     )
 
-    private fun ComorbiditiesViewModel.titles() = screen.sections.value.flatMap { section -> section.conditions.map { it.title } }
+    private fun ComorbiditiesViewModel.titles() = screen.sections.value.choiceRows().map { it.title }
 
     private fun ComorbiditiesViewModel.condition(title: StringResource): ChoiceRow =
-        screen.sections.value.flatMap { it.conditions }.single { it.title == title }
+        screen.sections.value.choiceRows().single { it.title == title }
 }

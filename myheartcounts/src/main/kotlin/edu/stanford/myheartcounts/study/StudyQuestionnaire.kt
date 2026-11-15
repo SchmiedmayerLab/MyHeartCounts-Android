@@ -20,10 +20,10 @@ import org.hl7.fhir.r4.model.QuestionnaireResponse
  * the renderer's response back into one that answers the original [Questionnaire].
  *
  * The renderer records an answer to a quantity question only once a unit is picked from the
- * question's unit options, which a question with a single fixed unit does not offer. Such questions
- * are therefore rendered as decimal questions, showing their unit beside the input, and
- * [responseFor] restores their answers as quantities in that unit. Their numeric bounds are rendered
- * as decimals, the type the renderer compares a decimal answer against.
+ * question's unit options. A question with a single unit, whether fixed or the only unit option, is
+ * therefore rendered as a decimal question, showing its unit beside the input, and [responseFor]
+ * restores its answers as quantities in that unit. Numeric bounds, including quantity bounds, are
+ * rendered as decimals, the type the renderer compares a decimal answer against.
  *
  * Item controls, such as pages and check boxes, take effect only when coded in the item control code
  * system; codes given under its value set are moved to it. A check-box question accepts several
@@ -69,9 +69,23 @@ class StudyQuestionnaire private constructor(
         const val UNIT_EXTENSION_URL = "http://hl7.org/fhir/StructureDefinition/questionnaire-unit"
 
         /**
+         * The extension offering a unit a quantity question can be answered in.
+         */
+        const val UNIT_OPTION_EXTENSION_URL = "http://hl7.org/fhir/StructureDefinition/questionnaire-unitOption"
+
+        /**
+         * The extensions bounding a quantity answer, each with the bound for a numeric answer it is
+         * rendered as, in the same order as [BOUND_EXTENSION_URLS].
+         */
+        val QUANTITY_BOUND_EXTENSION_URLS = listOf(
+            "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-minQuantity",
+            "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-maxQuantity",
+        )
+
+        /**
          * The extensions bounding a numeric answer.
          */
-        val BOUND_EXTENSION_URLS = setOf(
+        val BOUND_EXTENSION_URLS = listOf(
             "http://hl7.org/fhir/StructureDefinition/minValue",
             "http://hl7.org/fhir/StructureDefinition/maxValue",
         )
@@ -107,10 +121,13 @@ class StudyQuestionnaire private constructor(
                     .filter { it.system == ITEM_CONTROL_VALUE_SET }
                     .forEach { it.system = ITEM_CONTROL_SYSTEM }
                 if (controls.any { it.code == CHECK_BOX_CONTROL }) item.repeats = true
-                val unit = item.getExtensionByUrl(UNIT_EXTENSION_URL)?.value as? Coding
+                val unit = singleUnit(item = item)
                 if (item.type == Questionnaire.QuestionnaireItemType.QUANTITY && unit != null) {
                     item.type = Questionnaire.QuestionnaireItemType.DECIMAL
                     quantityUnits[item.linkId] = unit
+                    item.removeExtension(UNIT_OPTION_EXTENSION_URL)
+                    if (!item.hasExtension(UNIT_EXTENSION_URL)) item.addExtension(UNIT_EXTENSION_URL, unit)
+                    renderQuantityBoundsAsDecimals(item = item)
                 }
                 if (item.type == Questionnaire.QuestionnaireItemType.DECIMAL) {
                     item.extension
@@ -120,6 +137,20 @@ class StudyQuestionnaire private constructor(
                         }
                 }
                 prepareItems(items = item.item, quantityUnits = quantityUnits)
+            }
+        }
+
+        private fun singleUnit(item: Questionnaire.QuestionnaireItemComponent): Coding? =
+            item.getExtensionByUrl(UNIT_EXTENSION_URL)?.value as? Coding
+                ?: item.getExtensionsByUrl(UNIT_OPTION_EXTENSION_URL)
+                    .map { it.value as? Coding }
+                    .singleOrNull()
+
+        private fun renderQuantityBoundsAsDecimals(item: Questionnaire.QuestionnaireItemComponent) {
+            QUANTITY_BOUND_EXTENSION_URLS.zip(BOUND_EXTENSION_URLS).forEach { (quantityUrl, decimalUrl) ->
+                val bound = item.getExtensionByUrl(quantityUrl)?.value as? Quantity ?: return@forEach
+                item.removeExtension(quantityUrl)
+                item.addExtension(decimalUrl, DecimalType(bound.value))
             }
         }
     }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -67,7 +68,7 @@ private class TextBadgePreviewProvider : PreviewParameterProvider<TextBadge> {
 
     private val base = TextBadge(
         text = StringResource("45%"),
-        color = DashboardColorPalette.green,
+        color = MHCColors.green,
     )
 
     override val values: Sequence<TextBadge> = sequenceOf(

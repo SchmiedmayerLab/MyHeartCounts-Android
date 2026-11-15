@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -25,7 +26,7 @@ class StatTileScreenshotTest : ScreenshotTest() {
     private val base = StatTile(
         icon = ImageResource.Vector(
             image = Icons.Default.Favorite,
-            tint = { DashboardColorPalette.pink.resolve() },
+            tint = { MHCColors.pink.resolve() },
         ),
         title = StringResource("Resting HR"),
         value = StatTile.Value(

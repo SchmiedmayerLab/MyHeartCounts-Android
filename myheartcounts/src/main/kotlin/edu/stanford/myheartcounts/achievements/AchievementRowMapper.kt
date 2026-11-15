@@ -7,10 +7,10 @@
 
 package edu.stanford.myheartcounts.achievements
 
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.ProgressRing
 import edu.stanford.myheartcounts.dashboard.ui.ProgressRingRow
 import edu.stanford.myheartcounts.dashboard.ui.TextBadge
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
@@ -34,11 +34,11 @@ class AchievementRowMapperImpl : AchievementRowMapper {
     override fun map(achievement: Achievement, showsProgress: Boolean): ProgressRingRow = ProgressRingRow(
         ring = ProgressRing(
             progress = achievement.progress,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource(
                 image = achievement.icon,
                 tint = if (achievement.isUnlocked) {
-                    { DashboardColorPalette.green.resolve() }
+                    { MHCColors.green.resolve() }
                 } else {
                     { Colors.onSurface }
                 },
@@ -49,7 +49,7 @@ class AchievementRowMapperImpl : AchievementRowMapper {
         trailingBadge = if (showsProgress && achievement.progress > 0f && !achievement.isUnlocked) {
             TextBadge(
                 text = StringResource(NumberFormat.getPercentInstance().format(achievement.progress)),
-                color = DashboardColorPalette.green,
+                color = MHCColors.green,
             )
         } else {
             null

@@ -434,6 +434,9 @@ SPDX-License-Identifier: MIT
     <string name="debug_shake_to_open_description" translatable="false">Does this sheet keep popping up while you\'re running or moving? Turn this off to stop shaking from opening it. To turn it back on, relaunch the app.</string>
     <string name="debug_health" translatable="false">Health</string>
     <string name="debug_health_availability" translatable="false">Health Connect</string>
+    <string name="debug_health_available" translatable="false">Available</string>
+    <string name="debug_health_update_required" translatable="false">Update required</string>
+    <string name="debug_health_unavailable" translatable="false">Unavailable</string>
     <string name="debug_health_fully_authorized" translatable="false">All permissions granted</string>
     <string name="debug_health_history_access" translatable="false">History access</string>
     <string name="debug_health_background_access" translatable="false">Background access</string>

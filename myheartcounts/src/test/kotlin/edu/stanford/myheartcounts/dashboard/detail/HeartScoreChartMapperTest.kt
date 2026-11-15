@@ -10,10 +10,10 @@ package edu.stanford.myheartcounts.dashboard.detail
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.chart.CartesianChart
 import edu.stanford.myheartcounts.dashboard.ui.chart.ChartCard
 import edu.stanford.myheartcounts.dashboard.ui.chart.TimeCoordinates
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,7 +117,7 @@ class HeartScoreChartMapperTest {
         )
 
         // then
-        assertThat(chart.series.map { it.color }).containsExactly(DashboardColorPalette.red, DashboardColorPalette.blue).inOrder()
+        assertThat(chart.series.map { it.color }).containsExactly(MHCColors.red, MHCColors.blue).inOrder()
     }
 
     @Test

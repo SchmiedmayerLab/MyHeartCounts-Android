@@ -22,9 +22,9 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.model.workout.NotificationTime
 import edu.stanford.myheartcounts.model.workout.WorkoutType
 import edu.stanford.myheartcounts.ui.AppBarTextAction
+import edu.stanford.myheartcounts.ui.TextRow
 import edu.stanford.myheartcounts.ui.ValueBadge
 import edu.stanford.myheartcounts.ui.choice.ChoiceRow
-import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import edu.stanford.myheartcounts.workoutpreference.ui.NotificationTimePicker
 import edu.stanford.myheartcounts.workoutpreference.ui.NotificationTimeRow
 import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceLayout
@@ -37,9 +37,11 @@ import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.GroveAppBar
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -91,12 +93,8 @@ data class WorkoutPreferenceLayoutInput(
  */
 class WorkoutPreferenceLayoutMapperImpl : WorkoutPreferenceLayoutMapper {
 
-    override fun map(input: WorkoutPreferenceLayoutInput): WorkoutPreferenceLayout = WorkoutPreferenceLayout(
-        introduction = StringResource(MHCStrings.workout_preference_text),
-        workoutTypes = input.preference.stateMap(scope = input.scope) {
-            workoutTypes(preference = it, input = input)
-        },
-        notificationTime = NotificationTimeRow(
+    override fun map(input: WorkoutPreferenceLayoutInput): WorkoutPreferenceLayout {
+        val notificationTime = NotificationTimeRow(
             title = StringResource(MHCStrings.workout_preference_notification_time),
             subtitle = StringResource(MHCStrings.workout_preference_notification_time_subtitle),
             badge = input.preference.stateMap(scope = input.scope) {
@@ -105,23 +103,24 @@ class WorkoutPreferenceLayoutMapperImpl : WorkoutPreferenceLayoutMapper {
                     onClick = { input.actionSink.push(WorkoutPreferenceAction.TimePickerRequested) },
                 )
             },
-        ),
-        timePicker = input.isTimePickerOpen
-            .map { isOpen -> if (isOpen) timePicker(input = input) else null }
-            .stateIn(
-                scope = input.scope,
-                started = SharingStarted.WhileSubscribed(),
-                initialValue = null,
-            ),
-        continueButton = when (input.mode) {
-            WorkoutPreferenceScreenMode.Step -> AsyncTextButton(
-                title = StringResource(MHCStrings.workout_preference_continue),
-                coroutineScope = { input.scope },
-                action = { input.onConfirm() },
-            )
-            WorkoutPreferenceScreenMode.Standalone -> null
-        },
-    )
+        )
+        return WorkoutPreferenceLayout(
+            sections = input.preference.stateMap(scope = input.scope) {
+                sections(
+                    preference = it,
+                    notificationTime = notificationTime,
+                    input = input,
+                )
+            },
+            timePicker = input.isTimePickerOpen
+                .map { isOpen -> if (isOpen) timePicker(input = input) else null }
+                .stateIn(
+                    scope = input.scope,
+                    started = SharingStarted.WhileSubscribed(),
+                    initialValue = null,
+                ),
+        )
+    }
 
     override fun mapAppBar(input: WorkoutPreferenceLayoutInput) = groveAppBar {
         back { input.onDismiss() }
@@ -157,20 +156,68 @@ class WorkoutPreferenceLayoutMapperImpl : WorkoutPreferenceLayoutMapper {
         )
     }
 
-    private fun workoutTypes(preference: WorkoutPreference, input: WorkoutPreferenceLayoutInput) = ChoiceSection(
-        header = StringResource(MHCStrings.workout_preference_types_header),
-        options = WorkoutType.entries.map { type ->
-            ChoiceRow(
-                icon = ImageResource(image = icon(type = type)),
-                title = StringResource(title(type = type)),
-                subtitle = null,
-                detail = null,
-                isSelected = type in preference.workoutTypes,
-                followUp = null,
-                onClick = { input.actionSink.push(WorkoutPreferenceAction.TypeToggled(type = type)) },
-            )
-        },
-        footer = null,
+    private fun sections(
+        preference: WorkoutPreference,
+        notificationTime: NotificationTimeRow,
+        input: WorkoutPreferenceLayoutInput,
+    ): GroveSectionList = groveSectionList {
+        section(key = INTRODUCTION_KEY) {
+            card(key = INTRODUCTION_KEY) {
+                row(
+                    key = INTRODUCTION_KEY,
+                    content = TextRow(text = StringResource(MHCStrings.workout_preference_text)),
+                )
+            }
+        }
+        section(key = WORKOUT_TYPES_KEY) {
+            title(resId = MHCStrings.workout_preference_types_header)
+            card(key = WORKOUT_TYPES_KEY) {
+                WorkoutType.entries.forEach { type ->
+                    row(
+                        key = type.name,
+                        content = workoutType(
+                            type = type,
+                            preference = preference,
+                            input = input,
+                        ),
+                    )
+                }
+            }
+        }
+        section(key = NOTIFICATION_TIME_KEY) {
+            card(key = NOTIFICATION_TIME_KEY) {
+                row(
+                    key = NOTIFICATION_TIME_KEY,
+                    content = notificationTime,
+                )
+            }
+        }
+        if (input.mode == WorkoutPreferenceScreenMode.Step) {
+            section(key = CONTINUE_KEY) {
+                content(
+                    key = CONTINUE_KEY,
+                    content = AsyncTextButton(
+                        title = StringResource(MHCStrings.workout_preference_continue),
+                        coroutineScope = { input.scope },
+                        action = { input.onConfirm() },
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun workoutType(
+        type: WorkoutType,
+        preference: WorkoutPreference,
+        input: WorkoutPreferenceLayoutInput,
+    ) = ChoiceRow(
+        icon = ImageResource(image = icon(type = type)),
+        title = StringResource(title(type = type)),
+        subtitle = null,
+        detail = null,
+        isSelected = type in preference.workoutTypes,
+        followUp = null,
+        onClick = { input.actionSink.push(WorkoutPreferenceAction.TypeToggled(type = type)) },
     )
 
     private fun mapTime(time: NotificationTime) = StringResource(
@@ -211,4 +258,11 @@ class WorkoutPreferenceLayoutMapperImpl : WorkoutPreferenceLayoutMapper {
         started = SharingStarted.WhileSubscribed(),
         initialValue = transform(value),
     )
+
+    private companion object {
+        const val INTRODUCTION_KEY = "introduction"
+        const val WORKOUT_TYPES_KEY = "workout-types"
+        const val NOTIFICATION_TIME_KEY = "notification-time"
+        const val CONTINUE_KEY = "continue"
+    }
 }

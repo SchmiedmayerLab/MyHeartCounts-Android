@@ -8,7 +8,6 @@
 package edu.stanford.myheartcounts.workoutpreference
 
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.account.FakeAccountService
 import edu.stanford.myheartcounts.account.PreferredNudgeNotificationTimeKey
 import edu.stanford.myheartcounts.account.PreferredWorkoutTypesKey
 import edu.stanford.myheartcounts.model.workout.NotificationTime
@@ -17,6 +16,7 @@ import edu.stanford.myheartcounts.model.workout.WorkoutTypes
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.FakeAccount
+import org.grovealliance.account.FakeAccountService
 import org.junit.Test
 
 class WorkoutPreferenceEditorTest {

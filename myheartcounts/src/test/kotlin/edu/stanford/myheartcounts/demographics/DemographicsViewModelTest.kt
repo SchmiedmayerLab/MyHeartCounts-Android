@@ -177,7 +177,7 @@ class DemographicsViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.screen.layout.healthImport.onClick()
+        viewModel.screen.layout.healthImport().onClick()
 
         // then
         assertThat(editor.state.value.response.heightInCm).isEqualTo(170.0)
@@ -190,7 +190,7 @@ class DemographicsViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.screen.layout.healthImport.onClick()
+        viewModel.screen.layout.healthImport().onClick()
 
         // then
         assertThat(viewModel.screen.layout.scaffoldState.widgets.value.toast?.message)
@@ -204,7 +204,7 @@ class DemographicsViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.screen.layout.healthImport.onClick()
+        viewModel.screen.layout.healthImport().onClick()
 
         // then
         assertThat(viewModel.screen.layout.scaffoldState.widgets.value.toast?.message)
@@ -266,7 +266,7 @@ class DemographicsViewModelTest {
         navigator = navigator,
     )
 
-    private fun DemographicsLayout.fields() = sections.flatMap { section -> section.rows.map { it.field } }
+    private fun DemographicsLayout.fields() = questionSections().flatten().map { it.field }
 
-    private fun DemographicsLayout.row(field: DemographicsField) = sections.flatMap { it.rows }.single { it.field == field }
+    private fun DemographicsLayout.row(field: DemographicsField) = questionSections().flatten().single { it.field == field }
 }

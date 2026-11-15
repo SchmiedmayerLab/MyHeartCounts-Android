@@ -20,6 +20,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.ImageResource
@@ -73,28 +74,28 @@ private class IconTextCardPreviewProvider : PreviewParameterProvider<IconTextCar
             IconTextCardRow(
                 icon = ImageResource.Vector(
                     image = Icons.AutoMirrored.Filled.DirectionsWalk,
-                    tint = { DashboardColorPalette.green.resolve() },
+                    tint = { MHCColors.green.resolve() },
                 ),
                 text = StringResource("Your 26,635 steps cover about 26 km — that's 9.6 lengths of a long bridge."),
             ),
             IconTextCardRow(
                 icon = ImageResource.Vector(
                     image = Icons.Default.Favorite,
-                    tint = { DashboardColorPalette.red.resolve() },
+                    tint = { MHCColors.red.resolve() },
                 ),
                 text = StringResource("Your heart has beaten about 681K times since you started."),
             ),
             IconTextCardRow(
                 icon = ImageResource.Vector(
                     image = Icons.Default.LocalFireDepartment,
-                    tint = { DashboardColorPalette.orange.resolve() },
+                    tint = { MHCColors.orange.resolve() },
                 ),
                 text = StringResource("You've burned 2,053 active calories — the equivalent of 7 slices of pizza."),
             ),
             IconTextCardRow(
                 icon = ImageResource.Vector(
                     image = Icons.Default.Hotel,
-                    tint = { DashboardColorPalette.indigo.resolve() },
+                    tint = { MHCColors.indigo.resolve() },
                 ),
                 text = StringResource("A short text"),
             ),

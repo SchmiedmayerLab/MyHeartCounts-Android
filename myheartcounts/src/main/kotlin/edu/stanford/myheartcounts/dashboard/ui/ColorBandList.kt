@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -45,7 +46,7 @@ import org.grovealliance.ui.theme.semiBold
  * highlighted.
  *
  * The bands are drawn top to bottom in the given order, set slightly apart, with the outer corners
- * of the stack rounded. The labels are drawn in [DashboardColorPalette.onRating], so band colors
+ * of the stack rounded. The labels are drawn in [MHCColors.onRating], so band colors
  * must be light enough to carry dark text in both themes.
  *
  * @param bands the bands, from top to bottom
@@ -125,7 +126,7 @@ data class ColorBandList(
         Text(
             text = text.text(),
             style = if (isHighlighted) TextStyles.bodyMedium.semiBold() else TextStyles.bodyMedium.medium(),
-            color = DashboardColorPalette.onRating.resolve(),
+            color = MHCColors.onRating.resolve(),
             modifier = modifier,
         )
     }
@@ -138,25 +139,25 @@ private class ColorBandListPreviewProvider : PreviewParameterProvider<ColorBandL
             ColorBandList.Band(
                 leadingText = StringResource("7 to 9 hours"),
                 trailingText = StringResource("100"),
-                fillColors = listOf(DashboardColorPalette.green),
+                fillColors = listOf(MHCColors.green),
                 isHighlighted = true,
             ),
             ColorBandList.Band(
                 leadingText = StringResource("9 to 10 hours"),
                 trailingText = StringResource("90"),
-                fillColors = listOf(DashboardColorPalette.redToGreen.colorAt(fraction = 0.9f)),
+                fillColors = listOf(MHCColors.redToGreen.colorAt(fraction = 0.9f)),
                 isHighlighted = false,
             ),
             ColorBandList.Band(
                 leadingText = StringResource("6 to 7 hours"),
                 trailingText = StringResource("70"),
-                fillColors = listOf(DashboardColorPalette.redToGreen.colorAt(fraction = 0.7f)),
+                fillColors = listOf(MHCColors.redToGreen.colorAt(fraction = 0.7f)),
                 isHighlighted = false,
             ),
             ColorBandList.Band(
                 leadingText = StringResource("4 to 5 hours"),
                 trailingText = StringResource("20"),
-                fillColors = listOf(DashboardColorPalette.redToGreen.colorAt(fraction = 0.2f)),
+                fillColors = listOf(MHCColors.redToGreen.colorAt(fraction = 0.2f)),
                 isHighlighted = false,
             ),
         ),
@@ -170,7 +171,7 @@ private class ColorBandListPreviewProvider : PreviewParameterProvider<ColorBandL
             bands = listOf(
                 base.bands.first().copy(
                     leadingText = StringResource("0"),
-                    fillColors = DashboardColorPalette.redToGreen,
+                    fillColors = MHCColors.redToGreen,
                     isHighlighted = false,
                 ),
             ),

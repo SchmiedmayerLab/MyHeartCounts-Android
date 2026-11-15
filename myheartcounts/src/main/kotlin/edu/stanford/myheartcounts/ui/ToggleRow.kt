@@ -24,7 +24,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ComposableContent
-import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.GroveTheme
@@ -33,10 +32,10 @@ import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * A card with a [title], an optional [subtitle] and a switch showing [isOn]. Tapping anywhere on the
- * card reports the requested value through [onToggle]; the switch follows [isOn] only.
+ * A row with a [title], an optional [subtitle] and a switch showing [isOn]. Tapping anywhere on the
+ * row reports the requested value through [onToggle]; the switch follows [isOn] only.
  */
-data class ToggleSection(
+data class ToggleRow(
     val title: StringResource,
     val subtitle: StringResource?,
     val isOn: StateFlow<Boolean>,
@@ -47,41 +46,38 @@ data class ToggleSection(
     override fun Content(modifier: Modifier) {
         val isOn by isOn.collectAsStateWithLifecycle()
 
-        GroveCard(modifier = modifier) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .toggleable(
-                        value = isOn,
-                        role = Role.Switch,
-                        onValueChange = onToggle,
-                    )
-                    .padding(Spacings.medium),
-                horizontalArrangement = Arrangement.spacedBy(Spacings.medium),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(Spacings.tiny),
-                ) {
-                    Text(
-                        text = title.text(),
-                        style = TextStyles.bodyLarge,
-                        color = Colors.onSurface,
-                    )
-                    subtitle?.let {
-                        Text(
-                            text = it.text(),
-                            style = TextStyles.bodySmall,
-                            color = Colors.onSurfaceVariant,
-                        )
-                    }
-                }
-                Switch(
-                    checked = isOn,
-                    onCheckedChange = null,
+        Row(
+            modifier = modifier
+                .toggleable(
+                    value = isOn,
+                    role = Role.Switch,
+                    onValueChange = onToggle,
                 )
+                .padding(Spacings.medium),
+            horizontalArrangement = Arrangement.spacedBy(Spacings.medium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Spacings.tiny),
+            ) {
+                Text(
+                    text = title.text(),
+                    style = TextStyles.bodyLarge,
+                    color = Colors.onSurface,
+                )
+                subtitle?.let {
+                    Text(
+                        text = it.text(),
+                        style = TextStyles.bodySmall,
+                        color = Colors.onSurfaceVariant,
+                    )
+                }
             }
+            Switch(
+                checked = isOn,
+                onCheckedChange = null,
+            )
         }
     }
 }
@@ -90,11 +86,11 @@ data class ToggleSection(
 @Composable
 private fun Preview() {
     GroveTheme {
-        ToggleSection(
+        ToggleRow(
             title = StringResource("Weekly Summary"),
             subtitle = StringResource("Receive a summary of your activity every Monday."),
             isOn = MutableStateFlow(value = true),
             onToggle = {},
-        ).Content(modifier = Modifier.padding(Spacings.medium))
+        ).Content(modifier = Modifier.fillMaxWidth())
     }
 }

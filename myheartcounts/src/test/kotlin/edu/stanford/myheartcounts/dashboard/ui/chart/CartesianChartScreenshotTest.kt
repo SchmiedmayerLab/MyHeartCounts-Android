@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -39,7 +39,7 @@ class CartesianChartScreenshotTest : ScreenshotTest() {
         series = listOf(
             CartesianChart.Series(
                 style = CartesianChart.Style.Bar,
-                color = DashboardColorPalette.blue,
+                color = MHCColors.blue,
                 points = daily(from = start, days = 14) { day -> 6.5 + 2 * sin(day * 0.9) },
                 highlightFormat = null,
             ),
@@ -82,7 +82,7 @@ class CartesianChartScreenshotTest : ScreenshotTest() {
                 series = listOf(
                     base.series.single().copy(
                         style = CartesianChart.Style.Line,
-                        color = DashboardColorPalette.green,
+                        color = MHCColors.green,
                         points = daily(from = start, days = 7) { day -> 30 + 20 * sin(day * 1.3) },
                     ),
                 ),
@@ -98,7 +98,7 @@ class CartesianChartScreenshotTest : ScreenshotTest() {
                 series = listOf(
                     base.series.single().copy(
                         style = CartesianChart.Style.Point,
-                        color = DashboardColorPalette.red,
+                        color = MHCColors.red,
                         points = (0 until 7 * 24).map { hour ->
                             val time = start.plus(Duration.ofHours(hour.toLong()))
                             coordinates.point(
@@ -123,12 +123,12 @@ class CartesianChartScreenshotTest : ScreenshotTest() {
                 series = listOf(
                     base.series.single().copy(
                         style = CartesianChart.Style.Line,
-                        color = DashboardColorPalette.red,
+                        color = MHCColors.red,
                         points = days.map { day -> moment(from = from, day = day, value = 125 + 8 * sin(day * 0.4)) },
                     ),
                     base.series.single().copy(
                         style = CartesianChart.Style.Line,
-                        color = DashboardColorPalette.blue,
+                        color = MHCColors.blue,
                         points = days.map { day -> moment(from = from, day = day, value = 80 + 6 * sin(day * 0.5)) },
                     ),
                 ),
@@ -144,7 +144,7 @@ class CartesianChartScreenshotTest : ScreenshotTest() {
             chart = base.copy(
                 series = listOf(
                     base.series.single().copy(
-                        color = DashboardColorPalette.orange,
+                        color = MHCColors.orange,
                         points = (0 until 26).map { week ->
                             coordinates.point(
                                 start = from.plus(Duration.ofDays(week * 7L)),
@@ -167,7 +167,7 @@ class CartesianChartScreenshotTest : ScreenshotTest() {
                 series = listOf(
                     base.series.single().copy(
                         style = CartesianChart.Style.Line,
-                        color = DashboardColorPalette.red,
+                        color = MHCColors.red,
                         points = (0 until 12).map { month ->
                             val monthStart = from.plusMonths(month.toLong()).atStartOfDay(ZoneOffset.UTC)
                             coordinates.point(

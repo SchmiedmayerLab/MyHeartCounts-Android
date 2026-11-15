@@ -74,6 +74,7 @@ class MyHeartCountsApplication : Application(), GroveApplication, WorkConfigurat
                         givenName = name?.givenName.orEmpty(),
                         familyName = name?.familyName.orEmpty(),
                         strokes = emptyList(),
+                        canvasSize = null,
                     )
                 }
             }

@@ -12,6 +12,7 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
 import edu.stanford.myheartcounts.dashboard.HeartScoreDateFormatterImpl
 import edu.stanford.myheartcounts.dashboard.HeartScoreMeasurement
+import edu.stanford.myheartcounts.dashboard.content
 import edu.stanford.myheartcounts.dashboard.ui.ColorBandList
 import edu.stanford.myheartcounts.dashboard.ui.GaugeHeader
 import org.grovealliance.core.time.FakeTimeProvider

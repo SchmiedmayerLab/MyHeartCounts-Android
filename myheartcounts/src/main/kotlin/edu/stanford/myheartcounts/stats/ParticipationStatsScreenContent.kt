@@ -19,11 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSectionList
 import edu.stanford.myheartcounts.dashboard.ui.LabeledValue
 import edu.stanford.myheartcounts.dashboard.ui.TextBadge
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ActionSink
@@ -31,7 +29,9 @@ import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveScaffold
 import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.horizontalSlideBackward
 import org.grovealliance.ui.horizontalSlideForward
 import org.grovealliance.ui.theme.GroveTheme
@@ -53,9 +53,9 @@ import org.grovealliance.ui.theme.ThemePreviews
 data class ParticipationStatsScreenContent(
     val scaffoldState: GroveScaffoldState,
     val page: StateFlow<ParticipationStatsPage>,
-    val stats: DashboardSectionList,
+    val stats: GroveSectionList,
     val explainer: ParticipationStatsExplainer,
-    val achievements: DashboardSectionList,
+    val achievements: GroveSectionList,
     val actionSink: ActionSink<ParticipationStatsAction>,
 ) : ComposableContent {
 
@@ -93,7 +93,7 @@ data class ParticipationStatsScreenContent(
     private companion object {
         val DUMMY_DATA_BADGE = TextBadge(
             text = StringResource("DUMMY DATA"),
-            color = DashboardColorPalette.orange,
+            color = MHCColors.orange,
         )
     }
 }
@@ -102,22 +102,21 @@ private class ParticipationStatsScreenContentPreviewProvider : PreviewParameterP
     private val base = ParticipationStatsScreenContent(
         scaffoldState = GroveScaffoldState(),
         page = MutableStateFlow(ParticipationStatsPage.Stats),
-        stats = DashboardSectionList(
-            sections = listOf(
-                DashboardSection(
-                    title = null,
+        stats = groveSectionList {
+            section(key = "enrollment") {
+                content(
+                    key = "enrollment",
                     content = LabeledValue(
                         label = StringResource("Enrolled since"),
                         value = StringResource("January 1, 2026"),
                     ),
-                    footnote = null,
-                ),
-            ),
-        ),
+                )
+            }
+        },
         explainer = ParticipationStatsExplainer(
             text = StringResource("Participation Stats cover all activity recorded since you enrolled."),
         ),
-        achievements = DashboardSectionList(sections = emptyList()),
+        achievements = groveSectionList {},
         actionSink = ActionSource<ParticipationStatsAction> {}.sink(),
     )
 

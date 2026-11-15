@@ -5,19 +5,20 @@
 //
 // SPDX-License-Identifier: MIT
 
-package edu.stanford.myheartcounts.dashboard.ui
+package edu.stanford.myheartcounts.ui
 
 import androidx.compose.ui.graphics.Color
 import org.grovealliance.ui.theme.ColorToken
 
 /**
- * The colors of dashboards: [red] through [green] rate values from the worst to the best, and the
- * remaining colors tell apart the kinds of value shown side by side, such as the icons of tiles.
+ * The app's colors beyond the theme: [red] through [green] also rate values from the worst to the
+ * best, and the remaining colors tell apart kinds of content shown side by side, such as the icons
+ * of tiles.
  *
  * Each color is a [ColorToken] with a lighter variant used in dark mode. The rating colors are
  * bright in both modes, so text on them is drawn in [onRating] in both modes.
  */
-object DashboardColorPalette {
+object MHCColors {
 
     /**
      * Red, marking the worst values.

@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.ImageResource
@@ -132,7 +133,7 @@ private class CounterCardPreviewProvider : PreviewParameterProvider<CounterCard>
     private val row = ProgressRingRow(
         ring = ProgressRing(
             progress = 0.7f,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource.Vector(
                 image = Icons.AutoMirrored.Filled.DirectionsWalk,
                 tint = { Colors.onSurface },

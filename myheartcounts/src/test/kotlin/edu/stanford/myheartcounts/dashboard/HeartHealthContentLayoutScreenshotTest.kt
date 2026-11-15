@@ -13,12 +13,11 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.ui.Modifier
 import edu.stanford.myheartcounts.MHCStrings
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
 import edu.stanford.myheartcounts.dashboard.ui.Gauge
 import edu.stanford.myheartcounts.dashboard.ui.GaugeCard
 import edu.stanford.myheartcounts.dashboard.ui.GaugeTile
 import edu.stanford.myheartcounts.dashboard.ui.GaugeTileGrid
+import edu.stanford.myheartcounts.ui.MHCColors
 import edu.stanford.myheartcounts.ui.MarkdownCard
 import edu.stanford.myheartcounts.ui.NavigationCard
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +27,7 @@ import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.ColorToken
 import org.junit.Test
 
@@ -46,15 +46,15 @@ class HeartHealthContentLayoutScreenshotTest : ScreenshotTest() {
             ),
             state = MutableStateFlow(
                 HeartHealthLayoutState.Content(
-                    layout = HeartHealthContentLayout(
-                        sections = listOf(
-                            DashboardSection(
-                                title = null,
-                                content = GaugeCard(gauge = overallGauge()),
-                                footnote = StringResource(MHCStrings.heart_health_score_footnote),
-                            ),
-                            DashboardSection(
-                                title = StringResource(MHCStrings.heart_health_components_title),
+                    layout = groveSectionList {
+                        section(key = "score") {
+                            content(key = "score", content = GaugeCard(gauge = overallGauge()))
+                            footer(MHCStrings.heart_health_score_footnote)
+                        }
+                        section(key = "components") {
+                            title(MHCStrings.heart_health_components_title)
+                            content(
+                                key = "components",
                                 content = GaugeTileGrid(
                                     tiles = listOf(
                                         tile(title = MHCStrings.heart_score_exercise_minutes, score = 1.0, caption = "12:00 AM"),
@@ -63,23 +63,27 @@ class HeartHealthContentLayoutScreenshotTest : ScreenshotTest() {
                                         tile(title = MHCStrings.heart_score_blood_glucose, score = null, caption = null),
                                     ),
                                 ),
-                                footnote = StringResource(MHCStrings.heart_health_components_footnote),
-                            ),
-                            DashboardSection(
-                                title = StringResource(MHCStrings.heart_health_explainer_title),
+                            )
+                            footer(MHCStrings.heart_health_components_footnote)
+                        }
+                        section(key = "explainer") {
+                            title(MHCStrings.heart_health_explainer_title)
+                            content(
+                                key = "explainer",
                                 content = MarkdownCard(document = MarkdownDocument.process(text = EXPLAINER)),
-                                footnote = null,
-                            ),
-                            DashboardSection(
-                                title = StringResource(MHCStrings.heart_health_past_data_title),
+                            )
+                        }
+                        section(key = "past-data") {
+                            title(MHCStrings.heart_health_past_data_title)
+                            content(
+                                key = "past-data",
                                 content = NavigationCard(
                                     title = StringResource(MHCStrings.heart_health_past_results),
                                     onClick = {},
                                 ),
-                                footnote = null,
-                            ),
-                        ),
-                    ),
+                            )
+                        }
+                    },
                 ),
             ),
         )
@@ -91,7 +95,7 @@ class HeartHealthContentLayoutScreenshotTest : ScreenshotTest() {
 
     private fun overallGauge() = Gauge(
         progress = OVERALL_SCORE,
-        colors = DashboardColorPalette.redToGreen,
+        colors = MHCColors.redToGreen,
         lineWidth = Gauge.defaultLineWidth * LARGE_LINE_WIDTH,
         size = Gauge.Size.Large,
         label = Gauge.Label(
@@ -111,7 +115,7 @@ class HeartHealthContentLayoutScreenshotTest : ScreenshotTest() {
         title = StringResource(title),
         gauge = Gauge(
             progress = score?.toFloat(),
-            colors = if (score == null) listOf(ColorToken.Outline) else DashboardColorPalette.redToGreen,
+            colors = if (score == null) listOf(ColorToken.Outline) else MHCColors.redToGreen,
             lineWidth = Gauge.defaultLineWidth * REGULAR_LINE_WIDTH,
             size = Gauge.Size.Regular,
             label = Gauge.Label(

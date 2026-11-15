@@ -32,9 +32,6 @@ import edu.stanford.myheartcounts.achievements.AchievementRowMapper
 import edu.stanford.myheartcounts.achievements.AchievementsContentMapper
 import edu.stanford.myheartcounts.achievements.AchievementsSource
 import edu.stanford.myheartcounts.dashboard.ui.CounterCard
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSectionList
 import edu.stanford.myheartcounts.dashboard.ui.IconTextCard
 import edu.stanford.myheartcounts.dashboard.ui.IconTextCardRow
 import edu.stanford.myheartcounts.dashboard.ui.LabeledValue
@@ -42,11 +39,13 @@ import edu.stanford.myheartcounts.dashboard.ui.ProgressBadge
 import edu.stanford.myheartcounts.dashboard.ui.ProgressRingRowList
 import edu.stanford.myheartcounts.dashboard.ui.StatTile
 import edu.stanford.myheartcounts.dashboard.ui.StatTileGrid
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.ColorToken
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.resolve
@@ -100,7 +99,7 @@ class SampleParticipationStatsContentMapper(
     override fun map(input: ParticipationStatsContentInput) = ParticipationStatsScreenContent(
         scaffoldState = input.scaffoldState,
         page = input.page,
-        stats = DashboardSectionList(sections = sections(input = input)),
+        stats = stats(input = input),
         explainer = ParticipationStatsExplainer(
             text = StringResource(
                 MHCStrings.participation_stats_explainer,
@@ -111,33 +110,27 @@ class SampleParticipationStatsContentMapper(
         actionSink = input.actionSink,
     )
 
-    private fun sections(input: ParticipationStatsContentInput): List<DashboardSection> = listOf(
-        DashboardSection(
-            title = null,
-            content = enrollmentCard(input = input),
-            footnote = null,
-        ),
-        DashboardSection(
-            title = StringResource(MHCStrings.participation_stats_engagement),
-            content = StatTileGrid(tiles = engagementTiles()),
-            footnote = null,
-        ),
-        DashboardSection(
-            title = StringResource(MHCStrings.participation_stats_health_totals),
-            content = StatTileGrid(tiles = healthTotalTiles()),
-            footnote = null,
-        ),
-        DashboardSection(
-            title = StringResource(MHCStrings.participation_stats_health_highlights),
-            content = StatTileGrid(tiles = highlightTiles()),
-            footnote = null,
-        ),
-        DashboardSection(
-            title = StringResource(MHCStrings.participation_stats_fun_facts),
-            content = IconTextCard(rows = funFacts()),
-            footnote = null,
-        ),
-    )
+    private fun stats(input: ParticipationStatsContentInput) = groveSectionList {
+        section(key = "enrollment") {
+            content(key = "enrollment", content = enrollmentCard(input = input))
+        }
+        section(key = "engagement") {
+            title(MHCStrings.participation_stats_engagement)
+            content(key = "engagement", content = StatTileGrid(tiles = engagementTiles()))
+        }
+        section(key = "health-totals") {
+            title(MHCStrings.participation_stats_health_totals)
+            content(key = "health-totals", content = StatTileGrid(tiles = healthTotalTiles()))
+        }
+        section(key = "health-highlights") {
+            title(MHCStrings.participation_stats_health_highlights)
+            content(key = "health-highlights", content = StatTileGrid(tiles = highlightTiles()))
+        }
+        section(key = "fun-facts") {
+            title(MHCStrings.participation_stats_fun_facts)
+            content(key = "fun-facts", content = IconTextCard(rows = funFacts()))
+        }
+    }
 
     private fun enrollmentCard(input: ParticipationStatsContentInput): CounterCard {
         val unlocked = achievements.groups.sumOf { group -> group.achievements.count { it.isUnlocked } }
@@ -152,7 +145,7 @@ class SampleParticipationStatsContentMapper(
                 ),
                 label = StringResource("${integer(value = unlocked)} / ${integer(value = achievements.totalCount)}"),
                 progress = unlocked.toFloat() / achievements.totalCount,
-                progressColor = DashboardColorPalette.red,
+                progressColor = MHCColors.red,
             ),
             detail = LabeledValue(
                 label = StringResource(MHCStrings.participation_stats_enrolled_since),
@@ -178,31 +171,31 @@ class SampleParticipationStatsContentMapper(
     private fun engagementTiles() = listOf(
         tile(
             icon = Icons.Default.CheckCircle,
-            color = DashboardColorPalette.red,
+            color = MHCColors.red,
             title = MHCStrings.participation_stats_tasks_done,
             value = integer(value = 1),
         ),
         tile(
             icon = Icons.AutoMirrored.Filled.Assignment,
-            color = DashboardColorPalette.purple,
+            color = MHCColors.purple,
             title = MHCStrings.participation_stats_surveys_answered,
             value = integer(value = 0),
         ),
         tile(
             icon = Icons.AutoMirrored.Filled.MenuBook,
-            color = DashboardColorPalette.brown,
+            color = MHCColors.brown,
             title = MHCStrings.participation_stats_articles_read,
             value = integer(value = 1),
         ),
         tile(
             icon = Icons.Default.MonitorHeart,
-            color = DashboardColorPalette.red,
+            color = MHCColors.red,
             title = MHCStrings.participation_stats_ecgs_recorded,
             value = integer(value = 1),
         ),
         tile(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
-            color = DashboardColorPalette.blue,
+            color = MHCColors.blue,
             title = MHCStrings.participation_stats_walk_run_tests,
             value = integer(value = 0),
         ),
@@ -211,50 +204,50 @@ class SampleParticipationStatsContentMapper(
     private fun healthTotalTiles() = listOf(
         tile(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
-            color = DashboardColorPalette.green,
+            color = MHCColors.green,
             title = MHCStrings.participation_stats_steps,
             value = compact(value = 26_635),
         ),
         tile(
             icon = Icons.Default.Favorite,
-            color = DashboardColorPalette.red,
+            color = MHCColors.red,
             title = MHCStrings.participation_stats_heartbeats,
             value = compact(value = 681_000),
             footnote = StringResource(MHCStrings.participation_stats_estimate),
         ),
         tile(
             icon = Icons.Default.Map,
-            color = DashboardColorPalette.blue,
+            color = MHCColors.blue,
             title = MHCStrings.participation_stats_distance,
             value = "${integer(value = 26)} km",
         ),
         tile(
             icon = Icons.Default.LocalFireDepartment,
-            color = DashboardColorPalette.orange,
+            color = MHCColors.orange,
             title = MHCStrings.participation_stats_active_energy,
             value = "${decimal(value = 2.4, fractionDigits = 1)} kWh",
         ),
         tile(
             icon = Icons.AutoMirrored.Filled.DirectionsRun,
-            color = DashboardColorPalette.green,
+            color = MHCColors.green,
             title = MHCStrings.participation_stats_exercise_time,
             value = "2h 31m",
         ),
         tile(
             icon = Icons.Default.Bed,
-            color = DashboardColorPalette.indigo,
+            color = MHCColors.indigo,
             title = MHCStrings.participation_stats_sleep,
             value = "1d 16h",
         ),
         tile(
             icon = Icons.Default.SportsGymnastics,
-            color = DashboardColorPalette.teal,
+            color = MHCColors.teal,
             title = MHCStrings.participation_stats_workouts,
             value = integer(value = 3),
         ),
         tile(
             icon = Icons.Default.Stairs,
-            color = DashboardColorPalette.cyan,
+            color = MHCColors.cyan,
             title = MHCStrings.participation_stats_flights_climbed,
             value = integer(value = 1),
         ),
@@ -263,28 +256,28 @@ class SampleParticipationStatsContentMapper(
     private fun highlightTiles() = listOf(
         tile(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
-            color = DashboardColorPalette.green,
+            color = MHCColors.green,
             title = MHCStrings.participation_stats_best_step_day,
             value = compact(value = 8_000),
             footnote = StringResource(shortDate(date = LocalDate.of(2026, 10, 24))),
         ),
         tile(
             icon = Icons.Default.Timer,
-            color = DashboardColorPalette.blue,
+            color = MHCColors.blue,
             title = MHCStrings.participation_stats_longest_workout,
             value = "1h 34m",
             footnote = StringResource("${shortDate(date = enrollmentDate)} • Walking"),
         ),
         tile(
             icon = Icons.Default.Favorite,
-            color = DashboardColorPalette.red,
+            color = MHCColors.red,
             title = MHCStrings.participation_stats_max_heart_rate,
             value = integer(value = 169),
             unit = BPM,
         ),
         tile(
             icon = Icons.Default.Bed,
-            color = DashboardColorPalette.red,
+            color = MHCColors.red,
             title = MHCStrings.participation_stats_resting_heart_rate,
             value = integer(value = 80),
             unit = BPM,
@@ -295,7 +288,7 @@ class SampleParticipationStatsContentMapper(
     private fun funFacts() = listOf(
         fact(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
-            color = DashboardColorPalette.green,
+            color = MHCColors.green,
             text = StringResource(
                 MHCStrings.participation_stats_fun_fact_steps,
                 StringResource(integer(value = 26_635)),
@@ -305,7 +298,7 @@ class SampleParticipationStatsContentMapper(
         ),
         fact(
             icon = Icons.Default.Favorite,
-            color = DashboardColorPalette.red,
+            color = MHCColors.red,
             text = StringResource(
                 MHCStrings.participation_stats_fun_fact_heartbeats,
                 StringResource(compact(value = 681_000)),
@@ -314,7 +307,7 @@ class SampleParticipationStatsContentMapper(
         ),
         fact(
             icon = Icons.Default.LocalFireDepartment,
-            color = DashboardColorPalette.orange,
+            color = MHCColors.orange,
             text = StringResource(
                 MHCStrings.participation_stats_fun_fact_active_energy,
                 StringResource(integer(value = 2_053)),
@@ -323,7 +316,7 @@ class SampleParticipationStatsContentMapper(
         ),
         fact(
             icon = Icons.Default.Bed,
-            color = DashboardColorPalette.indigo,
+            color = MHCColors.indigo,
             text = StringResource(
                 MHCStrings.participation_stats_fun_fact_sleep,
                 StringResource(decimal(value = 1.7, fractionDigits = 1)),

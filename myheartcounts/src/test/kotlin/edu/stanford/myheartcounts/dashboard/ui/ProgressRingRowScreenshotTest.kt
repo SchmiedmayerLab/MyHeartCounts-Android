@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -25,7 +26,7 @@ class ProgressRingRowScreenshotTest : ScreenshotTest() {
     private val base = ProgressRingRow(
         ring = ProgressRing(
             progress = 0.7f,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource.Vector(
                 image = Icons.AutoMirrored.Filled.DirectionsWalk,
                 tint = { Colors.onSurface },
@@ -38,7 +39,7 @@ class ProgressRingRowScreenshotTest : ScreenshotTest() {
 
     private val badge = TextBadge(
         text = StringResource("70%"),
-        color = DashboardColorPalette.green,
+        color = MHCColors.green,
     )
 
     @Test

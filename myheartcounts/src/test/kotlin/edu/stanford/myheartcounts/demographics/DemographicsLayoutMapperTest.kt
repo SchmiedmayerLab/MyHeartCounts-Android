@@ -42,7 +42,7 @@ class DemographicsLayoutMapperTest {
         val layout = mapper.map(input = input(region = DemographicsRegion.US))
 
         // then
-        assertThat(layout.sections.map { section -> section.rows.map { it.field } }).containsExactly(
+        assertThat(layout.questionSections().map { section -> section.map { it.field } }).containsExactly(
             listOf(
                 DemographicsField.DateOfBirth,
                 DemographicsField.GenderIdentity,
@@ -64,7 +64,7 @@ class DemographicsLayoutMapperTest {
         val layout = mapper.map(input = input(region = DemographicsRegion.UK))
 
         // then
-        assertThat(layout.sections.map { section -> section.rows.map { it.field } }).containsExactly(
+        assertThat(layout.questionSections().map { section -> section.map { it.field } }).containsExactly(
             listOf(
                 DemographicsField.DateOfBirth,
                 DemographicsField.GenderIdentity,
@@ -191,7 +191,7 @@ class DemographicsLayoutMapperTest {
         val layout = mapper.map(input = input())
 
         // when
-        layout.healthImport.onClick()
+        layout.healthImport().onClick()
 
         // then
         assertThat(pushedActions).containsExactly(DemographicsAction.HealthImportSelected)
@@ -205,7 +205,7 @@ class DemographicsLayoutMapperTest {
         completion = completion,
     )
 
-    private fun DemographicsLayout.row(field: DemographicsField) = sections.flatMap { it.rows }.single { it.field == field }
+    private fun DemographicsLayout.row(field: DemographicsField) = questionSections().flatten().single { it.field == field }
 
     private fun completion(isRequired: Boolean) = DemographicsCompletion(
         isAnswered = false,

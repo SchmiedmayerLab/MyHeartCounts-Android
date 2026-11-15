@@ -8,17 +8,18 @@
 package edu.stanford.myheartcounts.dashboard
 
 import edu.stanford.myheartcounts.MHCStrings
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
 import edu.stanford.myheartcounts.dashboard.ui.Gauge
 import edu.stanford.myheartcounts.dashboard.ui.GaugeCard
 import edu.stanford.myheartcounts.dashboard.ui.GaugeTile
 import edu.stanford.myheartcounts.dashboard.ui.GaugeTileGrid
+import edu.stanford.myheartcounts.ui.MHCColors
 import edu.stanford.myheartcounts.ui.MarkdownCard
 import edu.stanford.myheartcounts.ui.NavigationCard
 import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.ui.ActionSink
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.ColorToken
 import java.text.NumberFormat
 
@@ -30,7 +31,7 @@ interface HeartHealthContentMapper {
     /**
      * Maps [input] into the layout to render.
      */
-    fun map(input: HeartHealthContentInput): HeartHealthContentLayout
+    fun map(input: HeartHealthContentInput): GroveSectionList
 }
 
 /**
@@ -56,15 +57,18 @@ class HeartHealthContentMapperImpl(
     private val dateFormatter: HeartScoreDateFormatter,
 ) : HeartHealthContentMapper {
 
-    override fun map(input: HeartHealthContentInput): HeartHealthContentLayout = HeartHealthContentLayout(
-        sections = listOfNotNull(
-            DashboardSection(
-                title = null,
+    override fun map(input: HeartHealthContentInput) = groveSectionList {
+        section(key = SCORE_KEY) {
+            content(
+                key = SCORE_KEY,
                 content = GaugeCard(gauge = overallGauge(input.scores.overall)),
-                footnote = StringResource(MHCStrings.heart_health_score_footnote),
-            ),
-            DashboardSection(
-                title = StringResource(MHCStrings.heart_health_components_title),
+            )
+            footer(MHCStrings.heart_health_score_footnote)
+        }
+        section(key = COMPONENTS_KEY) {
+            title(MHCStrings.heart_health_components_title)
+            content(
+                key = COMPONENTS_KEY,
                 content = GaugeTileGrid(
                     tiles = input.scores.components.map { result ->
                         componentTile(
@@ -73,25 +77,29 @@ class HeartHealthContentMapperImpl(
                         )
                     },
                 ),
-                footnote = StringResource(MHCStrings.heart_health_components_footnote),
-            ),
-            input.explainer?.let { document ->
-                DashboardSection(
-                    title = StringResource(MHCStrings.heart_health_explainer_title),
+            )
+            footer(MHCStrings.heart_health_components_footnote)
+        }
+        input.explainer?.let { document ->
+            section(key = EXPLAINER_KEY) {
+                title(MHCStrings.heart_health_explainer_title)
+                content(
+                    key = EXPLAINER_KEY,
                     content = MarkdownCard(document = document),
-                    footnote = null,
                 )
-            },
-            DashboardSection(
-                title = StringResource(MHCStrings.heart_health_past_data_title),
+            }
+        }
+        section(key = PAST_DATA_KEY) {
+            title(MHCStrings.heart_health_past_data_title)
+            content(
+                key = PAST_DATA_KEY,
                 content = NavigationCard(
                     title = StringResource(MHCStrings.heart_health_past_results),
                     onClick = { input.actionSink.push(HeartHealthAction.PastDataSelected) },
                 ),
-                footnote = null,
-            ),
-        ),
-    )
+            )
+        }
+    }
 
     private fun overallGauge(score: Double?) = Gauge(
         progress = score?.toFloat(),
@@ -126,7 +134,7 @@ class HeartHealthContentMapperImpl(
     )
 
     private fun gaugeColors(score: Double?): List<ColorToken> =
-        if (score == null) listOf(ColorToken.Outline) else DashboardColorPalette.redToGreen
+        if (score == null) listOf(ColorToken.Outline) else MHCColors.redToGreen
 
     private fun scoreText(score: Double?): StringResource = if (score == null) {
         StringResource(MHCStrings.heart_health_no_score)
@@ -144,6 +152,11 @@ class HeartHealthContentMapperImpl(
     }
 
     private companion object {
+        const val SCORE_KEY = "score"
+        const val COMPONENTS_KEY = "components"
+        const val EXPLAINER_KEY = "explainer"
+        const val PAST_DATA_KEY = "past-data"
+
         /**
          * The points a full score is shown as.
          */

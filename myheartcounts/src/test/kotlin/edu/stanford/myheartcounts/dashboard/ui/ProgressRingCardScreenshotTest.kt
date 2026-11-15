@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
+import org.grovealliance.ui.LazyListContentPreview
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSection
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.Spacings
 import org.junit.Test
@@ -24,7 +27,7 @@ class ProgressRingCardScreenshotTest : ScreenshotTest() {
     private val row = ProgressRingRow(
         ring = ProgressRing(
             progress = 1f,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource.Vector(
                 image = Icons.AutoMirrored.Filled.DirectionsWalk,
                 tint = { Colors.onSurface },
@@ -43,7 +46,7 @@ class ProgressRingCardScreenshotTest : ScreenshotTest() {
                 title = StringResource("Another title"),
                 trailingBadge = TextBadge(
                     text = StringResource("45%"),
-                    color = DashboardColorPalette.green,
+                    color = MHCColors.green,
                 ),
             ),
             row.copy(
@@ -79,12 +82,13 @@ class ProgressRingCardScreenshotTest : ScreenshotTest() {
         card: ProgressRingCard,
         title: StringResource? = null,
     ) {
+        val section = groveSection(key = "achievements") {
+            title?.let { title(it) }
+            content(key = "achievements", content = card)
+        }
         screenshot {
-            DashboardSection(
-                title = title,
-                content = card,
-                footnote = null,
-            ).Content(
+            LazyListContentPreview(
+                content = section,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(Spacings.medium),

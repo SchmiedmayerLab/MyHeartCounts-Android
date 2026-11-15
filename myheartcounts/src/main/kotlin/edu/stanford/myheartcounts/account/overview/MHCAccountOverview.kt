@@ -13,16 +13,17 @@ import org.grovealliance.account.AccountOverviewScreen
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveScaffold
 import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.account.CustomAccountSections
 
 /**
- * The account overview: the account's details and sign-out, followed by the study-specific
- * [sections]. [onDismiss] is called when the overview is dismissed, including after a sign-out.
+ * The account overview: the account's details and sign-out, with the study-specific
+ * [customSections] in between. [onDismiss] is called when the overview is dismissed, including after a sign-out.
  * [scaffoldState] carries what the sections show on top of the overview, such as error toasts.
  *
  * The overview fills the screen; [Content]'s modifier is not applied.
  */
 data class MHCAccountOverview(
-    val sections: MHCAccountOverviewSections,
+    val customSections: CustomAccountSections,
     val scaffoldState: GroveScaffoldState,
     val onDismiss: () -> Unit,
 ) : ComposableContent {
@@ -31,7 +32,7 @@ data class MHCAccountOverview(
     override fun Content(modifier: Modifier) {
         GroveScaffold(state = scaffoldState) {
             AccountOverviewScreen(
-                customSection = sections,
+                customSections = customSections,
                 onDismiss = onDismiss,
             )
         }

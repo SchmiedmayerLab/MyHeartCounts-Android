@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import edu.stanford.myheartcounts.dashboard.ui.internal.TileGrid
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -53,7 +54,7 @@ private class StatTileGridPreviewProvider : PreviewParameterProvider<StatTileGri
             StatTile(
                 icon = ImageResource.Vector(
                     image = Icons.AutoMirrored.Filled.DirectionsWalk,
-                    tint = { DashboardColorPalette.green.resolve() },
+                    tint = { MHCColors.green.resolve() },
                 ),
                 title = StringResource("Best Step Day"),
                 value = StatTile.Value(
@@ -65,7 +66,7 @@ private class StatTileGridPreviewProvider : PreviewParameterProvider<StatTileGri
             StatTile(
                 icon = ImageResource.Vector(
                     image = Icons.Default.Timer,
-                    tint = { DashboardColorPalette.blue.resolve() },
+                    tint = { MHCColors.blue.resolve() },
                 ),
                 title = StringResource("Longest Workout"),
                 value = StatTile.Value(
@@ -77,7 +78,7 @@ private class StatTileGridPreviewProvider : PreviewParameterProvider<StatTileGri
             StatTile(
                 icon = ImageResource.Vector(
                     image = Icons.Default.Favorite,
-                    tint = { DashboardColorPalette.red.resolve() },
+                    tint = { MHCColors.red.resolve() },
                 ),
                 title = StringResource("Max Heart Rate"),
                 value = StatTile.Value(
@@ -89,7 +90,7 @@ private class StatTileGridPreviewProvider : PreviewParameterProvider<StatTileGri
             StatTile(
                 icon = ImageResource.Vector(
                     image = Icons.Default.Hotel,
-                    tint = { DashboardColorPalette.pink.resolve() },
+                    tint = { MHCColors.pink.resolve() },
                 ),
                 title = StringResource("Resting HR"),
                 value = StatTile.Value(

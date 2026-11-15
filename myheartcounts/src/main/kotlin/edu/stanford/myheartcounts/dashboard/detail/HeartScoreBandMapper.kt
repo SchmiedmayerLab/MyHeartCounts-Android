@@ -16,7 +16,7 @@ import edu.stanford.myheartcounts.dashboard.HeartScoreResult
 import edu.stanford.myheartcounts.dashboard.HeartScoreScale
 import edu.stanford.myheartcounts.dashboard.NicotineExposureCategory
 import edu.stanford.myheartcounts.dashboard.ui.ColorBandList
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
 
@@ -126,7 +126,7 @@ class HeartScoreBandMapperImpl(
      * The color at [score] along the palette's red-to-green gradient.
      */
     private fun color(score: Double): ColorToken {
-        val colors = DashboardColorPalette.redToGreen
+        val colors = MHCColors.redToGreen
         val position = score.coerceIn(0.0, 1.0) * colors.lastIndex
         val low = position.toInt()
         val high = (low + 1).coerceAtMost(colors.lastIndex)

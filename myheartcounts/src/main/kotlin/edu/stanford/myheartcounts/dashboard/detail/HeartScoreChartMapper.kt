@@ -9,7 +9,6 @@ package edu.stanford.myheartcounts.dashboard.detail
 
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.chart.CalendarTimeAxisFormat
 import edu.stanford.myheartcounts.dashboard.ui.chart.CartesianChart
 import edu.stanford.myheartcounts.dashboard.ui.chart.ChartCard
@@ -19,6 +18,7 @@ import edu.stanford.myheartcounts.dashboard.ui.chart.MenuPicker
 import edu.stanford.myheartcounts.dashboard.ui.chart.NumberAxisFormat
 import edu.stanford.myheartcounts.dashboard.ui.chart.TimeCoordinates
 import edu.stanford.myheartcounts.dashboard.ui.chart.cartesianChart
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -207,9 +207,9 @@ class HeartScoreChartMapperImpl(
                     style = if (bars) CartesianChart.Style.Bar else CartesianChart.Style.Line,
                     color = when {
                         values.kind == HeartScoreChartSeries.Kind.Systolic || component == HeartScoreComponent.BloodLipids ->
-                            DashboardColorPalette.red
-                        component == HeartScoreComponent.StepCount -> DashboardColorPalette.orange
-                        else -> DashboardColorPalette.blue
+                            MHCColors.red
+                        component == HeartScoreComponent.StepCount -> MHCColors.orange
+                        else -> MHCColors.blue
                     },
                     highlightFormat = HeartScoreHighlightFormat(
                         coordinates = coordinates,

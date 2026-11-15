@@ -17,6 +17,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.ImageResource
@@ -68,7 +69,7 @@ private class ProgressRingCardPreviewProvider : PreviewParameterProvider<Progres
     private val row = ProgressRingRow(
         ring = ProgressRing(
             progress = 1f,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource.Vector(
                 image = Icons.AutoMirrored.Filled.DirectionsWalk,
                 tint = { Colors.onSurface },
@@ -87,7 +88,7 @@ private class ProgressRingCardPreviewProvider : PreviewParameterProvider<Progres
                 title = StringResource("Another title"),
                 trailingBadge = TextBadge(
                     text = StringResource("45%"),
-                    color = DashboardColorPalette.green,
+                    color = MHCColors.green,
                 ),
             ),
             row.copy(

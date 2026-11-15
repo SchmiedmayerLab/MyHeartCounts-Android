@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.dashboard.ui
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -21,7 +22,7 @@ class GaugeCardScreenshotTest : ScreenshotTest() {
     private val base = GaugeCard(
         gauge = Gauge(
             progress = 0.7f,
-            colors = DashboardColorPalette.redToGreen,
+            colors = MHCColors.redToGreen,
             lineWidth = Gauge.defaultLineWidth * 2,
             size = Gauge.Size.Large,
             label = Gauge.Label(

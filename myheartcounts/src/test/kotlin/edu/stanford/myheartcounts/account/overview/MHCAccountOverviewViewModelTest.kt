@@ -12,12 +12,12 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.account.FakePostTrialNudges
 import edu.stanford.myheartcounts.account.FakeStudyWithdrawal
 import edu.stanford.myheartcounts.account.feedback.FakeFeedback
-import edu.stanford.myheartcounts.account.overview.WithdrawFromStudySection.WithdrawalState
+import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.WithdrawalState
 import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
-import edu.stanford.myheartcounts.ui.ToggleSection
+import edu.stanford.myheartcounts.ui.ToggleRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.grovealliance.ui.GroveAppBar
+import org.grovealliance.ui.ItemDisplayRow
 import org.grovealliance.ui.StringResource
 import org.junit.After
 import org.junit.Before
@@ -59,7 +60,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.supportSection().onDemographicsSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "demographics").onClick?.invoke()
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.Demographics))
@@ -71,7 +72,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.studyParticipationSection().onParticipationStatsSelected()
+        viewModel.studyParticipationSection().row<ItemDisplayRow>(key = "participation-stats").onClick?.invoke()
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.ParticipationStats))
@@ -83,7 +84,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.studyParticipationSection().onUpdateComorbiditiesSelected()
+        viewModel.studyParticipationSection().row<ItemDisplayRow>(key = "comorbidities").onClick?.invoke()
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.Comorbidities))
@@ -95,7 +96,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.studyParticipationSection().onWorkoutPreferenceSelected()
+        viewModel.studyParticipationSection().row<ItemDisplayRow>(key = "workout-preference").onClick?.invoke()
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.WorkoutPreference))
@@ -121,7 +122,7 @@ class MHCAccountOverviewViewModelTest {
         viewModel.withdrawSection().onWithdrawSelected()
 
         // when
-        viewModel.withdrawSection().onDismissed()
+        viewModel.withdrawSection().confirmation.onDismiss()
 
         // then
         assertThat(viewModel.withdrawSection().state.value).isEqualTo(WithdrawalState.Idle)
@@ -135,7 +136,7 @@ class MHCAccountOverviewViewModelTest {
         viewModel.withdrawSection().onWithdrawSelected()
 
         // when
-        viewModel.withdrawSection().onWithdrawConfirmed()
+        viewModel.withdrawSection().confirmation.confirmButton.action()
 
         // then
         assertThat(studyWithdrawal.withdrawCount).isEqualTo(1)
@@ -150,7 +151,7 @@ class MHCAccountOverviewViewModelTest {
         viewModel.withdrawSection().onWithdrawSelected()
 
         // when
-        viewModel.withdrawSection().onWithdrawConfirmed()
+        viewModel.withdrawSection().confirmation.confirmButton.action()
 
         // then
         assertThat(viewModel.withdrawSection().state.value).isEqualTo(WithdrawalState.Failed)
@@ -258,7 +259,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // then
-        assertThat(viewModel.appInfoSection().version).isEqualTo(APP_VERSION)
+        assertThat(viewModel.appInfoSection().row<ItemDisplayRow>(key = "version").value).isEqualTo(StringResource(APP_VERSION))
     }
 
     @Test
@@ -267,7 +268,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.appInfoSection().onPrivacyPolicySelected()
+        viewModel.appInfoSection().row<ItemDisplayRow>(key = "privacy-policy").onClick?.invoke()
 
         // then
         assertThat(navigator.pushedEvents)
@@ -280,7 +281,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
 
         // then
         assertThat(viewModel.screen.scaffoldState.widgets.value.bottomSheet).isNotNull()
@@ -291,7 +292,7 @@ class MHCAccountOverviewViewModelTest {
     fun `offers sending feedback only once a message is written`() {
         // given
         val viewModel = viewModel()
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
         val canSendInitially = mapper.canSendFeedback
 
         // when
@@ -306,7 +307,7 @@ class MHCAccountOverviewViewModelTest {
     fun `stops offering to send feedback when the message is cleared`() {
         // given
         val viewModel = viewModel()
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
         mapper.feedbackSheet?.onMessageChanged?.invoke("The dashboard is great")
 
         // when
@@ -320,7 +321,7 @@ class MHCAccountOverviewViewModelTest {
     fun `sends the trimmed feedback message`() = runTest(context = dispatcher) {
         // given
         val viewModel = viewModel()
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
         mapper.feedbackSheet?.onMessageChanged?.invoke("  The dashboard is great  ")
 
         // when
@@ -335,7 +336,7 @@ class MHCAccountOverviewViewModelTest {
         // given
         feedback.setResult(result = Result.failure(IllegalStateException("offline")))
         val viewModel = viewModel()
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
         mapper.feedbackSheet?.onMessageChanged?.invoke("The dashboard is great")
 
         // when
@@ -351,7 +352,7 @@ class MHCAccountOverviewViewModelTest {
     fun `keeps the feedback sheet open while a message is unsent`() {
         // given
         val viewModel = viewModel()
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
         val isDismissibleWhileEmpty = mapper.feedbackSheet?.isDismissible?.invoke()
 
         // when
@@ -366,7 +367,7 @@ class MHCAccountOverviewViewModelTest {
     fun `lets the feedback sheet close once its close button is tapped`() {
         // given
         val viewModel = viewModel()
-        viewModel.supportSection().onSendFeedbackSelected()
+        viewModel.supportSection().row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
         mapper.feedbackSheet?.onMessageChanged?.invoke("The dashboard is great")
 
         // when
@@ -396,20 +397,20 @@ class MHCAccountOverviewViewModelTest {
         mapper = mapper,
     )
 
-    private fun MHCAccountOverviewViewModel.withdrawSection() =
-        screen.sections.items.filterIsInstance<WithdrawFromStudySection>().single()
+    private fun MHCAccountOverviewViewModel.withdrawSection() = screen.customSections
+        .section(key = "withdraw-from-study")
+        .content<WithdrawFromStudyButton>(key = "withdraw-from-study")
 
-    private fun MHCAccountOverviewViewModel.postTrialNudgesSection() =
-        screen.sections.items.filterIsInstance<ToggleSection>().single()
+    private fun MHCAccountOverviewViewModel.postTrialNudgesSection() = screen.customSections
+        .section(key = "post-trial-nudges")
+        .row<ToggleRow>(key = "post-trial-nudges")
 
-    private fun MHCAccountOverviewViewModel.supportSection() =
-        screen.sections.items.filterIsInstance<SupportSection>().single()
+    private fun MHCAccountOverviewViewModel.supportSection() = screen.customSections.section(key = "support")
 
     private fun MHCAccountOverviewViewModel.studyParticipationSection() =
-        screen.sections.items.filterIsInstance<StudyParticipationSection>().single()
+        screen.customSections.section(key = "study-participation")
 
-    private fun MHCAccountOverviewViewModel.appInfoSection() =
-        screen.sections.items.filterIsInstance<AppInfoSection>().single()
+    private fun MHCAccountOverviewViewModel.appInfoSection() = screen.customSections.section(key = "app-info")
 
     /**
      * The real mapper, recording the latest feedback sheet and the actions of its app bar.
