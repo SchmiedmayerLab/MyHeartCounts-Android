@@ -144,6 +144,18 @@ sealed interface MHCRoute : NavKey {
     data object Demographics : MHCRoute
 
     /**
+     * The participant's comorbidities and when each was diagnosed.
+     */
+    @Serializable
+    data object Comorbidities : MHCRoute
+
+    /**
+     * The participant's preferred workout types and notification time.
+     */
+    @Serializable
+    data object WorkoutPreference : MHCRoute
+
+    /**
      * The task being performed, shown over the active root phase.
      */
     @Serializable

@@ -81,6 +81,7 @@ class OnboardingProgressTrackerImpl(
         OnboardingStep.Comprehension -> RecordedOnboardingStep.COMPREHENSION
         OnboardingStep.Consent -> RecordedOnboardingStep.CONSENT
         OnboardingStep.HealthAccess -> RecordedOnboardingStep.HEALTH_ACCESS
+        OnboardingStep.WorkoutPreference -> RecordedOnboardingStep.WORKOUT_PREFERENCE
         OnboardingStep.Notifications -> RecordedOnboardingStep.NOTIFICATIONS
         OnboardingStep.Demographics -> RecordedOnboardingStep.DEMOGRAPHICS
         OnboardingStep.FinalEnrollment -> RecordedOnboardingStep.FINAL_STEP

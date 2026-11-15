@@ -13,14 +13,6 @@ import org.grovealliance.health.Health
 import org.grovealliance.health.RecordType
 
 /**
- * The most recent body measurements found in health data; `null` where none was found.
- */
-data class DemographicsMeasurements(
-    val heightInCm: Double?,
-    val weightInKg: Double?,
-)
-
-/**
  * Reads the participant's most recent height and weight from Health Connect.
  */
 interface DemographicsAutofill {
@@ -31,6 +23,14 @@ interface DemographicsAutofill {
      */
     suspend fun read(): Result<DemographicsMeasurements>
 }
+
+/**
+ * The most recent body measurements found in health data; `null` where none was found.
+ */
+data class DemographicsMeasurements(
+    val heightInCm: Double?,
+    val weightInKg: Double?,
+)
 
 /**
  * Default [DemographicsAutofill] implementation.

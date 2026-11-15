@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.di
 
 import edu.stanford.myheartcounts.MainActivityViewModel
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailViewModel
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryViewModel
@@ -21,6 +22,7 @@ import edu.stanford.myheartcounts.stats.ParticipationStatsViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
 import edu.stanford.myheartcounts.task.PerformTaskViewModel
 import edu.stanford.myheartcounts.upcoming.UpcomingTasksViewModel
+import edu.stanford.myheartcounts.workoutpreference.WorkoutPreferenceViewModel
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.GroveDsl
 import org.grovealliance.core.coroutines.Concurrency
@@ -66,6 +68,23 @@ fun ConfigurationBuilder.appViewModels() {
             mapper = dependency(),
         )
     }
+    participantDataViewModels()
+    studyViewModels()
+    dashboardViewModels()
+}
+
+/**
+ * Registers the ViewModels editing what the participant tells about themselves: their demographics,
+ * comorbidities and workout preference.
+ */
+private fun ConfigurationBuilder.participantDataViewModels() {
+    viewModel {
+        WorkoutPreferenceViewModel(
+            savedStateHandle = savedStateHandle(),
+            editor = dependency(),
+            mapper = dependency(),
+        )
+    }
     viewModel {
         DemographicsViewModel(
             savedStateHandle = savedStateHandle(),
@@ -77,8 +96,14 @@ fun ConfigurationBuilder.appViewModels() {
             navigator = dependency(),
         )
     }
-    studyViewModels()
-    dashboardViewModels()
+    viewModel {
+        ComorbiditiesViewModel(
+            mapper = dependency(),
+            rules = dependency(),
+            storage = dependency(),
+            navigator = dependency(),
+        )
+    }
 }
 
 /**

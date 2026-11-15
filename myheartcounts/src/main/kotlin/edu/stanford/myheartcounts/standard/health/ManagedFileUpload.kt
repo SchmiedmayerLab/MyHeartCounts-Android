@@ -21,30 +21,6 @@ import org.grovealliance.core.coroutines.runCatchingAsync
 import java.io.File
 
 /**
- * The Cloud Storage folder an archive belongs in, under the participant's own prefix.
- *
- * The backend keys its ingestion on these names, so they are a contract rather than a naming choice
- * (`onArchivedLiveHealthSampleUploaded.ts:48`).
- */
-enum class HealthUploadCategory(val folderName: String) {
-
-    /**
-     * Samples measured while the participant has been enrolled.
-     */
-    LIVE(FirebaseSchema.Storage.LIVE_HEALTH_SAMPLES),
-
-    /**
-     * Samples measured before enrollment, backfilled once.
-     */
-    HISTORICAL(FirebaseSchema.Storage.HISTORICAL_HEALTH_SAMPLES),
-
-    /**
-     * Records of samples the participant deleted from Health Connect after they were uploaded.
-     */
-    DELETIONS(FirebaseSchema.Storage.HEALTH_DELETIONS),
-}
-
-/**
  * Uploads archives to Cloud Storage so that an interrupted upload resumes rather than losing data.
  *
  * An archive is written into a staging folder on disk first and only deleted once Cloud Storage has
@@ -154,4 +130,28 @@ class ManagedFileUpload(
     private companion object {
         const val STAGING_DIRECTORY = "health-uploads"
     }
+}
+
+/**
+ * The Cloud Storage folder an archive belongs in, under the participant's own prefix.
+ *
+ * The backend keys its ingestion on these names, so they are a contract rather than a naming choice
+ * (`onArchivedLiveHealthSampleUploaded.ts:48`).
+ */
+enum class HealthUploadCategory(val folderName: String) {
+
+    /**
+     * Samples measured while the participant has been enrolled.
+     */
+    LIVE(FirebaseSchema.Storage.LIVE_HEALTH_SAMPLES),
+
+    /**
+     * Samples measured before enrollment, backfilled once.
+     */
+    HISTORICAL(FirebaseSchema.Storage.HISTORICAL_HEALTH_SAMPLES),
+
+    /**
+     * Records of samples the participant deleted from Health Connect after they were uploaded.
+     */
+    DELETIONS(FirebaseSchema.Storage.HEALTH_DELETIONS),
 }

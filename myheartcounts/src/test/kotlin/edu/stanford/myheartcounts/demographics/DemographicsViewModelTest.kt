@@ -10,6 +10,9 @@ package edu.stanford.myheartcounts.demographics
 import androidx.lifecycle.SavedStateHandle
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProviderImpl
+import edu.stanford.myheartcounts.comorbidities.ComorbiditiesRules
+import edu.stanford.myheartcounts.comorbidities.DiagnosisDateMapperImpl
 import edu.stanford.myheartcounts.demographics.ui.DemographicsLayout
 import edu.stanford.myheartcounts.demographics.ui.DemographicsScreenMode
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
@@ -252,7 +255,11 @@ class DemographicsViewModelTest {
             optionIdMapper = optionIdMapper,
             groupMapper = DemographicsChoiceGroupMapperImpl(catalog = catalog),
             rules = DemographicsRules(),
-            timeProvider = timeProvider,
+            comorbiditiesRules = ComorbiditiesRules(),
+            diagnosisDateMapper = DiagnosisDateMapperImpl(
+                conditionsProvider = ComorbiditiesConditionsProviderImpl(),
+                timeProvider = timeProvider,
+            ),
         ),
         editor = editor,
         autofill = autofill,

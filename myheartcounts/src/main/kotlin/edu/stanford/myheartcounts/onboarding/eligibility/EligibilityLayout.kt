@@ -54,6 +54,44 @@ import org.grovealliance.ui.theme.Spacings
 import org.grovealliance.ui.theme.medium
 
 /**
+ * The eligibility step layout: an introductory [description], a list of question [sections], and a
+ * [primaryButton] whose enabled state tracks whether the answers are complete.
+ */
+data class EligibilityLayout(
+    val description: StringResource,
+    val sections: List<Section>,
+    val primaryButton: Flow<AsyncTextButton>,
+) : ComposableContent {
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Spacings.medium),
+            verticalArrangement = Arrangement.spacedBy(Spacings.medium),
+        ) {
+            GroveCard {
+                Text(
+                    modifier = Modifier.padding(Spacings.medium),
+                    text = description.text(),
+                    color = Colors.onSurfaceVariant,
+                )
+            }
+            sections.forEach { it.Content(modifier = Modifier.fillMaxWidth()) }
+            PrimaryButton()
+        }
+    }
+
+    @Composable
+    private fun PrimaryButton() {
+        val primaryButton by primaryButton.collectAsStateWithLifecycle(initialValue = null)
+        primaryButton?.Content(modifier = Modifier.fillMaxWidth())
+    }
+}
+
+/**
  * A searchable bottom-sheet country picker presenting the given [rows]; [onClose] dismisses it
  * without changing the selection.
  */
@@ -125,44 +163,6 @@ data class CountrySelectionSheet(
                 }
             }
         }
-    }
-}
-
-/**
- * The eligibility step layout: an introductory [description], a list of question [sections], and a
- * [primaryButton] whose enabled state tracks whether the answers are complete.
- */
-data class EligibilityLayout(
-    val description: StringResource,
-    val sections: List<Section>,
-    val primaryButton: Flow<AsyncTextButton>,
-) : ComposableContent {
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Spacings.medium),
-            verticalArrangement = Arrangement.spacedBy(Spacings.medium),
-        ) {
-            GroveCard {
-                Text(
-                    modifier = Modifier.padding(Spacings.medium),
-                    text = description.text(),
-                    color = Colors.onSurfaceVariant,
-                )
-            }
-            sections.forEach { it.Content(modifier = Modifier.fillMaxWidth()) }
-            PrimaryButton()
-        }
-    }
-
-    @Composable
-    private fun PrimaryButton() {
-        val primaryButton by primaryButton.collectAsStateWithLifecycle(initialValue = null)
-        primaryButton?.Content(modifier = Modifier.fillMaxWidth())
     }
 }
 
