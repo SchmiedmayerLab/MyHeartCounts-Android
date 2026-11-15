@@ -24,6 +24,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewScreen
+import edu.stanford.myheartcounts.comorbidities.ui.ComorbiditiesScreen
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailScreen
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryScreen
 import edu.stanford.myheartcounts.dashboard.pastdata.PastTimedWalkTestResultsScreen
@@ -43,6 +44,8 @@ import edu.stanford.myheartcounts.study.StudyScreen
 import edu.stanford.myheartcounts.study.StudyVariantProvider
 import edu.stanford.myheartcounts.task.PerformTaskScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
+import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreen
+import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreenMode
 import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
@@ -151,6 +154,16 @@ class MainActivity : AppCompatActivity() {
                 }
                 entry<MHCRoute.Demographics> {
                     DemographicsScreen(mode = DemographicsScreenMode.Complete)
+                }
+                entry<MHCRoute.Comorbidities> {
+                    ComorbiditiesScreen()
+                }
+                entry<MHCRoute.WorkoutPreference> {
+                    WorkoutPreferenceScreen(
+                        mode = WorkoutPreferenceScreenMode.Standalone,
+                        onDismiss = { navigator.push(event = NavigationEvent.Close(route = MHCRoute.WorkoutPreference)) },
+                        onSaved = { navigator.push(event = NavigationEvent.Close(route = MHCRoute.WorkoutPreference)) },
+                    )
                 }
                 entry<MHCRoute.PerformTask> {
                     PerformTaskScreen()

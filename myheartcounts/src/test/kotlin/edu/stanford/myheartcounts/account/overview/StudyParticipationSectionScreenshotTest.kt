@@ -19,7 +19,11 @@ class StudyParticipationSectionScreenshotTest : ScreenshotTest() {
     @Test
     fun `StudyParticipationSection screenshot`() {
         // given
-        val section = StudyParticipationSection(onParticipationStatsSelected = {})
+        val section = StudyParticipationSection(
+            onParticipationStatsSelected = {},
+            onUpdateComorbiditiesSelected = {},
+            onWorkoutPreferenceSelected = {},
+        )
 
         // when / then
         screenshot {

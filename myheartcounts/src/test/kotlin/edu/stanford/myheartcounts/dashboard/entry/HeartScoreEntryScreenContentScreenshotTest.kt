@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.ui.AppBarTextAction
+import edu.stanford.myheartcounts.ui.ValueBadge
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.GroveScaffoldState
@@ -206,11 +208,10 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
             appBar = groveAppBar {
                 close {}
                 action(
-                    content = EntrySaveAction(
+                    content = AppBarTextAction(
                         title = StringResource(MHCStrings.heart_entry_save),
-                        isEnabled = MutableStateFlow(canSave),
-                        isLoading = MutableStateFlow(saving),
-                        onClick = {},
+                        enabled = MutableStateFlow(canSave && !saving),
+                        action = {},
                     ),
                 )
             },
@@ -220,14 +221,19 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
             picker = picker,
             dateRow = EntryDateRow(
                 label = StringResource(MHCStrings.heart_entry_date),
-                date = MutableStateFlow(StringResource("Jan 1, 2026")),
-                time = MutableStateFlow(
-                    EntryDateRow.Time(
-                        label = StringResource("9:15 AM"),
-                        hour = 9,
-                        minute = 15,
+                date = MutableStateFlow(
+                    ValueBadge(
+                        text = StringResource("Jan 1, 2026"),
+                        onClick = {},
                     ),
                 ),
+                time = MutableStateFlow(
+                    ValueBadge(
+                        text = StringResource("9:15 AM"),
+                        onClick = {},
+                    ),
+                ),
+                picker = MutableStateFlow(null),
                 dialog = EntryDateRow.DialogLabels(
                     title = StringResource(MHCStrings.heart_entry_time),
                     confirm = StringResource(MHCStrings.heart_entry_confirm),
@@ -236,6 +242,7 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
                 isSelectableDate = { true },
                 onDateSelected = {},
                 onTimeSelected = { _, _ -> },
+                onPickerDismissed = {},
             ),
             panels = panels,
             selectedPanel = MutableStateFlow(selectedPanel),

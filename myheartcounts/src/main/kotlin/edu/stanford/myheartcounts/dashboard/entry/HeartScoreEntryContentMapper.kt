@@ -10,6 +10,8 @@ package edu.stanford.myheartcounts.dashboard.entry
 import androidx.compose.ui.text.input.KeyboardType
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
+import edu.stanford.myheartcounts.ui.AppBarTextAction
+import edu.stanford.myheartcounts.ui.ValueBadge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,13 +27,19 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+interface HeartScoreEntryContentMapper {
+    fun map(input: HeartScoreEntryContentInput): HeartScoreEntryMappedLayout
+}
+
 /**
- * The measurement state and its event destination, used to build the form once.
+ * The measurement state, its event destination and [onSave], which stores the measurement and returns
+ * once that is done, used to build the form once.
  */
 data class HeartScoreEntryContentInput(
     val state: StateFlow<HeartScoreEntryState>,
     val scope: CoroutineScope,
     val actionSink: ActionSink<HeartScoreEntryAction>,
+    val onSave: suspend () -> Unit,
 )
 
 /**
@@ -41,10 +49,6 @@ data class HeartScoreEntryMappedLayout(
     val appBar: GroveAppBar,
     val layout: EntryFormLayout,
 )
-
-interface HeartScoreEntryContentMapper {
-    fun map(input: HeartScoreEntryContentInput): HeartScoreEntryMappedLayout
-}
 
 class HeartScoreEntryContentMapperImpl(
     private val timeProvider: TimeProvider,
@@ -100,11 +104,10 @@ class HeartScoreEntryContentMapperImpl(
     private fun appBar(input: HeartScoreEntryContentInput) = groveAppBar {
         close { input.actionSink.push(HeartScoreEntryAction.Close) }
         action(
-            content = EntrySaveAction(
+            content = AppBarTextAction(
                 title = StringResource(MHCStrings.heart_entry_save),
-                isEnabled = input.display { it.canSave && !it.saving },
-                isLoading = input.display { it.saving },
-                onClick = { input.actionSink.push(HeartScoreEntryAction.Save) },
+                enabled = input.display { it.canSave && !it.saving },
+                action = input.onSave,
             ),
         )
     }
@@ -115,13 +118,27 @@ class HeartScoreEntryContentMapperImpl(
         val timeFormat = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
         return EntryDateRow(
             label = StringResource(MHCStrings.heart_entry_date),
-            date = input.display { StringResource(dateFormat.format(it.form.date)) },
-            time = input.display {
-                EntryDateRow.Time(
-                    label = StringResource(timeFormat.format(it.form.date)),
-                    hour = it.form.date.hour,
-                    minute = it.form.date.minute,
+            date = input.display {
+                ValueBadge(
+                    text = StringResource(dateFormat.format(it.form.date)),
+                    onClick = { input.actionSink.push(HeartScoreEntryAction.PickerRequested(picker = HeartScoreEntryState.Picker.Date)) },
                 )
+            },
+            time = input.display {
+                ValueBadge(
+                    text = StringResource(timeFormat.format(it.form.date)),
+                    onClick = { input.actionSink.push(HeartScoreEntryAction.PickerRequested(picker = HeartScoreEntryState.Picker.Time)) },
+                )
+            },
+            picker = input.display { state ->
+                when (state.picker) {
+                    HeartScoreEntryState.Picker.Date -> EntryDateRow.Picker.Date
+                    HeartScoreEntryState.Picker.Time -> EntryDateRow.Picker.Time(
+                        hour = state.form.date.hour,
+                        minute = state.form.date.minute,
+                    )
+                    null -> null
+                }
             },
             dialog = EntryDateRow.DialogLabels(
                 title = StringResource(MHCStrings.heart_entry_time),
@@ -140,6 +157,7 @@ class HeartScoreEntryContentMapperImpl(
                     ),
                 )
             },
+            onPickerDismissed = { input.actionSink.push(HeartScoreEntryAction.PickerDismissed) },
         )
     }
 

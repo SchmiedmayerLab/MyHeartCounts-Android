@@ -87,6 +87,12 @@ class MHCAccountOverviewViewModel(
             MHCAccountOverviewAction.ParticipationStatsSelected -> navigator.push(
                 event = NavigationEvent.NavigateTo(route = MHCRoute.ParticipationStats),
             )
+            MHCAccountOverviewAction.UpdateComorbiditiesSelected -> navigator.push(
+                event = NavigationEvent.NavigateTo(route = MHCRoute.Comorbidities),
+            )
+            MHCAccountOverviewAction.WorkoutPreferenceSelected -> navigator.push(
+                event = NavigationEvent.NavigateTo(route = MHCRoute.WorkoutPreference),
+            )
             MHCAccountOverviewAction.Dismissed -> navigator.push(event = NavigationEvent.Close(route = MHCRoute.AccountOverview))
         }
     }
@@ -192,6 +198,16 @@ sealed interface MHCAccountOverviewAction {
      * The participant opened their participation stats and achievements.
      */
     data object ParticipationStatsSelected : MHCAccountOverviewAction
+
+    /**
+     * The participant asked to update their health conditions.
+     */
+    data object UpdateComorbiditiesSelected : MHCAccountOverviewAction
+
+    /**
+     * The participant asked to change their workout preference.
+     */
+    data object WorkoutPreferenceSelected : MHCAccountOverviewAction
 
     /**
      * The participant asked to withdraw from the study.

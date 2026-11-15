@@ -12,9 +12,9 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.demographics.ui.DemographicsDatePicker
 import edu.stanford.myheartcounts.demographics.ui.DemographicsLayout
 import edu.stanford.myheartcounts.demographics.ui.DemographicsMenu
-import edu.stanford.myheartcounts.demographics.ui.DemographicsMonthYearPicker
 import edu.stanford.myheartcounts.demographics.ui.HealthImportCard
 import edu.stanford.myheartcounts.model.demographics.RaceEthnicity
+import edu.stanford.myheartcounts.ui.choice.MonthYearPicker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +24,19 @@ import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.StringResource
+
+/**
+ * Builds the [DemographicsLayout].
+ */
+interface DemographicsLayoutMapper {
+
+    /**
+     * Maps [input] into the layout of its region's questions. Its rows follow
+     * [DemographicsLayoutInput.response] and [DemographicsLayoutInput.completion], so the result
+     * stays valid as the answers change.
+     */
+    fun map(input: DemographicsLayoutInput): DemographicsLayout
+}
 
 /**
  * What the [DemographicsLayout] is built from.
@@ -44,24 +57,11 @@ data class DemographicsLayoutInput(
     val completion: StateFlow<Map<DemographicsField, DemographicsCompletion>>,
     val menu: StateFlow<DemographicsMenu?>,
     val datePicker: StateFlow<DemographicsDatePicker?>,
-    val monthYearPicker: StateFlow<DemographicsMonthYearPicker?>,
+    val monthYearPicker: StateFlow<MonthYearPicker?>,
     val scaffoldState: GroveScaffoldState,
     val scope: CoroutineScope,
     val actionSink: ActionSink<DemographicsAction>,
 )
-
-/**
- * Builds the [DemographicsLayout].
- */
-interface DemographicsLayoutMapper {
-
-    /**
-     * Maps [input] into the layout of its region's questions. Its rows follow
-     * [DemographicsLayoutInput.response] and [DemographicsLayoutInput.completion], so the result
-     * stays valid as the answers change.
-     */
-    fun map(input: DemographicsLayoutInput): DemographicsLayout
-}
 
 /**
  * Default [DemographicsLayoutMapper] implementation, reading answers in the wording of [catalog] and

@@ -16,6 +16,15 @@ import org.grovealliance.storage.local.putSerializable
 import java.time.YearMonth
 
 /**
+ * Stores acknowledged monthly checkpoints separately for each participant and metric.
+ */
+interface HealthStatsCheckpointStore {
+    fun get(metricId: String, month: YearMonth): HealthStatsCheckpoint?
+    fun put(metricId: String, month: YearMonth, checkpoint: HealthStatsCheckpoint)
+    fun clear()
+}
+
+/**
  * Acknowledged change history and the records belonging to its monthly snapshot.
  */
 @Serializable
@@ -24,15 +33,6 @@ data class HealthStatsCheckpoint(
     val recordIds: Set<String>,
     val zoneId: String,
 )
-
-/**
- * Stores acknowledged monthly checkpoints separately for each participant and metric.
- */
-interface HealthStatsCheckpointStore {
-    fun get(metricId: String, month: YearMonth): HealthStatsCheckpoint?
-    fun put(metricId: String, month: YearMonth, checkpoint: HealthStatsCheckpoint)
-    fun clear()
-}
 
 class HealthStatsCheckpointStoreImpl(
     private val storage: KeyValueStorage,

@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package edu.stanford.myheartcounts.demographics.ui
+package edu.stanford.myheartcounts.ui.choice
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -65,7 +65,7 @@ import java.util.Locale
  * @param onClear called when the participant clears the date
  * @param onDismiss called when the dialog closes unchanged
  */
-data class DemographicsMonthYearPicker(
+data class MonthYearPicker(
     val title: StringResource,
     val years: List<Int>,
     val months: List<StringResource>,
@@ -183,8 +183,8 @@ data class DemographicsMonthYearPicker(
     }
 }
 
-private class DemographicsMonthYearPickerPreviewProvider : PreviewParameterProvider<DemographicsMonthYearPicker> {
-    private val base = DemographicsMonthYearPicker(
+private class MonthYearPickerPreviewProvider : PreviewParameterProvider<MonthYearPicker> {
+    private val base = MonthYearPicker(
         title = StringResource("Diabetes"),
         years = (2026 downTo 2016).toList(),
         months = Month.entries.map { StringResource(it.getDisplayName(TextStyle.FULL, Locale.US)) },
@@ -212,7 +212,7 @@ private class DemographicsMonthYearPickerPreviewProvider : PreviewParameterProvi
 @ThemePreviews
 @Composable
 private fun Preview(
-    @PreviewParameter(DemographicsMonthYearPickerPreviewProvider::class) content: DemographicsMonthYearPicker,
+    @PreviewParameter(MonthYearPickerPreviewProvider::class) content: MonthYearPicker,
 ) {
     GroveTheme { content.Content() }
 }

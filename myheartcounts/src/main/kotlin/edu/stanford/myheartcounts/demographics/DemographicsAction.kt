@@ -11,7 +11,6 @@ import edu.stanford.myheartcounts.demographics.ui.DemographicsDatePicker
 import edu.stanford.myheartcounts.demographics.ui.DemographicsEntrySheet
 import edu.stanford.myheartcounts.demographics.ui.DemographicsLayout
 import edu.stanford.myheartcounts.demographics.ui.DemographicsMenu
-import edu.stanford.myheartcounts.demographics.ui.DemographicsMonthYearPicker
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
 import edu.stanford.myheartcounts.model.demographics.BloodType
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
@@ -26,6 +25,7 @@ import edu.stanford.myheartcounts.model.demographics.RaceEthnicity
 import edu.stanford.myheartcounts.model.demographics.StageOfChangeOption
 import edu.stanford.myheartcounts.model.demographics.UKRegion
 import edu.stanford.myheartcounts.model.demographics.USRegion
+import edu.stanford.myheartcounts.ui.choice.MonthYearPicker
 import java.time.LocalDate
 
 /**
@@ -84,7 +84,7 @@ sealed interface DemographicsAction {
     data class DiagnosisDateSelected(val condition: String) : DemographicsAction
 
     /**
-     * The participant closed the open [DemographicsMonthYearPicker] without changing the date.
+     * The participant closed the open [MonthYearPicker] without changing the date.
      */
     data object MonthYearPickerDismissed : DemographicsAction
 
