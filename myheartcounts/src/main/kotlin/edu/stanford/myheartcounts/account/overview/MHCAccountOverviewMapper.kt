@@ -62,6 +62,7 @@ class MHCAccountOverviewMapperImpl(
                 StudyParticipationSection(
                     onParticipationStatsSelected = { input.actionSink.push(MHCAccountOverviewAction.ParticipationStatsSelected) },
                     onUpdateComorbiditiesSelected = { input.actionSink.push(MHCAccountOverviewAction.UpdateComorbiditiesSelected) },
+                    onWorkoutPreferenceSelected = { input.actionSink.push(MHCAccountOverviewAction.WorkoutPreferenceSelected) },
                 ),
                 postTrialNudges(input = input),
                 support(input = input),

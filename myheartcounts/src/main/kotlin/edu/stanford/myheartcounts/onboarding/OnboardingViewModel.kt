@@ -43,6 +43,8 @@ import edu.stanford.myheartcounts.standard.consent.MHCConsentHandler
 import edu.stanford.myheartcounts.standard.health.HealthAccess
 import edu.stanford.myheartcounts.study.StudyEnroller
 import edu.stanford.myheartcounts.study.StudyVariantProvider
+import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreen
+import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreenMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -322,7 +324,7 @@ class OnboardingViewModel(
                 currentStep.update { stepState(step = step) }
                 val appBar = when (step) {
                     OnboardingStep.Welcome, OnboardingStep.ReactivateAccount -> GroveAppBar.Empty
-                    OnboardingStep.Login -> null
+                    OnboardingStep.Login, OnboardingStep.WorkoutPreference -> null
                     OnboardingStep.Eligibility -> groveAppBar {
                         title(MHCStrings.eligibility_title)
                         back(::previousStep)
@@ -651,6 +653,24 @@ data class ConsentStep(
         ConsentScreen(
             onConsent = onConsent,
             onFormChanged = onFormChanged,
+        )
+    }
+}
+
+/**
+ * The workout preference step content: the workout preference screen, calling [onDismiss] when the
+ * participant leaves it and [onSaved] once the preference is stored.
+ */
+data class WorkoutPreferenceStep(
+    val onDismiss: () -> Unit,
+    val onSaved: () -> Unit,
+) : ComposableContent {
+    @Composable
+    override fun Content(modifier: Modifier) {
+        WorkoutPreferenceScreen(
+            mode = WorkoutPreferenceScreenMode.Step,
+            onDismiss = onDismiss,
+            onSaved = onSaved,
         )
     }
 }
