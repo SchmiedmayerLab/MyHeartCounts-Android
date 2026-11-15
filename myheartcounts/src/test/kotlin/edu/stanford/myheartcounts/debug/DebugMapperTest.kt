@@ -12,8 +12,6 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.featureflag.FeatureFlag
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.health.HealthConnectAvailability
@@ -65,20 +63,20 @@ class DebugMapperTest {
         )
 
         // then
-        assertThat(sheet.appInfo.filterNotNull().first().cards.map { card -> card.rows.map { it.label to it.value } })
+        assertThat(sheet.loadedSection(key = "app-info").infoCards().map { card -> card.map { it.label to it.value } })
             .containsExactly(
                 listOf(
-                    StringResource(MHCStrings.debug_info_version) to "1.2.0",
-                    StringResource(MHCStrings.debug_info_build) to "42",
+                    StringResource(MHCStrings.debug_info_version) to StringResource("1.2.0"),
+                    StringResource(MHCStrings.debug_info_build) to StringResource("42"),
                 ),
                 listOf(
-                    StringResource(MHCStrings.debug_info_project_id) to "project",
-                    StringResource(MHCStrings.debug_info_account_id) to null,
+                    StringResource(MHCStrings.debug_info_project_id) to StringResource("project"),
+                    StringResource(MHCStrings.debug_info_account_id) to StringResource(MHCStrings.debug_info_unavailable),
                 ),
                 listOf(
-                    StringResource(MHCStrings.debug_info_enrolled_revision) to "44",
-                    StringResource(MHCStrings.debug_info_bundled_revision) to "45",
-                    StringResource(MHCStrings.debug_info_consent_version) to "1.0.0",
+                    StringResource(MHCStrings.debug_info_enrolled_revision) to StringResource("44"),
+                    StringResource(MHCStrings.debug_info_bundled_revision) to StringResource("45"),
+                    StringResource(MHCStrings.debug_info_consent_version) to StringResource("1.0.0"),
                 ),
             )
             .inOrder()
@@ -90,10 +88,10 @@ class DebugMapperTest {
         val sheet = mapper.map(input = input(isEnabled = true))
 
         // then
-        val section = sheet.featureFlags.flags.single()
-        assertThat(section.title).isEqualTo(StringResource(MHCStrings.feature_flag_simplify_onboarding_title))
-        assertThat(section.subtitle).isEqualTo(StringResource(MHCStrings.feature_flag_simplify_onboarding_description))
-        assertThat(section.isOn.value).isTrue()
+        val row = sheet.section(key = "feature-flags").toggleRows().single()
+        assertThat(row.title).isEqualTo(StringResource(MHCStrings.feature_flag_simplify_onboarding_title))
+        assertThat(row.subtitle).isEqualTo(StringResource(MHCStrings.feature_flag_simplify_onboarding_description))
+        assertThat(row.isOn.value).isTrue()
     }
 
     @Test
@@ -102,7 +100,7 @@ class DebugMapperTest {
         val sheet = mapper.map(input = input(isEnabled = false))
 
         // when
-        sheet.featureFlags.flags.single().onToggle(true)
+        sheet.section(key = "feature-flags").toggleRows().single().onToggle(true)
 
         // then
         assertThat(pushedActions).containsExactly(
@@ -119,7 +117,7 @@ class DebugMapperTest {
         val sheet = mapper.map(input = input(isEnabled = false))
 
         // then
-        assertThat(sheet.featureFlags.restartButton.title).isEqualTo(StringResource(MHCStrings.feature_flags_restart))
+        assertThat(sheet.section(key = "feature-flags").restartButton().title).isEqualTo(StringResource(MHCStrings.feature_flags_restart))
     }
 
     @Test
@@ -128,7 +126,7 @@ class DebugMapperTest {
         val sheet = mapper.map(input = input(isEnabled = false))
 
         // when
-        sheet.featureFlags.restartButton.action()
+        sheet.section(key = "feature-flags").restartButton().action()
 
         // then
         assertThat(pushedActions).containsExactly(DebugMapper.Action.RestartSelected)
@@ -152,7 +150,7 @@ class DebugMapperTest {
         val sheet = mapper.map(input = input(isEnabled = false))
 
         // when
-        sheet.shake.toggle.onToggle(false)
+        sheet.section(key = "shake").toggleRows().single().onToggle(false)
 
         // then
         assertThat(pushedActions).containsExactly(DebugMapper.Action.ShakeToOpenToggled(enabled = false))
@@ -181,25 +179,24 @@ class DebugMapperTest {
         )
 
         // then
-        assertThat(sheet.health.filterNotNull().first()).isEqualTo(
-            DebugHealthSection(
-                title = DebugSectionTitle(title = StringResource(MHCStrings.debug_health)),
-                status = DebugRowsCard(
-                    rows = listOf(
-                        row(label = MHCStrings.debug_health_availability, value = "Update required"),
-                        row(label = MHCStrings.debug_health_fully_authorized, value = "No"),
-                        row(label = MHCStrings.debug_health_history_access, value = "Yes"),
-                        row(label = MHCStrings.debug_health_background_access, value = null),
-                    ),
-                ),
-                granted = DebugTextCard(
-                    title = StringResource(MHCStrings.debug_health_granted),
-                    text = StringResource("Steps (R), Weight (RW)"),
-                ),
-                notGranted = DebugTextCard(
-                    title = StringResource(MHCStrings.debug_health_not_granted),
-                    text = StringResource("HeartRate (R), Height (W)"),
-                ),
+        val health = sheet.loadedSection(key = "health")
+        assertThat(health.title).isEqualTo(StringResource(MHCStrings.debug_health))
+        assertThat(health.cardRows(key = "status").map { it.content }).containsExactly(
+            row(label = MHCStrings.debug_health_availability, value = StringResource(MHCStrings.debug_health_update_required)),
+            row(label = MHCStrings.debug_health_fully_authorized, value = StringResource(MHCStrings.answer_no)),
+            row(label = MHCStrings.debug_health_history_access, value = StringResource(MHCStrings.answer_yes)),
+            row(label = MHCStrings.debug_health_background_access, value = StringResource(MHCStrings.debug_info_unavailable)),
+        ).inOrder()
+        assertThat(health.textRow(key = "granted")).isEqualTo(
+            DebugTextRow(
+                title = StringResource(MHCStrings.debug_health_granted),
+                text = StringResource("Steps (R), Weight (RW)"),
+            ),
+        )
+        assertThat(health.textRow(key = "not-granted")).isEqualTo(
+            DebugTextRow(
+                title = StringResource(MHCStrings.debug_health_not_granted),
+                text = StringResource("HeartRate (R), Height (W)"),
             ),
         )
     }
@@ -207,11 +204,11 @@ class DebugMapperTest {
     @Test
     fun `reports no data types when none is required`() = runTest {
         // when
-        val health = mapper.map(input = input(isEnabled = false, scope = backgroundScope)).health.filterNotNull().first()
+        val health = mapper.map(input = input(isEnabled = false, scope = backgroundScope)).loadedSection(key = "health")
 
         // then
-        assertThat(health.granted.text).isEqualTo(StringResource(MHCStrings.debug_health_none))
-        assertThat(health.notGranted.text).isEqualTo(StringResource(MHCStrings.debug_health_none))
+        assertThat(health.textRow(key = "granted").text).isEqualTo(StringResource(MHCStrings.debug_health_none))
+        assertThat(health.textRow(key = "not-granted").text).isEqualTo(StringResource(MHCStrings.debug_health_none))
     }
 
     private fun input(
@@ -228,8 +225,8 @@ class DebugMapperTest {
 
     private fun row(
         label: Int,
-        value: String?,
-    ) = DebugRowsCard.Row(
+        value: StringResource,
+    ) = DebugInfoRow(
         label = StringResource(label),
         value = value,
     )

@@ -7,9 +7,9 @@
 
 package edu.stanford.myheartcounts.achievements
 
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSectionList
 import edu.stanford.myheartcounts.dashboard.ui.ProgressRingCard
+import org.grovealliance.ui.GroveSectionList
+import org.grovealliance.ui.groveSectionList
 
 /**
  * Builds the list of all achievements.
@@ -20,7 +20,7 @@ interface AchievementsContentMapper {
      * One card per category of achievements, each achievement showing its progress in percent while
      * it is under way.
      */
-    fun map(): DashboardSectionList
+    fun map(): GroveSectionList
 }
 
 /**
@@ -31,20 +31,22 @@ class AchievementsContentMapperImpl(
     private val rowMapper: AchievementRowMapper,
 ) : AchievementsContentMapper {
 
-    override fun map() = DashboardSectionList(
-        sections = source.groups.map { group ->
-            DashboardSection(
-                title = group.title,
-                content = ProgressRingCard(
-                    rows = group.achievements.map { achievement ->
-                        rowMapper.map(
-                            achievement = achievement,
-                            showsProgress = true,
-                        )
-                    },
-                ),
-                footnote = null,
-            )
-        },
-    )
+    override fun map() = groveSectionList {
+        source.groups.forEachIndexed { index, group ->
+            section(key = "group-$index") {
+                title(group.title)
+                content(
+                    key = "achievements",
+                    content = ProgressRingCard(
+                        rows = group.achievements.map { achievement ->
+                            rowMapper.map(
+                                achievement = achievement,
+                                showsProgress = true,
+                            )
+                        },
+                    ),
+                )
+            }
+        }
+    }
 }

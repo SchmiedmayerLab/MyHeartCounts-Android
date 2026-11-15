@@ -10,7 +10,7 @@ package edu.stanford.myheartcounts.dashboard.ui.chart
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
@@ -34,7 +34,7 @@ class ChartCardScreenshotTest : ScreenshotTest() {
         series = listOf(
             CartesianChart.Series(
                 style = CartesianChart.Style.Bar,
-                color = DashboardColorPalette.blue,
+                color = MHCColors.blue,
                 points = (0 until 14).map { day ->
                     coordinates.point(
                         start = start.plus(Duration.ofDays(day.toLong())),

@@ -101,6 +101,7 @@ class ConsentUploadTest {
                         ),
                     ),
                 ),
+                canvasSize = null,
             ),
         ),
     )

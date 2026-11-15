@@ -9,7 +9,6 @@ package edu.stanford.myheartcounts.workoutpreference
 
 import androidx.lifecycle.SavedStateHandle
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.account.FakeAccountService
 import edu.stanford.myheartcounts.account.PreferredWorkoutTypesKey
 import edu.stanford.myheartcounts.model.workout.WorkoutType
 import edu.stanford.myheartcounts.model.workout.WorkoutTypes
@@ -24,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.FakeAccount
+import org.grovealliance.account.FakeAccountService
 import org.grovealliance.ui.consumeAll
 import org.junit.After
 import org.junit.Before
@@ -74,7 +74,7 @@ class WorkoutPreferenceViewModelTest {
         viewModel.screen.onOpened()
 
         // when
-        viewModel.screen.layout.workoutTypes.value.options[WorkoutType.STRENGTH.ordinal].onClick()
+        viewModel.screen.layout.workoutTypes()[WorkoutType.STRENGTH.ordinal].onClick()
 
         // then
         assertThat(editor.state.value.workoutTypes).containsExactly(WorkoutType.STRENGTH)
@@ -88,7 +88,7 @@ class WorkoutPreferenceViewModelTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.screen.layout.timePicker.collect {} }
 
         // when
-        viewModel.screen.layout.notificationTime.badge.value.onClick()
+        viewModel.screen.layout.notificationTime().badge.value.onClick()
         val picker = requireNotNull(viewModel.screen.layout.timePicker.value)
         picker.onSelect(picker.selection.copy(hour = 20))
 
@@ -102,10 +102,10 @@ class WorkoutPreferenceViewModelTest {
         // given
         val viewModel = viewModel()
         viewModel.screen.onOpened()
-        viewModel.screen.layout.workoutTypes.value.options[WorkoutType.WALK.ordinal].onClick()
+        viewModel.screen.layout.workoutTypes()[WorkoutType.WALK.ordinal].onClick()
 
         // when
-        requireNotNull(viewModel.screen.layout.continueButton).action()
+        requireNotNull(viewModel.screen.layout.continueButton()).action()
 
         // then
         val stored = accountService.updates.single().modifiedDetails[PreferredWorkoutTypesKey::class]
@@ -121,7 +121,7 @@ class WorkoutPreferenceViewModelTest {
         viewModel.screen.onOpened()
 
         // when
-        requireNotNull(viewModel.screen.layout.continueButton).action()
+        requireNotNull(viewModel.screen.layout.continueButton()).action()
 
         // then
         assertThat(viewModel.events.consumeAll()).isEmpty()
@@ -167,7 +167,7 @@ class WorkoutPreferenceViewModelTest {
         val viewModel = viewModel(mode = WorkoutPreferenceScreenMode.Standalone)
 
         // then
-        assertThat(viewModel.screen.layout.continueButton).isNull()
+        assertThat(viewModel.screen.layout.continueButton()).isNull()
     }
 
     private fun viewModel(mode: WorkoutPreferenceScreenMode = WorkoutPreferenceScreenMode.Step) = WorkoutPreferenceViewModel(

@@ -7,12 +7,15 @@
 
 package edu.stanford.myheartcounts.dashboard
 
+import org.grovealliance.ui.GroveSectionList
+import org.grovealliance.ui.groveSectionList
+
 class FakeHeartHealthContentMapper : HeartHealthContentMapper {
     private val receivedInputs = mutableListOf<HeartHealthContentInput>()
     val inputs: List<HeartHealthContentInput> get() = receivedInputs.toList()
 
-    override fun map(input: HeartHealthContentInput): HeartHealthContentLayout {
+    override fun map(input: HeartHealthContentInput): GroveSectionList {
         receivedInputs += input
-        return HeartHealthContentLayout(sections = emptyList())
+        return groveSectionList {}
     }
 }

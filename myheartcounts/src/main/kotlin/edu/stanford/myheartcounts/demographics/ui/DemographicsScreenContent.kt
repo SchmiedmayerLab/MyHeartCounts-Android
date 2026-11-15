@@ -19,6 +19,7 @@ import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.StaticGroveScaffold
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.ThemePreviews
 
@@ -49,30 +50,38 @@ private class DemographicsScreenContentPreviewProvider : PreviewParameterProvide
             title(StringResource("Demographics"))
         },
         layout = DemographicsLayout(
-            healthImport = HealthImportCard(
-                title = StringResource("Read from Health Connect"),
-                description = StringResource("Use this option to fill in your answers from Health Connect."),
-                onClick = {},
-            ),
-            sections = listOf(
-                DemographicsLayout.Section(
-                    rows = listOf(
-                        DemographicsLayout.Row(
-                            field = DemographicsField.DateOfBirth,
-                            label = StringResource("Date of Birth"),
-                            value = MutableStateFlow(
-                                DemographicsLayout.Value(
-                                    text = StringResource("Jun 15, 1990"),
-                                    isOptional = false,
-                                ),
-                            ),
-                            menu = MutableStateFlow(null),
-                            accessory = DemographicsLayout.Accessory.None,
+            sections = groveSectionList {
+                section(key = "health-import") {
+                    content(
+                        key = "health-import",
+                        content = HealthImportCard(
+                            title = StringResource("Read from Health Connect"),
+                            description = StringResource("Use this option to fill in your answers from Health Connect."),
                             onClick = {},
                         ),
-                    ),
-                ),
-            ),
+                    )
+                }
+                section(key = "personal") {
+                    card(key = "questions") {
+                        row(
+                            key = "date-of-birth",
+                            content = DemographicsLayout.Row(
+                                field = DemographicsField.DateOfBirth,
+                                label = StringResource("Date of Birth"),
+                                value = MutableStateFlow(
+                                    DemographicsLayout.Value(
+                                        text = StringResource("Jun 15, 1990"),
+                                        isOptional = false,
+                                    ),
+                                ),
+                                menu = MutableStateFlow(null),
+                                accessory = DemographicsLayout.Accessory.None,
+                                onClick = {},
+                            ),
+                        )
+                    }
+                }
+            },
             datePicker = MutableStateFlow(null),
             scaffoldState = GroveScaffoldState(),
         ),

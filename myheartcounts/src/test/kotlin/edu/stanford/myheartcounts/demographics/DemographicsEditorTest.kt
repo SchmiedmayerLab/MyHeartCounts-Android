@@ -9,7 +9,6 @@ package edu.stanford.myheartcounts.demographics
 
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.account.DidOptInToTrialKey
-import edu.stanford.myheartcounts.account.FakeAccountService
 import edu.stanford.myheartcounts.account.WeightInKgKey
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
 import edu.stanford.myheartcounts.model.demographics.MHCGenderIdentity
@@ -23,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.AccountKeys
 import org.grovealliance.account.FakeAccount
+import org.grovealliance.account.FakeAccountService
 import org.grovealliance.account.accountId
 import org.grovealliance.core.time.FakeTimeProvider
 import org.junit.Test

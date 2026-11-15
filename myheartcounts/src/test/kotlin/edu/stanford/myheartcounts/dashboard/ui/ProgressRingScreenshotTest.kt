@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.theme.Colors
@@ -23,7 +24,7 @@ class ProgressRingScreenshotTest : ScreenshotTest() {
 
     private val base = ProgressRing(
         progress = 0.7f,
-        progressColor = DashboardColorPalette.green,
+        progressColor = MHCColors.green,
         icon = ImageResource.Vector(
             image = Icons.AutoMirrored.Filled.DirectionsWalk,
             tint = { Colors.onSurface },
@@ -52,7 +53,7 @@ class ProgressRingScreenshotTest : ScreenshotTest() {
 
     @Test
     fun `ProgressRing other color screenshot`() {
-        screenshot(ring = base.copy(progressColor = DashboardColorPalette.blue))
+        screenshot(ring = base.copy(progressColor = MHCColors.blue))
     }
 
     private fun screenshot(ring: ProgressRing) {

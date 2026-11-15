@@ -8,7 +8,6 @@
 package edu.stanford.myheartcounts.onboarding
 
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.account.FakeAccountService
 import edu.stanford.myheartcounts.account.MostRecentOnboardingStepKey
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +17,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.account.AccountDetails
 import org.grovealliance.account.FakeAccount
+import org.grovealliance.account.FakeAccountService
 import org.junit.Test
 import edu.stanford.myheartcounts.model.OnboardingStep as RecordedOnboardingStep
 

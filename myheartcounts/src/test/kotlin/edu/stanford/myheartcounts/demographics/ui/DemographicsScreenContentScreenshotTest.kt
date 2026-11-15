@@ -13,6 +13,7 @@ import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.junit.Test
 
 class DemographicsScreenContentScreenshotTest : ScreenshotTest() {
@@ -29,20 +30,20 @@ class DemographicsScreenContentScreenshotTest : ScreenshotTest() {
         accessory = DemographicsLayout.Accessory.None,
         onClick = {},
     )
+    private val healthImport = HealthImportCard(
+        title = StringResource(MHCStrings.demographics_health_import_title),
+        description = StringResource(MHCStrings.demographics_health_import_description),
+        onClick = {},
+    )
     private val base = DemographicsScreenContent(
         appBar = groveAppBar {
             back {}
             title(MHCStrings.demographics_title)
         },
         layout = DemographicsLayout(
-            healthImport = HealthImportCard(
-                title = StringResource(MHCStrings.demographics_health_import_title),
-                description = StringResource(MHCStrings.demographics_health_import_description),
-                onClick = {},
-            ),
-            sections = listOf(
-                DemographicsLayout.Section(
-                    rows = listOf(
+            sections = sections(
+                rows = listOf(
+                    listOf(
                         row,
                         row.copy(
                             field = DemographicsField.GenderIdentity,
@@ -56,9 +57,7 @@ class DemographicsScreenContentScreenshotTest : ScreenshotTest() {
                             accessory = DemographicsLayout.Accessory.Menu,
                         ),
                     ),
-                ),
-                DemographicsLayout.Section(
-                    rows = listOf(
+                    listOf(
                         row.copy(
                             field = DemographicsField.ReferralSource,
                             label = StringResource(MHCStrings.demographics_field_referralsource),
@@ -94,6 +93,27 @@ class DemographicsScreenContentScreenshotTest : ScreenshotTest() {
         // when / then
         screenshot {
             content.Content()
+        }
+    }
+
+    private fun sections(rows: List<List<DemographicsLayout.Row>>) = groveSectionList {
+        section(key = "health-import") {
+            content(
+                key = "health-import",
+                content = healthImport,
+            )
+        }
+        rows.forEachIndexed { index, questions ->
+            section(key = "$index") {
+                card(key = "questions") {
+                    questions.forEach {
+                        row(
+                            key = it.field.name,
+                            content = it,
+                        )
+                    }
+                }
+            }
         }
     }
 }

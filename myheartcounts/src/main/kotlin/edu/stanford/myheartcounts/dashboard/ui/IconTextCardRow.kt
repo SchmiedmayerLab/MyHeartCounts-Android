@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -73,7 +74,7 @@ private class IconTextCardRowPreviewProvider : PreviewParameterProvider<IconText
     private val base = IconTextCardRow(
         icon = ImageResource.Vector(
             image = Icons.Default.LocalFireDepartment,
-            tint = { DashboardColorPalette.orange.resolve() },
+            tint = { MHCColors.orange.resolve() },
         ),
         text = StringResource("You've burned 2,053 active calories — the equivalent of 7 slices of pizza."),
     )

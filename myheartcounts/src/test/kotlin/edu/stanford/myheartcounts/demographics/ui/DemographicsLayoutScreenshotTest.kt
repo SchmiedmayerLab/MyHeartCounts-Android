@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.junit.Test
 
 class DemographicsLayoutScreenshotTest : ScreenshotTest() {
@@ -29,15 +30,15 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
         accessory = DemographicsLayout.Accessory.None,
         onClick = {},
     )
+    private val healthImport = HealthImportCard(
+        title = StringResource(MHCStrings.demographics_health_import_title),
+        description = StringResource(MHCStrings.demographics_health_import_description),
+        onClick = {},
+    )
     private val base = DemographicsLayout(
-        healthImport = HealthImportCard(
-            title = StringResource(MHCStrings.demographics_health_import_title),
-            description = StringResource(MHCStrings.demographics_health_import_description),
-            onClick = {},
-        ),
-        sections = listOf(
-            DemographicsLayout.Section(
-                rows = listOf(
+        sections = sections(
+            rows = listOf(
+                listOf(
                     row,
                     row.copy(
                         field = DemographicsField.GenderIdentity,
@@ -73,9 +74,7 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
                         accessory = DemographicsLayout.Accessory.Menu,
                     ),
                 ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
+                listOf(
                     row.copy(
                         field = DemographicsField.Height,
                         label = StringResource("Height"),
@@ -97,9 +96,7 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
                         ),
                     ),
                 ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
+                listOf(
                     row.copy(
                         field = DemographicsField.RaceEthnicity,
                         label = StringResource("Race / Ethnicity"),
@@ -123,9 +120,7 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
                         accessory = DemographicsLayout.Accessory.Disclosure,
                     ),
                 ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
+                listOf(
                     row.copy(
                         field = DemographicsField.Comorbidities,
                         label = StringResource("Comorbidities"),
@@ -138,9 +133,7 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
                         accessory = DemographicsLayout.Accessory.Disclosure,
                     ),
                 ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
+                listOf(
                     row.copy(
                         field = DemographicsField.USRegion,
                         label = StringResource("US State / Territory"),
@@ -175,9 +168,7 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
                         accessory = DemographicsLayout.Accessory.Disclosure,
                     ),
                 ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
+                listOf(
                     row.copy(
                         field = DemographicsField.StageOfChange,
                         label = StringResource("Stage of Change"),
@@ -190,9 +181,7 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
                         accessory = DemographicsLayout.Accessory.Disclosure,
                     ),
                 ),
-            ),
-            DemographicsLayout.Section(
-                rows = listOf(
+                listOf(
                     row.copy(
                         field = DemographicsField.ReferralSource,
                         label = StringResource("Referral Source"),
@@ -223,9 +212,9 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
     fun `DemographicsLayout long answer screenshot`() {
         // given
         val layout = base.copy(
-            sections = listOf(
-                DemographicsLayout.Section(
-                    rows = listOf(
+            sections = sections(
+                rows = listOf(
+                    listOf(
                         row.copy(
                             field = DemographicsField.ReferralSource,
                             label = StringResource("Referral Source"),
@@ -245,6 +234,27 @@ class DemographicsLayoutScreenshotTest : ScreenshotTest() {
         // when / then
         screenshot {
             layout.Content()
+        }
+    }
+
+    private fun sections(rows: List<List<DemographicsLayout.Row>>) = groveSectionList {
+        section(key = "health-import") {
+            content(
+                key = "health-import",
+                content = healthImport,
+            )
+        }
+        rows.forEachIndexed { index, questions ->
+            section(key = "$index") {
+                card(key = "questions") {
+                    questions.forEach {
+                        row(
+                            key = it.field.name,
+                            content = it,
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -96,7 +96,8 @@ class FakeDemographicsEditor : DemographicsEditor {
 
     override val state: StateFlow<DemographicsState> = mutableState.asStateFlow()
     override val completion = mutableCompletion.asStateFlow()
-    override val isComplete = MutableStateFlow(false).asStateFlow()
+    private val mutableIsComplete = MutableStateFlow(false)
+    override val isComplete = mutableIsComplete.asStateFlow()
     private val mutableSaveFailures = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     override val saveFailures = mutableSaveFailures.asSharedFlow()
 
@@ -110,6 +111,13 @@ class FakeDemographicsEditor : DemographicsEditor {
      */
     fun setState(state: DemographicsState) {
         mutableState.value = state
+    }
+
+    /**
+     * Sets whether every question needing an answer has one.
+     */
+    fun setComplete(isComplete: Boolean) {
+        mutableIsComplete.value = isComplete
     }
 
     /**

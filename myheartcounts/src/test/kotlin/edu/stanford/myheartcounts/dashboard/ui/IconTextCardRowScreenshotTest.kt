@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -25,7 +26,7 @@ class IconTextCardRowScreenshotTest : ScreenshotTest() {
     private val base = IconTextCardRow(
         icon = ImageResource.Vector(
             image = Icons.Default.LocalFireDepartment,
-            tint = { DashboardColorPalette.orange.resolve() },
+            tint = { MHCColors.orange.resolve() },
         ),
         text = StringResource("You've burned 2,053 active calories — the equivalent of 7 slices of pizza."),
     )

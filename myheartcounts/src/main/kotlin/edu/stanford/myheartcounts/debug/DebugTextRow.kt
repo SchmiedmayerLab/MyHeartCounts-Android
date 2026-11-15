@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import org.grovealliance.ui.ComposableContent
-import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.GroveTheme
@@ -26,37 +25,35 @@ import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * A card with a [title] above a [text].
+ * A [title] above a [text] in a debug card.
  */
-data class DebugTextCard(
+data class DebugTextRow(
     val title: StringResource,
     val text: StringResource,
 ) : ComposableContent {
 
     @Composable
     override fun Content(modifier: Modifier) {
-        GroveCard(modifier = modifier) {
-            Column(
-                modifier = Modifier.padding(Spacings.medium),
-                verticalArrangement = Arrangement.spacedBy(Spacings.extraSmall),
-            ) {
-                Text(
-                    text = title.text(),
-                    style = TextStyles.titleSmall,
-                    color = Colors.onSurface,
-                )
-                Text(
-                    text = text.text(),
-                    style = TextStyles.bodyMedium,
-                    color = Colors.onSurfaceVariant,
-                )
-            }
+        Column(
+            modifier = modifier.padding(Spacings.medium),
+            verticalArrangement = Arrangement.spacedBy(Spacings.extraSmall),
+        ) {
+            Text(
+                text = title.text(),
+                style = TextStyles.titleSmall,
+                color = Colors.onSurface,
+            )
+            Text(
+                text = text.text(),
+                style = TextStyles.bodyMedium,
+                color = Colors.onSurfaceVariant,
+            )
         }
     }
 }
 
-private class DebugTextCardPreviewProvider : PreviewParameterProvider<DebugTextCard> {
-    private val base = DebugTextCard(
+private class DebugTextRowPreviewProvider : PreviewParameterProvider<DebugTextRow> {
+    private val base = DebugTextRow(
         title = StringResource("Granted"),
         text = StringResource("Steps (R), Weight (RW)"),
     )
@@ -69,6 +66,6 @@ private class DebugTextCardPreviewProvider : PreviewParameterProvider<DebugTextC
 
 @ThemePreviews
 @Composable
-private fun Preview(@PreviewParameter(DebugTextCardPreviewProvider::class) content: DebugTextCard) {
+private fun Preview(@PreviewParameter(DebugTextRowPreviewProvider::class) content: DebugTextRow) {
     GroveTheme { content.Content(modifier = Modifier.fillMaxWidth()) }
 }

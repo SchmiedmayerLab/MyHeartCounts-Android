@@ -27,6 +27,7 @@ import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.ImageResource
@@ -151,7 +152,7 @@ private class StatTilePreviewProvider : PreviewParameterProvider<StatTile> {
     private val base = StatTile(
         icon = ImageResource.Vector(
             image = Icons.Default.Favorite,
-            tint = { DashboardColorPalette.pink.resolve() },
+            tint = { MHCColors.pink.resolve() },
         ),
         title = StringResource("Resting HR"),
         value = StatTile.Value(

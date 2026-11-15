@@ -14,6 +14,7 @@ import org.hl7.fhir.r4.model.Coding
 import org.hl7.fhir.r4.model.DecimalType
 import org.hl7.fhir.r4.model.Extension
 import org.hl7.fhir.r4.model.IntegerType
+import org.hl7.fhir.r4.model.Quantity
 import org.hl7.fhir.r4.model.Questionnaire
 import org.hl7.fhir.r4.model.Questionnaire.QuestionnaireItemType
 import org.hl7.fhir.r4.model.QuestionnaireResponse
@@ -107,6 +108,67 @@ class StudyQuestionnaireTest {
     }
 
     @Test
+    fun `renders a quantity question with a single unit option as a decimal question in that unit`() {
+        // given
+        val questionnaire = questionnaire()
+
+        // when
+        val prepared = StudyQuestionnaire.prepare(questionnaire = questionnaire)
+
+        // then
+        val item = prepared.questionnaire.item.single().item.single { it.linkId == UNIT_OPTION_LINK_ID }
+        assertThat(item.type).isEqualTo(QuestionnaireItemType.DECIMAL)
+        assertThat((item.getExtensionByUrl(StudyQuestionnaire.UNIT_EXTENSION_URL).value as Coding).code)
+            .isEqualTo(OPTION_UNIT_CODE)
+        assertThat(item.hasExtension(StudyQuestionnaire.UNIT_OPTION_EXTENSION_URL)).isFalse()
+    }
+
+    @Test
+    fun `renders the quantity bounds of a question as decimal bounds`() {
+        // given
+        val questionnaire = questionnaire()
+
+        // when
+        val prepared = StudyQuestionnaire.prepare(questionnaire = questionnaire)
+
+        // then
+        val item = prepared.questionnaire.item.single().item.single { it.linkId == UNIT_OPTION_LINK_ID }
+        assertThat(StudyQuestionnaire.BOUND_EXTENSION_URLS.map { (item.getExtensionByUrl(it).value as DecimalType).value.toInt() })
+            .containsExactly(OPTION_MIN, OPTION_MAX)
+            .inOrder()
+        assertThat(StudyQuestionnaire.QUANTITY_BOUND_EXTENSION_URLS.none { item.hasExtension(it) }).isTrue()
+    }
+
+    @Test
+    fun `keeps a quantity question with several unit options`() {
+        // given
+        val questionnaire = questionnaire()
+
+        // when
+        val prepared = StudyQuestionnaire.prepare(questionnaire = questionnaire)
+
+        // then
+        val item = prepared.questionnaire.item.single().item.single { it.linkId == UNIT_OPTIONS_LINK_ID }
+        assertThat(item.type).isEqualTo(QuestionnaireItemType.QUANTITY)
+        assertThat(item.getExtensionsByUrl(StudyQuestionnaire.UNIT_OPTION_EXTENSION_URL)).hasSize(2)
+    }
+
+    @Test
+    fun `restores the answer to a single unit option question as a quantity in that unit`() {
+        // given
+        val prepared = StudyQuestionnaire.prepare(questionnaire = questionnaire())
+        val rendered = renderedResponse()
+
+        // when
+        val response = prepared.responseFor(rendered = rendered)
+
+        // then
+        val answer = response.item.single().item.single { it.linkId == UNIT_OPTION_LINK_ID }.answer.single()
+        assertThat(answer.valueQuantity.value.toInt()).isEqualTo(OPTION_ANSWER)
+        assertThat(answer.valueQuantity.unit).isEqualTo(OPTION_UNIT_CODE)
+    }
+
+    @Test
     fun `marks the response completed`() {
         // given
         val prepared = StudyQuestionnaire.prepare(questionnaire = questionnaire())
@@ -150,6 +212,19 @@ class StudyQuestionnaireTest {
                 addExtension(Extension(MAX_VALUE_URL, IntegerType(MAX)))
             }
             addItem().apply {
+                linkId = UNIT_OPTION_LINK_ID
+                type = QuestionnaireItemType.QUANTITY
+                addExtension(Extension(StudyQuestionnaire.UNIT_OPTION_EXTENSION_URL, Coding().setCode(OPTION_UNIT_CODE)))
+                addExtension(Extension(MIN_QUANTITY_URL, Quantity(OPTION_MIN.toDouble()).setCode(OPTION_UNIT_CODE)))
+                addExtension(Extension(MAX_QUANTITY_URL, Quantity(OPTION_MAX.toDouble()).setCode(OPTION_UNIT_CODE)))
+            }
+            addItem().apply {
+                linkId = UNIT_OPTIONS_LINK_ID
+                type = QuestionnaireItemType.QUANTITY
+                addExtension(Extension(StudyQuestionnaire.UNIT_OPTION_EXTENSION_URL, Coding().setCode(OPTION_UNIT_CODE)))
+                addExtension(Extension(StudyQuestionnaire.UNIT_OPTION_EXTENSION_URL, Coding().setCode(OTHER_UNIT_CODE)))
+            }
+            addItem().apply {
                 linkId = BOOLEAN_LINK_ID
                 type = QuestionnaireItemType.BOOLEAN
             }
@@ -174,6 +249,10 @@ class StudyQuestionnaireTest {
                 addAnswer().value = DecimalType(ANSWER.toLong())
             }
             addItem().apply {
+                linkId = UNIT_OPTION_LINK_ID
+                addAnswer().value = DecimalType(OPTION_ANSWER.toLong())
+            }
+            addItem().apply {
                 linkId = BOOLEAN_LINK_ID
                 addAnswer().value = BooleanType(true)
             }
@@ -196,5 +275,14 @@ class StudyQuestionnaireTest {
         const val PAGE_CODE = "page"
         const val CHECK_BOX_CODE = "check-box"
         const val CHOICE_LINK_ID = "medications"
+        const val UNIT_OPTION_LINK_ID = "glucose"
+        const val UNIT_OPTIONS_LINK_ID = "weight"
+        const val OPTION_UNIT_CODE = "mg/dL"
+        const val OTHER_UNIT_CODE = "mmol/L"
+        const val OPTION_MIN = 40
+        const val OPTION_MAX = 400
+        const val OPTION_ANSWER = 95
+        const val MIN_QUANTITY_URL = "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-minQuantity"
+        const val MAX_QUANTITY_URL = "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-maxQuantity"
     }
 }

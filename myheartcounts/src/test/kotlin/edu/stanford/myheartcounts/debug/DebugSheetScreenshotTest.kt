@@ -9,98 +9,78 @@ package edu.stanford.myheartcounts.debug
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import edu.stanford.myheartcounts.ui.ToggleSection
+import edu.stanford.myheartcounts.featureflag.FeatureFlag
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.grovealliance.health.HealthConnectAvailability
 import org.grovealliance.testing.screenshot.ScreenshotTest
-import org.grovealliance.ui.AsyncTextButton
-import org.grovealliance.ui.StringResource
-import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.groveSectionList
 import org.junit.Test
 
 class DebugSheetScreenshotTest : ScreenshotTest() {
 
-    private val shake = DebugShakeSection(
-        title = DebugSectionTitle(title = StringResource("Debug Sheet")),
-        toggle = ToggleSection(
-            title = StringResource("Open on Shake"),
-            subtitle = StringResource(
-                "Does this sheet keep popping up while you're running or moving? " +
-                    "Turn this off to stop shaking from opening it. To turn it back on, relaunch the app.",
-            ),
-            isOn = MutableStateFlow(value = true),
-            onToggle = {},
-        ),
-    )
-
-    private val featureFlags = DebugFeatureFlagsSection(
-        title = DebugSectionTitle(title = StringResource("Feature Flags")),
-        flags = listOf(
-            ToggleSection(
-                title = StringResource("Simplify Onboarding"),
-                subtitle = StringResource("Shortens onboarding to login, Health Connect access and enrollment."),
-                isOn = MutableStateFlow(value = true),
-                onToggle = {},
-            ),
-        ),
-        note = StringResource("Changes apply once the app restarts."),
-        restartButton = AsyncTextButton(
-            title = StringResource("Restart"),
-            action = {},
-        ),
-    )
-
     @Test
-    fun `DebugSheet screenshot`() {
-        val sheet = DebugSheet(
-            appBar = groveAppBar {
-                title(StringResource("Debug"))
-                close {}
-            },
-            shake = shake,
-            featureFlags = featureFlags,
-            appInfo = MutableStateFlow(
-                DebugAppInfoSection(
-                    title = DebugSectionTitle(title = StringResource("App Info")),
-                    cards = listOf(
-                        card("Version" to "1.2.0", "Build" to "42"),
-                        card("Project ID" to "myheart-counts-development", "Account ID" to "rnzv8nCjZZLFvJIHcPRzcBnjMoH4"),
-                        card("Study Revision (enrolled)" to "44", "Study Revision (bundled)" to "44", "lastSignedConsentVersion" to null),
-                    ),
-                ),
-            ),
-            health = MutableStateFlow(
-                DebugHealthSection(
-                    title = DebugSectionTitle(title = StringResource("Health")),
-                    status = card(
-                        "Health Connect" to "Available",
-                        "All permissions granted" to "No",
-                        "History access" to "Yes",
-                        "Background access" to "No",
-                    ),
-                    granted = DebugTextCard(
-                        title = StringResource("Granted"),
-                        text = StringResource("Steps (R), Weight (RW)"),
-                    ),
-                    notGranted = DebugTextCard(
-                        title = StringResource("Not granted"),
-                        text = StringResource("HeartRate (R), Height (W)"),
-                    ),
-                ),
-            ),
-            onDismiss = {},
-        )
+    fun `DebugSheet screenshot`() = runTest {
+        // given
+        val sheet = sheet(scope = backgroundScope)
+        val loaded = sheet.copy(sections = MutableStateFlow(sheet.sections.first { it.sections.size == LOADED_SECTION_COUNT }))
 
-        screenshot {
-            sheet.Content(modifier = Modifier.fillMaxSize())
-        }
+        // when / then
+        screenshot { loaded.Content(modifier = Modifier.fillMaxSize()) }
     }
 
-    private fun card(vararg rows: Pair<String, String?>) = DebugRowsCard(
-        rows = rows.map { (label, value) ->
-            DebugRowsCard.Row(
-                label = StringResource(label),
-                value = value,
-            )
-        },
+    @Test
+    fun `DebugSheet health section screenshot`() = runTest {
+        // given
+        val health = sheet(scope = backgroundScope).loadedSection(key = "health")
+        val list = groveSectionList { section(health) }
+
+        // when / then
+        screenshot { list.Content(modifier = Modifier.fillMaxSize()) }
+    }
+
+    private fun sheet(scope: CoroutineScope) = DebugMapperImpl().map(
+        input = DebugMapper.Input(
+            appInfo = flowOf(
+                DebugAppInfo(
+                    version = "1.2.0",
+                    build = "42",
+                    firebaseProjectId = "myheart-counts-development",
+                    accountId = "rnzv8nCjZZLFvJIHcPRzcBnjMoH4",
+                    enrolledStudyRevision = "44",
+                    bundledStudyRevision = "44",
+                    lastSignedConsentVersion = null,
+                ),
+            ),
+            healthInfo = flowOf(
+                DebugHealthInfo(
+                    availability = HealthConnectAvailability.Available,
+                    isFullyAuthorized = false,
+                    historyAccess = true,
+                    backgroundAccess = false,
+                    read = listOf(
+                        DebugHealthInfo.TypeAccess(name = "Steps", isGranted = true),
+                        DebugHealthInfo.TypeAccess(name = "Weight", isGranted = true),
+                        DebugHealthInfo.TypeAccess(name = "HeartRate", isGranted = false),
+                    ),
+                    write = listOf(
+                        DebugHealthInfo.TypeAccess(name = "Weight", isGranted = true),
+                        DebugHealthInfo.TypeAccess(name = "Height", isGranted = false),
+                    ),
+                ),
+            ),
+            scope = scope,
+            shakeToOpen = MutableStateFlow(true),
+            flagValues = mapOf(FeatureFlag.SimplifyOnboarding to MutableStateFlow(true)),
+            actionSink = ActionSource<DebugMapper.Action> {}.sink(),
+        ),
     )
+
+    private companion object {
+        const val LOADED_SECTION_COUNT = 4
+    }
 }

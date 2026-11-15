@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -24,7 +25,7 @@ class GaugeTileScreenshotTest : ScreenshotTest() {
         title = StringResource("Title"),
         gauge = Gauge(
             progress = 1f,
-            colors = DashboardColorPalette.redToGreen,
+            colors = MHCColors.redToGreen,
             lineWidth = Gauge.defaultLineWidth * 1.5f,
             size = Gauge.Size.Regular,
             label = Gauge.Label(

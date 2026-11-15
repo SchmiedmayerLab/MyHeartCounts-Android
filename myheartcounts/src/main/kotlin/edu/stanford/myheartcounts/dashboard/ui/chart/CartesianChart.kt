@@ -32,7 +32,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.internal.ChartPlot
 import edu.stanford.myheartcounts.dashboard.ui.internal.ChartPlotHolder
 import edu.stanford.myheartcounts.dashboard.ui.internal.ChartReveal
@@ -51,6 +50,7 @@ import edu.stanford.myheartcounts.dashboard.ui.internal.highlightCandidates
 import edu.stanford.myheartcounts.dashboard.ui.internal.highlightsAt
 import edu.stanford.myheartcounts.dashboard.ui.internal.nearestTo
 import edu.stanford.myheartcounts.dashboard.ui.internal.stepSelection
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -533,7 +533,7 @@ private class CartesianChartPreviewProvider : PreviewParameterProvider<Cartesian
             range = CartesianChart.Range(start = 100.0, end = 160.0),
             format = NumberAxisFormat(locale = Locale.US),
         )
-        line(color = DashboardColorPalette.blue, highlightFormat = PreviewHighlightFormat) {
+        line(color = MHCColors.blue, highlightFormat = PreviewHighlightFormat) {
             point(x = 0.0, y = 120.0)
             point(x = 2.5, y = 145.0)
             point(x = 5.0, y = 132.0)

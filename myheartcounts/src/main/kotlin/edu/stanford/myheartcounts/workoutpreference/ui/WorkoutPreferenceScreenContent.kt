@@ -11,16 +11,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import edu.stanford.myheartcounts.ui.TextRow
 import edu.stanford.myheartcounts.ui.ValueBadge
-import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.DisplayedEffect
 import org.grovealliance.ui.GroveScaffold
 import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.ThemePreviews
 
@@ -52,29 +52,40 @@ private class WorkoutPreferenceScreenContentPreviewProvider : PreviewParameterPr
             },
         ),
         layout = WorkoutPreferenceLayout(
-            introduction = StringResource("Tell us which workouts you prefer and when you'd like to receive reminders."),
-            workoutTypes = MutableStateFlow(
-                ChoiceSection(
-                    header = StringResource("Preferred Workout Types"),
-                    options = emptyList(),
-                    footer = null,
-                ),
-            ),
-            notificationTime = NotificationTimeRow(
-                title = StringResource("Notification Time"),
-                subtitle = StringResource("The preferred time for activity-related notifications."),
-                badge = MutableStateFlow(
-                    ValueBadge(
-                        text = StringResource("09:00"),
-                        onClick = {},
-                    ),
-                ),
+            sections = MutableStateFlow(
+                groveSectionList {
+                    section(key = "introduction") {
+                        card(key = "introduction") {
+                            row(
+                                key = "introduction",
+                                content = TextRow(
+                                    text = StringResource(
+                                        "Tell us which workouts you prefer and when you'd like to receive reminders.",
+                                    ),
+                                ),
+                            )
+                        }
+                    }
+                    section(key = "notification-time") {
+                        card(key = "notification-time") {
+                            row(
+                                key = "notification-time",
+                                content = NotificationTimeRow(
+                                    title = StringResource("Notification Time"),
+                                    subtitle = StringResource("The preferred time for activity-related notifications."),
+                                    badge = MutableStateFlow(
+                                        ValueBadge(
+                                            text = StringResource("09:00"),
+                                            onClick = {},
+                                        ),
+                                    ),
+                                ),
+                            )
+                        }
+                    }
+                },
             ),
             timePicker = MutableStateFlow(null),
-            continueButton = AsyncTextButton(
-                title = StringResource("Save"),
-                action = {},
-            ),
         ),
         onOpened = {},
     )

@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -316,7 +317,7 @@ private class GaugePreviewProvider : PreviewParameterProvider<Gauge> {
 
     private val base = Gauge(
         progress = 0.7f,
-        colors = DashboardColorPalette.redToGreen,
+        colors = MHCColors.redToGreen,
         lineWidth = Gauge.defaultLineWidth * 1.5f,
         size = Gauge.Size.Regular,
         label = Gauge.Label(

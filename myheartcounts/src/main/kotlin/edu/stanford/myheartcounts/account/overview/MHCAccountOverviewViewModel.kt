@@ -13,7 +13,7 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.account.PostTrialNudges
 import edu.stanford.myheartcounts.account.StudyWithdrawal
 import edu.stanford.myheartcounts.account.feedback.MHCFeedback
-import edu.stanford.myheartcounts.account.overview.WithdrawFromStudySection.WithdrawalState
+import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.WithdrawalState
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator

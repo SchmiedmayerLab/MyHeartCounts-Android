@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -53,7 +54,7 @@ class ProgressBadgeScreenshotTest : ScreenshotTest() {
 
     @Test
     fun `ProgressBadge other color screenshot`() {
-        screenshot(badge = base.copy(progressColor = DashboardColorPalette.green))
+        screenshot(badge = base.copy(progressColor = MHCColors.green))
     }
 
     private fun screenshot(badge: ProgressBadge) {

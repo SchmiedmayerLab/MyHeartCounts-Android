@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.dashboard.ui
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.theme.ColorToken
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -104,7 +105,7 @@ class GradientColorTest {
     fun `a fraction outside tokens is rejected`() {
         // when / then
         assertThrows(IllegalArgumentException::class.java) {
-            DashboardColorPalette.redToGreen.colorAt(fraction = -0.1f)
+            MHCColors.redToGreen.colorAt(fraction = -0.1f)
         }
     }
 

@@ -15,13 +15,12 @@ import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.grovealliance.storage.local.InMemoryKeyValueStorage
+import org.grovealliance.ui.StringResource
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -62,7 +61,7 @@ class DebugViewModelTest {
         shakeDetector.shake()
 
         // when
-        viewModel.sheet.value?.shake?.toggle?.onToggle?.invoke(false)
+        viewModel.sheet.value?.section(key = "shake")?.toggleRows()?.single()?.onToggle?.invoke(false)
         val sheetAfterToggle = viewModel.sheet.value
         sheetAfterToggle?.onDismiss?.invoke()
         shakeDetector.shake()
@@ -105,8 +104,8 @@ class DebugViewModelTest {
         )
 
         // then
-        val values = viewModel.sheet.value?.appInfo?.filterNotNull()?.first()?.cards?.flatMap { card -> card.rows.map { it.value } }
-        assertThat(values).containsAtLeast("account-id", "0.1.0")
+        val values = viewModel.sheet.value?.loadedSection(key = "app-info")?.infoCards()?.flatten()?.map { it.value }
+        assertThat(values).containsAtLeast(StringResource("account-id"), StringResource("0.1.0"))
     }
 
     @Test
@@ -122,7 +121,8 @@ class DebugViewModelTest {
         shakeDetector.shake()
 
         // then
-        assertThat(viewModel.sheet.value?.featureFlags?.flags?.map { it.isOn.value }).containsExactly(true, false).inOrder()
+        val flags = viewModel.sheet.value?.section(key = "feature-flags")?.toggleRows()
+        assertThat(flags?.map { it.isOn.value }).containsExactly(true, false).inOrder()
     }
 
     @Test
@@ -132,11 +132,12 @@ class DebugViewModelTest {
         shakeDetector.shake()
 
         // when
-        viewModel.sheet.value?.featureFlags?.flags?.get(FeatureFlag.UKStudyTesting.ordinal)?.onToggle?.invoke(true)
+        viewModel.sheet.value?.section(key = "feature-flags")?.toggleRows()?.get(FeatureFlag.UKStudyTesting.ordinal)?.onToggle?.invoke(true)
 
         // then
         assertThat(featureFlags.isEnabled(flag = FeatureFlag.UKStudyTesting)).isTrue()
-        assertThat(viewModel.sheet.value?.featureFlags?.flags?.map { it.isOn.value }).containsExactly(false, true).inOrder()
+        val flags = viewModel.sheet.value?.section(key = "feature-flags")?.toggleRows()
+        assertThat(flags?.map { it.isOn.value }).containsExactly(false, true).inOrder()
     }
 
     @Test
@@ -159,7 +160,7 @@ class DebugViewModelTest {
         shakeDetector.shake()
 
         // when
-        viewModel.sheet.value?.featureFlags?.restartButton?.action?.invoke()
+        viewModel.sheet.value?.section(key = "feature-flags")?.restartButton()?.action?.invoke()
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.RestartApp)

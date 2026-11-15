@@ -9,14 +9,16 @@ package edu.stanford.myheartcounts.demographics
 
 import androidx.annotation.StringRes
 import edu.stanford.myheartcounts.demographics.ui.DemographicsChoiceSheet
+import edu.stanford.myheartcounts.ui.TextRow
 import edu.stanford.myheartcounts.ui.choice.ChoiceFollowUpRow
 import edu.stanford.myheartcounts.ui.choice.ChoiceRow
-import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 
 /**
  * Maps groups of answers into a [DemographicsChoiceSheet]. Every sheet marks the current answers
@@ -170,36 +172,49 @@ class DemographicsChoiceGroupMapperImpl(
             if (closesOnSelect) input.actionSink.push(DemographicsAction.SheetClosed)
         }
 
-        fun sections(response: DemographicsResponse): List<ChoiceSection> =
-            groups.mapNotNull { group ->
-                val options = group.choices
-                    .filter { isOffered(response, it.value) }
-                    .map { choice ->
-                        ChoiceRow(
-                            icon = null,
-                            title = choice.option.title,
-                            subtitle = choice.option.subtitle,
-                            detail = detail?.invoke(response, choice.value) ?: choice.detail,
-                            isSelected = isSelected(response, choice.value),
-                            followUp = followUp?.invoke(response, choice.value),
-                            onClick = { select(value = choice.value) },
+        fun sections(response: DemographicsResponse): GroveSectionList = groveSectionList {
+            prompt?.let {
+                section(key = PROMPT_KEY) {
+                    card(key = PROMPT_KEY) {
+                        row(
+                            key = PROMPT_KEY,
+                            content = TextRow(text = it),
                         )
                     }
-                options.takeIf { it.isNotEmpty() }?.let {
-                    ChoiceSection(
-                        header = group.header,
-                        options = it,
-                        footer = group.footer,
-                    )
                 }
             }
+            groups.forEachIndexed { index, group ->
+                val choices = group.choices.filter { isOffered(response, it.value) }
+                if (choices.isNotEmpty()) {
+                    section(key = "$GROUP_KEY-$index") {
+                        group.header?.let { title(stringResource = it) }
+                        card(key = OPTIONS_KEY) {
+                            choices.forEach { choice ->
+                                row(
+                                    key = choice.option.id,
+                                    content = ChoiceRow(
+                                        icon = null,
+                                        title = choice.option.title,
+                                        subtitle = choice.option.subtitle,
+                                        detail = detail?.invoke(response, choice.value) ?: choice.detail,
+                                        isSelected = isSelected(response, choice.value),
+                                        followUp = followUp?.invoke(response, choice.value),
+                                        onClick = { select(value = choice.value) },
+                                    ),
+                                )
+                            }
+                        }
+                        group.footer?.let { footer(stringResource = it) }
+                    }
+                }
+            }
+        }
 
         return DemographicsChoiceSheet(
             appBar = groveAppBar {
                 title(title)
                 close { input.actionSink.push(DemographicsAction.SheetClosed) }
             },
-            prompt = prompt,
             monthYearPicker = input.monthYearPicker,
             sections = input.response
                 .map { sections(response = it) }
@@ -209,5 +224,11 @@ class DemographicsChoiceGroupMapperImpl(
                     initialValue = sections(response = input.response.value),
                 ),
         )
+    }
+
+    private companion object {
+        const val PROMPT_KEY = "prompt"
+        const val GROUP_KEY = "group"
+        const val OPTIONS_KEY = "options"
     }
 }

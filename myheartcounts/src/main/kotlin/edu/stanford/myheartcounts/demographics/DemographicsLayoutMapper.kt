@@ -23,7 +23,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.GroveScaffoldState
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 
 /**
  * Builds the [DemographicsLayout].
@@ -75,258 +77,258 @@ class DemographicsLayoutMapperImpl(
 ) : DemographicsLayoutMapper {
 
     override fun map(input: DemographicsLayoutInput) = DemographicsLayout(
-        healthImport = HealthImportCard(
-            title = StringResource(MHCStrings.demographics_health_import_title),
-            description = StringResource(MHCStrings.demographics_health_import_description),
-            onClick = { input.actionSink.push(DemographicsAction.HealthImportSelected) },
-        ),
-        sections = listOf(
-            personal(input = input),
-            body(input = input),
-            origin(input = input),
-            conditions(input = input),
-            usBackground(input = input),
-            ukBackground(input = input),
-            nhs(input = input),
-            activity(input = input),
-            referral(input = input),
-        ).mapNotNull { section ->
-            val fields = rules.fields(region = input.region)
-            section.rows
-                .filter { it.field in fields }
-                .takeIf { it.isNotEmpty() }
-                ?.let { DemographicsLayout.Section(rows = it) }
-        },
+        sections = sections(input = input),
         datePicker = input.datePicker,
         scaffoldState = input.scaffoldState,
     )
 
-    private fun personal(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.DateOfBirth,
-                answer = { it.dateOfBirth?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_field_dateofbirth,
-                accessory = DemographicsLayout.Accessory.None,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.GenderIdentity,
-                answer = { it.genderIdentity?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_field_genderidentity,
-                accessory = DemographicsLayout.Accessory.Menu,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.SexAtBirth,
-                answer = { it.biologicalSexAtBirth?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_label_sex_at_birth,
-                accessory = DemographicsLayout.Accessory.Menu,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.BloodType,
-                answer = { it.bloodType?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_field_bloodtype,
-                accessory = DemographicsLayout.Accessory.Menu,
-                input = input,
-            ),
-        ),
-    )
-
-    private fun body(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.Height,
-                answer = { it.heightInCm?.let(answerMapper::mapCentimetresText) },
-                label = MHCStrings.demographics_field_height,
-                accessory = DemographicsLayout.Accessory.None,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.Weight,
-                answer = { it.weightInKg?.let(answerMapper::mapKilogramsText) },
-                label = MHCStrings.demographics_field_weight,
-                accessory = DemographicsLayout.Accessory.None,
-                input = input,
-            ),
-        ),
-    )
-
-    private fun origin(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.RaceEthnicity,
-                answer = { it.raceEthnicity?.let(::raceEthnicityText) },
-                label = MHCStrings.demographics_field_raceethnicity,
-                unanswered = MHCStrings.demographics_value_no_selection,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.LatinoStatus,
-                answer = { response ->
-                    response.latinoStatus?.let {
-                        optionText(
-                            field = DemographicsField.LatinoStatus,
-                            id = optionIdMapper.mapId(value = it),
-                        )
+    private fun sections(input: DemographicsLayoutInput): GroveSectionList {
+        val fields = rules.fields(region = input.region)
+        val questions = listOf(
+            "personal" to personal(input = input),
+            "body" to body(input = input),
+            "origin" to origin(input = input),
+            "conditions" to conditions(input = input),
+            "us-background" to usBackground(input = input),
+            "uk-background" to ukBackground(input = input),
+            "nhs" to nhs(input = input),
+            "activity" to activity(input = input),
+            "referral" to referral(input = input),
+        )
+        return groveSectionList {
+            section(key = HEALTH_IMPORT_KEY) {
+                content(
+                    key = HEALTH_IMPORT_KEY,
+                    content = HealthImportCard(
+                        title = StringResource(MHCStrings.demographics_health_import_title),
+                        description = StringResource(MHCStrings.demographics_health_import_description),
+                        onClick = { input.actionSink.push(DemographicsAction.HealthImportSelected) },
+                    ),
+                )
+            }
+            questions.forEach { (key, rows) ->
+                section(key = key) {
+                    card(key = QUESTIONS_KEY) {
+                        rows.filter { it.field in fields }.forEach {
+                            row(
+                                key = it.field.name,
+                                content = it,
+                            )
+                        }
                     }
-                },
-                label = MHCStrings.demographics_label_latino_status,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
+                }
+            }
+        }
+    }
+
+    private fun personal(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.DateOfBirth,
+            answer = { it.dateOfBirth?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_field_dateofbirth,
+            accessory = DemographicsLayout.Accessory.None,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.GenderIdentity,
+            answer = { it.genderIdentity?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_field_genderidentity,
+            accessory = DemographicsLayout.Accessory.Menu,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.SexAtBirth,
+            answer = { it.biologicalSexAtBirth?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_label_sex_at_birth,
+            accessory = DemographicsLayout.Accessory.Menu,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.BloodType,
+            answer = { it.bloodType?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_field_bloodtype,
+            accessory = DemographicsLayout.Accessory.Menu,
+            input = input,
         ),
     )
 
-    private fun conditions(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.Comorbidities,
-                answer = { it.comorbidities?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_field_comorbidities,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
+    private fun body(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.Height,
+            answer = { it.heightInCm?.let(answerMapper::mapCentimetresText) },
+            label = MHCStrings.demographics_field_height,
+            accessory = DemographicsLayout.Accessory.None,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.Weight,
+            answer = { it.weightInKg?.let(answerMapper::mapKilogramsText) },
+            label = MHCStrings.demographics_field_weight,
+            accessory = DemographicsLayout.Accessory.None,
+            input = input,
         ),
     )
 
-    private fun activity(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.StageOfChange,
-                answer = { response ->
-                    response.stageOfChange?.let {
-                        optionText(
-                            field = DemographicsField.StageOfChange,
-                            id = optionIdMapper.mapId(value = it),
-                        )
-                    }
-                },
-                label = MHCStrings.demographics_field_stageofchange,
-                unanswered = MHCStrings.demographics_value_no_selection,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
+    private fun origin(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.RaceEthnicity,
+            answer = { it.raceEthnicity?.let(::raceEthnicityText) },
+            label = MHCStrings.demographics_field_raceethnicity,
+            unanswered = MHCStrings.demographics_value_no_selection,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.LatinoStatus,
+            answer = { response ->
+                response.latinoStatus?.let {
+                    optionText(
+                        field = DemographicsField.LatinoStatus,
+                        id = optionIdMapper.mapId(value = it),
+                    )
+                }
+            },
+            label = MHCStrings.demographics_label_latino_status,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
         ),
     )
 
-    private fun referral(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.ReferralSource,
-                answer = { response ->
-                    response.referralSource?.let { optionText(field = DemographicsField.ReferralSource, id = it) }
-                },
-                label = MHCStrings.demographics_label_referral_source,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
+    private fun conditions(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.Comorbidities,
+            answer = { it.comorbidities?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_field_comorbidities,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
         ),
     )
 
-    private fun usBackground(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.USRegion,
-                answer = { it.usRegion?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_label_us_region,
-                unanswered = MHCStrings.demographics_value_no_selection,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.USEducation,
-                answer = { response ->
-                    response.educationUS?.let {
-                        optionText(
-                            field = DemographicsField.USEducation,
-                            id = optionIdMapper.mapId(value = it),
-                        )
-                    }
-                },
-                label = MHCStrings.demographics_label_education,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.USIncome,
-                answer = { response ->
-                    response.householdIncomeUS?.let {
-                        optionText(
-                            field = DemographicsField.USIncome,
-                            id = optionIdMapper.mapId(value = it),
-                        )
-                    }
-                },
-                label = MHCStrings.demographics_label_income,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
+    private fun activity(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.StageOfChange,
+            answer = { response ->
+                response.stageOfChange?.let {
+                    optionText(
+                        field = DemographicsField.StageOfChange,
+                        id = optionIdMapper.mapId(value = it),
+                    )
+                }
+            },
+            label = MHCStrings.demographics_field_stageofchange,
+            unanswered = MHCStrings.demographics_value_no_selection,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
         ),
     )
 
-    private fun ukBackground(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.UKRegion,
-                answer = { it.ukRegion?.let(answerMapper::mapText) },
-                label = MHCStrings.demographics_label_uk_region,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.UKEducation,
-                answer = { response ->
-                    response.educationUK?.let {
-                        optionText(
-                            field = DemographicsField.UKEducation,
-                            id = optionIdMapper.mapId(value = it),
-                        )
-                    }
-                },
-                label = MHCStrings.demographics_label_education,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
-            row(
-                field = DemographicsField.UKIncome,
-                answer = { response ->
-                    response.householdIncomeUK?.let {
-                        optionText(
-                            field = DemographicsField.UKIncome,
-                            id = optionIdMapper.mapId(value = it),
-                        )
-                    }
-                },
-                label = MHCStrings.demographics_label_income,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.Disclosure,
-                input = input,
-            ),
+    private fun referral(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.ReferralSource,
+            answer = { response ->
+                response.referralSource?.let { optionText(field = DemographicsField.ReferralSource, id = it) }
+            },
+            label = MHCStrings.demographics_label_referral_source,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
         ),
     )
 
-    private fun nhs(input: DemographicsLayoutInput) = DemographicsLayout.Section(
-        rows = listOf(
-            row(
-                field = DemographicsField.NHSNumber,
-                answer = { response ->
-                    response.nhsNumber?.stringValue?.takeIf { it.isNotEmpty() }?.let { StringResource(it) }
-                },
-                label = MHCStrings.demographics_field_nhsnumber,
-                unanswered = MHCStrings.demographics_value_not_set,
-                accessory = DemographicsLayout.Accessory.None,
-                input = input,
-            ),
+    private fun usBackground(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.USRegion,
+            answer = { it.usRegion?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_label_us_region,
+            unanswered = MHCStrings.demographics_value_no_selection,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.USEducation,
+            answer = { response ->
+                response.educationUS?.let {
+                    optionText(
+                        field = DemographicsField.USEducation,
+                        id = optionIdMapper.mapId(value = it),
+                    )
+                }
+            },
+            label = MHCStrings.demographics_label_education,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.USIncome,
+            answer = { response ->
+                response.householdIncomeUS?.let {
+                    optionText(
+                        field = DemographicsField.USIncome,
+                        id = optionIdMapper.mapId(value = it),
+                    )
+                }
+            },
+            label = MHCStrings.demographics_label_income,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+    )
+
+    private fun ukBackground(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.UKRegion,
+            answer = { it.ukRegion?.let(answerMapper::mapText) },
+            label = MHCStrings.demographics_label_uk_region,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.UKEducation,
+            answer = { response ->
+                response.educationUK?.let {
+                    optionText(
+                        field = DemographicsField.UKEducation,
+                        id = optionIdMapper.mapId(value = it),
+                    )
+                }
+            },
+            label = MHCStrings.demographics_label_education,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+        row(
+            field = DemographicsField.UKIncome,
+            answer = { response ->
+                response.householdIncomeUK?.let {
+                    optionText(
+                        field = DemographicsField.UKIncome,
+                        id = optionIdMapper.mapId(value = it),
+                    )
+                }
+            },
+            label = MHCStrings.demographics_label_income,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.Disclosure,
+            input = input,
+        ),
+    )
+
+    private fun nhs(input: DemographicsLayoutInput) = listOf(
+        row(
+            field = DemographicsField.NHSNumber,
+            answer = { response ->
+                response.nhsNumber?.stringValue?.takeIf { it.isNotEmpty() }?.let { StringResource(it) }
+            },
+            label = MHCStrings.demographics_field_nhsnumber,
+            unanswered = MHCStrings.demographics_value_not_set,
+            accessory = DemographicsLayout.Accessory.None,
+            input = input,
         ),
     )
 
@@ -387,4 +389,9 @@ class DemographicsLayoutMapperImpl(
         } else {
             StringResource(MHCStrings.demographics_value_selected_count, race.rawValue.countOneBits())
         }
+
+    private companion object {
+        const val HEALTH_IMPORT_KEY = "health-import"
+        const val QUESTIONS_KEY = "questions"
+    }
 }

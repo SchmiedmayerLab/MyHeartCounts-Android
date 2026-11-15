@@ -31,7 +31,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import edu.stanford.myheartcounts.MHCDrawables
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
@@ -120,7 +119,7 @@ data class ArticleHeader(
                             style = TextStyles.labelMedium,
                             color = Color.White,
                             modifier = Modifier
-                                .background(DashboardColorPalette.blue.resolve(), GroveShapes.medium)
+                                .background(MHCColors.blue.resolve(), GroveShapes.medium)
                                 .padding(horizontal = Spacings.small, vertical = Spacings.extraSmall),
                         )
                     }

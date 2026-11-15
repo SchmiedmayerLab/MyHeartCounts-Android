@@ -30,7 +30,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorPalette
 import org.grovealliance.ui.theme.ColorToken
@@ -51,7 +51,7 @@ class ChartInteractionTest {
         series = listOf(
             CartesianChart.Series(
                 style = CartesianChart.Style.Bar,
-                color = DashboardColorPalette.blue,
+                color = MHCColors.blue,
                 points = listOf(
                     coordinates.point(start = start, end = start.plusSeconds(50), value = 8.0),
                     coordinates.point(start = start.plusSeconds(50), end = start.plusSeconds(100), value = 6.0),

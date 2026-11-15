@@ -19,8 +19,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.internal.TileHeader
+import edu.stanford.myheartcounts.ui.MHCColors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ComposableContent
@@ -97,7 +97,7 @@ private class ChartCardPreviewProvider : PreviewParameterProvider<ChartCard> {
         series = listOf(
             CartesianChart.Series(
                 style = CartesianChart.Style.Bar,
-                color = DashboardColorPalette.blue,
+                color = MHCColors.blue,
                 points = listOf(
                     coordinates.point(start = start, end = start.plusSeconds(SECONDS_PER_DAY), value = 8.75),
                 ),

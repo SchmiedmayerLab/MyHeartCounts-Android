@@ -11,12 +11,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Check
@@ -34,60 +33,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
 import edu.stanford.myheartcounts.ui.MHCAppTheme
+import edu.stanford.myheartcounts.ui.TextRow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.BottomSheetComposableContent
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.GroveSearchFieldComposable
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StaticGroveScaffold
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.rememberGroveAppBar
 import org.grovealliance.ui.theme.Colors
+import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.Sizes
 import org.grovealliance.ui.theme.Spacings
+import org.grovealliance.ui.theme.ThemePreviews
 import org.grovealliance.ui.theme.medium
 
 /**
- * The eligibility step layout: an introductory [description], a list of question [sections], and a
- * [primaryButton] whose enabled state tracks whether the answers are complete.
+ * The eligibility step layout: the introduction, the eligibility questions and the save button in
+ * [sections], following their changes.
  */
 data class EligibilityLayout(
-    val description: StringResource,
-    val sections: List<Section>,
-    val primaryButton: Flow<AsyncTextButton>,
+    val sections: StateFlow<GroveSectionList>,
 ) : ComposableContent {
 
     @Composable
     override fun Content(modifier: Modifier) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Spacings.medium),
-            verticalArrangement = Arrangement.spacedBy(Spacings.medium),
-        ) {
-            GroveCard {
-                Text(
-                    modifier = Modifier.padding(Spacings.medium),
-                    text = description.text(),
-                    color = Colors.onSurfaceVariant,
-                )
-            }
-            sections.forEach { it.Content(modifier = Modifier.fillMaxWidth()) }
-            PrimaryButton()
-        }
-    }
-
-    @Composable
-    private fun PrimaryButton() {
-        val primaryButton by primaryButton.collectAsStateWithLifecycle(initialValue = null)
-        primaryButton?.Content(modifier = Modifier.fillMaxWidth())
+        val sections by sections.collectAsStateWithLifecycle()
+        sections.Content(modifier = modifier.fillMaxSize())
     }
 }
 
@@ -167,31 +151,6 @@ data class CountrySelectionSheet(
 }
 
 /**
- * A titled card grouping a single piece of [content] under a [title].
- */
-data class Section(
-    val title: StringResource,
-    val content: ComposableContent,
-) : ComposableContent {
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        Column(modifier = modifier) {
-            Text(
-                modifier = Modifier.padding(vertical = Spacings.small),
-                text = title.text(),
-                style = LocalTextStyle.current.medium(),
-                color = Colors.onSurfaceVariant,
-            )
-
-            GroveCard {
-                content.Content(modifier = Modifier.fillMaxWidth())
-            }
-        }
-    }
-}
-
-/**
  * A tappable row showing [text] with an optional trailing [valueLabel] and a chevron; tapping it
  * invokes [onClicked].
  */
@@ -259,64 +218,65 @@ private fun Preview() {
     }
 }
 
-@Preview
+private class EligibilityLayoutPreviewProvider : PreviewParameterProvider<EligibilityLayout> {
+    private val base = EligibilityLayout(
+        sections = MutableStateFlow(
+            groveSectionList {
+                section(key = "description") {
+                    card(key = "description") {
+                        row(
+                            key = "description",
+                            content = TextRow(text = StringResource(MHCStrings.eligibility_subtitle)),
+                        )
+                    }
+                }
+                section(key = "age") {
+                    title(MHCStrings.eligibility_age_title)
+                    card(key = "age") {
+                        row(
+                            key = "age",
+                            content = BooleanOptionRow(
+                                text = StringResource(MHCStrings.eligibility_age_question),
+                                subtext = null,
+                                value = MutableStateFlow(true),
+                                onChange = {},
+                                style = BooleanOptionRow.Style.Switch,
+                                confirmLabel = StringResource(MHCStrings.answer_yes),
+                                declineLabel = StringResource(MHCStrings.answer_no),
+                            ),
+                        )
+                    }
+                }
+                section(key = "region") {
+                    title(MHCStrings.eligibility_region_title)
+                    card(key = "region") {
+                        row(
+                            key = "region",
+                            content = LinkRow(
+                                text = StringResource(MHCStrings.eligibility_region_question),
+                                valueLabel = MutableStateFlow(StringResource("Germany")),
+                                onClicked = {},
+                            ),
+                        )
+                    }
+                }
+                section(key = "save") {
+                    content(
+                        key = "save",
+                        content = AsyncTextButton(
+                            title = StringResource(MHCStrings.eligibility_save),
+                            action = {},
+                        ),
+                    )
+                }
+            },
+        ),
+    )
+    override val values = sequenceOf(base)
+}
+
+@ThemePreviews
 @Composable
-private fun EligibilityPreview() {
-    MHCAppTheme {
-        EligibilityLayout(
-            description = StringResource(MHCStrings.eligibility_subtitle),
-            sections = listOf(
-                Section(
-                    title = StringResource(MHCStrings.eligibility_age_title),
-                    content = BooleanOptionRow(
-                        text = StringResource(MHCStrings.eligibility_age_question),
-                        subtext = null,
-                        value = flowOf(true),
-                        onChange = { },
-                        style = BooleanOptionRow.Style.Switch,
-                        confirmLabel = StringResource(MHCStrings.answer_yes),
-                        declineLabel = StringResource(MHCStrings.answer_no),
-                    ),
-                ),
-                Section(
-                    title = StringResource(MHCStrings.eligibility_region_title),
-                    content = LinkRow(
-                        text = StringResource(MHCStrings.eligibility_region_question),
-                        valueLabel = flowOf(StringResource("Germany")),
-                        onClicked = { },
-                    ),
-                ),
-                Section(
-                    title = StringResource(MHCStrings.eligibility_language_title),
-                    content = BooleanOptionRow(
-                        text = StringResource(MHCStrings.eligibility_language_question),
-                        subtext = null,
-                        value = flowOf(true),
-                        onChange = { },
-                        style = BooleanOptionRow.Style.Label,
-                        confirmLabel = StringResource(MHCStrings.answer_yes),
-                        declineLabel = StringResource(MHCStrings.answer_no),
-                    ),
-                ),
-                Section(
-                    title = StringResource(MHCStrings.eligibility_account_sharing_title),
-                    content = BooleanOptionRow(
-                        text = StringResource(MHCStrings.eligibility_account_sharing_question),
-                        subtext = StringResource(MHCStrings.eligibility_account_sharing_explanation),
-                        value = flowOf(false),
-                        onChange = { },
-                        style = BooleanOptionRow.Style.Label,
-                        confirmLabel = StringResource(MHCStrings.answer_yes),
-                        declineLabel = StringResource(MHCStrings.answer_no),
-                    ),
-                ),
-            ),
-            primaryButton = flowOf(
-                AsyncTextButton(
-                    title = StringResource(MHCStrings.eligibility_save),
-                    action = { },
-                )
-            ),
-        ).Content(modifier = Modifier)
-    }
+private fun EligibilityPreview(@PreviewParameter(EligibilityLayoutPreviewProvider::class) layout: EligibilityLayout) {
+    GroveTheme { layout.Content() }
 }

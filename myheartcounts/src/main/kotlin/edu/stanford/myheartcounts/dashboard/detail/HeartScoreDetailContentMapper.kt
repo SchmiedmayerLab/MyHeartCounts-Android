@@ -14,16 +14,17 @@ import edu.stanford.myheartcounts.dashboard.HeartScoreDateFormatter
 import edu.stanford.myheartcounts.dashboard.HeartScoreMeasurement
 import edu.stanford.myheartcounts.dashboard.HeartScoreResult
 import edu.stanford.myheartcounts.dashboard.NicotineExposureCategory
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
-import edu.stanford.myheartcounts.dashboard.ui.DashboardSection
 import edu.stanford.myheartcounts.dashboard.ui.Gauge
 import edu.stanford.myheartcounts.dashboard.ui.GaugeHeader
 import edu.stanford.myheartcounts.dashboard.ui.chart.ChartCard
 import edu.stanford.myheartcounts.ui.ExternalLink
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSection
+import org.grovealliance.ui.groveSections
 import org.grovealliance.ui.theme.ColorToken
 import java.net.URI
 import java.text.NumberFormat
@@ -65,33 +66,52 @@ class HeartScoreDetailContentMapperImpl(
 
     override fun map(input: HeartScoreDetailContentInput): HeartScoreDetailContentLayout = HeartScoreDetailContentLayout(
         title = StringResource(input.result.component.title),
-        sections = listOfNotNull(
-            section(title = null, content = header(result = input.result)),
-            input.chart?.let { section(title = null, content = it) },
-            bandMapper.map(result = input.result)?.let { bands ->
-                DashboardSection(
-                    title = StringResource(MHCStrings.heart_detail_score_result),
-                    content = bands,
-                    footnote = StringResource(MHCStrings.heart_detail_exercise_footer)
-                        .takeIf { input.result.component == HeartScoreComponent.ExerciseMinutes },
-                )
-            },
-            input.explainer?.let { document ->
+        sections = groveSections {
+            section(
+                section = section(
+                    key = HEADER_KEY,
+                    content = header(result = input.result),
+                ),
+            )
+            input.chart?.let { chart ->
                 section(
-                    title = StringResource(MHCStrings.heart_detail_about, StringResource(input.result.component.title)),
-                    content = HeartScoreAboutContent(
-                        document = document,
-                        links = links(document = document, actions = input.actionSink),
+                    section = section(
+                        key = CHART_KEY,
+                        content = chart,
                     ),
                 )
-            },
+            }
+            bandMapper.map(result = input.result)?.let { bands ->
+                section(key = BANDS_KEY) {
+                    title(MHCStrings.heart_detail_score_result)
+                    content(key = BANDS_KEY, content = bands)
+                    if (input.result.component == HeartScoreComponent.ExerciseMinutes) {
+                        footer(MHCStrings.heart_detail_exercise_footer)
+                    }
+                }
+            }
+            input.explainer?.let { document ->
+                section(
+                    section = section(
+                        key = ABOUT_KEY,
+                        title = StringResource(MHCStrings.heart_detail_about, StringResource(input.result.component.title)),
+                        content = HeartScoreAboutContent(
+                            document = document,
+                            links = links(document = document, actions = input.actionSink),
+                        ),
+                    ),
+                )
+            }
             input.debugSamples?.let { samples ->
                 section(
-                    title = StringResource(MHCStrings.heart_detail_debug_samples),
-                    content = HeartScoreDebugContent(samples = samples),
+                    section = section(
+                        key = DEBUG_SAMPLES_KEY,
+                        title = StringResource(MHCStrings.heart_detail_debug_samples),
+                        content = HeartScoreDebugContent(samples = samples),
+                    ),
                 )
-            },
-        ),
+            }
+        },
     )
 
     private fun header(result: HeartScoreResult) = GaugeHeader(
@@ -100,7 +120,7 @@ class HeartScoreDetailContentMapperImpl(
         footnote = result.measuredAt?.let { dateFormatter.measuredAt(instant = it) },
         gauge = Gauge(
             progress = result.score?.toFloat(),
-            colors = if (result.score == null) listOf(ColorToken.Outline) else DashboardColorPalette.redToGreen,
+            colors = if (result.score == null) listOf(ColorToken.Outline) else MHCColors.redToGreen,
             lineWidth = Gauge.defaultLineWidth * GAUGE_LINE_WIDTH,
             size = Gauge.Size.Regular,
             label = Gauge.Label(
@@ -201,13 +221,22 @@ class HeartScoreDetailContentMapperImpl(
         maximumFractionDigits = MAX_FRACTION_DIGITS
     }.format(value)
 
-    private fun section(title: StringResource?, content: ComposableContent) = DashboardSection(
-        title = title,
-        content = content,
-        footnote = null,
-    )
+    private fun section(
+        key: String,
+        content: ComposableContent,
+        title: StringResource? = null,
+    ) = groveSection(key = key) {
+        title?.let { title(it) }
+        content(key = key, content = content)
+    }
 
     private companion object {
+        const val HEADER_KEY = "header"
+        const val CHART_KEY = "chart"
+        const val BANDS_KEY = "bands"
+        const val ABOUT_KEY = "about"
+        const val DEBUG_SAMPLES_KEY = "debug-samples"
+
         /**
          * The points a full score is shown as.
          */

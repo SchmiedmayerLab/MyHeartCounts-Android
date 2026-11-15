@@ -10,10 +10,10 @@ package edu.stanford.myheartcounts.dashboard.ui.internal
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.chart.CartesianChart
 import edu.stanford.myheartcounts.dashboard.ui.chart.Highlight
 import edu.stanford.myheartcounts.dashboard.ui.chart.HighlightFormat
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.StringResource
 import org.junit.Test
 
@@ -26,7 +26,7 @@ class ChartHighlightTest {
     )
     private val base = CartesianChart.Series(
         style = CartesianChart.Style.Line,
-        color = DashboardColorPalette.red,
+        color = MHCColors.red,
         points = listOf(point(from = 10, to = 20), point(from = 40, to = 40)),
         highlightFormat = Format,
     )

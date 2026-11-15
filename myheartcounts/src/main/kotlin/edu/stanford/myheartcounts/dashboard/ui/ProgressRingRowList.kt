@@ -26,6 +26,7 @@ import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -74,7 +75,7 @@ private class ProgressRingRowListPreviewProvider : PreviewParameterProvider<Prog
     private val row = ProgressRingRow(
         ring = ProgressRing(
             progress = 0.7f,
-            progressColor = DashboardColorPalette.green,
+            progressColor = MHCColors.green,
             icon = ImageResource.Vector(
                 image = Icons.AutoMirrored.Filled.DirectionsWalk,
                 tint = { Colors.onSurface },

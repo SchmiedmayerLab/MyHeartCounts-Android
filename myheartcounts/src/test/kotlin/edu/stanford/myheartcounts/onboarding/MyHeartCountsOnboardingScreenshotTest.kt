@@ -7,6 +7,7 @@
 
 package edu.stanford.myheartcounts.onboarding
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -21,9 +22,9 @@ import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayout
 import edu.stanford.myheartcounts.onboarding.eligibility.EmailField
 import edu.stanford.myheartcounts.onboarding.eligibility.IneligibleContent
 import edu.stanford.myheartcounts.onboarding.eligibility.LinkRow
-import edu.stanford.myheartcounts.onboarding.eligibility.Section
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
 import edu.stanford.myheartcounts.ui.ExternalLink
+import edu.stanford.myheartcounts.ui.TextRow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.onboarding.OnboardingActions
 import org.grovealliance.onboarding.OnboardingInformation
@@ -31,10 +32,13 @@ import org.grovealliance.onboarding.OnboardingLayout
 import org.grovealliance.onboarding.OnboardingTitle
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.GroveSectionsBuilderScope
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StaticGroveScaffold
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.grovealliance.ui.theme.Colors
 import org.junit.Test
 
@@ -161,97 +165,97 @@ class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
     }
 
     private fun eligibilityLayout() = EligibilityLayout(
-        description = StringResource(MHCStrings.eligibility_subtitle),
-        sections = listOf(
-            Section(
-                title = StringResource(MHCStrings.eligibility_age_title),
-                content = BooleanOptionRow(
-                    text = StringResource(MHCStrings.eligibility_age_question),
-                    subtext = null,
-                    value = MutableStateFlow(true),
-                    onChange = { },
-                    style = BooleanOptionRow.Style.Switch,
-                    confirmLabel = StringResource(MHCStrings.answer_yes),
-                    declineLabel = StringResource(MHCStrings.answer_no),
-                ),
-            ),
-            Section(
-                title = StringResource(MHCStrings.eligibility_region_title),
-                content = LinkRow(
-                    text = StringResource(MHCStrings.eligibility_region_question),
-                    valueLabel = MutableStateFlow(StringResource("Germany")),
-                    onClicked = { },
-                ),
-            ),
-            Section(
-                title = StringResource(MHCStrings.eligibility_language_title),
-                content = BooleanOptionRow(
-                    text = StringResource(MHCStrings.eligibility_language_question),
-                    subtext = null,
-                    value = MutableStateFlow(true),
-                    onChange = { },
-                    style = BooleanOptionRow.Style.Label,
-                    confirmLabel = StringResource(MHCStrings.answer_yes),
-                    declineLabel = StringResource(MHCStrings.answer_no),
-                ),
-            ),
-            Section(
-                title = StringResource(MHCStrings.eligibility_account_sharing_title),
-                content = BooleanOptionRow(
-                    text = StringResource(MHCStrings.eligibility_account_sharing_question),
-                    subtext = StringResource(MHCStrings.eligibility_account_sharing_explanation),
-                    value = MutableStateFlow(false),
-                    onChange = { },
-                    style = BooleanOptionRow.Style.Label,
-                    confirmLabel = StringResource(MHCStrings.answer_yes),
-                    declineLabel = StringResource(MHCStrings.answer_no),
-                ),
-            ),
-        ),
-        primaryButton = MutableStateFlow(
-            AsyncTextButton(
-                title = StringResource(MHCStrings.eligibility_save),
-                action = { },
-            )
+        sections = MutableStateFlow(
+            groveSectionList {
+                rowSection(
+                    key = "description",
+                    title = null,
+                    content = TextRow(text = StringResource(MHCStrings.eligibility_subtitle)),
+                )
+                rowSection(
+                    key = "age",
+                    title = MHCStrings.eligibility_age_title,
+                    content = yesNoRow(
+                        text = MHCStrings.eligibility_age_question,
+                        subtext = null,
+                        value = true,
+                        style = BooleanOptionRow.Style.Switch,
+                    ),
+                )
+                rowSection(
+                    key = "region",
+                    title = MHCStrings.eligibility_region_title,
+                    content = LinkRow(
+                        text = StringResource(MHCStrings.eligibility_region_question),
+                        valueLabel = MutableStateFlow(StringResource("Germany")),
+                        onClicked = { },
+                    ),
+                )
+                rowSection(
+                    key = "language",
+                    title = MHCStrings.eligibility_language_title,
+                    content = yesNoRow(
+                        text = MHCStrings.eligibility_language_question,
+                        subtext = null,
+                        value = true,
+                        style = BooleanOptionRow.Style.Label,
+                    ),
+                )
+                rowSection(
+                    key = "account-sharing",
+                    title = MHCStrings.eligibility_account_sharing_title,
+                    content = yesNoRow(
+                        text = MHCStrings.eligibility_account_sharing_question,
+                        subtext = MHCStrings.eligibility_account_sharing_explanation,
+                        value = false,
+                        style = BooleanOptionRow.Style.Label,
+                    ),
+                )
+                buttonSection(
+                    key = "save",
+                    title = MHCStrings.eligibility_save,
+                )
+            },
         ),
     )
 
     private fun consentSurveyLayout() = ConsentSurveyLayout(
-        header = StringResource(MHCStrings.consent_survey_header),
-        questions = listOf(
-            BooleanOptionRow(
-                text = StringResource(MHCStrings.consent_survey_question_seek_help),
-                subtext = null,
-                value = MutableStateFlow(true),
-                onChange = { },
-                style = BooleanOptionRow.Style.Label,
-                confirmLabel = StringResource(MHCStrings.answer_true),
-                declineLabel = StringResource(MHCStrings.answer_false),
-            ),
-            BooleanOptionRow(
-                text = StringResource(MHCStrings.consent_survey_question_voluntary),
-                subtext = null,
-                value = MutableStateFlow<Boolean?>(null),
-                onChange = { },
-                style = BooleanOptionRow.Style.Label,
-                confirmLabel = StringResource(MHCStrings.answer_true),
-                declineLabel = StringResource(MHCStrings.answer_false),
-            ),
-            BooleanOptionRow(
-                text = StringResource(MHCStrings.consent_survey_question_withdraw),
-                subtext = null,
-                value = MutableStateFlow(false),
-                onChange = { },
-                style = BooleanOptionRow.Style.Label,
-                confirmLabel = StringResource(MHCStrings.answer_true),
-                declineLabel = StringResource(MHCStrings.answer_false),
-            ),
-        ),
-        primaryButton = MutableStateFlow(
-            AsyncTextButton(
-                title = StringResource(MHCStrings.onboarding_continue),
-                action = { },
-            )
+        sections = MutableStateFlow(
+            groveSectionList {
+                rowSection(
+                    key = "header",
+                    title = null,
+                    content = TextRow(text = StringResource(MHCStrings.consent_survey_header)),
+                )
+                rowSection(
+                    key = "seek-help",
+                    title = null,
+                    content = trueFalseRow(
+                        text = MHCStrings.consent_survey_question_seek_help,
+                        value = true,
+                    ),
+                )
+                rowSection(
+                    key = "voluntary",
+                    title = null,
+                    content = trueFalseRow(
+                        text = MHCStrings.consent_survey_question_voluntary,
+                        value = null,
+                    ),
+                )
+                rowSection(
+                    key = "withdraw",
+                    title = null,
+                    content = trueFalseRow(
+                        text = MHCStrings.consent_survey_question_withdraw,
+                        value = false,
+                    ),
+                )
+                buttonSection(
+                    key = "continue",
+                    title = MHCStrings.onboarding_continue,
+                )
+            },
         ),
     )
 
@@ -293,5 +297,59 @@ class MyHeartCountsOnboardingScreenshotTest : ScreenshotTest() {
             },
             content = content,
         )
+    }
+
+    private fun yesNoRow(
+        @StringRes text: Int,
+        @StringRes subtext: Int?,
+        value: Boolean,
+        style: BooleanOptionRow.Style,
+    ) = BooleanOptionRow(
+        text = StringResource(text),
+        subtext = subtext?.let { StringResource(it) },
+        value = MutableStateFlow(value),
+        onChange = { },
+        style = style,
+        confirmLabel = StringResource(MHCStrings.answer_yes),
+        declineLabel = StringResource(MHCStrings.answer_no),
+    )
+
+    private fun trueFalseRow(
+        @StringRes text: Int,
+        value: Boolean?,
+    ) = BooleanOptionRow(
+        text = StringResource(text),
+        subtext = null,
+        value = MutableStateFlow(value),
+        onChange = { },
+        style = BooleanOptionRow.Style.Label,
+        confirmLabel = StringResource(MHCStrings.answer_true),
+        declineLabel = StringResource(MHCStrings.answer_false),
+    )
+
+    private fun GroveSectionsBuilderScope.rowSection(
+        key: String,
+        @StringRes title: Int?,
+        content: ComposableContent,
+    ) {
+        section(key = key) {
+            title?.let { title(resId = it) }
+            card(key = key) { row(key = key, content = content) }
+        }
+    }
+
+    private fun GroveSectionsBuilderScope.buttonSection(
+        key: String,
+        @StringRes title: Int,
+    ) {
+        section(key = key) {
+            content(
+                key = key,
+                content = AsyncTextButton(
+                    title = StringResource(title),
+                    action = { },
+                ),
+            )
+        }
     }
 }

@@ -17,7 +17,7 @@ tickets to close the gap.
 |---|---|
 | iOS baseline | `MyHeartCounts-iOS` @ `0c56672` (whole app, Watch app, `MyHeartCountsShared`, study definitions); the dashboard's data sources, participation stats and achievements re-checked against `5bd8ee3` |
 | Android baseline | `MyHeartCounts-Android` @ `ec8168b` (audit); statuses updated against `19cab4d` ([#45](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/45): the Heart Health dashboard, demographics and study variants, on top of #44, #42 and #40) and the work on branch `feature/parity-iteration-3` |
-| Grove baseline | `grove-kotlin` @ `695fad1` (audit); the app's pin is now `0d302ed` (Grove #13, the login button's loading state, on top of #10), a descendant that contains every G ticket marked done except G07, which was moved into the app (`dashboard/ui`) |
+| Grove baseline | `grove-kotlin` @ `695fad1` (audit); the app's pin is now `4cecfe8` (Grove #15, the section system with the license module, on top of #13 and #10), a descendant that contains every G ticket marked done except G07, which was moved into the app (`dashboard/ui`) |
 | Study definition | revision 44 (`MyHeartCounts-StudyDefinitions`) |
 | Compiled | 2026-09-28 |
 | Last updated | 2026-11-07 |
@@ -29,20 +29,20 @@ grove-swift ↔ grove-kotlin equivalence. It only lists Grove work where MHC-And
 that Grove doesn't provide yet (the `G` tickets in section 5).
 
 The Grove pin couldn't be read during the audit, so the audit assumed `695fad1`. The pin has since been
-verified as `cc5937f`, which contains `695fad1`, and has since moved to `5f932aa`, `cb77df6` and then `0d302ed`.
+verified as `cc5937f`, which contains `695fad1`, and has since moved to `5f932aa`, `cb77df6`, `0d302ed` and then `4cecfe8`.
 
 The rows and tickets touched by Phase 1 work, demographics, and the G tickets were re-verified after the audit. Re-check any other row
 against the code before acting on it.
 
 ## Progress
 
-As of 2026-11-07. A ticket counts as done once it is ✅ here.
+As of 2026-11-15. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
 | App tickets (`T`) | 35 | 66 | 53% |
-| Grove tickets (`G`) | 11 | 14 | 79% |
-| **All tickets** | **46** | **80** | **58%** |
+| Grove tickets (`G`) | 13 | 15 | 87% |
+| **All tickets** | **48** | **81** | **59%** |
 | Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 69 ✅ · 19 🟡 · 31 ❌ | 119 | 58% (66% counting 🟡 as half) |
 
 | Phase | Done | Open |
@@ -57,7 +57,7 @@ As of 2026-11-07. A ticket counts as done once it is ✅ here.
 | 8. Consent renewal | 0 / 1 | T47 |
 | 9. Localization | 0 / 1 | T48 |
 | 10. Tooling and optional platform work | 1 / 7 | T49–T53, T65 |
-| Grove | 11 / 14 | G03, G14, G05 (only if D4 is yes) |
+| Grove | 13 / 15 | G03, G05 (only if D4 is yes) |
 
 Per feature group, see section 6. G03 (for the historical backfill) still blocks app work; G07's components live in the app's `dashboard/ui` package, so the dashboard UI (T43–T45, T58) needs no Grove change.
 
@@ -114,10 +114,10 @@ capabilities MHC needs that are missing (❌, each with a `G` ticket). Modules M
 |---|---|---|---|
 | `core`, `core-*`, `foundation` | Module/DI configuration, standard, coroutines, app lifecycle, logging, time provider, ViewModel helpers, JSON/Instant serializers | ✅ throughout | — |
 | `firebase` | Firebase app configuration with late initialization; options and the initialization hook are resolved in the dependency graph | ✅ `firebase/MHCFirebaseConfiguration.kt` (`mhcFirebase()`) | — |
-| `account` | `Account`, keys (manual/required/supported), `AccountDetails`/`AccountModifications`, sign-in/sign-out event flows, `AccountLoginScreen`, `AccountOverviewScreen` with a **`customSection` slot** (edit keys, name, password; logout; **no delete**), `AccountService.resetPassword` | ✅ login, overview, keys | ✅ `AccountService.sendEmailVerification()` and `refresh()` (**G08**) |
+| `account` | `Account`, keys (manual/required/supported), `AccountDetails`/`AccountModifications`, sign-in/sign-out event flows, `AccountLoginScreen`, `AccountOverviewScreen` taking app sections as **`customSections`**, rendered with its own in one lazy list (edit keys, name, password; logout; **no delete**), `AccountService.resetPassword` | ✅ login, overview, keys | ✅ `AccountService.sendEmailVerification()` and `refresh()` (**G08**). ✅ App-defined sections in a lazy overview (**G15**) |
 | `account-firebase` | `FirebaseAccountService` (email/password, anonymous, emulator), `FirestoreAccountStorage`, sets `isVerified` from Firebase | ✅ | ✅ Implements G08's resend and reload |
 | `ui-account` | Data-entry and display composables (string, boolean, choices, instant), overview/edit layouts | 🟡 key display only | — (demographics pickers are MHC-specific) |
-| `consent` | `ConsentScreen` rendering markdown consent with toggles, selects and a signature; `ConsentResponses` | ✅ onboarding consent | — (MHC has its own PDF renderer, `ConsentPdfRenderer.kt`) |
+| `consent` | `ConsentScreen` rendering markdown consent with toggles, selects and a signature; `ConsentResponses`; the signature's canvas size (`SignatureMetadata.canvasSize`) | ✅ onboarding consent | — (MHC has its own PDF renderer, `ConsentPdfRenderer.kt`) |
 | `onboarding` | `OnboardingLayout`, title, information areas, actions, `SequentialOnboardingLayout` | ✅ all onboarding pages | — |
 | `markdown` | Markdown + front-matter parsing, `MarkdownDocumentView` | ✅ articles, Heart Health explanations | ✅ Tables (**G13**) |
 | `questionnaire` | `QuestionnaireComposable` built on **Android FHIR Data Capture**, with cancel behavior and a completion step; returns `QuestionnaireResponse` | ✅ survey tasks (T23) | — (MHC adapts the survey content before rendering, B10). The renderer takes the host theme's Grove palette (G11) |
@@ -127,7 +127,7 @@ capabilities MHC needs that are missing (❌, each with a `G` ticket). Modules M
 | `study-definition` | `StudyDefinition` decoding (Swift-compatible), `StudyBundle.open/unpack` (`.tar.zst`), locale-aware `resolve`, `consentText`, component titles | ✅ | — (downloading the bundle is MHC work, T08) |
 | `health` | Configured read/write access, automatic background collection with change tokens and a resync callback, **`requestPermissionsIfNeeded`** (incl. history + background), per-type read/write requests, permission rationale activity, raw `query` (time range, data-origin source filter, sort, limit), anchored and continuous queries, `insert`, `oldestSampleDate` | 🟡 collection, permission request and availability (T10) | ✅ Availability / update-required handling and a suspending permission request (**G01**). ✅ Aggregate queries (`aggregate`, total or per hourly/daily/weekly/monthly/custom bucket) and `mostRecent` (**G02**). ❌ No resumable **historical bulk export** → **G03**. ❌ No **medical records (FHIR)** read API, although the permissions are declared → **G05** (only if D4 is yes). Broad declarations retained for bundle flexibility (B8) |
 | `storage-local`, `storage-credential` | Key-value storage (encrypted/unencrypted), credential storage | ✅ | ✅ Encrypted values of any size (**G12**) |
-| `ui`, `ui-theme`, `ui-validation` | Scaffold, app bar, cards, async buttons, toasts, error/loading layouts, date picker, choices input, validated text fields, **runtime `PermissionRequester`**, theme, validation rules | ✅ | ❌ No **chart** or **gauge** components → **G07** |
+| `ui`, `ui-theme`, `ui-validation` | Scaffold (with dialogs and `GroveAlertDialog`), app bar, cards, **sections** (`GroveSection`, `GroveSectionList`, `CardRow`, builder DSL), async buttons, toasts, error/loading layouts, date picker, choices input, validated text fields, **runtime `PermissionRequester`**, theme, validation rules | ✅ | ❌ No **chart** or **gauge** components → **G07**. ✅ Shared section components (**G14**) |
 | `resources` | Shared Grove strings | ✅ | — English only by design: the app overrides Grove strings in its own locale folders (T48). **G10** ✅ made the one concatenated message translatable |
 
 **Not required from Grove** (MHC-local on both platforms): Firebase Storage uploads and managed file
@@ -368,7 +368,7 @@ blocks.
 9. **Localization.**
 10. **Tooling and optional platform work.**
 
-Grove tickets (`G01`–`G14`) are placed in the phase whose MHC tickets need them, ahead of those
+Grove tickets (`G01`–`G15`) are placed in the phase whose MHC tickets need them, ahead of those
 tickets. Because a Grove change reaches the app through the submodule pin (see README), each `G`
 ticket is: merge in Grove, bump the pin, then use it in MHC.
 
@@ -385,7 +385,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | 9 | T48 🟡 | G10 ✅ (Grove side) |
 | 10 | T49–T53, **T60** ✅, T65 | G05 (for T53, only if D4 is yes) |
 
-G14 (shared form and section components) blocks no ticket; it removes duplicated UI in Grove and the app.
+G14 ✅ (shared form and section components) blocked no ticket; it removes duplicated UI in Grove and the app. Neither does G15 (app-defined sections in a lazy account overview).
 G12 (an encrypted-storage bug) blocked no ticket; it is done ✅.
 
 Phases set priority, not hard gates. T23, T25 and T26 (Phase 4) landed while T10 (Phase 1)
@@ -1000,10 +1000,18 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 **Acceptance:** The LDL and blood pressure explanations show their tables as on iOS (bordered cells, semibold header, wrapped text); parser and screenshot tests cover alignment and inline emphasis.
 **As built:** `MarkdownNode.Table` (columns with header and `Alignment` Leading/Center/Trailing, rows padded or cut to the column count) is parsed ahead of the other node kinds when a line with a pipe is followed by a delimiter row of as many cells; outer pipes are optional, `\|` stays a literal pipe, and the body ends at a blank line, heading or list item. `MarkdownTableView` renders it from `MarkdownNodeView`: a hairline `outline` border around every cell, the header in semibold, cell padding of 0.72 em by 0.35 em of the body font, column alignment, inline emphasis and links. Columns take their widest cell when the table fits; otherwise columns that fit an equal share keep their width and the wider ones share the rest, never below their longest word, with text wrapping. `MarkdownNode.links()` covers table cells. The app's consent PDF writes a table row by row (consent documents have none today). Tests: 9 parser tests (alignments, no outer pipes, escaped pipes, short and long rows, ends of a table, mismatched delimiter, pipes in paragraphs, links in cells) and a screenshot with the study's blood pressure and LDL tables; checked on a device in the LDL and blood pressure explanations of the score detail screen.
 
-#### G14: Shared form and section components (`ui` or a new `ui-form` module)
+#### G14: Shared form and section components (`ui` or a new `ui-form` module) ✅ Done in Grove (#15, pinned)
 **Tags:** `grove`, `ui`, `tech-debt`
-**Description:** This is not only an app problem: Grove's own UI modules, such as `ui-account`, `ui-scheduler` and `consent`, each recreate the same setup, and the app does it again on top. Every one of them builds its own list-style building blocks on top of `GroveCard` and `ItemDisplayRowComposable`: a section with a title, a card of labelled values separated by dividers, a titled text card, and rows with a switch, a value picker, a date, a text field or navigation. Each copy repeats the card, divider, padding and typography decisions, so they drift apart. The copies in Grove: `ui` (`ItemDisplayRow`, `DescriptionGridRow`), `ui-account` (`AccountOverviewSection`, `AccountOverviewItem`, `AccountSectionTitle`, `AccountValueText`, `StringDataDisplay`, `ValueTextDisplay`, the `BooleanDataEntry`, `ChoicesDataEntry`, `InstantDataEntry` and `StringDataEntry` rows, `SignUpSection`, `LabeledHorizontalDivider`), `ui-scheduler` (`TaskSection`, `TaskListHeader`) and `consent` (`ConsentToggleSection`, `ConsentSelectSection`). In the app: `ui/ToggleSection`, `ui/BooleanOptionRow` and `ui/NavigationCard`; the dashboard's `dashboard/ui/DashboardSection`, `TileHeader` and `IconTextCardRow`; the score entry form's `EntryFieldGroup`, `EntryFieldRow`, `EntryOptionsRow`, `EntryDateRow` and `EntryRowLabel`; the account overview's `AppInfoSection`, `StudyParticipationSection` and `SupportSection`; and the debug sheet's `DebugSectionTitle`, `DebugRowsCard` and `DebugTextCard`. Provide one set in Grove as concretely typed `ComposableContent`s with no domain types: a section (optional title and footer around a list of rows) and row kinds for a labelled value, a switch, a picker, a date, a text field and navigation, each with a preview and a screenshot test. Decide first whether they belong in `ui`, next to `GroveCard` and `ItemDisplayRowComposable`, or in a new `ui-form` module that the other UI modules depend on; then move the Grove modules and the app onto them and delete their copies. Domain-specific parts stay where they are: `ui-account` keeps its account-value wiring and `consent` its consent responses, each built from the shared rows.
+**Description:** This is not only an app problem: Grove's own UI modules, such as `ui-account`, `ui-scheduler` and `consent`, each recreate the same setup, and the app does it again on top. Every one of them builds its own list-style building blocks on top of `GroveCard` and `ItemDisplayRowComposable`: a section with a title, a card of labelled values separated by dividers, a titled text card, and rows with a switch, a value picker, a date, a text field or navigation. Each copy repeats the card, divider, padding and typography decisions, so they drift apart. The copies in Grove: `ui` (`ItemDisplayRow`, `DescriptionGridRow`), `ui-account` (`AccountOverviewSection`, `AccountOverviewItem`, `AccountSectionTitle`, `AccountValueText`, `StringDataDisplay`, `ValueTextDisplay`, the `BooleanDataEntry`, `ChoicesDataEntry`, `InstantDataEntry` and `StringDataEntry` rows, `SignUpSection`, `LabeledHorizontalDivider`), `ui-scheduler` (`TaskSection`, `TaskListHeader`) and `consent` (`ConsentToggleSection`, `ConsentSelectSection`). In the app: `ui/ToggleSection`, `ui/ToggleRow`, `ui/BooleanOptionRow` and `ui/NavigationCard`; the dashboard's `dashboard/ui/DashboardSection`, `TileHeader` and `IconTextCardRow`; the score entry form's `EntryFieldGroup`, `EntryFieldRow`, `EntryOptionsRow`, `EntryDateRow` and `EntryRowLabel`; the account overview's `AppInfoSection`, `StudyParticipationSection` and `SupportSection`; and the debug sheet's `DebugSectionTitle`, `DebugRowsCard` and `DebugTextCard`. Provide one set in Grove as concretely typed `ComposableContent`s with no domain types: a section (optional title and footer around a list of rows) and row kinds for a labelled value, a switch, a picker, a date, a text field and navigation, each with a preview and a screenshot test. Decide first whether they belong in `ui`, next to `GroveCard` and `ItemDisplayRowComposable`, or in a new `ui-form` module that the other UI modules depend on; then move the Grove modules and the app onto them and delete their copies. Domain-specific parts stay where they are: `ui-account` keeps its account-value wiring and `consent` its consent responses, each built from the shared rows.
 **Acceptance:** `ui-account`, `ui-scheduler`, `consent` and the app's dashboard components, account overview, score entry form and debug sheet are built from the shared components, with no module- or app-local section, row or section-title types left; screenshots are unchanged except where a difference was decided.
+
+**As built:** In `ui`, with no new module. `GroveSection` is a section with an optional title and footer around its elements: `Element.Card` joins `CardRow`s into one card with inset dividers, each row a lazy item of its own, and `Element.Content` places a component that brings its own surface. `GroveSectionList` hosts sections in a lazy list, sets them apart by `Spacings.large` and skips empty ones; `LazyListContent` lets a section add itself to a list the host owns. A builder DSL builds them in mappers (`groveSectionList`, `groveSections`, `groveSection`, `groveCard`). Grove's `license` module and the account overview's app sections (G15) are built from them. In the app, the account overview, debug sheet, Heart Health tab, heart score detail, participation stats, achievements and the onboarding forms (eligibility, consent survey, workout preference, demographics with its choice sheets, comorbidities) are built from sections; `DashboardSection`, `DashboardSectionList`, `ToggleSection`, `ChoiceSection`, `DebugSectionTitle`, `DebugRowsCard`, `DebugTextCard`, the eligibility layout's `Section` and the account overview's section types are gone. Rows stay with their owners as `ComposableContent`s placed in card sections (`ToggleRow`, `BooleanOptionRow`, `TextRow`, `ChoiceRow`); no shared picker, date or text-field row kinds were added. Not moved onto sections: `ui-account`'s own overview sections (`AccountOverviewSection`, `AccountSectionTitle`, `LabeledHorizontalDivider`), `ui-scheduler`'s `TaskSection` and `TaskListHeader`, `consent`'s `ConsentToggleSection` and `ConsentSelectSection`, and the app's score entry form (`EntryFieldGroup` and its rows) keep their own layouts.
+
+#### G15: App-defined sections in a lazy account overview ✅ Done in Grove (#15, pinned)
+**Tags:** `grove`, `account`, `ui`
+**Description:** The account overview took one `ComposableContent` as its custom section, rendered inside a scrolling `Column`, so an app could only append a single block that was always fully composed. Render the overview as one lazy list and let apps contribute any number of sections, each adding its own keyed items to that list.
+**Acceptance:** `AccountOverviewScreen` takes the app's sections and renders them in the given order between the account's own sections and Logout, in a single lazy list; the overview looks as before.
+**As built:** `ui` has `LazyListContent`, content that renders itself as lazy-list items: its `@Composable items()` collects its state and returns the `LazyListScope` block to add. `LazyListContentPreview(content, modifier)` previews one in the Grove theme as the items of a `LazyColumn`. `ui-account` has `CustomAccountSections(sections)`, and `AccountOverviewScreen(customSections = CustomAccountSections.None, onDismiss)` replaces the `customSection: ComposableContent?` parameter; `AccountOverviewLayout` is one lazy list with the header, the account's own sections, the custom sections in their given order, and Logout. The app's overview passes `GroveSection`s (G14) built in `MHCAccountOverviewMapper`: study participation, post-trial nudges, support, app info, and withdrawing from the study, whose confirmation and failure dialogs are Grove `GroveAlertDialog`s. `MHCAccountOverviewSections` and the overview's own section types are gone.
 
 ## 6. Summary by feature group
 

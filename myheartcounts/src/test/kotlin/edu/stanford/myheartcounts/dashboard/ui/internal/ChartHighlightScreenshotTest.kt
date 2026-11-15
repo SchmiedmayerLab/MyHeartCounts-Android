@@ -15,9 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import edu.stanford.myheartcounts.dashboard.ui.DashboardColorPalette
 import edu.stanford.myheartcounts.dashboard.ui.chart.CartesianChart
 import edu.stanford.myheartcounts.dashboard.ui.chart.CartesianChartConfig
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.theme.ColorToken
 import org.grovealliance.ui.theme.Spacings
@@ -88,7 +88,7 @@ class ChartHighlightScreenshotTest : ScreenshotTest() {
                 color = config.highlight.valueColor.resolve(),
                 fontWeight = config.typography.highlightValueWeight,
             )
-            val colors = listOf(DashboardColorPalette.blue.resolve(), DashboardColorPalette.red.resolve())
+            val colors = listOf(MHCColors.blue.resolve(), MHCColors.red.resolve())
             val grid = config.gridColor.resolve()
             val line = config.highlight.lineColor.resolve()
             val background = config.highlight.backgroundColor.resolve()

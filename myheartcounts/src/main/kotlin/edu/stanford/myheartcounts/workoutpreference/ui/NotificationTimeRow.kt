@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,17 +24,15 @@ import edu.stanford.myheartcounts.ui.ValueBadge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ComposableContent
-import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
-import org.grovealliance.ui.theme.GroveShapes
 import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.Spacings
 import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * A card naming the time of day notifications are sent at, with the current time as a trailing
+ * A row naming the time of day notifications are sent at, with the current time as a trailing
  * [badge].
  *
  * @param title what the time is for
@@ -52,34 +49,27 @@ data class NotificationTimeRow(
     override fun Content(modifier: Modifier) {
         val badge by badge.collectAsStateWithLifecycle()
 
-        GroveCard(
-            modifier = modifier,
-            shape = GroveShapes.large,
+        Row(
+            modifier = modifier.padding(Spacings.medium),
+            horizontalArrangement = Arrangement.spacedBy(Spacings.medium),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacings.medium),
-                horizontalArrangement = Arrangement.spacedBy(Spacings.medium),
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Spacings.tiny),
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(Spacings.tiny),
-                ) {
-                    Text(
-                        text = title.text(),
-                        style = TextStyles.bodyLarge,
-                        color = Colors.onSurface,
-                    )
-                    Text(
-                        text = subtitle.text(),
-                        style = TextStyles.bodySmall,
-                        color = Colors.onSurfaceVariant,
-                    )
-                }
-                badge.Content()
+                Text(
+                    text = title.text(),
+                    style = TextStyles.bodyLarge,
+                    color = Colors.onSurface,
+                )
+                Text(
+                    text = subtitle.text(),
+                    style = TextStyles.bodySmall,
+                    color = Colors.onSurfaceVariant,
+                )
             }
+            badge.Content()
         }
     }
 }

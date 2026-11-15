@@ -10,11 +10,11 @@ package edu.stanford.myheartcounts.demographics.ui
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.ui.choice.ChoiceFollowUpRow
 import edu.stanford.myheartcounts.ui.choice.ChoiceRow
-import edu.stanford.myheartcounts.ui.choice.ChoiceSection
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 import org.junit.Test
 
 class DemographicsChoiceSheetScreenshotTest : ScreenshotTest() {
@@ -32,50 +32,54 @@ class DemographicsChoiceSheetScreenshotTest : ScreenshotTest() {
             title(MHCStrings.comorbidities_title)
             close {}
         },
-        prompt = null,
         sections = MutableStateFlow(
-            listOf(
-                ChoiceSection(
-                    header = null,
-                    options = listOf(
-                        option.copy(
-                            isSelected = true,
-                            followUp = ChoiceFollowUpRow(
-                                label = StringResource(MHCStrings.comorbidities_since),
-                                value = StringResource("Mar 2020"),
-                                isSet = true,
-                                onClick = {},
+            groveSectionList {
+                section(key = "primary") {
+                    card(key = "options") {
+                        row(
+                            key = "diabetes",
+                            content = option.copy(
+                                isSelected = true,
+                                followUp = ChoiceFollowUpRow(
+                                    label = StringResource(MHCStrings.comorbidities_since),
+                                    value = StringResource("Mar 2020"),
+                                    isSet = true,
+                                    onClick = {},
+                                ),
                             ),
-                        ),
-                        option.copy(
-                            title = StringResource("Heart Failure"),
-                            isSelected = true,
-                            followUp = ChoiceFollowUpRow(
-                                label = StringResource(MHCStrings.comorbidities_since),
-                                value = StringResource(MHCStrings.comorbidities_since_unknown),
-                                isSet = false,
-                                onClick = {},
+                        )
+                        row(
+                            key = "heart-failure",
+                            content = option.copy(
+                                title = StringResource("Heart Failure"),
+                                isSelected = true,
+                                followUp = ChoiceFollowUpRow(
+                                    label = StringResource(MHCStrings.comorbidities_since),
+                                    value = StringResource(MHCStrings.comorbidities_since_unknown),
+                                    isSet = false,
+                                    onClick = {},
+                                ),
                             ),
-                        ),
-                        option.copy(
-                            title = StringResource("Coronary Artery Disease"),
-                        ),
-                    ),
-                    footer = null,
-                ),
-                ChoiceSection(
-                    header = null,
-                    options = listOf(
-                        option.copy(
-                            title = StringResource("Stroke"),
-                        ),
-                        option.copy(
-                            title = StringResource("Kidney Disease"),
-                        ),
-                    ),
-                    footer = null,
-                ),
-            ),
+                        )
+                        row(
+                            key = "coronary-artery-disease",
+                            content = option.copy(title = StringResource("Coronary Artery Disease")),
+                        )
+                    }
+                }
+                section(key = "secondary") {
+                    card(key = "options") {
+                        row(
+                            key = "stroke",
+                            content = option.copy(title = StringResource("Stroke")),
+                        )
+                        row(
+                            key = "kidney-disease",
+                            content = option.copy(title = StringResource("Kidney Disease")),
+                        )
+                    }
+                }
+            },
         ),
         monthYearPicker = MutableStateFlow(null),
     )

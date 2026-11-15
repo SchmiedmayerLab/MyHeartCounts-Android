@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import edu.stanford.myheartcounts.dashboard.ui.internal.TileHeader
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
 import org.grovealliance.ui.StringResource
@@ -89,7 +90,7 @@ private class GaugeTilePreviewProvider : PreviewParameterProvider<GaugeTile> {
         title = StringResource("Title"),
         gauge = Gauge(
             progress = 1f,
-            colors = DashboardColorPalette.redToGreen,
+            colors = MHCColors.redToGreen,
             lineWidth = Gauge.defaultLineWidth * 1.5f,
             size = Gauge.Size.Regular,
             label = Gauge.Label(

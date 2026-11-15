@@ -7,113 +7,93 @@
 
 package edu.stanford.myheartcounts.onboarding.comprehension
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.ui.BooleanOptionRow
-import edu.stanford.myheartcounts.ui.MHCAppTheme
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import edu.stanford.myheartcounts.ui.TextRow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.AsyncTextButton
 import org.grovealliance.ui.ComposableContent
-import org.grovealliance.ui.GroveCard
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
-import org.grovealliance.ui.theme.Colors
-import org.grovealliance.ui.theme.Spacings
+import org.grovealliance.ui.groveSectionList
+import org.grovealliance.ui.theme.GroveTheme
+import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * The consent survey step layout: an introductory [header], a list of review [questions], and a
- * [primaryButton] whose enabled state tracks whether every question has been answered correctly.
+ * The consent survey step layout: the introduction, the review questions and the continue button in
+ * [sections], following their changes.
  */
 data class ConsentSurveyLayout(
-    val header: StringResource,
-    val questions: List<BooleanOptionRow>,
-    val primaryButton: Flow<AsyncTextButton>,
+    val sections: StateFlow<GroveSectionList>,
 ) : ComposableContent {
 
     @Composable
     override fun Content(modifier: Modifier) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Spacings.medium),
-            verticalArrangement = Arrangement.spacedBy(Spacings.medium),
-        ) {
-            GroveCard {
-                Text(
-                    modifier = Modifier.padding(Spacings.medium),
-                    text = header.text(),
-                    color = Colors.onSurfaceVariant,
-                )
-            }
-            questions.forEach { question ->
-                GroveCard {
-                    question.Content(modifier = Modifier.fillMaxWidth())
-                }
-            }
-            PrimaryButton()
-        }
-    }
-
-    @Composable
-    private fun PrimaryButton() {
-        val primaryButton by primaryButton.collectAsStateWithLifecycle(initialValue = null)
-        primaryButton?.Content(modifier = Modifier.fillMaxWidth())
+        val sections by sections.collectAsStateWithLifecycle()
+        sections.Content(modifier = modifier.fillMaxSize())
     }
 }
 
-@Preview
+private class ConsentSurveyLayoutPreviewProvider : PreviewParameterProvider<ConsentSurveyLayout> {
+    private val questions = listOf(
+        MHCStrings.consent_survey_question_seek_help to true,
+        MHCStrings.consent_survey_question_voluntary to null,
+        MHCStrings.consent_survey_question_withdraw to false,
+    )
+    private val base = ConsentSurveyLayout(
+        sections = MutableStateFlow(
+            groveSectionList {
+                section(key = "header") {
+                    card(key = "header") {
+                        row(
+                            key = "header",
+                            content = TextRow(text = StringResource(MHCStrings.consent_survey_header)),
+                        )
+                    }
+                }
+                questions.forEach { (text, value) ->
+                    section(key = "$text") {
+                        card(key = "question") {
+                            row(
+                                key = "question",
+                                content = BooleanOptionRow(
+                                    text = StringResource(text),
+                                    subtext = null,
+                                    value = MutableStateFlow(value),
+                                    onChange = {},
+                                    style = BooleanOptionRow.Style.Label,
+                                    confirmLabel = StringResource(MHCStrings.answer_true),
+                                    declineLabel = StringResource(MHCStrings.answer_false),
+                                ),
+                            )
+                        }
+                    }
+                }
+                section(key = "continue") {
+                    content(
+                        key = "continue",
+                        content = AsyncTextButton(
+                            title = StringResource(MHCStrings.onboarding_continue),
+                            action = {},
+                        ),
+                    )
+                }
+            },
+        ),
+    )
+    override val values = sequenceOf(base)
+}
+
+@ThemePreviews
 @Composable
-private fun ConsentSurveyPreview() {
-    MHCAppTheme {
-        ConsentSurveyLayout(
-            header = StringResource(MHCStrings.consent_survey_header),
-            questions = listOf(
-                BooleanOptionRow(
-                    text = StringResource(MHCStrings.consent_survey_question_seek_help),
-                    subtext = null,
-                    value = flowOf(true),
-                    onChange = { },
-                    style = BooleanOptionRow.Style.Label,
-                    confirmLabel = StringResource(MHCStrings.answer_true),
-                    declineLabel = StringResource(MHCStrings.answer_false),
-                ),
-                BooleanOptionRow(
-                    text = StringResource(MHCStrings.consent_survey_question_voluntary),
-                    subtext = null,
-                    value = flowOf(null),
-                    onChange = { },
-                    style = BooleanOptionRow.Style.Label,
-                    confirmLabel = StringResource(MHCStrings.answer_true),
-                    declineLabel = StringResource(MHCStrings.answer_false),
-                ),
-                BooleanOptionRow(
-                    text = StringResource(MHCStrings.consent_survey_question_withdraw),
-                    subtext = null,
-                    value = flowOf(false),
-                    onChange = { },
-                    style = BooleanOptionRow.Style.Label,
-                    confirmLabel = StringResource(MHCStrings.answer_true),
-                    declineLabel = StringResource(MHCStrings.answer_false),
-                ),
-            ),
-            primaryButton = flowOf(
-                AsyncTextButton(
-                    title = StringResource(MHCStrings.onboarding_continue),
-                    action = { },
-                )
-            ),
-        ).Content(modifier = Modifier)
-    }
+private fun Preview(@PreviewParameter(ConsentSurveyLayoutPreviewProvider::class) layout: ConsentSurveyLayout) {
+    GroveTheme { layout.Content() }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
@@ -49,7 +50,7 @@ class CounterCardScreenshotTest : ScreenshotTest() {
         trailingRow = ProgressRingRow(
             ring = ProgressRing(
                 progress = 0f,
-                progressColor = DashboardColorPalette.green,
+                progressColor = MHCColors.green,
                 icon = ImageResource.Vector(
                     image = Icons.Default.CalendarMonth,
                     tint = { Colors.onSurface },
@@ -65,7 +66,7 @@ class CounterCardScreenshotTest : ScreenshotTest() {
                 ProgressRingRow(
                     ring = ProgressRing(
                         progress = 0.7f,
-                        progressColor = DashboardColorPalette.green,
+                        progressColor = MHCColors.green,
                         icon = ImageResource.Vector(
                             image = Icons.AutoMirrored.Filled.DirectionsWalk,
                             tint = { Colors.onSurface },
@@ -78,7 +79,7 @@ class CounterCardScreenshotTest : ScreenshotTest() {
                 ProgressRingRow(
                     ring = ProgressRing(
                         progress = 0f,
-                        progressColor = DashboardColorPalette.green,
+                        progressColor = MHCColors.green,
                         icon = ImageResource.Vector(
                             image = Icons.AutoMirrored.Filled.Assignment,
                             tint = { Colors.onSurface },
@@ -151,7 +152,7 @@ class CounterCardScreenshotTest : ScreenshotTest() {
         trailingRow = base.trailingRow?.copy(
             title = StringResource("A week of consistency"),
             subtitle = StringResource("Completed all seven daily check-ins"),
-            trailingBadge = TextBadge(text = StringResource("Complete"), color = DashboardColorPalette.green),
+            trailingBadge = TextBadge(text = StringResource("Complete"), color = MHCColors.green),
         ),
     )
 

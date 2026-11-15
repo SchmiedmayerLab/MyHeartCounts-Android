@@ -19,8 +19,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.ui.ActionSink
+import org.grovealliance.ui.GroveSectionList
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSectionList
 
 /**
  * Builds the comorbidities screen.
@@ -96,44 +98,56 @@ class ComorbiditiesMapperImpl(
             onDismiss = { input.actionSink.push(ComorbiditiesAction.DiagnosisDatePickerDismissed) },
         )
 
-    private fun sections(comorbidities: Comorbidities?, input: ComorbiditiesInput): List<ComorbiditiesScreenContent.Section> {
+    private fun sections(comorbidities: Comorbidities?, input: ComorbiditiesInput): GroveSectionList {
         val entries = comorbidities?.entries
-        val groups = conditionsProvider.conditions()
-            .groupBy { it.group }
-            .values
-            .map { group ->
-                ComorbiditiesScreenContent.Section(
-                    conditions = group.map {
-                        ChoiceRow(
-                            icon = null,
-                            title = it.title,
-                            subtitle = it.subtitle,
-                            detail = null,
-                            isSelected = entries?.containsKey(it.id) == true,
-                            followUp = diagnosis(
-                                condition = it.id,
-                                date = entries?.get(it.id).orEmpty(),
-                                input = input,
+        return groveSectionList {
+            conditionsProvider.conditions()
+                .groupBy { it.group }
+                .forEach { (group, conditions) ->
+                    section(key = group.name) {
+                        card(key = CONDITIONS_KEY) {
+                            conditions.forEach {
+                                row(
+                                    key = it.id,
+                                    content = ChoiceRow(
+                                        icon = null,
+                                        title = it.title,
+                                        subtitle = it.subtitle,
+                                        detail = null,
+                                        isSelected = entries?.containsKey(it.id) == true,
+                                        followUp = diagnosis(
+                                            condition = it.id,
+                                            date = entries?.get(it.id).orEmpty(),
+                                            input = input,
+                                        ),
+                                        onClick = {
+                                            input.actionSink.push(ComorbiditiesAction.ConditionSelected(condition = it.id))
+                                        },
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+            if (rules.offersNone(current = comorbidities)) {
+                section(key = NONE_KEY) {
+                    card(key = CONDITIONS_KEY) {
+                        row(
+                            key = NONE_KEY,
+                            content = ChoiceRow(
+                                icon = null,
+                                title = StringResource(MHCStrings.comorbidities_none),
+                                subtitle = null,
+                                detail = null,
+                                isSelected = rules.isNone(current = comorbidities),
+                                followUp = null,
+                                onClick = { input.actionSink.push(ComorbiditiesAction.NoneSelected) },
                             ),
-                            onClick = { input.actionSink.push(ComorbiditiesAction.ConditionSelected(condition = it.id)) },
                         )
-                    },
-                )
+                    }
+                }
             }
-        val none = ComorbiditiesScreenContent.Section(
-            conditions = listOf(
-                ChoiceRow(
-                    icon = null,
-                    title = StringResource(MHCStrings.comorbidities_none),
-                    subtitle = null,
-                    detail = null,
-                    isSelected = rules.isNone(current = comorbidities),
-                    followUp = null,
-                    onClick = { input.actionSink.push(ComorbiditiesAction.NoneSelected) },
-                ),
-            ),
-        )
-        return if (rules.offersNone(current = comorbidities)) groups + none else groups
+        }
     }
 
     private fun diagnosis(condition: String, date: String, input: ComorbiditiesInput) = ChoiceFollowUpRow(
@@ -142,4 +156,9 @@ class ComorbiditiesMapperImpl(
         isSet = date.isNotEmpty(),
         onClick = { input.actionSink.push(ComorbiditiesAction.DiagnosisDateSelected(condition = condition)) },
     )
+
+    private companion object {
+        const val CONDITIONS_KEY = "conditions"
+        const val NONE_KEY = "none"
+    }
 }

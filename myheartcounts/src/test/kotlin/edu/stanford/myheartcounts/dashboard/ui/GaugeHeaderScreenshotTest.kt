@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.dashboard.ui
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.ColorToken
@@ -35,7 +36,7 @@ class GaugeHeaderScreenshotTest : ScreenshotTest() {
         footnote = StringResource("7:36"),
         gauge = Gauge(
             progress = 1f,
-            colors = DashboardColorPalette.redToGreen,
+            colors = MHCColors.redToGreen,
             lineWidth = Gauge.defaultLineWidth * 1.5f,
             size = Gauge.Size.Regular,
             label = Gauge.Label(

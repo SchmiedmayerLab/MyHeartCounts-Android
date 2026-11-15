@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import edu.stanford.myheartcounts.ui.MHCColors
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Spacings
@@ -23,25 +24,25 @@ class ColorBandListScreenshotTest : ScreenshotTest() {
             ColorBandList.Band(
                 leadingText = StringResource("7 to 9 hours"),
                 trailingText = StringResource("100"),
-                fillColors = listOf(DashboardColorPalette.green),
+                fillColors = listOf(MHCColors.green),
                 isHighlighted = true,
             ),
             ColorBandList.Band(
                 leadingText = StringResource("9 to 10 hours"),
                 trailingText = StringResource("90"),
-                fillColors = listOf(DashboardColorPalette.redToGreen.colorAt(fraction = 0.9f)),
+                fillColors = listOf(MHCColors.redToGreen.colorAt(fraction = 0.9f)),
                 isHighlighted = false,
             ),
             ColorBandList.Band(
                 leadingText = StringResource("6 to 7 hours"),
                 trailingText = StringResource("70"),
-                fillColors = listOf(DashboardColorPalette.redToGreen.colorAt(fraction = 0.7f)),
+                fillColors = listOf(MHCColors.redToGreen.colorAt(fraction = 0.7f)),
                 isHighlighted = false,
             ),
             ColorBandList.Band(
                 leadingText = StringResource("4 to 5 hours"),
                 trailingText = StringResource("20"),
-                fillColors = listOf(DashboardColorPalette.redToGreen.colorAt(fraction = 0.2f)),
+                fillColors = listOf(MHCColors.redToGreen.colorAt(fraction = 0.2f)),
                 isHighlighted = false,
             ),
         ),
@@ -99,7 +100,7 @@ class ColorBandListScreenshotTest : ScreenshotTest() {
                 bands = listOf(
                     base.bands.first().copy(
                         leadingText = StringResource("0"),
-                        fillColors = DashboardColorPalette.redToGreen,
+                        fillColors = MHCColors.redToGreen,
                         isHighlighted = false,
                     ),
                 ),

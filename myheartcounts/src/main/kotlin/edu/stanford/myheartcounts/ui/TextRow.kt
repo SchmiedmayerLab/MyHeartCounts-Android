@@ -5,48 +5,43 @@
 //
 // SPDX-License-Identifier: MIT
 
-package edu.stanford.myheartcounts.debug
+package edu.stanford.myheartcounts.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.GroveTheme
 import org.grovealliance.ui.theme.Spacings
-import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * The uppercase [title] above a section of the debug sheet.
+ * A row showing a paragraph of [text].
  */
-data class DebugSectionTitle(
-    val title: StringResource,
+data class TextRow(
+    val text: StringResource,
 ) : ComposableContent {
 
     @Composable
     override fun Content(modifier: Modifier) {
         Text(
-            modifier = modifier.padding(top = Spacings.small),
-            text = title.text().uppercase(),
-            style = TextStyles.labelLarge,
+            modifier = modifier.padding(Spacings.medium),
+            text = text.text(),
             color = Colors.onSurfaceVariant,
         )
     }
 }
 
-private class DebugSectionTitlePreviewProvider : PreviewParameterProvider<DebugSectionTitle> {
-    private val base = DebugSectionTitle(title = StringResource("App Info"))
-
-    override val values = sequenceOf(base)
-}
-
 @ThemePreviews
 @Composable
-private fun Preview(@PreviewParameter(DebugSectionTitlePreviewProvider::class) content: DebugSectionTitle) {
-    GroveTheme { content.Content() }
+private fun Preview() {
+    GroveTheme {
+        TextRow(
+            text = StringResource("Answer a few questions to find out whether you can take part in the study."),
+        ).Content(modifier = Modifier.fillMaxWidth())
+    }
 }
