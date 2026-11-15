@@ -14,7 +14,6 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.demographics.ui.DemographicsChoiceSheet
 import edu.stanford.myheartcounts.demographics.ui.DemographicsDatePicker
 import edu.stanford.myheartcounts.demographics.ui.DemographicsMenu
-import edu.stanford.myheartcounts.demographics.ui.DemographicsMonthYearPicker
 import edu.stanford.myheartcounts.demographics.ui.DemographicsScreenContent
 import edu.stanford.myheartcounts.demographics.ui.DemographicsScreenMode
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
@@ -22,6 +21,7 @@ import edu.stanford.myheartcounts.model.demographics.NHSNumber
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
+import edu.stanford.myheartcounts.ui.choice.MonthYearPicker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,7 +56,7 @@ class DemographicsViewModel(
     private val actionSource = ActionSource(::onAction)
     private val menu = MutableStateFlow<DemographicsMenu?>(null)
     private val datePicker = MutableStateFlow<DemographicsDatePicker?>(null)
-    private val monthYearPicker = MutableStateFlow<DemographicsMonthYearPicker?>(null)
+    private val monthYearPicker = MutableStateFlow<MonthYearPicker?>(null)
     private val scaffoldState = mutableScaffoldState()
     private var entry: DemographicsEntry? = null
     private val entryText = MutableStateFlow("")

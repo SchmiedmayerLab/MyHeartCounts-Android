@@ -57,19 +57,6 @@ import java.time.format.FormatStyle
 import java.util.Locale
 
 /**
- * What the participation stats sheet is built from.
- *
- * @param scaffoldState the sheet's scaffold, app bar included
- * @param page the page on screen
- * @param actionSink receives the sheet's intents
- */
-data class ParticipationStatsContentInput(
-    val scaffoldState: GroveScaffoldState,
-    val page: StateFlow<ParticipationStatsPage>,
-    val actionSink: ActionSink<ParticipationStatsAction>,
-)
-
-/**
  * Builds the participation stats screen.
  */
 interface ParticipationStatsContentMapper {
@@ -81,6 +68,19 @@ interface ParticipationStatsContentMapper {
      */
     fun map(input: ParticipationStatsContentInput): ParticipationStatsScreenContent
 }
+
+/**
+ * What the participation stats sheet is built from.
+ *
+ * @param scaffoldState the sheet's scaffold, app bar included
+ * @param page the page on screen
+ * @param actionSink receives the sheet's intents
+ */
+data class ParticipationStatsContentInput(
+    val scaffoldState: GroveScaffoldState,
+    val page: StateFlow<ParticipationStatsPage>,
+    val actionSink: ActionSink<ParticipationStatsAction>,
+)
 
 /**
  * A [ParticipationStatsContentMapper] showing fixed sample values, not derived from the

@@ -44,13 +44,26 @@ class OnboardingStepProviderTest {
         assertThat(provider.getNext(step = OnboardingStep.Notifications, answers = OnboardingAnswers.default))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.Demographics))
         notificationPermission.setGranted(granted = true)
-        assertThat(provider.getNext(step = OnboardingStep.HealthAccess, answers = OnboardingAnswers.default))
+        assertThat(provider.getNext(step = OnboardingStep.WorkoutPreference, answers = OnboardingAnswers.default))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.Demographics))
         assertThat(provider.getNext(step = OnboardingStep.Demographics, answers = OnboardingAnswers.default))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment))
         assertThat(provider.getPrevious(step = OnboardingStep.FinalEnrollment))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.Demographics))
         assertThat(provider.getPrevious(step = OnboardingStep.Demographics))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
+    }
+
+    @Test
+    fun `workout preference comes between health access and notifications`() = runTest {
+        // when / then
+        assertThat(provider.getNext(step = OnboardingStep.HealthAccess, answers = OnboardingAnswers.default))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
+        assertThat(provider.getNext(step = OnboardingStep.WorkoutPreference, answers = OnboardingAnswers.default))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.Notifications))
+        assertThat(provider.getPrevious(step = OnboardingStep.Notifications))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
+        assertThat(provider.getPrevious(step = OnboardingStep.WorkoutPreference))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.HealthAccess))
     }
 
@@ -252,6 +265,25 @@ class OnboardingStepProviderTest {
 
         // then
         assertThat(result).isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.HealthAccess))
+    }
+
+    @Test
+    fun `simplified onboarding asks for the workout preference before final enrollment`() = runTest {
+        // given
+        featureFlags.setEnabled(
+            flag = FeatureFlag.SimplifyOnboarding,
+            enabled = true,
+        )
+
+        // when / then
+        assertThat(provider.getNext(step = OnboardingStep.HealthAccess, answers = OnboardingAnswers.default))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
+        assertThat(provider.getNext(step = OnboardingStep.WorkoutPreference, answers = OnboardingAnswers.default))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment))
+        assertThat(provider.getPrevious(step = OnboardingStep.FinalEnrollment))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
+        assertThat(provider.getPrevious(step = OnboardingStep.WorkoutPreference))
+            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.HealthAccess))
     }
 
     @Test

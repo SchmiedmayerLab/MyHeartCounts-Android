@@ -12,6 +12,19 @@ import org.grovealliance.scheduler.InstantRange
 import java.util.UUID
 
 /**
+ * One value of a [CustomQuantitySampleType].
+ *
+ * @property value the value, in the unit of its [type]
+ * @property timeRange the time the value applies to; empty for a value taken at one instant
+ */
+data class CustomQuantitySample(
+    val id: UUID,
+    val type: CustomQuantitySampleType,
+    val value: Double,
+    val timeRange: InstantRange,
+)
+
+/**
  * A kind of value that is not recorded by the health platform but derived from the participant's
  * survey answers or entered by them, and stored with their other health observations.
  *
@@ -42,16 +55,3 @@ enum class CustomQuantitySampleType(
      */
     NicotineExposure(id = "MHCCustomSampleTypeNicotineExposure", unit = HealthUnit.Count),
 }
-
-/**
- * One value of a [CustomQuantitySampleType].
- *
- * @property value the value, in the unit of its [type]
- * @property timeRange the time the value applies to; empty for a value taken at one instant
- */
-data class CustomQuantitySample(
-    val id: UUID,
-    val type: CustomQuantitySampleType,
-    val value: Double,
-    val timeRange: InstantRange,
-)

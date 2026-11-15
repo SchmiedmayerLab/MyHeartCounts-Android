@@ -16,8 +16,8 @@ enum class FeatureFlag(
     val defaultValue: Boolean,
 ) {
     /**
-     * Shortens onboarding to login, Health Connect access and enrollment, to reach the study
-     * quickly when testing what comes after onboarding.
+     * Shortens onboarding to login, Health Connect access, the workout preference and enrollment, to
+     * reach the study quickly when testing what comes after onboarding.
      */
     SimplifyOnboarding(
         id = "simplifyOnboarding",

@@ -18,35 +18,6 @@ import org.grovealliance.ui.theme.TextStyleToken
 import java.util.Locale
 
 /**
- * Keeps nested chart and series configuration in their own DSL scopes.
- */
-@DslMarker
-annotation class CartesianChartDsl
-
-/**
- * Builds an immutable chart outside composition, using the same model as direct construction.
- *
- * Both axes start at zero to one with localized numeric labels. An empty series list is valid.
- *
- * @param emptyText the empty-state text
- * @param description the screen reader summary
- * @param accessibilityLabels the screen reader actions for stepping through points
- * @param block the axes and series to build
- */
-fun cartesianChart(
-    emptyText: StringResource,
-    description: StringResource,
-    accessibilityLabels: CartesianChart.AccessibilityLabels,
-    block: CartesianChartBuilder.() -> Unit,
-): CartesianChart {
-    return CartesianChartBuilder(
-        emptyText = emptyText,
-        description = description,
-        accessibilityLabels = accessibilityLabels,
-    ).apply(block).build()
-}
-
-/**
  * Collects axes, ordered series and appearance for [cartesianChart].
  *
  * Styling methods override individual fields of a default configuration; successive calls retain
@@ -381,6 +352,35 @@ class CartesianChartBuilder internal constructor(
             config = config,
         )
     }
+}
+
+/**
+ * Keeps nested chart and series configuration in their own DSL scopes.
+ */
+@DslMarker
+annotation class CartesianChartDsl
+
+/**
+ * Builds an immutable chart outside composition, using the same model as direct construction.
+ *
+ * Both axes start at zero to one with localized numeric labels. An empty series list is valid.
+ *
+ * @param emptyText the empty-state text
+ * @param description the screen reader summary
+ * @param accessibilityLabels the screen reader actions for stepping through points
+ * @param block the axes and series to build
+ */
+fun cartesianChart(
+    emptyText: StringResource,
+    description: StringResource,
+    accessibilityLabels: CartesianChart.AccessibilityLabels,
+    block: CartesianChartBuilder.() -> Unit,
+): CartesianChart {
+    return CartesianChartBuilder(
+        emptyText = emptyText,
+        description = description,
+        accessibilityLabels = accessibilityLabels,
+    ).apply(block).build()
 }
 
 /**

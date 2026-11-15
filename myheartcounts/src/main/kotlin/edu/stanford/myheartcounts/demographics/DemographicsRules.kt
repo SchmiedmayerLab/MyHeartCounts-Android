@@ -87,16 +87,6 @@ class DemographicsRules {
         return updated.takeUnless { it.isEmpty }
     }
 
-    /**
-     * [current] with [condition] chosen without a date of diagnosis, or unchosen.
-     */
-    fun toggled(current: Comorbidities?, condition: String): Comorbidities {
-        val entries = current?.entries.orEmpty()
-        return Comorbidities(
-            entries = if (condition in entries) entries - condition else entries + (condition to ""),
-        )
-    }
-
     private fun required(region: DemographicsRegion, optedIntoTrial: Boolean) = buildSet {
         addAll(ALWAYS_REQUIRED)
         if (region == DemographicsRegion.US) add(DemographicsField.LatinoStatus)

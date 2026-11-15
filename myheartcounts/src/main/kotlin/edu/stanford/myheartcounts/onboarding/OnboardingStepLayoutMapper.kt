@@ -126,18 +126,15 @@ class OnboardingStepLayoutMapperImpl(
         OnboardingStep.Comprehension -> consentSurveyLayoutMapper.map(input)
         OnboardingStep.Consent -> ConsentStep(
             onConsent = { responses ->
-                input.push(
-                    OnboardingAction.OnboardingAnswersChanged(
-                        input.answers.value.copy(consentResponses = responses),
-                    ),
-                )
+                val answers = input.answers.value.copy(consentResponses = responses)
+                input.push(OnboardingAction.OnboardingAnswersChanged(answers = answers))
                 input.advance(input.step)
             },
             onFormChanged = { input.push(OnboardingAction.ConsentFormChanged(state = it)) },
         )
 
         OnboardingStep.HealthAccess -> healthAccessStep(input)
-
+        OnboardingStep.WorkoutPreference -> workoutPreferenceStep(input = input)
         OnboardingStep.Notifications -> notificationStep(input = input)
         OnboardingStep.Demographics -> demographicsStep(input = input)
         OnboardingStep.FinalEnrollment -> finalEnrollment(input)
@@ -390,6 +387,11 @@ class OnboardingStepLayoutMapperImpl(
                 action = { input.push(OnboardingAction.Skipped) },
             )
         ),
+    )
+
+    private fun workoutPreferenceStep(input: OnboardingStepInput) = WorkoutPreferenceStep(
+        onDismiss = { input.push(OnboardingAction.Previous) },
+        onSaved = { input.push(OnboardingAction.Next) },
     )
 
     private fun demographicsStep(input: OnboardingStepInput): DemographicsStep {
