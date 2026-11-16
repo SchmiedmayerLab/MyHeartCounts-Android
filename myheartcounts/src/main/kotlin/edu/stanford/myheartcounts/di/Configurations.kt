@@ -332,6 +332,7 @@ private fun ConfigurationBuilder.notificationConfigurations() {
         MHCNotificationTracking(
             firestore = dependency(),
             timeProvider = dependency(),
+            bundleIdentifier = BuildConfig.APPLICATION_ID,
         )
     }
 }

@@ -10,11 +10,13 @@ package edu.stanford.myheartcounts.firebase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.FirebaseApp
+import edu.stanford.myheartcounts.BuildConfig
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.account.firebase.FirebaseAuthProvider
 import org.grovealliance.core.requireDependency
+import org.grovealliance.scheduler.OpenedTaskNotification
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assume.assumeTrue
@@ -23,6 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -115,5 +118,40 @@ class CloudFunctionsTest {
         assertThat(document.getString("event")).isEqualTo("opened")
         assertThat(document.getTimestamp("timestamp")).isNotNull()
         assertThat(document.getString("timeZone")).isNotEmpty()
+    }
+
+    @Test
+    fun recordsThatATaskReminderWasOpened() = runTest {
+        FirebaseTestSession.signUpFreshParticipant()
+
+        notificationTracking.trackDidOpen(
+            reminder = OpenedTaskNotification(
+                taskId = "task",
+                occurrenceStart = Instant.parse("2026-01-01T09:00:00Z"),
+            ),
+        )
+
+        val document = FirebaseTestSession.firestore.notificationTracking().get().await().documents.single()
+        assertThat(document.getString("notificationId"))
+            .isEqualTo("${BuildConfig.APPLICATION_ID}.scheduler.notification.event.task.788950800.0")
+        assertThat(document.getString("additionalStuff"))
+            .isEqualTo("{${BuildConfig.APPLICATION_ID}.scheduler.notification.taskId=task}")
+        assertThat(document.getString("event")).isEqualTo("opened")
+    }
+
+    @Test
+    fun recordsAReminderOccurrenceWithItsFractionOfASecond() = runTest {
+        FirebaseTestSession.signUpFreshParticipant()
+
+        notificationTracking.trackDidOpen(
+            reminder = OpenedTaskNotification(
+                taskId = "task",
+                occurrenceStart = Instant.parse("2026-01-01T09:00:00.250Z"),
+            ),
+        )
+
+        val document = FirebaseTestSession.firestore.notificationTracking().get().await().documents.single()
+        assertThat(document.getString("notificationId"))
+            .isEqualTo("${BuildConfig.APPLICATION_ID}.scheduler.notification.event.task.788950800.25")
     }
 }

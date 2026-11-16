@@ -52,6 +52,7 @@ import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
 import org.grovealliance.core.viewmodel.groveViewModel
 import org.grovealliance.license.LicenseInformationScreen
+import org.grovealliance.scheduler.SchedulerNotifications
 import org.grovealliance.ui.ConsumeEvents
 import org.grovealliance.ui.crossFade
 import org.grovealliance.ui.horizontalSlideBackward
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private val navigator by dependency<Navigator>()
     private val sceneStrategies = listOf(BottomSheetSceneStrategy<NavKey>())
     private val notificationTracking by dependency<MHCNotificationTracking>()
+    private val schedulerNotifications by dependency<SchedulerNotifications>()
     private val concurrency by dependency<Concurrency>()
     private val externalAppIntents by dependency<ExternalAppIntentMapper>()
 
@@ -92,13 +94,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Records that the participant opened a remote nudge or a task reminder, when this launch came
+     * from one.
+     */
+    private fun trackNotificationOpen(intent: Intent?) {
+        if (intent == null) return
+        trackNudgeOpen(intent = intent)
+        trackReminderOpen(intent = intent)
+    }
+
+    /**
+     * Records that the participant opened the task reminder this launch came from, if any.
+     */
+    private fun trackReminderOpen(intent: Intent) {
+        val reminder = schedulerNotifications.openedNotification(intent = intent) ?: return
+        // Consumed, so that nothing handed this intent again can count the same open twice. A
+        // reminder's launch intent carries nothing but the reminder.
+        intent.replaceExtras(Bundle())
+
+        concurrency.ioCoroutineScope().launch {
+            notificationTracking.trackDidOpen(reminder = reminder)
+        }
+    }
+
+    /**
      * Records that the participant opened a remote nudge, when this launch came from one.
      *
      * Firebase Cloud Messaging puts its own extras on the launch intent of a notification it
      * displayed, so their presence is what distinguishes a tap on a nudge from an ordinary launch.
      */
-    private fun trackNotificationOpen(intent: Intent?) {
-        val notificationId = intent?.extras?.getString(FCM_MESSAGE_ID_EXTRA) ?: return
+    private fun trackNudgeOpen(intent: Intent) {
+        val notificationId = intent.extras?.getString(FCM_MESSAGE_ID_EXTRA) ?: return
         val payload = intent.extras
             ?.keySet()
             .orEmpty()

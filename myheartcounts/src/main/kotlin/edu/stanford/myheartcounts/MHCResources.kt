@@ -27,3 +27,10 @@ typealias MHCPlurals = R.plurals
  * Resolve drawable resources through this alias rather than referencing [R.drawable] directly.
  */
 typealias MHCDrawables = R.drawable
+
+/**
+ * Centralised entry point for the app's colour resource IDs.
+ *
+ * Resolve colour resources through this alias rather than referencing [R.color] directly.
+ */
+typealias MHCColors = R.color
