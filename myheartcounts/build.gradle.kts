@@ -16,6 +16,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.aboutlibraries.android)
 }
 
 android {
@@ -25,6 +26,10 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+
+    androidResources {
+        generateLocaleConfig = true
     }
 
     defaultConfig {
@@ -95,6 +100,12 @@ kotlin {
     }
 }
 
+aboutLibraries {
+    collect {
+        configPath = file("aboutlibraries")
+    }
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -137,6 +148,7 @@ dependencies {
     implementation(libs.grove.core.viewmodel)
     implementation(libs.grove.firebase)
     implementation(libs.grove.health)
+    implementation(libs.grove.license)
     implementation(libs.grove.markdown)
     implementation(libs.grove.onboarding)
     implementation(libs.grove.questionnaire)

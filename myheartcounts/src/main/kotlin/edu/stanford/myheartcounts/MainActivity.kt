@@ -49,6 +49,7 @@ import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
 import org.grovealliance.core.viewmodel.groveViewModel
+import org.grovealliance.license.LicenseInformationScreen
 import org.grovealliance.ui.ConsumeEvents
 import org.grovealliance.ui.crossFade
 import org.grovealliance.ui.horizontalSlideBackward
@@ -153,6 +154,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 entry<MHCRoute.VerifyEmail>(metadata = BottomSheetSceneStrategy.sheet()) {
                     VerifyEmailScreen()
+                }
+                entry<MHCRoute.LicenseInformation> {
+                    LicenseInformationScreen(
+                        onDismiss = { navigator.push(event = NavigationEvent.Close(route = MHCRoute.LicenseInformation)) },
+                    )
                 }
                 entry<MHCRoute.Demographics> {
                     DemographicsScreen(mode = DemographicsScreenMode.Complete)

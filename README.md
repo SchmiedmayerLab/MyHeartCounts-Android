@@ -133,6 +133,17 @@ Contributions to this project are welcome. Please make sure to read the [contrib
 
 This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md) for more information.
 
+The app's account overview includes **License Information**, listing the third-party libraries and
+their licenses, shown by Grove's `license` module. The AboutLibraries Gradle plugin generates the list
+for each build variant and bundles it as an Android resource, so license texts are available offline
+where the metadata supplies them; entries also link to each library's website.
+
+Grove is built from source in the composite build, so its metadata is supplied in
+[`myheartcounts/aboutlibraries/libraries/grove.json`](myheartcounts/aboutlibraries/libraries/grove.json).
+Keep its version aligned with the `grove` entry in `gradle/libs.versions.toml` when updating Grove.
+Additional metadata overrides belong under `myheartcounts/aboutlibraries/`; the generated dependency
+list stays in the build directory.
+
 ## Citation
 
 If you use this software, please cite it using the metadata in [CITATION.cff](CITATION.cff), which GitHub surfaces through the [*Cite this repository*](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files) button.

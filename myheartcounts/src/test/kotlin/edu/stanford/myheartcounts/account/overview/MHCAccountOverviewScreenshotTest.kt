@@ -78,7 +78,6 @@ class MHCAccountOverviewScreenshotTest : ScreenshotTest() {
         customSections = CustomAccountSections(
             sections = listOf(
                 studyParticipation,
-                StudyParticipationSectionFixtures.createPostTrialNudges(),
                 SupportSectionFixtures.create(),
                 AppInfoSectionFixtures.create(),
                 withdrawFromStudy(state = state),

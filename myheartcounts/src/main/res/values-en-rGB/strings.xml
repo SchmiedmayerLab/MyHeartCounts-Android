@@ -21,5 +21,9 @@ SPDX-License-Identifier: MIT
     <string name="onboarding_final_enrollment_area_collection">The app will begin collecting activity data from your phone and any connected wearable devices you’ve authorised.</string>
     <string name="account_withdraw_confirm_message">Are you sure you want to withdraw from the My Heart Counts study?\nYou can re-enrol later if you choose.</string>
     <string name="comorbidities_condition_transientischemicattack">Transient Ischaemic Attack (TIA)</string>
+    <string name="license_information_title">Licence Information</string>
+    <string name="license_information_footer">Please refer to the individual repository links for packages without licence labels.</string>
+    <string name="license_information_error_title">Licences Unavailable</string>
+    <string name="license_information_error_message">The licence information couldn\'t be loaded. Please try again.</string>
     <string name="verify_email_explanation">A verified email lets us confirm it\'s really you, protects your account from unauthorised changes, and ensures you can reset your password or recover your account if needed.</string>
 </resources>

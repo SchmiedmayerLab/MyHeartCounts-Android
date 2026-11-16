@@ -37,6 +37,8 @@ class ExternalAppIntentMapperImpl(
         is NavigationEvent.LaunchAppSettings -> Intent(app.action).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
         }
+        NavigationEvent.OpenAppLanguageSettings ->
+            Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts(PACKAGE_SCHEME, context.packageName, null))
         NavigationEvent.OpenMailApp -> Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_EMAIL)
         is NavigationEvent.OpenUrl -> url(url = app.url)
         NavigationEvent.OpenStudyHomepage -> url(url = studyVariants.currentVariant.homepage)
@@ -52,4 +54,8 @@ class ExternalAppIntentMapperImpl(
     }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     private fun url(url: String) = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+    private companion object {
+        const val PACKAGE_SCHEME = "package"
+    }
 }

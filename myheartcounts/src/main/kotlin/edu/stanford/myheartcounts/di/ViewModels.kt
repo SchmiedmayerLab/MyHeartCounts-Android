@@ -66,6 +66,7 @@ fun ConfigurationBuilder.appViewModels() {
             studyWithdrawal = dependency(),
             postTrialNudges = dependency(),
             feedback = dependency(),
+            enrolledStudySource = dependency(),
             mapper = dependency(),
         )
     }
