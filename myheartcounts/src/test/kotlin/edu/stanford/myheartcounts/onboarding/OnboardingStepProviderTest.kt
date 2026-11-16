@@ -268,7 +268,7 @@ class OnboardingStepProviderTest {
     }
 
     @Test
-    fun `simplified onboarding asks for the workout preference before final enrollment`() = runTest {
+    fun `simplified onboarding goes from health access straight to final enrollment and back`() = runTest {
         // given
         featureFlags.setEnabled(
             flag = FeatureFlag.SimplifyOnboarding,
@@ -277,12 +277,8 @@ class OnboardingStepProviderTest {
 
         // when / then
         assertThat(provider.getNext(step = OnboardingStep.HealthAccess, answers = OnboardingAnswers.default))
-            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
-        assertThat(provider.getNext(step = OnboardingStep.WorkoutPreference, answers = OnboardingAnswers.default))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment))
         assertThat(provider.getPrevious(step = OnboardingStep.FinalEnrollment))
-            .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference))
-        assertThat(provider.getPrevious(step = OnboardingStep.WorkoutPreference))
             .isEqualTo(OnboardingStepResult.Step(step = OnboardingStep.HealthAccess))
     }
 

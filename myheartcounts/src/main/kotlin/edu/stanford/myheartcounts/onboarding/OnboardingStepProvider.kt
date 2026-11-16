@@ -76,8 +76,7 @@ class OnboardingStepProviderImpl(
     override suspend fun getNext(step: OnboardingStep, answers: OnboardingAnswers): OnboardingStepResult = when {
         isSimplified -> when (step) {
             OnboardingStep.FinalEnrollment -> OnboardingStepResult.Completed
-            OnboardingStep.HealthAccess -> OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference)
-            OnboardingStep.WorkoutPreference -> OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment)
+            OnboardingStep.HealthAccess -> OnboardingStepResult.Step(step = OnboardingStep.FinalEnrollment)
             OnboardingStep.Login -> OnboardingStepResult.Step(step = afterAccount(next = OnboardingStep.HealthAccess))
             else -> OnboardingStepResult.Step(step = OnboardingStep.HealthAccess)
         }
@@ -167,8 +166,7 @@ class OnboardingStepProviderImpl(
     override fun getPrevious(step: OnboardingStep): OnboardingStepResult = when {
         isSimplified -> when (step) {
             OnboardingStep.Login -> OnboardingStepResult.Dismissed
-            OnboardingStep.FinalEnrollment -> OnboardingStepResult.Step(step = OnboardingStep.WorkoutPreference)
-            OnboardingStep.WorkoutPreference -> OnboardingStepResult.Step(step = OnboardingStep.HealthAccess)
+            OnboardingStep.FinalEnrollment -> OnboardingStepResult.Step(step = OnboardingStep.HealthAccess)
             else -> OnboardingStepResult.Step(step = OnboardingStep.Login)
         }
         else -> previousStep(step = step)

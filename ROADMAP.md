@@ -36,19 +36,19 @@ against the code before acting on it.
 
 ## Progress
 
-As of 2026-11-15. A ticket counts as done once it is ✅ here.
+As of 2026-11-16. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 35 | 66 | 53% |
+| App tickets (`T`) | 36 | 66 | 55% |
 | Grove tickets (`G`) | 13 | 15 | 87% |
-| **All tickets** | **48** | **81** | **59%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 69 ✅ · 19 🟡 · 31 ❌ | 119 | 58% (66% counting 🟡 as half) |
+| **All tickets** | **49** | **81** | **60%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 70 ✅ · 19 🟡 · 30 ❌ | 119 | 59% (67% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
 | 1. Correctness bugs | 8 / 9 | T57 |
-| 2. Data-collection foundations | 2 / 7 | T08, T09, T11, T12, T13 |
+| 2. Data-collection foundations | 3 / 7 | T08, T09, T11, T12 |
 | 3. Onboarding parity | 11 / 12 | T64 |
 | 4. Questionnaires and tasks | 4 / 9 | T24, T27, T54, T55, T59 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
@@ -143,7 +143,7 @@ logic, and the consent PDF.
 | Remembered tab selection | `rootTabSelection` preference | 🟡 Partial | `SavedStateHandle` only; not kept across process death or relaunch |
 | Onboarding shown until complete; persisted `onboardingFlowComplete` | `MyHeartCounts.swift`, `OnboardingFlow.swift` | ✅ Done | T03: `onboarding/OnboardingCompletion.kt`, reset in `MHCStandard.onSignedOut`. Routing uses the flag only, as iOS does; a session lost while the app was closed still lands in Study |
 | "Logging Out…" screen, then return to onboarding | `RootView.swift`, `MyHeartCountsStandard.performLogoutCleanup` | 🟡 Partial | Sign-out switches the root back to onboarding. There is no progress state (left open in T03). |
-| Logout cleanup (pending uploads, staging, unenroll, clear Firestore cache next launch) | `MyHeartCountsStandard.swift` | 🟡 Partial | `MHCStandard.willSignOut()` covers push token, pending uploads, unenroll and cache. Missing: historical-export reset, rejected prompted actions, study activation date (these features don't exist yet). |
+| Logout cleanup (pending uploads, staging, unenroll, clear Firestore cache next launch) | `MyHeartCountsStandard.swift` | ✅ Done | T13: sign-out cleanup lives in `standard/SignOutCleanup`, which `MHCStandard` invokes; `willSignOut` removes the push token and, through `SignOutCleanup.beforeSignOut`, schedules the Firestore cache clear; the local study state (pending uploads, enrollments, study activation date) is cleared before every sign-out the app makes and after every sign-out it observes. No separate cleanup at launch (see T13). Historical-export reset and rejected prompted actions join that cleanup with T11 and T39. |
 | Cleanup at launch when nobody is signed in | `handleIsLoggedOut` | ❌ Missing | |
 | Per-region Firebase project (US/UK), chosen at eligibility and persisted | `Modules/DeferredConfigLoading.swift` | ✅ Done | `firebase/MHCFirebaseLoader.kt`, `MHCFirebaseRegionInitializer.kt` |
 | Firebase emulator support | `FeatureFlags.useFirebaseEmulator` | ✅ Done | `firebase/MHCFirebaseEmulator.kt` |
@@ -181,7 +181,7 @@ logic, and the consent PDF.
 | Demographics step (Continue gated on required fields) | `Onboarding/DemographicsStep.swift` | ✅ Done | `DemographicsStep`; completion and successful-save gate before final enrollment (T21) |
 | Final enrollment page (trial row only if opted in) | `Onboarding/FinalEnrollmentStep.swift` | ✅ Done | Trial row only when the consent's trial question was answered yes (T22) |
 | Enroll, reusing the account's `dateOfEnrollment` | `MyHeartCountsStandard.enroll` | ✅ Done | `study/StudyEnroller.kt`; a failed enrollment shows an error toast and keeps the participant on the final step, as on iOS |
-| Record local `studyActivationDate`; start historical export after enrollment | `MyHeartCountsStandard.enroll` | ❌ Missing | |
+| Record local `studyActivationDate`; start historical export after enrollment | `MyHeartCountsStandard.enroll` | 🟡 Partial | T13: `study/StudyActivation` records the activation date on every enrollment. The historical export is T11. |
 | Track `mostRecentOnboardingStep` on the account per step | `Onboarding/ProgressTracking.swift` | ✅ Done | `onboarding/OnboardingProgressTracker` (T16); `demographics` is recorded by T21, `workoutPreference` by T17 |
 
 ### 2.3 Consent lifecycle
@@ -375,7 +375,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | Phase | MHC tickets | Grove tickets needed first |
 |---|---|---|
 | 1 | T01–T07 ✅, **T10** ✅, T57 | G01 ✅ (for T10) |
-| 2 | T08, T09, T11, T12 🟡, T13, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
+| 2 | T08, T09, T11, T12 🟡, T13 ✅, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
 | 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
@@ -416,7 +416,7 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Tags:** `app-shell`, `bug`
 **Description:** Replace the dummy splash in `MainActivityViewModel`. Persist an "onboarding complete" flag, set when `FinalEnrollment` succeeds and cleared on sign-out. Route to `Study` when the flag is set, the participant is signed in and enrolled; otherwise route to `Onboarding`. Mirror iOS `MyHeartCounts.swift` / `RootView.swift`. Add an optional "Logging out…" state while `willSignOut` runs.
 **Acceptance:** A returning, enrolled participant lands on the Home tab after a cold start. Signing out returns to Welcome. Covered by a ViewModel test.
-**Open:** the "Logging out…" state isn't built. Cleanup at launch when nobody is signed in is part of T13.
+**Open:** the "Logging out…" state isn't built. Cleanup at launch when nobody is signed in was dropped in T13: every sign-out is cleaned up before and after it happens.
 
 #### T04: Withdraw from Study ✅ Done in [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40)
 **Tags:** `account`, `feature`
@@ -466,7 +466,7 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 
 #### T11: Historical health data backfill
 **Tags:** `health-data`, `feature`
-**Description:** Port `HistoricalHealthSamplesExportManager` on top of Grove's bulk export (G03). After enrollment (and on launch if it isn't finished), export every collected type from `historicalDataCollection` (10 years) in resumable time batches. Map each batch to FHIR (the same mapper as live data). Upload zstd JSON to `historicalHealthSamples` via `ManagedFileUpload` (the `HISTORICAL` category exists). Reset the session on sign-out. Depends on T10 (history permission) and G03.
+**Description:** Port `HistoricalHealthSamplesExportManager` on top of Grove's bulk export (G03). After enrollment (and on launch if it isn't finished), export every collected type from `historicalDataCollection` (10 years) in resumable time batches. Map each batch to FHIR (the same mapper as live data). Upload zstd JSON to `historicalHealthSamples` via `ManagedFileUpload` (the `HISTORICAL` category exists). Reset the session on sign-out by adding the reset to `MHCStandard.clearLocalStudyState` (T13). Depends on T10 (history permission) and G03.
 **Acceptance:** A new participant with years of Health Connect data has it uploaded, and the backfill survives process death.
 
 #### T12: Direct-Firestore upload for custom observations 🟡 Partial
@@ -475,10 +475,11 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Acceptance:** Round-trip tests. Documents are readable by the iOS dashboard query code.
 **As built:** `CustomSampleUploader` writes all four custom quantity types in batches of 100, with UUID document identities, LOINC 18262-6 for LDL, Spezi coding for custom types, dates and standard provenance extensions. T46 uses it for LDL. Timed-walk result upload remains open with T31.
 
-#### T13: Study activation date and logout cleanup parity
+#### T13: Study activation date and logout cleanup parity ✅ Done
 **Tags:** `app-shell`, `feature`
 **Description:** Store a local `studyActivationDate` on enrollment and clear it on sign-out. Also clear rejected prompted actions and reset the historical-export session on sign-out. Run cleanup at launch when no user is signed in. iOS: `MyHeartCountsStandard.enroll` / `performLogoutCleanup`.
 **Acceptance:** Signing out and in as a different participant leaves no state from the previous one.
+**As built:** `study/StudyActivation` (+Impl) keeps the activation date in the app's local storage: `StudyEnroller` sets it to the current time after each successful enrollment, including a re-enrollment that reuses the account's `dateOfEnrollment`. It is absent after an `AlreadyEnrolledInNewerRevision` enrollment, as on iOS. `SignOutCleanup` (`standard/`, injected into `MHCStandard`) drops pending uploads, unenrolls and forgets the activation date. Clearing that state never fails: each part is attempted on its own and a failure is logged. It runs from `beforeSignOut`, called by `MHCStandard.willSignOut` (before logout, account deletion and withdrawal), and from `afterSignOut`, called by `MHCStandard.onSignedOut` (so a sign-out the app didn't start, such as a revoked session, is covered too). Diverges from iOS by having no cleanup at launch when nobody is signed in: the sign-in state comes only from the account, whose first emission at launch is "signed out" for every participant, and every sign-out is already cleaned up before and after it happens. The only state left behind is from a process killed between those two runs. Rejected prompted actions and the historical-export session don't exist yet; T39 and T11 add their reset to `clearLocalStudyState`. Covered by `StudyActivationTest` and `StudyEnrollerTest`; the sign-out paths in `MHCStandard` have no unit test, and the change hasn't been run on a device.
 
 #### T61: Write monthly stats documents from Health Connect ✅ Done (validated against local emulators)
 **Tags:** `health-data`, `backend`, `feature`
@@ -1017,8 +1018,8 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 
 | Group | ✅ | 🟡 | ❌ | ➖ / 💤 |
 |---|---|---|---|---|
-| App shell and lifecycle | 8 | 4 | 4 | – |
-| Onboarding | 20 | 1 | 2 | 1 💤 |
+| App shell and lifecycle | 9 | 3 | 4 | – |
+| Onboarding | 20 | 2 | 1 | 1 💤 |
 | Consent lifecycle | – | – | 2 | – |
 | Account and settings | 6 | 2 | 8 | 1 ➖ |
 | Demographics | 6 | – | 1 | – |

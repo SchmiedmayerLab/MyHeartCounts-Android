@@ -41,6 +41,7 @@ class StudyEnrollerImpl(
     private val studyManager: StudyManager,
     private val account: Account,
     private val timeProvider: TimeProvider,
+    private val studyActivation: StudyActivation,
 ) : StudyEnroller {
     private val logger by groveLogger()
 
@@ -55,6 +56,7 @@ class StudyEnrollerImpl(
                 studyBundle = bundle,
                 enrollmentDate = enrollmentDate,
             )
+            studyActivation.markActivated()
         } catch (_: StudyEnrollmentException.AlreadyEnrolledInNewerRevision) {
             logger.i { "Already enrolled in a newer revision; keeping the existing enrollment." }
         }

@@ -108,6 +108,8 @@ import edu.stanford.myheartcounts.standard.MHCAppRevision
 import edu.stanford.myheartcounts.standard.MHCEnvironmentTracker
 import edu.stanford.myheartcounts.standard.MHCQuestionnaireUploader
 import edu.stanford.myheartcounts.standard.QuestionnaireResponseUploader
+import edu.stanford.myheartcounts.standard.SignOutCleanup
+import edu.stanford.myheartcounts.standard.SignOutCleanupImpl
 import edu.stanford.myheartcounts.standard.health.HealthAccess
 import edu.stanford.myheartcounts.standard.health.HealthAccessImpl
 import edu.stanford.myheartcounts.standard.health.HealthObservationMapper
@@ -117,6 +119,8 @@ import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
 import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
 import edu.stanford.myheartcounts.study.MHCStudyBundleProviderImpl
+import edu.stanford.myheartcounts.study.StudyActivation
+import edu.stanford.myheartcounts.study.StudyActivationImpl
 import edu.stanford.myheartcounts.study.StudyArticleSource
 import edu.stanford.myheartcounts.study.StudyArticleSourceImpl
 import edu.stanford.myheartcounts.study.StudyEnroller
@@ -251,6 +255,16 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
             account = dependency(),
             appLifecycle = dependency(),
             timeProvider = dependency(),
+        )
+    }
+    singleton<SignOutCleanup> {
+        SignOutCleanupImpl(
+            healthData = dependency(),
+            studyManager = dependency(),
+            studyActivation = dependency(),
+            studyVariants = dependency(),
+            onboardingCompletion = dependency(),
+            firebaseLoader = dependency(),
         )
     }
 
@@ -432,6 +446,14 @@ private fun ConfigurationBuilder.studyConfigurations() {
             studyBundleProvider = dependency(),
             studyManager = dependency(),
             account = dependency(),
+            timeProvider = dependency(),
+            studyActivation = dependency(),
+        )
+    }
+
+    singleton<StudyActivation> {
+        StudyActivationImpl(
+            storage = dependency(),
             timeProvider = dependency(),
         )
     }
