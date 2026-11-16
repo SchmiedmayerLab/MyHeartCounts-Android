@@ -97,6 +97,7 @@ class DebugViewModelTest {
                 build = "1",
                 firebaseProjectId = "project",
                 accountId = "account-id",
+                isEmailVerified = null,
                 enrolledStudyRevision = "44",
                 bundledStudyRevision = "44",
                 lastSignedConsentVersion = "0.1.0",

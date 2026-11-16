@@ -59,24 +59,34 @@ sealed interface NavigationEvent {
     data class SwitchRoot(val root: MHCRoute.Root) : NavigationEvent
 
     /**
+     * A request that leaves the app for another one, such as the browser or system settings.
+     */
+    sealed interface ExternalApp : NavigationEvent
+
+    /**
      * Launches system app settings with [action].
      */
-    data class LaunchAppSettings(val action: String) : NavigationEvent
+    data class LaunchAppSettings(val action: String) : ExternalApp
+
+    /**
+     * Opens the participant's email app, if one is installed.
+     */
+    data object OpenMailApp : ExternalApp
 
     /**
      * Opens [url] in an external browser.
      */
-    data class OpenUrl(val url: String) : NavigationEvent
+    data class OpenUrl(val url: String) : ExternalApp
 
     /**
      * Opens the homepage of the participant's study variant in an external browser.
      */
-    data object OpenStudyHomepage : NavigationEvent
+    data object OpenStudyHomepage : ExternalApp
 
     /**
      * Opens the privacy policy of the participant's study variant in an external browser.
      */
-    data object OpenPrivacyPolicy : NavigationEvent
+    data object OpenPrivacyPolicy : ExternalApp
 
     /**
      * Offers the file at the content [uri], of [mimeType], to other apps through the system share
@@ -85,7 +95,7 @@ sealed interface NavigationEvent {
     data class ShareFile(
         val uri: String,
         val mimeType: String,
-    ) : NavigationEvent
+    ) : ExternalApp
 
     /**
      * Relaunches the app in a new process, so that state read at startup, such as feature flags,
@@ -136,6 +146,12 @@ sealed interface MHCRoute : NavKey {
      */
     @Serializable
     data object AccountOverview : MHCRoute
+
+    /**
+     * Verifying the participant's email address.
+     */
+    @Serializable
+    data object VerifyEmail : MHCRoute
 
     /**
      * The participant's editable demographic information.

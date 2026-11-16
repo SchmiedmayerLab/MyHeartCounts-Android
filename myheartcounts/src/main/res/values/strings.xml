@@ -424,6 +424,7 @@ SPDX-License-Identifier: MIT
     <string name="debug_info_build" translatable="false">Build</string>
     <string name="debug_info_project_id" translatable="false">Project ID</string>
     <string name="debug_info_account_id" translatable="false">Account ID</string>
+    <string name="debug_info_email_verified" translatable="false">Email Verified</string>
     <string name="debug_info_enrolled_revision" translatable="false">Study Revision (enrolled)</string>
     <string name="debug_info_bundled_revision" translatable="false">Study Revision (bundled)</string>
     <string name="debug_info_consent_version" translatable="false">lastSignedConsentVersion</string>
@@ -730,4 +731,19 @@ SPDX-License-Identifier: MIT
     <string name="workout_preference_continue">Continue</string>
     <string name="workout_preference_save">Save</string>
     <string name="workout_preference_save_failed">Your workout preference couldn\'t be saved. Please check your connection and try again.</string>
+    <string name="verify_email_title">Verify Email</string>
+    <string name="verify_email_explanation">A verified email lets us confirm it\'s really you, protects your account from unauthorized changes, and ensures you can reset your password or recover your account if needed.</string>
+    <string name="verify_email_no_account">Unable to connect to account. Make sure you have a working network connection.</string>
+    <string name="verify_email_verified">Your email address is verified</string>
+    <string name="verify_email_not_verified">Your email currently is not verified</string>
+    <string name="verify_email_how_to">How to verify</string>
+    <string name="verify_email_request_step">1. Request a verification link</string>
+    <string name="verify_email_request_explanation">We\'ll email a link to %1$s</string>
+    <string name="verify_email_send_link">Send Verification Link</string>
+    <string name="verify_email_open_step">2. Open the link in the email</string>
+    <string name="verify_email_open_explanation">Tap the link in the email to complete the verification, then return here.</string>
+    <string name="verify_email_open_mail">Open Email App</string>
+    <string name="verify_email_done">Done</string>
+    <string name="verify_email_link_sent">Verification link sent to your email.</string>
+    <string name="verify_email_link_failed">The verification link couldn\'t be sent. Please try again.</string>
 </resources>

@@ -51,6 +51,7 @@ class DebugSheetScreenshotTest : ScreenshotTest() {
                     build = "42",
                     firebaseProjectId = "myheart-counts-development",
                     accountId = "rnzv8nCjZZLFvJIHcPRzcBnjMoH4",
+                    isEmailVerified = null,
                     enrolledStudyRevision = "44",
                     bundledStudyRevision = "44",
                     lastSignedConsentVersion = null,

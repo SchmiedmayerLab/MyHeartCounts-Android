@@ -40,10 +40,10 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 36 | 66 | 55% |
+| App tickets (`T`) | 37 | 66 | 56% |
 | Grove tickets (`G`) | 13 | 15 | 87% |
-| **All tickets** | **49** | **81** | **60%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 70 ✅ · 19 🟡 · 30 ❌ | 119 | 59% (67% counting 🟡 as half) |
+| **All tickets** | **50** | **81** | **62%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 71 ✅ · 19 🟡 · 29 ❌ | 119 | 60% (68% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
@@ -52,7 +52,7 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 | 3. Onboarding parity | 11 / 12 | T64 |
 | 4. Questionnaires and tasks | 4 / 9 | T24, T27, T54, T55, T59 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
-| 6. Account sheet and prompted actions | 4 / 10 | T33, T35, T38–T40, T58 |
+| 6. Account sheet and prompted actions | 5 / 10 | T33, T35, T39, T40, T58 |
 | 7. Heart Health dashboard | 5 / 6 | T44 |
 | 8. Consent renewal | 0 / 1 | T47 |
 | 9. Localization | 0 / 1 | T48 |
@@ -211,7 +211,7 @@ logic, and the consent PDF.
 | License information (open-source acknowledgements) | `AccountSheet` (`ContributionsList`) | ❌ Missing | |
 | Debug menu (only if debug mode) | `Utils/Debug Stuff/DebugForm.swift` | ❌ Missing | See 2.13 |
 | Prompted-actions "view all" digest in the account sheet | `AccountSheet` → `PromptedActionsDigest(.viewAll)` | ❌ Missing | |
-| Verify email sheet (status, send link, open mail app, polling refresh) | `Account/VerifyEmailSheet.swift` | ❌ Missing | |
+| Verify email sheet (status, send link, open mail app, polling refresh) | `Account/VerifyEmailSheet.swift` | ✅ Done | T38: `account/verifyemail/` on `MHCRoute.VerifyEmail`; its entry point is the Verify Account Email prompted action (T39) |
 | Debug-mode feature flag (`enableAppDebugMode` account key, launch option, last-seen preference) | `Modules/AccountFeatureFlags.swift` | 🟡 Partial | Key defined, not used |
 
 ### 2.5 Demographics
@@ -379,7 +379,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
-| 6 | T33 🟡, T34 ✅, T35, T36 ✅, T37 ✅, T38–T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
+| 6 | T33 🟡, T34 ✅, T35, T36 ✅, T37 ✅, T38 ✅, T39, T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
 | 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
 | 8 | T47 | — |
 | 9 | T48 🟡 | G10 ✅ (Grove side) |
@@ -686,10 +686,11 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Acceptance:** Changes made from the account sheet persist to `preferredWorkoutTypes` / `preferredNotificationTime`; leaving without saving keeps the stored values.
 **As built:** A "Workout Preference" row in the account sheet's study section (`account/overview/StudyParticipationSection`, below Update Health Conditions) opens `MHCRoute.WorkoutPreference`, which shows `WorkoutPreferenceScreen` in `Standalone` mode: back and a successful save both close the route. Standalone mode has no bottom button and saves with a Save action in the app bar (`ui/AppBarTextAction`), enabled only once the preference differs from the one the screen was displayed with, showing progress and ignoring repeated taps; a failed save shows an error toast and stays. The screen loads the stored preference each time it is displayed. Covered by `MHCAccountOverviewMapperTest`, `MHCAccountOverviewViewModelTest`, `WorkoutPreferenceViewModelTest`, `WorkoutPreferenceLayoutMapperTest` and the `StudyParticipationSectionScreenshotTest` baseline. Checked on the emulator against the seeded Firebase emulator suite: after onboarding with `walk` / `09:00`, the screen opened on Walking with Save in the app bar and no bottom button; toggling Swimming and going back stored nothing and reopening showed Walking only; Swimming plus 7:00 PM and Save stored `walk,swim` and `19:00`, closed to the account sheet, and reopening showed the saved values. The notification time's subtitle drops iOS's "You can change this later.", since the same form is shown in both places.
 
-#### T38: Verify email sheet
+#### T38: Verify email sheet ✅ Done
 **Tags:** `account`, `feature`
 **Description:** Show the verification status; "Get Link" sends the Firebase verification email; "Open Mail" opens the mail app; poll every 2 s to refresh the account until verified. iOS: `VerifyEmailSheet.swift`. Depends on G08 ✅: `AccountService.sendEmailVerification()` for "Get Link" and `refresh()` for the polling, which re-reads only the Firebase user, not Firestore.
 **Acceptance:** The status flips to verified without restarting the app.
+**As built:** `account/verifyemail/` on `MHCRoute.VerifyEmail`, presented as a bottom sheet as on iOS: a large shield icon, "Verify Email" and the explanation (left-aligned), then a status strip (green shield "Your email address is verified" or orange "Your email currently is not verified") and, while unverified, "How to verify" with two steps. Step 1, "Request a verification link", explains "We'll email a link to" the address (highlighted) and offers a full-width "Send Verification Link" button calling Grove's `AccountService.sendEmailVerification()`; a toast confirms the link was sent, or that sending failed. Step 2, "Open the link in the email", offers an "Open Email App" link (mail icon) sending `NavigationEvent.OpenMailApp`, shown only when an email app is installed: `navigation/ExternalAppSource.canOpen` asks the package manager whether any app handles the intent a `NavigationEvent.ExternalApp` opens (the manifest declares the email-app query), and the view model passes the answer to the mapper as `canOpenMailApp`. While the address is unverified the view model reloads the account with `AccountService.refresh()` every 5 seconds, the interval the iOS sheet uses (not 2), and stops once verified; the app bar then swaps its close button for Done. The flag needs no Grove change: `account-firebase` sets `isVerified` from `FirebaseUser.isEmailVerified` on sign-in, on Firestore updates and on `refresh()`, and every update reaches the account. Its entry point is the Verify Account Email prompted action (T39), as on iOS; the debug sheet's App Info also shows "Email Verified" (Yes/No). Divergence: the two steps use a full-width button and a link where iOS puts plain text buttons beside the step titles. `NavigationEvent`'s events that open other apps are grouped under `NavigationEvent.ExternalApp`; `navigation/ExternalAppIntentMapper` builds the intent for each, which `MainActivity` starts and `ExternalAppSource` checks. Covered by mapper and view-model tests (polling every 5 s, stopping once verified, the link request, the email app, closing), the debug mapper and view-model tests, screenshots of both states, and `EmailVerificationTest` against the Firebase Auth emulator (unverified after sign-up and after a reload without opening the link; verified after the emulator's verification link is applied and the account reloaded).
 
 #### T39: Prompted actions framework
 **Tags:** `prompted-actions`, `home`, `feature`
@@ -1021,7 +1022,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | App shell and lifecycle | 9 | 3 | 4 | – |
 | Onboarding | 20 | 2 | 1 | 1 💤 |
 | Consent lifecycle | – | – | 2 | – |
-| Account and settings | 6 | 2 | 8 | 1 ➖ |
+| Account and settings | 7 | 2 | 7 | 1 ➖ |
 | Demographics | 6 | – | 1 | – |
 | Home | 6 | 3 | 0 | – |
 | Tasks tab | 2 | 4 | 1 | – |

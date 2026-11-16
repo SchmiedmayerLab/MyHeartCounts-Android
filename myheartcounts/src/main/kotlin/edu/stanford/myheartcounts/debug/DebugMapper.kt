@@ -199,6 +199,7 @@ class DebugMapperImpl : DebugMapper {
             key = "account",
             MHCStrings.debug_info_project_id to mapValue(value = info.firebaseProjectId),
             MHCStrings.debug_info_account_id to mapValue(value = info.accountId),
+            MHCStrings.debug_info_email_verified to mapYesNo(value = info.isEmailVerified),
         )
         infoCard(
             key = "study",
