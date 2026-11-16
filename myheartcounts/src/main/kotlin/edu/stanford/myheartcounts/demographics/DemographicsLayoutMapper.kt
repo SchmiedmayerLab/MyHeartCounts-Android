@@ -73,6 +73,7 @@ class DemographicsLayoutMapperImpl(
     private val catalog: DemographicsCatalog,
     private val optionIdMapper: DemographicsOptionIdMapper,
     private val answerMapper: DemographicsAnswerMapper,
+    private val measurementMapper: DemographicsMeasurementMapper,
     private val rules: DemographicsRules,
 ) : DemographicsLayoutMapper {
 
@@ -155,14 +156,14 @@ class DemographicsLayoutMapperImpl(
     private fun body(input: DemographicsLayoutInput) = listOf(
         row(
             field = DemographicsField.Height,
-            answer = { it.heightInCm?.let(answerMapper::mapCentimetresText) },
+            answer = { it.heightInCm?.let(measurementMapper::mapHeightText) },
             label = MHCStrings.demographics_field_height,
             accessory = DemographicsLayout.Accessory.None,
             input = input,
         ),
         row(
             field = DemographicsField.Weight,
-            answer = { it.weightInKg?.let(answerMapper::mapKilogramsText) },
+            answer = { it.weightInKg?.let(measurementMapper::mapWeightText) },
             label = MHCStrings.demographics_field_weight,
             accessory = DemographicsLayout.Accessory.None,
             input = input,

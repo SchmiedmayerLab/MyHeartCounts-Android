@@ -415,6 +415,12 @@ SPDX-License-Identifier: MIT
     <string name="heart_entry_bmi_mode">BMI</string>
     <string name="heart_entry_feet_value">%1$d ft</string>
     <string name="heart_entry_inches_value">%1$d in</string>
+    <string name="heart_entry_placeholder" translatable="false">0</string>
+    <string name="heart_entry_unit_mmhg">mmHg</string>
+    <string name="heart_entry_unit_mgdl">mg/dL</string>
+    <string name="heart_entry_unit_kg">kg</string>
+    <string name="heart_entry_unit_lb">lb</string>
+    <string name="heart_entry_unit_cm">cm</string>
 
     <!-- Debug sheet (debug builds only) -->
     <string name="debug_title" translatable="false">Debug</string>
@@ -688,10 +694,18 @@ SPDX-License-Identifier: MIT
     <string name="demographics_height_sheet_title">Enter Height</string>
     <string name="demographics_weight_sheet_title">Enter Weight</string>
     <string name="demographics_measurement_value">Value</string>
+    <string name="demographics_measurement_feet">Feet</string>
+    <string name="demographics_measurement_inches">Inches</string>
+    <string name="demographics_measurement_placeholder" translatable="false">0</string>
+    <string name="demographics_measurement_feet_placeholder" translatable="false">5</string>
+    <string name="demographics_measurement_inches_placeholder" translatable="false">4</string>
     <string name="demographics_unit_cm">cm</string>
     <string name="demographics_unit_kg">kg</string>
+    <string name="demographics_unit_lb">lb</string>
     <string name="demographics_value_cm">%1$s cm</string>
+    <string name="demographics_value_feet_inches">%1$d′ %2$d″</string>
     <string name="demographics_value_kg">%1$s kg</string>
+    <string name="demographics_value_lb">%1$s lb</string>
     <string name="demographics_value_selected_count">%1$d selected</string>
     <string name="demographics_race_footer">You can select multiple options.</string>
     <string name="demographics_us_region_sheet_title">Select your State or Territory</string>

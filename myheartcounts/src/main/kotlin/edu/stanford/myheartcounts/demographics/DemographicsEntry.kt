@@ -14,12 +14,12 @@ import edu.stanford.myheartcounts.demographics.ui.DemographicsEntrySheet
  */
 enum class DemographicsEntry {
     /**
-     * Height, in centimetres.
+     * Height, in the participant's units.
      */
     Height,
 
     /**
-     * Weight, in kilograms.
+     * Weight, in the participant's units.
      */
     Weight,
 

@@ -69,7 +69,10 @@ class HeartScoreEntryContentMapperTest {
             StringResource(MHCStrings.heart_entry_systolic),
             StringResource(MHCStrings.heart_entry_diastolic),
         ).inOrder()
-        assertThat(rows.map { it.unit }).containsExactly(StringResource("mmHg"), StringResource("mmHg"))
+        assertThat(rows.map { it.unit }).containsExactly(
+            StringResource(MHCStrings.heart_entry_unit_mmhg),
+            StringResource(MHCStrings.heart_entry_unit_mmhg),
+        )
         assertThat(events).containsExactly(
             HeartScoreEntryAction.FieldChanged(
                 field = HeartScoreEntryAction.Field.Value,
@@ -147,7 +150,7 @@ class HeartScoreEntryContentMapperTest {
         assertThat(layout.panels).hasSize(2)
         assertThat(layout.selectedPanel.value).isEqualTo(1)
         assertThat(layout.panels[0].rows.single().unit).isNull()
-        assertThat(layout.panels[1].rows.single().unit).isEqualTo(StringResource("lb"))
+        assertThat(layout.panels[1].rows.single().unit).isEqualTo(StringResource(MHCStrings.heart_entry_unit_lb))
         assertThat(layout.panels[1].options!!.pickers[1].selectedIndex.value).isEqualTo(10)
         assertThat(events).containsExactly(
             HeartScoreEntryAction.ModeChanged(direct = true),

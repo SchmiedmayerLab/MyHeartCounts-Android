@@ -18,6 +18,8 @@ import edu.stanford.myheartcounts.demographics.ui.DemographicsMenu
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
 import edu.stanford.myheartcounts.model.demographics.BloodType
 import edu.stanford.myheartcounts.model.demographics.MHCGenderIdentity
+import edu.stanford.myheartcounts.standard.MeasurementUnits
+import edu.stanford.myheartcounts.standard.MeasurementUnitsProvider
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.ui.ActionSink
@@ -55,17 +57,18 @@ interface DemographicsPickerMapper {
     fun mapDateOfBirthPicker(input: DemographicsLayoutInput): DemographicsDatePicker
 
     /**
-     * Maps the current answer to [entry] into the text the sheet typing it in starts from, or an empty
-     * text when it is unanswered.
+     * Maps the current answer to [entry] into the texts the fields of the sheet typing it in start
+     * from, empty when it is unanswered.
      */
-    fun mapEntryText(entry: DemographicsEntry, input: DemographicsLayoutInput): String
+    fun mapEntryText(entry: DemographicsEntry, input: DemographicsLayoutInput): List<String>
 
     /**
-     * Maps the sheet typing in the answer to [entry], showing [text] beneath [appBar].
+     * Maps the sheet typing in the answer to [entry] in the participant's units, showing [text]
+     * beneath [appBar].
      */
     fun mapEntrySheet(
         entry: DemographicsEntry,
-        text: StateFlow<String>,
+        text: StateFlow<List<String>>,
         appBar: StateFlow<GroveAppBar>,
         input: DemographicsLayoutInput,
     ): DemographicsEntrySheet
@@ -82,11 +85,13 @@ interface DemographicsPickerMapper {
 }
 
 /**
- * Default [DemographicsPickerMapper] implementation, mapping answers and measurements into text through
- * [answerMapper].
+ * Default [DemographicsPickerMapper] implementation, mapping answers into text through [answerMapper]
+ * and measurements through [measurementMapper], in the units of [unitsProvider].
  */
 class DemographicsPickerMapperImpl(
     private val answerMapper: DemographicsAnswerMapper,
+    private val measurementMapper: DemographicsMeasurementMapper,
+    private val unitsProvider: MeasurementUnitsProvider,
     private val timeProvider: TimeProvider,
 ) : DemographicsPickerMapper {
 
@@ -126,38 +131,23 @@ class DemographicsPickerMapperImpl(
         onDismiss = { input.actionSink.push(DemographicsAction.DatePickerDismissed) },
     )
 
-    override fun mapEntryText(entry: DemographicsEntry, input: DemographicsLayoutInput): String {
+    override fun mapEntryText(entry: DemographicsEntry, input: DemographicsLayoutInput): List<String> {
         val response = input.response.value
-        val text = when (entry) {
-            DemographicsEntry.Height -> response.heightInCm?.let(answerMapper::mapEntryText)
-            DemographicsEntry.Weight -> response.weightInKg?.let(answerMapper::mapEntryText)
-            DemographicsEntry.NHSNumber -> response.nhsNumber?.stringValue
+        return when (entry) {
+            DemographicsEntry.Height -> measurementMapper.mapHeightEntry(heightInCm = response.heightInCm)
+            DemographicsEntry.Weight -> measurementMapper.mapWeightEntry(weightInKg = response.weightInKg)
+            DemographicsEntry.NHSNumber -> listOf(response.nhsNumber?.stringValue.orEmpty())
         }
-        return text.orEmpty()
     }
 
     override fun mapEntrySheet(
         entry: DemographicsEntry,
-        text: StateFlow<String>,
+        text: StateFlow<List<String>>,
         appBar: StateFlow<GroveAppBar>,
         input: DemographicsLayoutInput,
     ) = DemographicsEntrySheet(
         appBar = appBar,
-        label = StringResource(
-            when (entry) {
-                DemographicsEntry.Height, DemographicsEntry.Weight -> MHCStrings.demographics_measurement_value
-                DemographicsEntry.NHSNumber -> MHCStrings.demographics_field_nhsnumber
-            },
-        ),
-        unit = when (entry) {
-            DemographicsEntry.Height -> StringResource(MHCStrings.demographics_unit_cm)
-            DemographicsEntry.Weight -> StringResource(MHCStrings.demographics_unit_kg)
-            DemographicsEntry.NHSNumber -> null
-        },
-        keyboardType = when (entry) {
-            DemographicsEntry.Height, DemographicsEntry.Weight -> KeyboardType.Decimal
-            DemographicsEntry.NHSNumber -> KeyboardType.Number
-        },
+        fields = entryFields(entry = entry),
         entry = text,
         help = if (entry == DemographicsEntry.NHSNumber) {
             DemographicsEntrySheet.Help(
@@ -167,7 +157,14 @@ class DemographicsPickerMapperImpl(
         } else {
             null
         },
-        onEntryChange = { input.actionSink.push(DemographicsAction.EntryChanged(entry = it)) },
+        onEntryChange = { index, text ->
+            input.actionSink.push(
+                DemographicsAction.EntryChanged(
+                    index = index,
+                    text = text,
+                ),
+            )
+        },
     )
 
     override fun mapEntryAppBar(
@@ -191,6 +188,51 @@ class DemographicsPickerMapperImpl(
             ),
         )
     }
+
+    private fun entryFields(entry: DemographicsEntry): List<DemographicsEntrySheet.Field> = when (entry) {
+        DemographicsEntry.Height -> when (unitsProvider.currentUnits.height) {
+            MeasurementUnits.Height.Centimetres -> listOf(
+                measurementField(unit = MHCStrings.demographics_unit_cm),
+            )
+            MeasurementUnits.Height.FeetAndInches -> listOf(
+                DemographicsEntrySheet.Field(
+                    label = StringResource(MHCStrings.demographics_measurement_feet),
+                    unit = null,
+                    placeholder = StringResource(MHCStrings.demographics_measurement_feet_placeholder),
+                    keyboardType = KeyboardType.Number,
+                ),
+                DemographicsEntrySheet.Field(
+                    label = StringResource(MHCStrings.demographics_measurement_inches),
+                    unit = null,
+                    placeholder = StringResource(MHCStrings.demographics_measurement_inches_placeholder),
+                    keyboardType = KeyboardType.Number,
+                ),
+            )
+        }
+        DemographicsEntry.Weight -> listOf(
+            measurementField(
+                unit = when (unitsProvider.currentUnits.weight) {
+                    MeasurementUnits.Weight.Kilograms -> MHCStrings.demographics_unit_kg
+                    MeasurementUnits.Weight.Pounds -> MHCStrings.demographics_unit_lb
+                },
+            ),
+        )
+        DemographicsEntry.NHSNumber -> listOf(
+            DemographicsEntrySheet.Field(
+                label = StringResource(MHCStrings.demographics_field_nhsnumber),
+                unit = null,
+                placeholder = null,
+                keyboardType = KeyboardType.Number,
+            ),
+        )
+    }
+
+    private fun measurementField(unit: Int) = DemographicsEntrySheet.Field(
+        label = StringResource(MHCStrings.demographics_measurement_value),
+        unit = StringResource(unit),
+        placeholder = StringResource(MHCStrings.demographics_measurement_placeholder),
+        keyboardType = KeyboardType.Decimal,
+    )
 
     private fun <T : Any> menu(
         field: DemographicsField,

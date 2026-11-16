@@ -10,11 +10,11 @@ package edu.stanford.myheartcounts.dashboard.entry
 import androidx.lifecycle.SavedStateHandle
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
-import edu.stanford.myheartcounts.dashboard.HeartHealthScoreFixtures
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
 import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
+import edu.stanford.myheartcounts.standard.FakeMeasurementUnitsProvider
 import edu.stanford.myheartcounts.standard.health.HealthAccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +23,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.grovealliance.account.FakeAccount
 import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.health.HealthConnectAvailability
 import org.grovealliance.ui.StringResource
@@ -35,7 +34,7 @@ import java.time.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HeartScoreEntryViewModelTest {
-    private val account = FakeAccount()
+    private val unitsProvider = FakeMeasurementUnitsProvider()
     private val navigator = FakeNavigator()
     private val time = FakeTimeProvider().apply { setNow(Instant.parse("2025-10-26T12:00:00Z")) }
     private val writer = FakeEntryWriter()
@@ -46,7 +45,6 @@ class HeartScoreEntryViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        account.supplyUserDetails(details = HeartHealthScoreFixtures.account())
     }
 
     @After
@@ -203,7 +201,7 @@ class HeartScoreEntryViewModelTest {
         navigator = navigator,
         writer = writer,
         healthAccess = access,
-        account = account,
+        unitsProvider = unitsProvider,
         timeProvider = time,
         mapper = mapper,
     )

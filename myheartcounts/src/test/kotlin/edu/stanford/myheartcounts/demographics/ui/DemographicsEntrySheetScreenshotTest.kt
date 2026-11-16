@@ -23,15 +23,20 @@ class DemographicsEntrySheetScreenshotTest : ScreenshotTest() {
                 close {}
             },
         ),
-        label = StringResource(MHCStrings.demographics_field_nhsnumber),
-        unit = null,
-        keyboardType = KeyboardType.Number,
-        entry = MutableStateFlow("943 476 5919"),
+        fields = listOf(
+            DemographicsEntrySheet.Field(
+                label = StringResource(MHCStrings.demographics_field_nhsnumber),
+                unit = null,
+                placeholder = null,
+                keyboardType = KeyboardType.Number,
+            ),
+        ),
+        entry = MutableStateFlow(listOf("943 476 5919")),
         help = DemographicsEntrySheet.Help(
             title = StringResource(MHCStrings.demographics_nhs_number_help),
             onClick = {},
         ),
-        onEntryChange = {},
+        onEntryChange = { _, _ -> },
     )
 
     @Test
@@ -39,6 +44,40 @@ class DemographicsEntrySheetScreenshotTest : ScreenshotTest() {
         // when / then
         screenshot {
             base.Content()
+        }
+    }
+
+    @Test
+    fun `DemographicsEntrySheet feet and inches screenshot`() {
+        // given
+        val sheet = base.copy(
+            appBar = MutableStateFlow(
+                groveAppBar {
+                    title(MHCStrings.demographics_height_sheet_title)
+                    close {}
+                },
+            ),
+            fields = listOf(
+                DemographicsEntrySheet.Field(
+                    label = StringResource(MHCStrings.demographics_measurement_feet),
+                    unit = null,
+                    placeholder = StringResource(MHCStrings.demographics_measurement_feet_placeholder),
+                    keyboardType = KeyboardType.Number,
+                ),
+                DemographicsEntrySheet.Field(
+                    label = StringResource(MHCStrings.demographics_measurement_inches),
+                    unit = null,
+                    placeholder = StringResource(MHCStrings.demographics_measurement_inches_placeholder),
+                    keyboardType = KeyboardType.Number,
+                ),
+            ),
+            entry = MutableStateFlow(listOf("", "")),
+            help = null,
+        )
+
+        // when / then
+        screenshot {
+            sheet.Content()
         }
     }
 }
