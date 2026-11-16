@@ -19,10 +19,12 @@ import edu.stanford.myheartcounts.standard.consent.MHCConsentHandler
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.consent.ConsentResponses
+import org.grovealliance.consent.SignatureCanvasSize
 import org.grovealliance.consent.SignatureMetadata
 import org.grovealliance.consent.SignaturePoint
 import org.grovealliance.consent.SignatureStroke
 import org.grovealliance.core.requireDependency
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -68,7 +70,9 @@ class ConsentUploadTest {
         assertThat(metadata.sizeBytes).isGreaterThan(MINIMUM_PLAUSIBLE_PDF_BYTES)
 
         // The four custom metadata keys the study reads the form back with.
-        assertThat(metadata.getCustomMetadata("consentFormMetadata")).isNotNull()
+        // The document's frontmatter as one flat JSON object, the shape every platform reads back.
+        val formMetadata = JSONObject(requireNotNull(metadata.getCustomMetadata("consentFormMetadata")))
+        assertThat(formMetadata.getString("version")).isEqualTo(CONSENT_VERSION)
         assertThat(metadata.getCustomMetadata("responses")).contains(SIGNATURE_ELEMENT_ID)
         assertThat(metadata.getCustomMetadata("date")).isNotNull()
         assertThat(metadata.getCustomMetadata("version")).isEqualTo(CONSENT_VERSION)
@@ -83,6 +87,21 @@ class ConsentUploadTest {
         assertThat(stamped?.lastSignedConsentVersion).isEqualTo(CONSENT_VERSION)
         assertThat(stamped?.futureStudies).isTrue()
         assertThat(stamped?.didOptInToTrial).isTrue()
+    }
+
+    @Test
+    fun untouchedOptInsAreStampedWithTheDocumentsInitialValues() = runTest {
+        consentHandler.upload(
+            responses = responses().copy(
+                toggles = emptyMap(),
+                selects = emptyMap(),
+            ),
+        ).getOrThrow()
+
+        // The Stanford document starts the future-studies toggle on and the trial select empty.
+        val stamped = FirebaseTestSession.awaitDetails { it?.lastSignedConsentDate != null }
+        assertThat(stamped?.futureStudies).isTrue()
+        assertThat(stamped?.didOptInToTrial).isFalse()
     }
 
     private fun responses() = ConsentResponses(
@@ -101,7 +120,10 @@ class ConsentUploadTest {
                         ),
                     ),
                 ),
-                canvasSize = null,
+                canvasSize = SignatureCanvasSize(
+                    width = 900f,
+                    height = 420f,
+                ),
             ),
         ),
     )

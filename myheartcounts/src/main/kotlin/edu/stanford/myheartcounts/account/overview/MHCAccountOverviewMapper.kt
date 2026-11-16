@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.MedicalInformation
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -179,6 +180,14 @@ class MHCAccountOverviewMapperImpl(
                     icon = Icons.Outlined.MedicalInformation,
                     label = MHCStrings.account_update_comorbidities,
                     onClick = { input.actionSink.push(MHCAccountOverviewAction.UpdateComorbiditiesSelected) },
+                ),
+            )
+            row(
+                row = navigationRow(
+                    key = "signed-consent-forms",
+                    icon = Icons.Outlined.Description,
+                    label = MHCStrings.account_review_consent_forms,
+                    onClick = { input.actionSink.push(MHCAccountOverviewAction.SignedConsentFormsSelected) },
                 ),
             )
             row(

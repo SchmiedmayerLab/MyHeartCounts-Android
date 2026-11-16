@@ -136,6 +136,18 @@ class MHCAccountOverviewViewModelTest {
     }
 
     @Test
+    fun `opens the signed consent forms from the account overview`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        viewModel.studyParticipationSection().row<ItemDisplayRow>(key = "signed-consent-forms").onClick?.invoke()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.SignedConsentForms))
+    }
+
+    @Test
     fun `opens the workout preference from the account overview`() {
         // given
         val viewModel = viewModel()

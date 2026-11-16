@@ -22,7 +22,7 @@ import org.junit.Test
 class MHCFirestoreTest {
     private val account = FakeAccount()
     private val configuration = FakeFirebaseAppConfiguration()
-    private val firestore = MHCFirestore(
+    private val firestore = MHCFirestoreImpl(
         account = account,
         firebaseAppConfiguration = configuration,
     )

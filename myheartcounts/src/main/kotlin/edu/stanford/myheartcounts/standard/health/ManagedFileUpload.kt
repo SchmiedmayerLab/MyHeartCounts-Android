@@ -8,7 +8,6 @@
 package edu.stanford.myheartcounts.standard.health
 
 import android.content.Context
-import com.google.firebase.storage.FirebaseStorage
 import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
@@ -111,8 +110,11 @@ class ManagedFileUpload(
         category: HealthUploadCategory,
         file: File,
     ): Result<Unit> = runCatchingAsync {
-        val path = "${FirebaseSchema.Storage.USERS}/$accountId/${category.folderName}/${file.name}"
-        FirebaseStorage.getInstance().reference.child(path).putBytes(file.readBytes()).await()
+        firestore.userStorageFolder(accountId = accountId)
+            .child(category.folderName)
+            .child(file.name)
+            .putBytes(file.readBytes())
+            .await()
         // Only now is the archive safe to drop: until Cloud Storage acknowledged it, this file
         // is the only copy of those samples.
         file.delete()
