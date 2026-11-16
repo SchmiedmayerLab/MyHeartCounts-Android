@@ -171,6 +171,7 @@ private fun ConfigurationBuilder.studyViewModels() {
             taskPerformer = dependency(),
             navigator = dependency(),
             responseUploader = dependency(),
+            measurementWriter = dependency(),
             uploadScope = dependency<Concurrency>().ioCoroutineScope(),
         )
     }

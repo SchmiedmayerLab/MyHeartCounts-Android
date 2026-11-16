@@ -10,10 +10,13 @@ package edu.stanford.myheartcounts.study
 import ca.uhn.fhir.context.FhirContext
 import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.BuildConfig
+import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntry
+import edu.stanford.myheartcounts.dashboard.entry.QuestionnaireMeasurementMapperImpl
 import edu.stanford.myheartcounts.standard.consent.MHCConsentDocumentProvider
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.markdown.MarkdownBlock
 import org.grovealliance.markdown.MarkdownDocument
 import org.grovealliance.studydefinition.Component
@@ -21,7 +24,9 @@ import org.grovealliance.studydefinition.FileReference
 import org.grovealliance.studydefinition.StudyBundle
 import org.grovealliance.studydefinition.StudyDefinitionJson
 import org.hl7.fhir.r4.model.CodeableConcept
+import org.hl7.fhir.r4.model.DecimalType
 import org.hl7.fhir.r4.model.Questionnaire
+import org.hl7.fhir.r4.model.QuestionnaireResponse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -166,6 +171,39 @@ class MHCStudyBundleTest {
         }
     }
 
+    @Test
+    fun `extracts the blood pressure and fasting glucose the shipped HeartRisk survey marks`() {
+        // given
+        val fileRef = bundle.studyDefinition.components
+            .filterIsInstance<Component.Questionnaire>()
+            .map { it.fileRef }
+            .single { it.filename == HEART_RISK_FILENAME }
+        val mapper = QuestionnaireMeasurementMapperImpl(timeProvider = FakeTimeProvider())
+
+        // when
+        val entries = listOf(Locale.US, Locale.forLanguageTag("es-US")).map { locale ->
+            val text = requireNotNull(bundle.resolve(fileRef, locale)).readText()
+            val questionnaire = StudyQuestionnaire.prepare(questionnaire = fhirParser.parseResource(Questionnaire::class.java, text))
+            val rendered = QuestionnaireResponse().apply {
+                addItem().setLinkId(HEART_RISK_SYSTOLIC_LINK_ID).addAnswer().setValue(DecimalType(120))
+                addItem().setLinkId(HEART_RISK_DIASTOLIC_LINK_ID).addAnswer().setValue(DecimalType(80))
+                addItem().setLinkId(HEART_RISK_GLUCOSE_LINK_ID).addAnswer().setValue(DecimalType(95))
+            }
+            mapper.mapEntries(
+                response = questionnaire.responseFor(rendered = rendered),
+                questionnaire = questionnaire.questionnaire,
+            ).getOrThrow()
+        }
+
+        // then
+        entries.forEach { extracted ->
+            val pressure = extracted.filterIsInstance<HeartScoreEntry.Pressure>().single()
+            assertThat(pressure.systolic).isEqualTo(120.0)
+            assertThat(pressure.diastolic).isEqualTo(80.0)
+            assertThat(extracted.filterIsInstance<HeartScoreEntry.Quantity>().single().value).isEqualTo(95.0)
+        }
+    }
+
     private fun List<Questionnaire.QuestionnaireItemComponent>.flattened(): List<Questionnaire.QuestionnaireItemComponent> =
         flatMap { listOf(it) + it.item.flattened() }
 
@@ -213,6 +251,10 @@ class MHCStudyBundleTest {
         const val GENERATED_ROOT = "build/generated"
         const val ARCHIVE_SUFFIX = ".tar.zst"
         const val DEFINITION_FILENAME = "definition.json"
+        const val HEART_RISK_FILENAME = "HeartRisk"
+        const val HEART_RISK_SYSTOLIC_LINK_ID = "7cec349c-495c-4ef6-834e-cc9708625736"
+        const val HEART_RISK_DIASTOLIC_LINK_ID = "b25ac0aa-4528-47dc-951f-97f411ec5cc2"
+        const val HEART_RISK_GLUCOSE_LINK_ID = "7309938e-ea24-4e31-8427-82f3a1a44f83"
         const val SCHEMA_VERSION_KEY = "schemaVersion"
         const val ITEM_CONTROL_URL = "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl"
         const val ITEM_CONTROL_SYSTEM = "http://hl7.org/fhir/questionnaire-item-control"
