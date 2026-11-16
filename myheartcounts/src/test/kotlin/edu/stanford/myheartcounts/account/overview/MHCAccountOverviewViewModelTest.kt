@@ -21,6 +21,8 @@ import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.promptedactions.FakePromptedActionsSource
 import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapperImpl
 import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
+import edu.stanford.myheartcounts.standard.health.FakeManagedFileUpload
+import edu.stanford.myheartcounts.standard.health.HealthUploadCategory
 import edu.stanford.myheartcounts.study.EnrolledStudyFixtures
 import edu.stanford.myheartcounts.study.FakeEnrolledStudySource
 import edu.stanford.myheartcounts.ui.ExternalLink
@@ -53,6 +55,7 @@ class MHCAccountOverviewViewModelTest {
     private val feedback = FakeFeedback()
     private val enrolledStudySource = FakeEnrolledStudySource()
     private val promptedActionsSource = FakePromptedActionsSource()
+    private val fileUpload = FakeManagedFileUpload()
     private val mapper = RecordingMapper()
 
     @Before
@@ -124,6 +127,35 @@ class MHCAccountOverviewViewModelTest {
 
         // then
         assertThat(viewModel.enrolledStudyRow()?.title).isEqualTo("My Heart Counts")
+    }
+
+    @Test
+    fun `says that health data is processing while a health upload is in flight`() {
+        // given
+        enrolledStudySource.setEnrolledStudy(enrolledStudy = EnrolledStudyFixtures.create(title = "My Heart Counts"))
+        val viewModel = viewModel()
+
+        // when
+        fileUpload.setActiveCategories(categories = setOf(HealthUploadCategory.LIVE))
+        val whileUploading = viewModel.dataProcessingRow()
+        fileUpload.setActiveCategories(categories = emptySet())
+
+        // then
+        assertThat(whileUploading).isNotNull()
+        assertThat(viewModel.dataProcessingRow()).isNull()
+    }
+
+    @Test
+    fun `does not count uploading deletions as processing health data`() {
+        // given
+        enrolledStudySource.setEnrolledStudy(enrolledStudy = EnrolledStudyFixtures.create(title = "My Heart Counts"))
+        val viewModel = viewModel()
+
+        // when
+        fileUpload.setActiveCategories(categories = setOf(HealthUploadCategory.DELETIONS))
+
+        // then
+        assertThat(viewModel.dataProcessingRow()).isNull()
     }
 
     @Test
@@ -480,6 +512,7 @@ class MHCAccountOverviewViewModelTest {
         feedback = feedback,
         enrolledStudySource = enrolledStudySource,
         promptedActionsSource = promptedActionsSource,
+        fileUpload = fileUpload,
         mapper = mapper,
     )
 
@@ -499,6 +532,12 @@ class MHCAccountOverviewViewModelTest {
         val section = screen.customSections.dynamicSection(key = "study-participation")
         viewModelScope.launch { section.collect {} }
         return section.value.rowOrNull<EnrolledStudyRow>(key = "enrolled-study")
+    }
+
+    private fun MHCAccountOverviewViewModel.dataProcessingRow(): DataProcessingRow? {
+        val section = screen.customSections.dynamicSection(key = "data-processing")
+        viewModelScope.launch { section.collect {} }
+        return section.value.rowOrNull<DataProcessingRow>(key = "data-processing")
     }
 
     private fun MHCAccountOverviewViewModel.appInfoSection() =

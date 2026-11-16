@@ -70,6 +70,7 @@ fun ConfigurationBuilder.appViewModels() {
             feedback = dependency(),
             enrolledStudySource = dependency(),
             promptedActionsSource = dependency(),
+            fileUpload = dependency(),
             mapper = dependency(),
         )
     }

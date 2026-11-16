@@ -121,6 +121,7 @@ import edu.stanford.myheartcounts.standard.health.HealthObservationProvenance
 import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
+import edu.stanford.myheartcounts.standard.health.ManagedFileUploadImpl
 import edu.stanford.myheartcounts.study.EnrolledStudySource
 import edu.stanford.myheartcounts.study.EnrolledStudySourceImpl
 import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
@@ -349,8 +350,8 @@ private fun ConfigurationBuilder.healthConfigurations() {
     }
     singleton { HealthStagingDatabase.create(context = appContext()) }
     singleton { HealthObservationMapper() }
-    singleton {
-        ManagedFileUpload(
+    singleton<ManagedFileUpload> {
+        ManagedFileUploadImpl(
             context = appContext(),
             firestore = dependency(),
             concurrency = dependency(),

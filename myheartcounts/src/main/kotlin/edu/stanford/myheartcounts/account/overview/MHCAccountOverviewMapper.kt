@@ -32,6 +32,7 @@ import edu.stanford.myheartcounts.ui.ExternalLink
 import edu.stanford.myheartcounts.ui.ToggleRow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.grovealliance.core.time.TimeProvider
@@ -99,6 +100,7 @@ class MHCAccountOverviewMapperImpl(
             sections = listOf(
                 promptedActions(input = input),
                 studyParticipation(input = input),
+                dataProcessing(input = input),
                 support(input = input),
                 appInfo(input = input),
                 withdrawFromStudy(input = input),
@@ -226,6 +228,30 @@ class MHCAccountOverviewMapperImpl(
         }
     }
 
+    private fun dataProcessing(input: MHCAccountOverviewInput): DynamicSection {
+        fun section(isShown: Boolean) = groveSection(key = DATA_PROCESSING_KEY) {
+            if (isShown) {
+                card(key = DATA_PROCESSING_KEY) {
+                    row(
+                        row = CardRow(
+                            key = DATA_PROCESSING_KEY,
+                            content = DataProcessingRow(text = StringResource(MHCStrings.account_processing_health_data)),
+                        ),
+                    )
+                }
+            }
+        }
+        return DynamicSection(
+            section = combine(input.enrolledStudy, input.isProcessingHealthData) { enrolledStudy, isProcessing ->
+                section(isShown = enrolledStudy != null && isProcessing)
+            }.stateIn(
+                scope = input.scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = section(isShown = false),
+            ),
+        )
+    }
+
     private fun enrolledStudy(
         enrolledStudy: EnrolledStudy?,
         input: MHCAccountOverviewInput,
@@ -330,41 +356,40 @@ class MHCAccountOverviewMapperImpl(
     private fun withdrawFromStudy(input: MHCAccountOverviewInput) = groveSection(key = WITHDRAW_FROM_STUDY_KEY) {
         content(
             key = WITHDRAW_FROM_STUDY_KEY,
-            content = withdrawFromStudyButton(input = input),
+            content = WithdrawFromStudyButton(
+                state = input.withdrawalState,
+                onWithdrawSelected = { input.actionSink.push(MHCAccountOverviewAction.WithdrawSelected) },
+                confirmation = GroveAlertDialog(
+                    title = StringResource(MHCStrings.account_withdraw_confirm_title),
+                    message = StringResource(MHCStrings.account_withdraw_confirm_message),
+                    confirmButton = GroveAlertDialog.Button(
+                        title = StringResource(MHCStrings.account_withdraw_confirm_action),
+                        style = GroveAlertDialog.Button.Style.Destructive,
+                        action = { input.actionSink.push(MHCAccountOverviewAction.WithdrawConfirmed) },
+                    ),
+                    dismissButton = GroveAlertDialog.Button(
+                        title = StringResource(MHCStrings.account_withdraw_cancel),
+                        action = {},
+                    ),
+                    onDismiss = { input.actionSink.push(MHCAccountOverviewAction.WithdrawDialogDismissed) },
+                ),
+                failure = GroveAlertDialog(
+                    title = StringResource(MHCStrings.account_withdraw_failed_title),
+                    message = StringResource(MHCStrings.account_withdraw_failed_message),
+                    confirmButton = GroveAlertDialog.Button(
+                        title = StringResource(MHCStrings.account_withdraw_failed_dismiss),
+                        action = {},
+                    ),
+                    onDismiss = { input.actionSink.push(MHCAccountOverviewAction.WithdrawDialogDismissed) },
+                ),
+            ),
         )
     }
-
-    private fun withdrawFromStudyButton(input: MHCAccountOverviewInput) = WithdrawFromStudyButton(
-        state = input.withdrawalState,
-        onWithdrawSelected = { input.actionSink.push(MHCAccountOverviewAction.WithdrawSelected) },
-        confirmation = GroveAlertDialog(
-            title = StringResource(MHCStrings.account_withdraw_confirm_title),
-            message = StringResource(MHCStrings.account_withdraw_confirm_message),
-            confirmButton = GroveAlertDialog.Button(
-                title = StringResource(MHCStrings.account_withdraw_confirm_action),
-                style = GroveAlertDialog.Button.Style.Destructive,
-                action = { input.actionSink.push(MHCAccountOverviewAction.WithdrawConfirmed) },
-            ),
-            dismissButton = GroveAlertDialog.Button(
-                title = StringResource(MHCStrings.account_withdraw_cancel),
-                action = {},
-            ),
-            onDismiss = { input.actionSink.push(MHCAccountOverviewAction.WithdrawDialogDismissed) },
-        ),
-        failure = GroveAlertDialog(
-            title = StringResource(MHCStrings.account_withdraw_failed_title),
-            message = StringResource(MHCStrings.account_withdraw_failed_message),
-            confirmButton = GroveAlertDialog.Button(
-                title = StringResource(MHCStrings.account_withdraw_failed_dismiss),
-                action = {},
-            ),
-            onDismiss = { input.actionSink.push(MHCAccountOverviewAction.WithdrawDialogDismissed) },
-        ),
-    )
 
     private companion object {
         const val PROMPTED_ACTIONS_KEY = "prompted-actions"
         const val STUDY_PARTICIPATION_KEY = "study-participation"
+        const val DATA_PROCESSING_KEY = "data-processing"
         const val SUPPORT_KEY = "support"
         const val APP_INFO_KEY = "app-info"
         const val WITHDRAW_FROM_STUDY_KEY = "withdraw-from-study"
