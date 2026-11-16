@@ -7,8 +7,8 @@
 
 package edu.stanford.myheartcounts.home
 
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import org.grovealliance.ui.StringResource
 
 /**
@@ -21,9 +21,9 @@ interface HomeSuggestionsSource {
     val nudge: Flow<DailyNudge?>
 
     /**
-     * The outstanding prompted actions, empty when there is nothing to prompt.
+     * Every prompted action, in display order.
      */
-    val pendingActions: Flow<List<PromptedAction>>
+    val promptedActions: Flow<List<PromptedAction>>
 }
 
 /**
@@ -34,22 +34,3 @@ data class DailyNudge(
     val title: StringResource,
     val message: StringResource,
 )
-
-/**
- * An action the participant is encouraged to take, outside of their scheduled study tasks.
- */
-data class PromptedAction(
-    val id: String,
-    val title: StringResource,
-)
-
-/**
- * Surfaces nothing above the participant's tasks.
- *
- * Kept for tests and previews, which have no backend to read a nudge from; the app itself uses
- * [FirebaseHomeSuggestionsSource].
- */
-class NoHomeSuggestionsSource : HomeSuggestionsSource {
-    override val nudge: Flow<DailyNudge?> = flowOf(null)
-    override val pendingActions: Flow<List<PromptedAction>> = flowOf(emptyList())
-}

@@ -40,6 +40,7 @@ import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.notification.MHCNudgeNotifications.Companion.FCM_MESSAGE_ID_EXTRA
 import edu.stanford.myheartcounts.onboarding.OnboardingScreen
+import edu.stanford.myheartcounts.promptedactions.ui.PromptedActionsScreen
 import edu.stanford.myheartcounts.stats.ParticipationStatsScreen
 import edu.stanford.myheartcounts.study.StudyScreen
 import edu.stanford.myheartcounts.task.PerformTaskScreen
@@ -152,6 +153,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 entry<MHCRoute.AccountOverview> {
                     MHCAccountOverviewScreen()
+                }
+                entry<MHCRoute.PromptedActions>(metadata = BottomSheetSceneStrategy.sheet()) { route ->
+                    PromptedActionsScreen(mode = route.mode)
                 }
                 entry<MHCRoute.VerifyEmail>(metadata = BottomSheetSceneStrategy.sheet()) {
                     VerifyEmailScreen()

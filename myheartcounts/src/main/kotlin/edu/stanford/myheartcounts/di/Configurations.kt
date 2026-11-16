@@ -216,6 +216,7 @@ fun ConfigurationBuilder.appConfigurations() {
     debugConfigurations()
     licenseConfigurations()
     signedConsentFormsConfigurations()
+    promptedActionsConfigurations()
     studyConfigurations()
     firebaseConfigurations()
     healthConfigurations()
@@ -269,6 +270,7 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
             studyManager = dependency(),
             studyActivation = dependency(),
             studyVariants = dependency(),
+            promptedActionRejections = dependency(),
             onboardingCompletion = dependency(),
             firebaseLoader = dependency(),
         )
@@ -286,6 +288,7 @@ private fun ConfigurationBuilder.accountOverviewConfigurations() {
             appRevision = dependency(),
             timeProvider = dependency(),
             buildInfo = dependency(),
+            promptedActionsMapper = dependency(),
         )
     }
     singleton { BuildInfo(sdkInt = Build.VERSION.SDK_INT) }
@@ -518,7 +521,12 @@ private fun ConfigurationBuilder.taskConfigurations() {
  * Registers the Home tab's data sources and layout mapper.
  */
 private fun ConfigurationBuilder.homeConfigurations() {
-    factory<HomeContentMapper> { HomeContentMapperImpl(tileMapper = dependency()) }
+    factory<HomeContentMapper> {
+        HomeContentMapperImpl(
+            tileMapper = dependency(),
+            promptedActionsMapper = dependency(),
+        )
+    }
     factory<HomeTasksSource> {
         HomeTasksSourceImpl(
             studyManager = dependency(),
@@ -539,6 +547,7 @@ private fun ConfigurationBuilder.homeConfigurations() {
         FirebaseHomeSuggestionsSource(
             firestore = dependency(),
             timeProvider = dependency(),
+            promptedActionsSource = dependency(),
         )
     }
     heartHealthConfigurations()

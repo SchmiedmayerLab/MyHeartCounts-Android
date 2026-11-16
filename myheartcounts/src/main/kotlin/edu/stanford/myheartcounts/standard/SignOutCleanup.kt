@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.standard
 import edu.stanford.myheartcounts.firebase.MHCFirebaseLoader
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import edu.stanford.myheartcounts.onboarding.OnboardingCompletion
+import edu.stanford.myheartcounts.promptedactions.PromptedActionRejections
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import edu.stanford.myheartcounts.study.StudyActivation
 import edu.stanford.myheartcounts.study.StudyVariantProvider
@@ -47,6 +48,7 @@ class SignOutCleanupImpl(
     private val studyManager: StudyManager,
     private val studyActivation: StudyActivation,
     private val studyVariants: StudyVariantProvider,
+    private val promptedActionRejections: PromptedActionRejections,
     private val onboardingCompletion: OnboardingCompletion,
     private val firebaseLoader: MHCFirebaseLoader,
 ) : SignOutCleanup {
@@ -79,5 +81,6 @@ class SignOutCleanupImpl(
         runCatchingAsync { studyManager.studyEnrollments().forEach { studyManager.unenroll(enrollment = it) } }
             .onFailure { logger.e(it) { "Removing the study enrollments failed." } }
         studyActivation.clear()
+        promptedActionRejections.clear()
     }
 }

@@ -12,6 +12,9 @@ import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.BuildInfoFixtures
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.WithdrawalState
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
+import edu.stanford.myheartcounts.promptedactions.PromptedActionFixtures
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapperImpl
 import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
 import edu.stanford.myheartcounts.study.EnrolledStudy
 import edu.stanford.myheartcounts.study.EnrolledStudyFixtures
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.ui.ActionSource
@@ -30,6 +34,7 @@ import org.grovealliance.ui.GroveAlertDialog
 import org.grovealliance.ui.GroveScaffoldState
 import org.grovealliance.ui.ItemDisplayRow
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.scheduler.PromptedActionsCard
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -49,7 +54,9 @@ class MHCAccountOverviewMapperTest {
         appRevision = MHCAppRevisionFixtures.create(version = APP_VERSION),
         timeProvider = timeProvider,
         buildInfo = buildInfo,
+        promptedActionsMapper = PromptedActionsMapperImpl(),
     )
+    private val promptedActions = MutableStateFlow<List<PromptedAction>>(emptyList())
     private val pushedActions = mutableListOf<MHCAccountOverviewAction>()
     private val actionSink = ActionSource<MHCAccountOverviewAction> { pushedActions.add(it) }
         .sink<MHCAccountOverviewAction>()
@@ -69,13 +76,14 @@ class MHCAccountOverviewMapperTest {
     }
 
     @Test
-    fun `offers study participation, support and the app info above withdrawing from the study`() {
+    fun `offers the prompted actions, study participation, support and the app info above withdrawing from the study`() {
         // when
         val overview = mapper.map(input = input())
 
         // then
         assertThat(overview.customSections.sectionKeys())
             .containsExactly(
+                "prompted-actions",
                 "study-participation",
                 "support",
                 "app-info",
@@ -127,6 +135,23 @@ class MHCAccountOverviewMapperTest {
 
         // then
         assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.LicenseInformationSelected)
+    }
+
+    @Test
+    fun `summarises every prompted action and opens them`() = runTest {
+        // given
+        promptedActions.value = listOf(PromptedActionFixtures.create())
+        val section = mapper.map(input = input(scope = backgroundScope)).customSections.dynamicSection(key = "prompted-actions")
+        backgroundScope.launch { section.collect {} }
+        runCurrent()
+        val card = section.value.content<PromptedActionsCard>(key = "prompted-actions")
+
+        // when
+        card.onClick?.invoke()
+
+        // then
+        assertThat(card.icons).hasSize(1)
+        assertThat(pushedActions).containsExactly(MHCAccountOverviewAction.PromptedActionsSelected)
     }
 
     @Test
@@ -358,6 +383,7 @@ class MHCAccountOverviewMapperTest {
         withdrawalState = withdrawalState,
         postTrialNudgesOptIn = postTrialNudgesOptIn,
         enrolledStudy = enrolledStudy,
+        promptedActions = promptedActions,
         scope = scope,
         actionSink = actionSink,
     )

@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import edu.stanford.myheartcounts.MHCPlurals
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapper
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
 import edu.stanford.myheartcounts.task.EventTileMapper
 import edu.stanford.myheartcounts.ui.ExternalLink
 import org.grovealliance.ui.ImageResource
@@ -39,6 +41,7 @@ interface HomeContentMapper {
  */
 class HomeContentMapperImpl(
     private val tileMapper: EventTileMapper,
+    private val promptedActionsMapper: PromptedActionsMapper,
 ) : HomeContentMapper {
 
     override fun map(input: HomeContentInput): HomeContentLayout = HomeContentLayout(
@@ -52,15 +55,11 @@ class HomeContentMapperImpl(
         ),
     )
 
-    private fun promptedActions(input: HomeContentInput): PromptedActionsCard? {
-        val actions = input.promptedActions.ifEmpty { return null }
-        return PromptedActionsCard(
-            icons = actions.map { ImageResource(image = Icons.Default.CheckCircle) },
-            title = StringResource(MHCStrings.home_prompted_actions_title),
-            subtitle = StringResource.quantity(MHCPlurals.home_prompted_actions_subtitle, actions.size),
-            onClick = { input.actionSink.push(HomeAction.PromptedActionsSelected) },
-        )
-    }
+    private fun promptedActions(input: HomeContentInput): PromptedActionsCard? = promptedActionsMapper.mapCard(
+        actions = input.promptedActions,
+        mode = PromptedActionsMode.Pending,
+        onClick = { input.actionSink.push(HomeAction.PromptedActionsSelected) },
+    )
 
     /**
      * The tasks a participant may perform at any time, offered when nothing is scheduled for today so

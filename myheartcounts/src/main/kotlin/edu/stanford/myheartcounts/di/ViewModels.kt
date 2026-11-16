@@ -20,6 +20,7 @@ import edu.stanford.myheartcounts.demographics.DemographicsViewModel
 import edu.stanford.myheartcounts.home.HomeViewModel
 import edu.stanford.myheartcounts.missed.MissedTasksViewModel
 import edu.stanford.myheartcounts.onboarding.OnboardingViewModel
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsViewModel
 import edu.stanford.myheartcounts.stats.ParticipationStatsViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
 import edu.stanford.myheartcounts.task.PerformTaskViewModel
@@ -68,6 +69,7 @@ fun ConfigurationBuilder.appViewModels() {
             postTrialNudges = dependency(),
             feedback = dependency(),
             enrolledStudySource = dependency(),
+            promptedActionsSource = dependency(),
             mapper = dependency(),
         )
     }
@@ -97,6 +99,15 @@ private fun ConfigurationBuilder.participantDataViewModels() {
             editor = dependency(),
             autofill = dependency(),
             navigator = dependency(),
+        )
+    }
+    viewModel {
+        PromptedActionsViewModel(
+            savedStateHandle = savedStateHandle(),
+            source = dependency(),
+            rejections = dependency(),
+            navigator = dependency(),
+            mapper = dependency(),
         )
     }
     viewModel {
