@@ -325,6 +325,7 @@ SPDX-License-Identifier: MIT
     <string name="account_enrolled_since">Enrolled since: %1$s</string>
     <string name="account_study_website">Learn more about the study</string>
     <string name="account_view_participation_stats">View Participation Stats</string>
+    <string name="account_processing_health_data">Processing Health Data…</string>
     <string name="account_update_comorbidities">Update Health Conditions</string>
     <string name="account_review_consent_forms">Review Consent Forms</string>
     <string name="account_workout_preference">Workout Preference</string>

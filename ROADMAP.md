@@ -40,10 +40,10 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 45 | 66 | 68% |
+| App tickets (`T`) | 46 | 69 | 67% |
 | Grove tickets (`G`) | 14 | 16 | 88% |
-| **All tickets** | **59** | **82** | **72%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 81 ✅ · 16 🟡 · 22 ❌ | 119 | 68% (75% counting 🟡 as half) |
+| **All tickets** | **60** | **85** | **71%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 83 ✅ · 15 🟡 · 21 ❌ | 119 | 70% (76% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
@@ -52,11 +52,11 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 | 3. Onboarding parity | 12 / 12 | – |
 | 4. Questionnaires and tasks | 7 / 9 | T27, T55 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
-| 6. Account sheet and prompted actions | 8 / 10 | T40, T58 |
+| 6. Account sheet and prompted actions | 9 / 12 | T58, T68, T69 |
 | 7. Heart Health dashboard | 5 / 6 | T44 |
 | 8. Consent renewal | 0 / 1 | T47 |
 | 9. Localization | 0 / 1 | T48 |
-| 10. Tooling and optional platform work | 1 / 7 | T49–T53, T65 |
+| 10. Tooling and optional platform work | 1 / 8 | T49–T53, T65, T67 |
 | Grove | 14 / 16 | G03, G05 (only if D4 is yes) |
 
 Per feature group, see section 6. G03 (for the historical backfill) still blocks app work; G07's components live in the app's `dashboard/ui` package, so the dashboard UI (T43–T45, T58) needs no Grove change.
@@ -139,9 +139,9 @@ logic, and the consent PDF.
 |---|---|---|---|
 | Three root tabs: Home, Tasks (Upcoming), Heart Health | `Root View/RootView.swift` | ✅ Done | `study/StudyViewModel.kt` |
 | Account button on every tab opens the account sheet | `Root View/RootViewTab.swift` | ✅ Done | `StudyAppBarProvider.kt` |
-| Remembered tab selection | `rootTabSelection` preference | 🟡 Partial | `SavedStateHandle` only; not kept across process death or relaunch |
+| Remembered tab selection | `rootTabSelection` preference | 🟡 Partial | `SavedStateHandle` only; not kept across process death or relaunch (T67) |
 | Onboarding shown until complete; persisted `onboardingFlowComplete` | `MyHeartCounts.swift`, `OnboardingFlow.swift` | ✅ Done | T03: `onboarding/OnboardingCompletion.kt`, reset in `MHCStandard.onSignedOut`. Routing uses the flag only, as iOS does; a session lost while the app was closed still lands in Study |
-| "Logging Out…" screen, then return to onboarding | `RootView.swift`, `MyHeartCountsStandard.performLogoutCleanup` | 🟡 Partial | Sign-out switches the root back to onboarding. There is no progress state (left open in T03). |
+| "Logging Out…" screen, then return to onboarding | `RootView.swift`, `MyHeartCountsStandard.performLogoutCleanup` | 🟡 Partial | Sign-out switches the root back to onboarding. There is no progress state (T68). |
 | Logout cleanup (pending uploads, staging, unenroll, clear Firestore cache next launch) | `MyHeartCountsStandard.swift` | ✅ Done | T13: sign-out cleanup lives in `standard/SignOutCleanup`, which `MHCStandard` invokes; `willSignOut` removes the push token and, through `SignOutCleanup.beforeSignOut`, schedules the Firestore cache clear; the local study state (pending uploads, enrollments, study activation date) is cleared before every sign-out the app makes and after every sign-out it observes. No separate cleanup at launch (see T13). Historical-export reset and rejected prompted actions join that cleanup with T11 and T39. |
 | Cleanup at launch when nobody is signed in | `handleIsLoggedOut` | ❌ Missing | |
 | Per-region Firebase project (US/UK), chosen at eligibility and persisted | `Modules/DeferredConfigLoading.swift` | ✅ Done | `firebase/MHCFirebaseLoader.kt`, `MHCFirebaseRegionInitializer.kt` |
@@ -194,7 +194,7 @@ logic, and the consent PDF.
 
 | Feature (iOS) | iOS reference | Android | Evidence / notes |
 |---|---|---|---|
-| Account overview (name, email, password etc.) | `Account/AccountSheet.swift` | 🟡 Partial | Grove `AccountOverviewScreen` wrapped by `account/overview/MHCAccountOverviewScreen`; add MHC items as entries of `MHCAccountOverviewSections` via the mapper |
+| Account overview (name, email, password etc.) | `Account/AccountSheet.swift` | 🟡 Partial | Grove `AccountOverviewScreen` wrapped by `account/overview/MHCAccountOverviewScreen`; add MHC items as entries of `MHCAccountOverviewSections` via the mapper. Editing the name, email and password comes from Grove's overview and `account-firebase` but hasn't been checked end to end (T69) |
 | Withdraw from Study (confirm, `markAccountForStudyWithdrawal`, logout) replacing delete | `AccountSheet.withdrawFromStudy` | ✅ Done | T04: `account/overview/WithdrawFromStudySection.kt`, `account/StudyWithdrawal.kt`. Divergence: always visible above Logout; iOS shows it only in edit mode, in place of deletion (Grove has no edit-mode hook) |
 | Study participation section (study title, short explanation, "Enrolled since", website link) | `AccountSheet.studyParticipationSection` | ✅ Done | T33: `account/overview/EnrolledStudyRow` heads `StudyParticipationSection`, with a "Learn more about the study" link to the variant's homepage. The section is always shown, since the account sheet is only reachable once enrolled |
 | Participation stats: enrollment date; engagement (tasks done, current and longest streak, surveys, articles, ECGs, walk/run tests); health totals (steps, heartbeats, distance, active energy, exercise time, sleep, workouts, flights); highlights (best step day, longest workout, max and resting HR); fun facts | `Account/ParticipationStatsView.swift` (`AccountSheet.studyParticipationSection`) | ❌ Missing | Not in the original audit. Health totals and highlights come from the stats documents (T61, T62), as on iOS (`ParticipationStatsProvider`); ECG count depends on D2 (T58). UI built with sample data behind a DUMMY DATA badge, see T58 |
@@ -203,7 +203,7 @@ logic, and the consent PDF.
 | Change the workout preference after onboarding | — | ✅ Android-only | The account sheet's study section opens the onboarding form standalone (T66); iOS tells participants they can change it later but offers no entry; the Android copy drops that sentence |
 | Edit demographics after onboarding | — | ✅ Android-only | A "Demographics" row in the account sheet's Study Participation section (`account/overview/StudyParticipationSection`, below the post-trial nudges toggle and above Update Health Conditions) opens the demographics form as a screen (T18). iOS has no such entry: participants reach the form only through the Complete Demographics prompted action (T39) or the debug form. Kept as the way to edit demographics after onboarding |
 | SensorKit enable/manage | `SensorKit/SensorKitButton.swift` | ➖ N/A | |
-| Data processing indicator ("Processing Health data…") | `AccountSheet.dataProcessingRow` | ❌ Missing | |
+| Data processing indicator ("Processing Health data…") | `AccountSheet.dataProcessingRow` | ✅ Done | T40: shown while an enrolled participant's live or historical health uploads are in flight. The debug-mode link to a progress view waits for T49, and the historical export joins in with T11 |
 | Change language | `AccountSheet` → Settings app | ✅ Done | T33: "Change Language" row opens Android's per-app language setting (Android 13+; hidden below). The locale config is generated from the app's resource folders, so the list follows T48 |
 | Send feedback (`feedback/{uuid}` with version, account, message, date, time zone, app version/build, device info) | `Feedback/FeedbackForm.swift`, `FeedbackManager.swift` | ✅ Done | `account/feedback/MHCFeedback`, `account/overview/FeedbackSheet` (T36) |
 | About row (version); 5 taps show extended info (build, Firebase project, account ID, enrolled/fetched study revision, `lastSignedConsentVersion`) | `AccountSheet.AboutRow` | ✅ Done | `account/overview/AppInfoSection` (T33). Divergence: the extended info isn't behind five taps on the version but in the debug sheet, which the testing environment opens on a shake (every build runs as testing until T65); the fetched revision is the bundled one until T08 |
@@ -317,7 +317,7 @@ logic, and the consent PDF.
 | Notification open tracking (`notificationTracking`) | `Modules/NotificationTracking.swift` | ✅ Done | `MHCNotificationTracking.kt` |
 | Present notifications while the app is in the foreground | `MyHeartCountsStandard+Notifications.swift` | ✅ Done | T07: `notification/MHCNudgeNotifications.kt`, channel `nudges`, shared with background nudges. The small icon is the app icon; no monochrome notification icon exists yet |
 | Environment tracking: last active, time zone, language, measurement system | `Modules/EnvironmentTracking.swift` | ✅ Done | `MHCEnvironmentTracker.kt`; values `metric` / `ussystem` / `uksystem` (T06). Still to confirm against production Firestore data (a TODO in the code) |
-| Cloud functions: `joinWaitlist`, `markAccountForStudyWithdrawal`, `markAccountForStudyReenrollment` | various | 🟡 Partial | `joinWaitlist` and `markAccountForStudyWithdrawal` (T04) are used; `markAccountForStudyReenrollment` waits for T15 |
+| Cloud functions: `joinWaitlist`, `markAccountForStudyWithdrawal`, `markAccountForStudyReenrollment` | various | ✅ Done | `joinWaitlist`, `markAccountForStudyWithdrawal` (T04) and `markAccountForStudyReenrollment` (T15, called by the Reactivate Account step) are used |
 
 ### 2.13 Developer and testing tooling
 
@@ -379,11 +379,11 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 ✅ | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24 ✅, T25–T26 ✅, T27, T28 ✅, T54 ✅, T55, T59 ✅ | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
-| 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
+| 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40 ✅, T58 🟡, T66 ✅, T68, T69 | G08 ✅ (for T38) |
 | 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
 | 8 | T47 | — |
 | 9 | T48 🟡 | G10 ✅ (Grove side) |
-| 10 | T49–T53, **T60** ✅, T65 | G05 (for T53, only if D4 is yes) |
+| 10 | T49–T53, **T60** ✅, T65, T67 | G05 (for T53, only if D4 is yes) |
 
 G14 ✅ (shared form and section components) blocked no ticket; it removes duplicated UI in Grove and the app. Neither does G15 (app-defined sections in a lazy account overview), nor G16 (a Grove `license` module taking over T33's License Information screen).
 G12 (an encrypted-storage bug) blocked no ticket; it is done ✅.
@@ -416,7 +416,7 @@ criteria) and tags. The first tag is the feature group; the second is `bug`, `fe
 **Tags:** `app-shell`, `bug`
 **Description:** Replace the dummy splash in `MainActivityViewModel`. Persist an "onboarding complete" flag, set when `FinalEnrollment` succeeds and cleared on sign-out. Route to `Study` when the flag is set, the participant is signed in and enrolled; otherwise route to `Onboarding`. Mirror iOS `MyHeartCounts.swift` / `RootView.swift`. Add an optional "Logging out…" state while `willSignOut` runs.
 **Acceptance:** A returning, enrolled participant lands on the Home tab after a cold start. Signing out returns to Welcome. Covered by a ViewModel test.
-**Open:** the "Logging out…" state isn't built. Cleanup at launch when nobody is signed in was dropped in T13: every sign-out is cleaned up before and after it happens.
+**Open:** the "Logging out…" state isn't built (T68). Cleanup at launch when nobody is signed in was dropped in T13: every sign-out is cleaned up before and after it happens.
 
 #### T04: Withdraw from Study ✅ Done in [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40)
 **Tags:** `account`, `feature`
@@ -468,7 +468,7 @@ No Android build reached participants before this fix, so nobody onboarded witho
 
 #### T11: Historical health data backfill
 **Tags:** `health-data`, `feature`
-**Description:** Port `HistoricalHealthSamplesExportManager` on top of Grove's bulk export (G03). After enrollment (and on launch if it isn't finished), export every collected type from `historicalDataCollection` (10 years) in resumable time batches. Map each batch to FHIR (the same mapper as live data). Upload zstd JSON to `historicalHealthSamples` via `ManagedFileUpload` (the `HISTORICAL` category exists). Reset the session on sign-out by adding the reset to `MHCStandard.clearLocalStudyState` (T13). Depends on T10 (history permission) and G03.
+**Description:** Port `HistoricalHealthSamplesExportManager` on top of Grove's bulk export (G03). After enrollment (and on launch if it isn't finished), export every collected type from `historicalDataCollection` (10 years) in resumable time batches. Map each batch to FHIR (the same mapper as live data). Upload zstd JSON to `historicalHealthSamples` via `ManagedFileUpload` (the `HISTORICAL` category exists). Reset the session on sign-out by adding the reset to `MHCStandard.clearLocalStudyState` (T13). While the export session runs or is paused, the account sheet's data processing indicator (T40) shows, as on iOS. Depends on T10 (history permission) and G03.
 **Acceptance:** A new participant with years of Health Connect data has it uploaded, and the backfill survives process death.
 
 #### T12: Direct-Firestore upload for custom observations 🟡 Partial
@@ -705,10 +705,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Acceptance:** A participant with incomplete demographics or an unverified email sees and can resolve the actions.
 **As built:** `promptedactions/`. `PromptedActionType` holds the two portable actions, each with a stable ID (`demographics`, `email-verification`); SensorKit and clinical records are on the not-porting list. `PromptedActionsSource` derives each action's state: every action is unavailable until the participant is enrolled and `StudyActivation` has an activation date; Complete Demographics is unavailable while the account's details are incomplete, then completed once `DemographicsEditor.isComplete`, pending otherwise; Verify Account Email follows the account's verified flag. Each action also carries `isRejected`, from `PromptedActionRejections`, which keeps the rejected actions in the app's local storage by those IDs and is cleared by `SignOutCleanup` on sign-out. `StudyActivation.activationDate` is now a `StateFlow` (with `currentActivationDate` for one-off reads), so the actions follow an enrollment that is activated after it is stored. Two modes: `Pending` presents pending actions not rejected and lets them be rejected; `All` presents pending ones, rejected included, plus a Completed section, and offers no rejection. Home (via `HomeSuggestionsSource.promptedActions`) shows Grove's `PromptedActionsCard` ("Complete Your Study Setup", "N recommended steps to get the most out of the study", one badge per pending action) only while something is pending; the account overview's first section, `PromptedActionsSection`, shows it always, as "You're All Set" once nothing is pending. Both open `MHCRoute.PromptedActions(mode)`, a bottom sheet ("Suggested for You") with one card per action (Grove's `PromptedActionRow`) and the iOS footers. The buttons open the demographics (`MHCRoute.Demographics`) or the email verification (`MHCRoute.VerifyEmail`); the ✕ asks "Stop Suggesting This?" before rejecting, as a Grove `GroveAlertDialog` shown through the scaffold's `showDialog` (the study withdrawal's confirmation and failure dialogs use `GroveAlertDialog` too). The sheet closes itself 0.45 s after the last pending action is gone, as on iOS. The debug sheet's Verify Email button, the entry point used before T39, is gone. Covered by tests of the source, the rejection store, the mapper, the checklist view model and the Home and overview mappers, and screenshots of both modes and the Home card. Not yet checked on a device.
 
-#### T40: Data processing indicator
+#### T40: Data processing indicator ✅ Done
 **Tags:** `account`, `health-data`, `feature`
 **Description:** Show "Processing Health data…" in the account sheet while live or historical uploads run. In debug mode, link it to a progress view. iOS: `AccountSheet.dataProcessingRow`, `DataProcessingDebugView.swift`.
 **Acceptance:** The indicator reflects `ManagedFileUpload` and historical-export activity.
+**As built:** `standard/health/ManagedFileUpload` is now an interface (+Impl) that also exposes `activeCategories`, the `HealthUploadCategory`s with uploads in flight, counted around every upload, including the retries `recoverOrphans` makes at launch, so a category is active from the start of an upload until it succeeds or fails, as iOS's `progressByCategory` is from enqueue to completion or abort. `MHCAccountOverviewViewModel` passes whether a live or historical upload is active, and `MHCAccountOverviewMapper` adds a "data-processing" section after Study Participation holding `DataProcessingRow` ("Processing Health Data…" beside a spinner) while the participant is enrolled and processing, as iOS's `dataProcessingRow` sits in its own section after Study Participation. Deletion uploads don't count, as on iOS, which counts only `liveHealthUpload` and `historicalHealthUpload`. The SensorKit variants don't apply. Open by dependency: the debug-mode link to a progress view (`DataProcessingDebugView`) belongs to T49, and the historical export session (running or paused) counts once T11 builds it. Covered by `HealthUploadTest.reportsACategoryAsActiveOnlyWhileItsUploadIsInFlight` (emulator), `MHCAccountOverviewMapperTest`, `MHCAccountOverviewViewModelTest` (through `FakeManagedFileUpload`) and the `DataProcessingRowScreenshotTest` baseline.
 
 #### T58: Participation stats 🟡 Partial
 **Tags:** `account`, `health-data`, `feature`
@@ -716,6 +717,16 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Acceptance:** The screen shows the same sections as iOS, with values computed from scheduler outcomes and the stats documents.
 **Progress:** UI only, with sample data. `MHCRoute.ParticipationStats` opens a bottom sheet from all three iOS entry points: the medal action that `StudyAppBarProvider` adds to the Home and Heart Health tabs, and the "View Participation Stats" row of the account overview's Study Participation section (T33). The sheet has three pages that slide like onboarding steps: the stats (enrollment card with achievements unlocked and upcoming, engagement, health totals, health highlights, fun facts), the explainer (from the info action), and the full achievements list (from the enrollment card). Built from the `dashboard/ui` components (G07: `CounterCard`, `StatTileGrid`, `IconTextCard`, `ProgressRingCard`, laid out by `DashboardSectionList`); `stats/ParticipationStatsContentMapper` builds the whole sheet, and every value comes from `SampleParticipationStatsContentMapper` and `achievements/SampleAchievementsSource`. Screenshot tests cover each page.
 **TODO (cleanup when wiring real data):** remove the hardcoded `DUMMY DATA` badge in `stats/ParticipationStatsScreenContent`, and replace `SampleParticipationStatsContentMapper` and `SampleAchievementsSource` with implementations reading scheduler outcomes and the stats documents (T62/T63). Achievements still need a ticket of their own for unlock tracking (iOS `AchievementsManager`, `achievementTracking` in Firestore).
+
+#### T68: "Logging out…" state while signing out
+**Tags:** `app-shell`, `account`, `feature`
+**Description:** Show a full-screen progress state from the moment the participant signs out until `SignOutCleanup` has run and the root has switched back to onboarding, so the tabs don't stay interactive while state is being cleared. iOS: `RootView.swift` (`isLoggingOut`), `MyHeartCountsStandard.performLogoutCleanup`. Left open in T03.
+**Acceptance:** Signing out (logout, withdrawal) shows the progress state until onboarding appears; no tab can be used in between.
+
+#### T69: Account overview editing end to end
+**Tags:** `account`, `verify`
+**Description:** The account overview's own sections (name, email, password, through Grove's `AccountOverviewScreen` and `account-firebase`'s `updateAccountDetails`) have never been checked against the backend. Check editing the name, changing the email and changing the password on the Firebase emulator, including the error shown when Firebase requires a recent sign-in, and compare with iOS `Account/AccountSheet.swift` (SpeziAccount `AccountOverview`). File Grove tickets for anything missing.
+**Acceptance:** Each edit persists (Firebase Auth and `users/{uid}`) or fails with a clear message; differences from iOS are recorded or fixed, and the row in 2.4 is ✅.
 
 ### Phase 7: Heart Health dashboard
 
@@ -913,6 +924,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Acceptance:** A search for `iOS` in `myheartcounts/src/main` finds nothing.
 **As built:** All 54 mentions in 20 files under `myheartcounts/src/main` are rewritten as contract descriptions, along with other lineage wording ("Ports …", "counterpart of …", SpeziOnboarding). Comments that only restated a value's origin were dropped. `HealthKit` remains only where it names the shared dataset's contract: the `HK…` sample identifiers that key the shared collections, and the `com.apple.HealthKit` stats source. The same cleanup was applied to the five mentions in the instrumented Firebase tests (`androidTest/.../firebase/`). Detekt and compilation of `main` and `androidTest` pass.
 
+#### T67: Remember the selected tab across launches
+**Tags:** `app-shell`, `feature`
+**Description:** The selected tab is kept only in `SavedStateHandle`, so the app reopens on Home after process death or a relaunch. Persist it in the app's local storage, as iOS does with its `rootTabSelection` preference, and clear it on sign-out.
+**Acceptance:** Leaving the app on the Heart Health tab and relaunching it opens the Heart Health tab; after signing out and in, Home.
+
 ---
 
 ### 5.1 Grove Kotlin tickets
@@ -1036,7 +1052,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | App shell and lifecycle | 9 | 3 | 4 | – |
 | Onboarding | 20 | 2 | 1 | 1 💤 |
 | Consent lifecycle | 1 | – | 1 | – |
-| Account and settings | 11 | 2 | 3 | 1 ➖ |
+| Account and settings | 12 | 2 | 2 | 1 ➖ |
 | Demographics | 7 | – | – | – |
 | Home | 7 | 2 | 0 | – |
 | Tasks tab | 4 | 2 | 1 | – |
@@ -1044,7 +1060,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | Active tasks | – | – | 5 | 3 ➖ |
 | Heart Health dashboard | 10 | 1 | 1 | – |
 | Health data | 5 | 2 | 2 | 3 ➖ |
-| Backend, notifications, environment | 4 | 2 | – | – |
+| Backend, notifications, environment | 5 | 1 | – | – |
 | Tooling | – | – | 4 | 1 ➖ |
 
 Counts are feature rows from sections 2.1–2.13, excluding the Android-only rows. The foundations are solid: Firebase per region, account, eligibility and waitlist, consent

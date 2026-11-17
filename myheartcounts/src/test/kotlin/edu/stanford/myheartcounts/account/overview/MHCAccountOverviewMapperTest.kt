@@ -64,6 +64,7 @@ class MHCAccountOverviewMapperTest {
     private val withdrawalState = MutableStateFlow(WithdrawalState.Idle)
     private val postTrialNudgesOptIn = MutableStateFlow(false)
     private val enrolledStudy = MutableStateFlow<EnrolledStudy?>(value = null)
+    private val isProcessingHealthData = MutableStateFlow(false)
 
     @Before
     fun setup() {
@@ -76,7 +77,7 @@ class MHCAccountOverviewMapperTest {
     }
 
     @Test
-    fun `offers the prompted actions, study participation, support and the app info above withdrawing from the study`() {
+    fun `offers the prompted actions, study participation, data processing, support and the app info above withdrawing from the study`() {
         // when
         val overview = mapper.map(input = input())
 
@@ -85,6 +86,7 @@ class MHCAccountOverviewMapperTest {
             .containsExactly(
                 "prompted-actions",
                 "study-participation",
+                "data-processing",
                 "support",
                 "app-info",
                 "withdraw-from-study",
@@ -225,6 +227,43 @@ class MHCAccountOverviewMapperTest {
     fun `hides the enrolled study while there is none`() = runTest(UnconfinedTestDispatcher()) {
         // when
         val row = enrolledStudyRow(scope = backgroundScope)
+
+        // then
+        assertThat(row).isNull()
+    }
+
+    @Test
+    fun `says that health data is processing while an enrolled participant's data uploads`() = runTest(UnconfinedTestDispatcher()) {
+        // given
+        enrolledStudy.value = EnrolledStudyFixtures.create(title = "My Heart Counts")
+        isProcessingHealthData.value = true
+
+        // when
+        val row = dataProcessingRow(scope = backgroundScope)
+
+        // then
+        assertThat(row?.text).isEqualTo(StringResource(MHCStrings.account_processing_health_data))
+    }
+
+    @Test
+    fun `says nothing about processing while no health data uploads`() = runTest(UnconfinedTestDispatcher()) {
+        // given
+        enrolledStudy.value = EnrolledStudyFixtures.create(title = "My Heart Counts")
+
+        // when
+        val row = dataProcessingRow(scope = backgroundScope)
+
+        // then
+        assertThat(row).isNull()
+    }
+
+    @Test
+    fun `says nothing about processing without an enrollment`() = runTest(UnconfinedTestDispatcher()) {
+        // given
+        isProcessingHealthData.value = true
+
+        // when
+        val row = dataProcessingRow(scope = backgroundScope)
 
         // then
         assertThat(row).isNull()
@@ -384,6 +423,7 @@ class MHCAccountOverviewMapperTest {
         postTrialNudgesOptIn = postTrialNudgesOptIn,
         enrolledStudy = enrolledStudy,
         promptedActions = promptedActions,
+        isProcessingHealthData = isProcessingHealthData,
         scope = scope,
         actionSink = actionSink,
     )
@@ -392,6 +432,12 @@ class MHCAccountOverviewMapperTest {
         val section = mapper.map(input = input(scope = scope)).customSections.dynamicSection(key = "study-participation")
         scope.launch { section.collect {} }
         return section.value.rowOrNull<EnrolledStudyRow>(key = "enrolled-study")
+    }
+
+    private fun dataProcessingRow(scope: CoroutineScope): DataProcessingRow? {
+        val section = mapper.map(input = input(scope = scope)).customSections.dynamicSection(key = "data-processing")
+        scope.launch { section.collect {} }
+        return section.value.rowOrNull<DataProcessingRow>(key = "data-processing")
     }
 
     private fun MHCAccountOverview.withdrawSection() =

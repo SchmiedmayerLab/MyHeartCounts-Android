@@ -20,6 +20,8 @@ import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.promptedactions.PromptedAction
 import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
 import edu.stanford.myheartcounts.promptedactions.PromptedActionsSource
+import edu.stanford.myheartcounts.standard.health.HealthUploadCategory
+import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
 import edu.stanford.myheartcounts.study.EnrolledStudy
 import edu.stanford.myheartcounts.study.EnrolledStudySource
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.ui.ActionSink
@@ -51,6 +54,7 @@ class MHCAccountOverviewViewModel(
     private val feedback: MHCFeedback,
     enrolledStudySource: EnrolledStudySource,
     promptedActionsSource: PromptedActionsSource,
+    fileUpload: ManagedFileUpload,
     private val mapper: MHCAccountOverviewMapper,
 ) : ViewModel() {
 
@@ -75,6 +79,9 @@ class MHCAccountOverviewViewModel(
             postTrialNudgesOptIn = postTrialNudgesOptIn.asStateFlow(),
             enrolledStudy = enrolledStudySource.enrolledStudy(),
             promptedActions = promptedActionsSource.actions,
+            isProcessingHealthData = fileUpload.activeCategories.map { categories ->
+                categories.any { it in HEALTH_DATA_CATEGORIES }
+            },
             scope = viewModelScope,
             actionSink = actionSource.sink(),
         ),
@@ -179,6 +186,11 @@ class MHCAccountOverviewViewModel(
 
     private companion object {
         val POST_TRIAL_NUDGES_DEBOUNCE = 250.milliseconds
+
+        /**
+         * The upload categories that count as processing the participant's health data.
+         */
+        val HEALTH_DATA_CATEGORIES = setOf(HealthUploadCategory.LIVE, HealthUploadCategory.HISTORICAL)
     }
 }
 
@@ -191,6 +203,7 @@ data class MHCAccountOverviewInput(
     val postTrialNudgesOptIn: StateFlow<Boolean>,
     val enrolledStudy: Flow<EnrolledStudy?>,
     val promptedActions: Flow<List<PromptedAction>>,
+    val isProcessingHealthData: Flow<Boolean>,
     val scope: CoroutineScope,
     val actionSink: ActionSink<MHCAccountOverviewAction>,
 )
