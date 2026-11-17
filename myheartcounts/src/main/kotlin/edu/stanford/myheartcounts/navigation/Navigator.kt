@@ -69,6 +69,11 @@ sealed interface NavigationEvent {
     data class LaunchAppSettings(val action: String) : ExternalApp
 
     /**
+     * Opens the system setting for choosing the app's language.
+     */
+    data object OpenAppLanguageSettings : ExternalApp
+
+    /**
      * Opens the participant's email app, if one is installed.
      */
     data object OpenMailApp : ExternalApp
@@ -146,6 +151,12 @@ sealed interface MHCRoute : NavKey {
      */
     @Serializable
     data object AccountOverview : MHCRoute
+
+    /**
+     * The app's third-party software and licenses.
+     */
+    @Serializable
+    data object LicenseInformation : MHCRoute
 
     /**
      * Verifying the participant's email address.

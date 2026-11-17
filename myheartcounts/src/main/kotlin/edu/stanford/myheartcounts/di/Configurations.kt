@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.di
 
 import android.os.Build
 import edu.stanford.myheartcounts.BuildConfig
+import edu.stanford.myheartcounts.BuildInfo
 import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.StudyAppBarProviderImpl
 import edu.stanford.myheartcounts.account.PostTrialNudges
@@ -117,6 +118,8 @@ import edu.stanford.myheartcounts.standard.health.HealthObservationProvenance
 import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
+import edu.stanford.myheartcounts.study.EnrolledStudySource
+import edu.stanford.myheartcounts.study.EnrolledStudySourceImpl
 import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
 import edu.stanford.myheartcounts.study.MHCStudyBundleProviderImpl
 import edu.stanford.myheartcounts.study.StudyActivation
@@ -210,6 +213,7 @@ fun ConfigurationBuilder.appConfigurations() {
     singleton { AppEnvironment.Testing }
     featureFlagConfigurations()
     debugConfigurations()
+    licenseConfigurations()
     studyConfigurations()
     firebaseConfigurations()
     healthConfigurations()
@@ -276,8 +280,13 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
  */
 private fun ConfigurationBuilder.accountOverviewConfigurations() {
     factory<MHCAccountOverviewMapper> {
-        MHCAccountOverviewMapperImpl(appRevision = dependency())
+        MHCAccountOverviewMapperImpl(
+            appRevision = dependency(),
+            timeProvider = dependency(),
+            buildInfo = dependency(),
+        )
     }
+    singleton { BuildInfo(sdkInt = Build.VERSION.SDK_INT) }
     factory<StudyWithdrawal> {
         StudyWithdrawalImpl(
             cloudFunctions = dependency(),
@@ -449,6 +458,14 @@ private fun ConfigurationBuilder.studyConfigurations() {
             account = dependency(),
             timeProvider = dependency(),
             studyActivation = dependency(),
+        )
+    }
+
+    factory<EnrolledStudySource> {
+        EnrolledStudySourceImpl(
+            studyManager = dependency(),
+            studyBundleProvider = dependency(),
+            variantProvider = dependency(),
         )
     }
 

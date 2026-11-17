@@ -8,8 +8,8 @@
 package edu.stanford.myheartcounts.account.overview
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
-import androidx.compose.material.icons.outlined.Person
 import edu.stanford.myheartcounts.MHCStrings
 import org.grovealliance.ui.CardRow
 import org.grovealliance.ui.ImageResource
@@ -18,21 +18,23 @@ import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveSection
 
 /**
- * Builds the account overview's support section.
+ * Builds the account overview's support section; by default offering a language change.
  */
 object SupportSectionFixtures {
-    fun create() = groveSection(key = "support") {
+    fun create(
+        offersLanguageChange: Boolean = true,
+    ) = groveSection(key = "support") {
         card(key = "support") {
-            row(row = demographics)
+            if (offersLanguageChange) row(row = changeLanguage)
             row(row = sendFeedback)
         }
     }
 
-    private val demographics = CardRow(
-        key = "demographics",
+    private val changeLanguage = CardRow(
+        key = "change-language",
         content = ItemDisplayRow(
-            leadingImage = ImageResource(image = Icons.Outlined.Person),
-            label = StringResource(MHCStrings.demographics_title),
+            leadingImage = ImageResource(image = Icons.Default.Language),
+            label = StringResource(MHCStrings.account_change_language),
             value = null,
             showArrow = true,
             onClick = {},

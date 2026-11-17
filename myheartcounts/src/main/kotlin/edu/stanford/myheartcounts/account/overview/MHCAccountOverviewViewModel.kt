@@ -17,8 +17,12 @@ import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.Withd
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
+import edu.stanford.myheartcounts.study.EnrolledStudy
+import edu.stanford.myheartcounts.study.EnrolledStudySource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +44,7 @@ class MHCAccountOverviewViewModel(
     private val studyWithdrawal: StudyWithdrawal,
     private val postTrialNudges: PostTrialNudges,
     private val feedback: MHCFeedback,
+    enrolledStudySource: EnrolledStudySource,
     private val mapper: MHCAccountOverviewMapper,
 ) : ViewModel() {
 
@@ -62,6 +67,8 @@ class MHCAccountOverviewViewModel(
             scaffoldState = scaffoldState.asScaffoldState(),
             withdrawalState = withdrawalState.asStateFlow(),
             postTrialNudgesOptIn = postTrialNudgesOptIn.asStateFlow(),
+            enrolledStudy = enrolledStudySource.enrolledStudy(),
+            scope = viewModelScope,
             actionSink = actionSource.sink(),
         ),
     )
@@ -74,6 +81,7 @@ class MHCAccountOverviewViewModel(
 
     private fun onAction(action: MHCAccountOverviewAction) {
         when (action) {
+            is MHCAccountOverviewAction.PageSelected -> navigator.push(event = NavigationEvent.NavigateTo(route = action.route))
             MHCAccountOverviewAction.WithdrawSelected -> withdrawalState.value = WithdrawalState.Confirming
             MHCAccountOverviewAction.WithdrawConfirmed -> withdraw()
             MHCAccountOverviewAction.WithdrawDialogDismissed -> withdrawalState.value = WithdrawalState.Idle
@@ -81,18 +89,8 @@ class MHCAccountOverviewViewModel(
             MHCAccountOverviewAction.PrivacyPolicySelected ->
                 navigator.push(event = NavigationEvent.OpenPrivacyPolicy)
             MHCAccountOverviewAction.SendFeedbackSelected -> showFeedback()
-            MHCAccountOverviewAction.DemographicsSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.Demographics),
-            )
-            MHCAccountOverviewAction.ParticipationStatsSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.ParticipationStats),
-            )
-            MHCAccountOverviewAction.UpdateComorbiditiesSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.Comorbidities),
-            )
-            MHCAccountOverviewAction.WorkoutPreferenceSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.WorkoutPreference),
-            )
+            MHCAccountOverviewAction.ChangeLanguageSelected -> navigator.push(event = NavigationEvent.OpenAppLanguageSettings)
+            MHCAccountOverviewAction.StudyHomepageSelected -> navigator.push(event = NavigationEvent.OpenStudyHomepage)
             MHCAccountOverviewAction.Dismissed -> navigator.push(event = NavigationEvent.Close(route = MHCRoute.AccountOverview))
         }
     }
@@ -184,6 +182,8 @@ data class MHCAccountOverviewInput(
     val scaffoldState: GroveScaffoldState,
     val withdrawalState: StateFlow<WithdrawalState>,
     val postTrialNudgesOptIn: StateFlow<Boolean>,
+    val enrolledStudy: Flow<EnrolledStudy?>,
+    val scope: CoroutineScope,
     val actionSink: ActionSink<MHCAccountOverviewAction>,
 )
 
@@ -192,22 +192,56 @@ data class MHCAccountOverviewInput(
  */
 sealed interface MHCAccountOverviewAction {
 
-    data object DemographicsSelected : MHCAccountOverviewAction
+    /**
+     * The participant opened another screen, the one at [route].
+     */
+    sealed interface PageSelected : MHCAccountOverviewAction {
+
+        /**
+         * The route of the screen opened.
+         */
+        val route: MHCRoute
+    }
+
+    /**
+     * The participant asked to update their demographic information.
+     */
+    data object DemographicsSelected : PageSelected {
+        override val route = MHCRoute.Demographics
+    }
+
+    /**
+     * The participant asked to visit the enrolled study's homepage.
+     */
+    data object StudyHomepageSelected : MHCAccountOverviewAction
 
     /**
      * The participant opened their participation stats and achievements.
      */
-    data object ParticipationStatsSelected : MHCAccountOverviewAction
+    data object ParticipationStatsSelected : PageSelected {
+        override val route = MHCRoute.ParticipationStats
+    }
 
     /**
      * The participant asked to update their health conditions.
      */
-    data object UpdateComorbiditiesSelected : MHCAccountOverviewAction
+    data object UpdateComorbiditiesSelected : PageSelected {
+        override val route = MHCRoute.Comorbidities
+    }
 
     /**
      * The participant asked to change their workout preference.
      */
-    data object WorkoutPreferenceSelected : MHCAccountOverviewAction
+    data object WorkoutPreferenceSelected : PageSelected {
+        override val route = MHCRoute.WorkoutPreference
+    }
+
+    /**
+     * The participant asked which third-party software the app uses, and under which licenses.
+     */
+    data object LicenseInformationSelected : PageSelected {
+        override val route = MHCRoute.LicenseInformation
+    }
 
     /**
      * The participant asked to withdraw from the study.
@@ -233,6 +267,11 @@ sealed interface MHCAccountOverviewAction {
      * The participant asked to read the privacy policy.
      */
     data object PrivacyPolicySelected : MHCAccountOverviewAction
+
+    /**
+     * The participant asked to choose the app's language.
+     */
+    data object ChangeLanguageSelected : MHCAccountOverviewAction
 
     /**
      * The participant asked to send feedback.

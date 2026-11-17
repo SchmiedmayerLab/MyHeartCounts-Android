@@ -323,7 +323,10 @@ SPDX-License-Identifier: MIT
     <string name="account_post_trial_nudges_title">Post-Trial Activity Nudges</string>
     <string name="account_post_trial_nudges_subtitle">Enable to continue receiving periodic activity nudges after the initial trial period.</string>
     <string name="account_post_trial_nudges_error">Your post-trial activity nudges choice could not be saved. Please check your connection and try again.</string>
+    <string name="account_change_language">Change Language</string>
     <string name="account_send_feedback">Send Feedback</string>
+    <string name="account_enrolled_since">Enrolled since: %1$s</string>
+    <string name="account_study_website">Learn more about the study</string>
     <string name="account_view_participation_stats">View Participation Stats</string>
     <string name="account_update_comorbidities">Update Health Conditions</string>
     <string name="account_workout_preference">Workout Preference</string>
@@ -731,6 +734,10 @@ SPDX-License-Identifier: MIT
     <string name="workout_preference_continue">Continue</string>
     <string name="workout_preference_save">Save</string>
     <string name="workout_preference_save_failed">Your workout preference couldn\'t be saved. Please check your connection and try again.</string>
+    <string name="license_information_title">License Information</string>
+    <string name="license_information_footer">Please refer to the individual repository links for packages without license labels.</string>
+    <string name="license_information_error_title">Licenses Unavailable</string>
+    <string name="license_information_error_message">The license information couldn\'t be loaded. Please try again.</string>
     <string name="verify_email_title">Verify Email</string>
     <string name="verify_email_explanation">A verified email lets us confirm it\'s really you, protects your account from unauthorized changes, and ensures you can reset your password or recover your account if needed.</string>
     <string name="verify_email_no_account">Unable to connect to account. Make sure you have a working network connection.</string>
