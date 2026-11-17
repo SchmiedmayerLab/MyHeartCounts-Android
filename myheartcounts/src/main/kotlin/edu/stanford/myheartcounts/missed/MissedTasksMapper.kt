@@ -12,14 +12,14 @@ import androidx.compose.material.icons.filled.Celebration
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.task.AlwaysAvailableTask
 import edu.stanford.myheartcounts.task.EventTileMapper
+import edu.stanford.myheartcounts.task.ui.TaskListLayout
 import org.grovealliance.scheduler.Event
 import org.grovealliance.ui.ActionSink
+import org.grovealliance.ui.GroveSection
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.scheduler.NoTasksContent
 import org.grovealliance.ui.scheduler.TaskListHeader
-import org.grovealliance.ui.scheduler.TaskListLayout
-import org.grovealliance.ui.scheduler.TaskSection
 
 /**
  * Builds the missed tasks screen's layout from the missed events.
@@ -65,7 +65,7 @@ class MissedTasksMapperImpl(
         },
     )
 
-    private fun daySections(input: MissedTasksInput): List<TaskSection> = tileMapper.daySections(
+    private fun daySections(input: MissedTasksInput): List<GroveSection> = tileMapper.daySections(
         events = input.events,
         onPerform = { performed, completesEvent ->
             input.actionSink.push(

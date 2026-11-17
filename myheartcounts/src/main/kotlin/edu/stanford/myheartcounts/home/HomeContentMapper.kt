@@ -15,7 +15,9 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapper
 import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
 import edu.stanford.myheartcounts.task.EventTileMapper
+import edu.stanford.myheartcounts.task.ui.TaskListLayout
 import edu.stanford.myheartcounts.ui.ExternalLink
+import org.grovealliance.ui.GroveSection
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.scheduler.MissedTasksRow
@@ -23,8 +25,6 @@ import org.grovealliance.ui.scheduler.NoTasksContent
 import org.grovealliance.ui.scheduler.NudgeBanner
 import org.grovealliance.ui.scheduler.PromptedActionsCard
 import org.grovealliance.ui.scheduler.TaskListHeader
-import org.grovealliance.ui.scheduler.TaskListLayout
-import org.grovealliance.ui.scheduler.TaskSection
 
 /**
  * Builds the Home tab's layout from the participant's current tasks.
@@ -65,7 +65,7 @@ class HomeContentMapperImpl(
      * The tasks a participant may perform at any time, offered when nothing is scheduled for today so
      * that a clear day still leads somewhere.
      */
-    private fun alwaysAvailableSections(input: HomeContentInput): List<TaskSection> {
+    private fun alwaysAvailableSections(input: HomeContentInput): List<GroveSection> {
         if (input.events.isNotEmpty()) return emptyList()
         return listOf(
             tileMapper.alwaysAvailableSection(
@@ -80,19 +80,16 @@ class HomeContentMapperImpl(
             emptyList()
         } else {
             listOf(
-                TaskSection(
+                tileMapper.section(
+                    key = TODAY_KEY,
                     title = null,
-                    tiles = input.events.map { event ->
-                        tileMapper.tile(
-                            event = event,
-                            onPerform = { performed, completesEvent ->
-                                input.actionSink.push(
-                                    HomeAction.PerformTaskSelected(
-                                        event = performed,
-                                        completesEvent = completesEvent,
-                                    )
-                                )
-                            },
+                    events = input.events,
+                    onPerform = { performed, completesEvent ->
+                        input.actionSink.push(
+                            HomeAction.PerformTaskSelected(
+                                event = performed,
+                                completesEvent = completesEvent,
+                            )
                         )
                     },
                 )
@@ -120,5 +117,9 @@ class HomeContentMapperImpl(
             ),
             onClick = { input.actionSink.push(HomeAction.MissedTasksSelected) },
         )
+    }
+
+    private companion object {
+        const val TODAY_KEY = "today"
     }
 }

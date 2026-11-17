@@ -82,7 +82,7 @@ data class SignedConsentFormRow(
                     color = Colors.onSurface,
                 )
             }
-            Box(contentAlignment = Alignment.Center) {
+            Box(contentAlignment = Alignment.CenterEnd) {
                 signedAt?.let {
                     Text(
                         modifier = Modifier.alpha(if (isLoading) 0f else 1f),

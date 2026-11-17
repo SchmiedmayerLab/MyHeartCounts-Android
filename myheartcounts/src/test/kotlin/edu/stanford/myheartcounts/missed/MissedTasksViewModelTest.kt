@@ -13,6 +13,7 @@ import edu.stanford.myheartcounts.task.EventTileMapperImpl
 import edu.stanford.myheartcounts.task.FakeEventPerformer
 import edu.stanford.myheartcounts.task.FakeMissedEventsSource
 import edu.stanford.myheartcounts.task.TaskListScreenState
+import edu.stanford.myheartcounts.task.ui.TaskListLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -27,7 +28,8 @@ import org.grovealliance.scheduler.fixtures.EventFixtures
 import org.grovealliance.scheduler.fixtures.OccurrenceFixtures
 import org.grovealliance.scheduler.fixtures.TaskFixtures
 import org.grovealliance.study.StudyTaskCategories
-import org.grovealliance.ui.scheduler.TaskListLayout
+import org.grovealliance.ui.GroveSection
+import org.grovealliance.ui.scheduler.TaskTile
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -133,6 +135,9 @@ class MissedTasksViewModelTest {
             occurrence = OccurrenceFixtures.create(start = start, schedule = schedule),
         )
     }
+
+    private val GroveSection.tiles: List<TaskTile>
+        get() = elements.map { (it as GroveSection.Element.Content).content as TaskTile }
 
     private companion object {
         const val SECONDS_PER_DAY = 86_400L

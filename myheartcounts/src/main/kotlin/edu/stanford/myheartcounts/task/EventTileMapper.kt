@@ -25,11 +25,12 @@ import org.grovealliance.scheduler.ScheduleDuration
 import org.grovealliance.scheduler.TaskCategory
 import org.grovealliance.study.StudyTaskCategories
 import org.grovealliance.ui.AsyncTextButton
+import org.grovealliance.ui.GroveSection
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.groveSection
 import org.grovealliance.ui.scheduler.TaskActionMenuItem
 import org.grovealliance.ui.scheduler.TaskActionsMenu
-import org.grovealliance.ui.scheduler.TaskSection
 import org.grovealliance.ui.scheduler.TaskTile
 import org.grovealliance.ui.scheduler.TaskTileHeader
 import java.time.Duration
@@ -50,22 +51,25 @@ import kotlin.math.roundToInt
  */
 interface EventTileMapper {
     /**
-     * The tile of [event] as of now. Its action, when one may be performed, calls [onPerform] with
-     * the event and whether performing it completes the event.
+     * The tiles of [events] as of now in one section identified by [key], under [title] when given
+     * and in the order given. A tile's action, when one may be performed, calls [onPerform] with the
+     * event and whether performing it completes the event.
      */
-    fun tile(
-        event: Event,
+    fun section(
+        key: String,
+        title: StringResource?,
+        events: List<Event>,
         onPerform: (event: Event, completesEvent: Boolean) -> Unit,
-    ): TaskTile
+    ): GroveSection
 
     /**
      * The tiles of [events] in one section per day they occur on, titled with the date and in the
-     * order given; see [tile].
+     * order given; see [section].
      */
     fun daySections(
         events: List<Event>,
         onPerform: (event: Event, completesEvent: Boolean) -> Unit,
-    ): List<TaskSection>
+    ): List<GroveSection>
 
     /**
      * The section offering [tasks], which may be performed at any time, each calling [onSelected]
@@ -74,7 +78,7 @@ interface EventTileMapper {
     fun alwaysAvailableSection(
         tasks: List<AlwaysAvailableTask> = AlwaysAvailableTask.entries,
         onSelected: (AlwaysAvailableTask) -> Unit,
-    ): TaskSection
+    ): GroveSection
 
     /**
      * A menu offering every task that may be performed at any time, each calling [onSelected] when
@@ -93,67 +97,71 @@ class EventTileMapperImpl(
     private val timeProvider: TimeProvider,
 ) : EventTileMapper {
 
-    override fun tile(
-        event: Event,
+    override fun section(
+        key: String,
+        title: StringResource?,
+        events: List<Event>,
         onPerform: (event: Event, completesEvent: Boolean) -> Unit,
-    ): TaskTile {
-        val category = event.task.category
-        return TaskTile(
-            header = TaskTileHeader(
-                icon = categoryIcon(category),
-                title = StringResource(event.task.title),
-                categoryLabel = categoryLabel(category),
-                timing = timing(event = event),
-            ),
-            instructions = event.task.instructions.takeIf { it.isNotBlank() }?.let { StringResource(it) },
-            action = actionButton(
-                event = event,
-                interaction = interaction(event = event),
-                onPerform = onPerform,
-            ),
-            isCompleted = event.isCompleted,
-        )
+    ): GroveSection = groveSection(key = key) {
+        title?.let { title(stringResource = it) }
+        events.forEach { event ->
+            content(
+                key = "${event.id.taskId}@${event.id.occurrenceStart}",
+                content = TaskTile(
+                    header = TaskTileHeader(
+                        icon = categoryIcon(event.task.category),
+                        title = StringResource(event.task.title),
+                        categoryLabel = categoryLabel(event.task.category),
+                        timing = timing(event = event),
+                    ),
+                    instructions = event.task.instructions.takeIf { it.isNotBlank() }?.let { StringResource(it) },
+                    action = actionButton(
+                        event = event,
+                        interaction = interaction(event = event),
+                        onPerform = onPerform,
+                    ),
+                    isCompleted = event.isCompleted,
+                ),
+            )
+        }
     }
 
     override fun daySections(
         events: List<Event>,
         onPerform: (event: Event, completesEvent: Boolean) -> Unit,
-    ): List<TaskSection> = events
+    ): List<GroveSection> = events
         .groupBy { it.occurrence.start.atZone(timeProvider.currentZone()).toLocalDate() }
         .map { (day, dayEvents) ->
-            TaskSection(
+            section(
+                key = day.toString(),
                 title = StringResource(DAY_FORMAT.format(day)),
-                tiles = dayEvents.map { event ->
-                    tile(
-                        event = event,
-                        onPerform = onPerform,
-                    )
-                },
+                events = dayEvents,
+                onPerform = onPerform,
             )
         }
 
     override fun alwaysAvailableSection(
         tasks: List<AlwaysAvailableTask>,
         onSelected: (AlwaysAvailableTask) -> Unit,
-    ): TaskSection {
-        val tiles = tasks.map { task ->
-            TaskTile(
-                header = TaskTileHeader(
-                    icon = alwaysAvailableIcon(task),
-                    title = StringResource(task.titleId),
-                    categoryLabel = task.subtitleId?.let { StringResource(it) },
-                ),
-                action = AsyncTextButton(
-                    title = StringResource(task.actionTitleId),
-                    action = { onSelected(task) },
+    ): GroveSection = groveSection(key = ALWAYS_AVAILABLE_KEY) {
+        title(resId = MHCStrings.home_other_tasks_title)
+        subtitle(resId = MHCStrings.home_other_tasks_subtitle)
+        tasks.forEach { task ->
+            content(
+                key = task.name,
+                content = TaskTile(
+                    header = TaskTileHeader(
+                        icon = alwaysAvailableIcon(task),
+                        title = StringResource(task.titleId),
+                        categoryLabel = task.subtitleId?.let { StringResource(it) },
+                    ),
+                    action = AsyncTextButton(
+                        title = StringResource(task.actionTitleId),
+                        action = { onSelected(task) },
+                    ),
                 ),
             )
         }
-        return TaskSection(
-            title = StringResource(MHCStrings.home_other_tasks_title),
-            tiles = tiles,
-            subtitle = StringResource(MHCStrings.home_other_tasks_subtitle),
-        )
     }
 
     override fun alwaysAvailableMenu(onSelected: (AlwaysAvailableTask) -> Unit): TaskActionsMenu = TaskActionsMenu(
@@ -389,6 +397,7 @@ class EventTileMapperImpl(
         const val MONTHS_PER_YEAR = 12
         const val WEEKS_BEFORE_MONTHS = 4
         val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+        const val ALWAYS_AVAILABLE_KEY = "always-available"
         val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
         val PERFORMABLE_CATEGORIES = setOf(
             StudyTaskCategories.informational,

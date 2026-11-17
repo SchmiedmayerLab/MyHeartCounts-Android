@@ -26,6 +26,8 @@ import org.grovealliance.studydefinition.TimedWalkingTestConfiguration
 import org.grovealliance.studydefinition.fixtures.ComponentFixtures
 import org.grovealliance.studydefinition.fixtures.TimedWalkingTestConfigurationFixtures
 import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.GroveSection
+import org.grovealliance.ui.scheduler.TaskTile
 import org.junit.Test
 import java.time.Duration
 import java.time.Instant
@@ -149,6 +151,9 @@ class UpcomingTasksMapperTest {
         events = events,
         actionSink = actionSink,
     )
+
+    private val GroveSection.tiles: List<TaskTile>
+        get() = elements.map { (it as GroveSection.Element.Content).content as TaskTile }
 
     private companion object {
         const val SECONDS_PER_DAY = 86_400L
