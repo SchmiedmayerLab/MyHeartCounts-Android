@@ -14,6 +14,8 @@ import edu.stanford.myheartcounts.model.demographics.BloodType
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
 import edu.stanford.myheartcounts.model.demographics.NHSNumber
 import edu.stanford.myheartcounts.model.demographics.UKRegion
+import edu.stanford.myheartcounts.standard.FakeMeasurementUnitsProvider
+import edu.stanford.myheartcounts.standard.MeasurementUnits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -29,10 +31,12 @@ class DemographicsLayoutMapperTest {
     private val response = MutableStateFlow(DemographicsResponse.empty)
     private val completion = MutableStateFlow<Map<DemographicsField, DemographicsCompletion>>(emptyMap())
     private val scope = TestScope(UnconfinedTestDispatcher())
+    private val unitsProvider = FakeMeasurementUnitsProvider()
     private val mapper = DemographicsLayoutMapperImpl(
         catalog = DemographicsCatalogFixtures.create(),
         optionIdMapper = DemographicsOptionIdMapperImpl(),
         answerMapper = DemographicsAnswerMapperImpl(optionIdMapper = DemographicsOptionIdMapperImpl()),
+        measurementMapper = DemographicsMeasurementMapperImpl(unitsProvider = unitsProvider),
         rules = DemographicsRules(),
     )
 
@@ -133,6 +137,25 @@ class DemographicsLayoutMapperTest {
                 isOptional = false,
             ),
         )
+    }
+
+    @Test
+    fun `measurement rows show the answers in the US system's units`() {
+        // given
+        unitsProvider.setUnits(units = MeasurementUnits.US)
+        response.value = DemographicsResponse.empty.copy(
+            heightInCm = 172.72,
+            weightInKg = 68.0388555,
+        )
+
+        // when
+        val layout = mapper.map(input = input())
+
+        // then
+        assertThat(layout.row(field = DemographicsField.Height).value.value?.text)
+            .isEqualTo(StringResource(MHCStrings.demographics_value_feet_inches, 5, 8))
+        assertThat(layout.row(field = DemographicsField.Weight).value.value?.text)
+            .isEqualTo(StringResource(MHCStrings.demographics_value_lb, "150"))
     }
 
     @Test

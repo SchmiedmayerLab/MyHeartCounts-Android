@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.di
 
 import android.os.Build
 import edu.stanford.myheartcounts.BuildConfig
+import edu.stanford.myheartcounts.BuildInfo
 import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.StudyAppBarProviderImpl
 import edu.stanford.myheartcounts.account.PostTrialNudges
@@ -19,6 +20,8 @@ import edu.stanford.myheartcounts.account.feedback.MHCFeedback
 import edu.stanford.myheartcounts.account.feedback.MHCFeedbackImpl
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapper
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapperImpl
+import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailMapper
+import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailMapperImpl
 import edu.stanford.myheartcounts.customsamples.CustomSampleDecoder
 import edu.stanford.myheartcounts.customsamples.CustomSampleDecoderImpl
 import edu.stanford.myheartcounts.customsamples.CustomSampleSource
@@ -40,6 +43,7 @@ import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctionsImpl
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.MHCFirestoreImpl
 import edu.stanford.myheartcounts.healthstats.HealthStatsCheckpointStore
 import edu.stanford.myheartcounts.healthstats.HealthStatsCheckpointStoreImpl
 import edu.stanford.myheartcounts.healthstats.HealthStatsDocumentDecoder
@@ -87,8 +91,6 @@ import edu.stanford.myheartcounts.home.HomeTasksSource
 import edu.stanford.myheartcounts.home.HomeTasksSourceImpl
 import edu.stanford.myheartcounts.missed.MissedTasksMapper
 import edu.stanford.myheartcounts.missed.MissedTasksMapperImpl
-import edu.stanford.myheartcounts.navigation.Navigator
-import edu.stanford.myheartcounts.navigation.NavigatorImpl
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.notification.MHCNudgeNotifications
 import edu.stanford.myheartcounts.notification.MHCPushTokenSynchronizer
@@ -107,7 +109,11 @@ import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.standard.MHCAppRevision
 import edu.stanford.myheartcounts.standard.MHCEnvironmentTracker
 import edu.stanford.myheartcounts.standard.MHCQuestionnaireUploader
+import edu.stanford.myheartcounts.standard.MeasurementUnitsProvider
+import edu.stanford.myheartcounts.standard.MeasurementUnitsProviderImpl
 import edu.stanford.myheartcounts.standard.QuestionnaireResponseUploader
+import edu.stanford.myheartcounts.standard.SignOutCleanup
+import edu.stanford.myheartcounts.standard.SignOutCleanupImpl
 import edu.stanford.myheartcounts.standard.health.HealthAccess
 import edu.stanford.myheartcounts.standard.health.HealthAccessImpl
 import edu.stanford.myheartcounts.standard.health.HealthObservationMapper
@@ -115,8 +121,13 @@ import edu.stanford.myheartcounts.standard.health.HealthObservationProvenance
 import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
+import edu.stanford.myheartcounts.standard.health.ManagedFileUploadImpl
+import edu.stanford.myheartcounts.study.EnrolledStudySource
+import edu.stanford.myheartcounts.study.EnrolledStudySourceImpl
 import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
 import edu.stanford.myheartcounts.study.MHCStudyBundleProviderImpl
+import edu.stanford.myheartcounts.study.StudyActivation
+import edu.stanford.myheartcounts.study.StudyActivationImpl
 import edu.stanford.myheartcounts.study.StudyArticleSource
 import edu.stanford.myheartcounts.study.StudyArticleSourceImpl
 import edu.stanford.myheartcounts.study.StudyEnroller
@@ -157,7 +168,7 @@ fun ConfigurationBuilder.appConfigurations() {
     comorbiditiesConfigurations()
     workoutPreferenceConfigurations()
     participationStatsConfigurations()
-    singleton<Navigator> { NavigatorImpl() }
+    navigationConfigurations()
     homeConfigurations()
     taskConfigurations()
     singleton<StudyAppBarProvider> {
@@ -206,6 +217,9 @@ fun ConfigurationBuilder.appConfigurations() {
     singleton { AppEnvironment.Testing }
     featureFlagConfigurations()
     debugConfigurations()
+    licenseConfigurations()
+    signedConsentFormsConfigurations()
+    promptedActionsConfigurations()
     studyConfigurations()
     firebaseConfigurations()
     healthConfigurations()
@@ -218,8 +232,8 @@ fun ConfigurationBuilder.appConfigurations() {
  */
 private fun ConfigurationBuilder.firebaseConfigurations() {
     module { AppLifecycle() }
-    module {
-        MHCFirestore(
+    singleton<MHCFirestore> {
+        MHCFirestoreImpl(
             account = dependency(),
             firebaseAppConfiguration = dependency(),
         )
@@ -253,6 +267,18 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
             timeProvider = dependency(),
         )
     }
+    singleton<MeasurementUnitsProvider> { MeasurementUnitsProviderImpl() }
+    singleton<SignOutCleanup> {
+        SignOutCleanupImpl(
+            healthData = dependency(),
+            studyManager = dependency(),
+            studyActivation = dependency(),
+            studyVariants = dependency(),
+            promptedActionRejections = dependency(),
+            onboardingCompletion = dependency(),
+            firebaseLoader = dependency(),
+        )
+    }
 
     consentConfigurations()
 }
@@ -262,8 +288,14 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
  */
 private fun ConfigurationBuilder.accountOverviewConfigurations() {
     factory<MHCAccountOverviewMapper> {
-        MHCAccountOverviewMapperImpl(appRevision = dependency())
+        MHCAccountOverviewMapperImpl(
+            appRevision = dependency(),
+            timeProvider = dependency(),
+            buildInfo = dependency(),
+            promptedActionsMapper = dependency(),
+        )
     }
+    singleton { BuildInfo(sdkInt = Build.VERSION.SDK_INT) }
     factory<StudyWithdrawal> {
         StudyWithdrawalImpl(
             cloudFunctions = dependency(),
@@ -278,6 +310,7 @@ private fun ConfigurationBuilder.accountOverviewConfigurations() {
             timeProvider = dependency(),
         )
     }
+    singleton<VerifyEmailMapper> { VerifyEmailMapperImpl() }
 }
 
 /**
@@ -300,6 +333,7 @@ private fun ConfigurationBuilder.notificationConfigurations() {
         MHCNotificationTracking(
             firestore = dependency(),
             timeProvider = dependency(),
+            bundleIdentifier = BuildConfig.APPLICATION_ID,
         )
     }
 }
@@ -316,8 +350,8 @@ private fun ConfigurationBuilder.healthConfigurations() {
     }
     singleton { HealthStagingDatabase.create(context = appContext()) }
     singleton { HealthObservationMapper() }
-    singleton {
-        ManagedFileUpload(
+    singleton<ManagedFileUpload> {
+        ManagedFileUploadImpl(
             context = appContext(),
             firestore = dependency(),
             concurrency = dependency(),
@@ -433,6 +467,22 @@ private fun ConfigurationBuilder.studyConfigurations() {
             studyManager = dependency(),
             account = dependency(),
             timeProvider = dependency(),
+            studyActivation = dependency(),
+        )
+    }
+
+    factory<EnrolledStudySource> {
+        EnrolledStudySourceImpl(
+            studyManager = dependency(),
+            studyBundleProvider = dependency(),
+            variantProvider = dependency(),
+        )
+    }
+
+    singleton<StudyActivation> {
+        StudyActivationImpl(
+            storage = dependency(),
+            timeProvider = dependency(),
         )
     }
 }
@@ -476,7 +526,12 @@ private fun ConfigurationBuilder.taskConfigurations() {
  * Registers the Home tab's data sources and layout mapper.
  */
 private fun ConfigurationBuilder.homeConfigurations() {
-    factory<HomeContentMapper> { HomeContentMapperImpl(tileMapper = dependency()) }
+    factory<HomeContentMapper> {
+        HomeContentMapperImpl(
+            tileMapper = dependency(),
+            promptedActionsMapper = dependency(),
+        )
+    }
     factory<HomeTasksSource> {
         HomeTasksSourceImpl(
             studyManager = dependency(),
@@ -497,6 +552,7 @@ private fun ConfigurationBuilder.homeConfigurations() {
         FirebaseHomeSuggestionsSource(
             firestore = dependency(),
             timeProvider = dependency(),
+            promptedActionsSource = dependency(),
         )
     }
     heartHealthConfigurations()

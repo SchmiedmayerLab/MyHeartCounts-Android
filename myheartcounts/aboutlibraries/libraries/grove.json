@@ -1,0 +1,10 @@
+{
+  "uniqueId": "org.grovealliance:grove-kotlin",
+  "artifactVersion": "0.1.0",
+  "name": "Grove",
+  "description": "Modules for building digital health study apps on Android.",
+  "website": "https://github.com/SchmiedmayerLab/grove-kotlin",
+  "licenses": [
+    "MIT"
+  ]
+}

@@ -9,7 +9,9 @@ package edu.stanford.myheartcounts.di
 
 import edu.stanford.myheartcounts.MainActivityViewModel
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
+import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailViewModel
 import edu.stanford.myheartcounts.comorbidities.ComorbiditiesViewModel
+import edu.stanford.myheartcounts.consentforms.SignedConsentFormsViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailViewModel
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryViewModel
@@ -18,6 +20,7 @@ import edu.stanford.myheartcounts.demographics.DemographicsViewModel
 import edu.stanford.myheartcounts.home.HomeViewModel
 import edu.stanford.myheartcounts.missed.MissedTasksViewModel
 import edu.stanford.myheartcounts.onboarding.OnboardingViewModel
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsViewModel
 import edu.stanford.myheartcounts.stats.ParticipationStatsViewModel
 import edu.stanford.myheartcounts.study.StudyViewModel
 import edu.stanford.myheartcounts.task.PerformTaskViewModel
@@ -65,6 +68,9 @@ fun ConfigurationBuilder.appViewModels() {
             studyWithdrawal = dependency(),
             postTrialNudges = dependency(),
             feedback = dependency(),
+            enrolledStudySource = dependency(),
+            promptedActionsSource = dependency(),
+            fileUpload = dependency(),
             mapper = dependency(),
         )
     }
@@ -91,9 +97,36 @@ private fun ConfigurationBuilder.participantDataViewModels() {
             layoutMapper = dependency(),
             pickerMapper = dependency(),
             choiceSheetMapper = dependency(),
+            measurementMapper = dependency(),
             editor = dependency(),
             autofill = dependency(),
             navigator = dependency(),
+        )
+    }
+    viewModel {
+        PromptedActionsViewModel(
+            savedStateHandle = savedStateHandle(),
+            source = dependency(),
+            rejections = dependency(),
+            navigator = dependency(),
+            mapper = dependency(),
+        )
+    }
+    viewModel {
+        VerifyEmailViewModel(
+            account = dependency(),
+            accountService = dependency(),
+            navigator = dependency(),
+            externalApps = dependency(),
+            mapper = dependency(),
+        )
+    }
+    viewModel {
+        SignedConsentFormsViewModel(
+            source = dependency(),
+            renderer = dependency(),
+            navigator = dependency(),
+            mapper = dependency(),
         )
     }
     viewModel {
@@ -139,6 +172,7 @@ private fun ConfigurationBuilder.studyViewModels() {
             taskPerformer = dependency(),
             navigator = dependency(),
             responseUploader = dependency(),
+            measurementWriter = dependency(),
             uploadScope = dependency<Concurrency>().ioCoroutineScope(),
         )
     }
@@ -188,7 +222,7 @@ private fun ConfigurationBuilder.dashboardViewModels() {
             navigator = dependency(),
             writer = dependency(),
             healthAccess = dependency(),
-            account = dependency(),
+            unitsProvider = dependency(),
             timeProvider = dependency(),
             mapper = dependency(),
         )

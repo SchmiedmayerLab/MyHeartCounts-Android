@@ -14,6 +14,8 @@ import edu.stanford.myheartcounts.StudyAppBarProvider
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
 import edu.stanford.myheartcounts.task.AlwaysAvailableTask
 import edu.stanford.myheartcounts.task.EventPerformer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -81,7 +83,7 @@ class HomeViewModel(
         combine(
             tasksSource.tasks(),
             suggestionsSource.nudge,
-            suggestionsSource.pendingActions,
+            suggestionsSource.promptedActions,
         ) { tasks, nudge, promptedActions ->
             mapper.map(
                 input = HomeContentInput(
@@ -129,7 +131,9 @@ class HomeViewModel(
     }
 
     private fun showPromptedActions() {
-        logger.i { "Prompted actions selected." }
+        navigator.push(
+            event = NavigationEvent.NavigateTo(route = MHCRoute.PromptedActions(mode = PromptedActionsMode.Pending)),
+        )
     }
 
     private fun performAlwaysAvailableTask(task: AlwaysAvailableTask) {

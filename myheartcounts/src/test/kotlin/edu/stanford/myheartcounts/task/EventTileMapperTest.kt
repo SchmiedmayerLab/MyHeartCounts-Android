@@ -20,7 +20,9 @@ import org.grovealliance.scheduler.fixtures.EventFixtures
 import org.grovealliance.scheduler.fixtures.OccurrenceFixtures
 import org.grovealliance.scheduler.fixtures.TaskFixtures
 import org.grovealliance.study.StudyTaskCategories
+import org.grovealliance.ui.GroveSection
 import org.grovealliance.ui.StringResource
+import org.grovealliance.ui.scheduler.TaskTile
 import org.junit.Test
 import java.time.Duration
 import java.time.Instant
@@ -161,7 +163,7 @@ class EventTileMapperTest {
         // given
         val event = eventAt(start = nineAm.plusSeconds(SECONDS_PER_DAY * DAYS_BEYOND_LATE_WINDOW))
         val performed = mutableListOf<Boolean>()
-        val tile = mapper.tile(
+        val tile = tileOf(
             event = event,
             onPerform = { _, completesEvent -> performed += completesEvent },
         )
@@ -195,7 +197,7 @@ class EventTileMapperTest {
         start: Instant,
         duration: ScheduleDuration = ScheduleDuration.TillEndOfDay,
         end: Instant = start.plusSeconds(SECONDS_PER_HOUR),
-    ): StringResource? = mapper.tile(
+    ): StringResource? = tileOf(
         event = eventAt(
             start = start,
             duration = duration,
@@ -203,6 +205,16 @@ class EventTileMapperTest {
         ),
         onPerform = { _, _ -> },
     ).header.timing
+
+    private fun tileOf(
+        event: Event,
+        onPerform: (event: Event, completesEvent: Boolean) -> Unit,
+    ): TaskTile = mapper.section(
+        key = "tiles",
+        title = null,
+        events = listOf(event),
+        onPerform = onPerform,
+    ).elements.single().let { (it as GroveSection.Element.Content).content as TaskTile }
 
     private fun withDistance(distance: StringResource, start: Instant): StringResource =
         StringResource(MHCStrings.task_timing_with_offset, distance, StringResource(time(start)))

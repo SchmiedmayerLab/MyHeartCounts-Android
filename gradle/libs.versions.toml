@@ -7,6 +7,7 @@
 
 # Please keep [versions] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [versions]
+aboutLibraries = "15.3.0"
 activityCompose = "1.13.0"
 agp = "9.4.1"
 androidTools = "32.3.1"
@@ -103,6 +104,7 @@ grove-core-viewmodel = { module = "org.grovealliance:core-viewmodel", version.re
 grove-firebase = { module = "org.grovealliance:firebase", version.ref = "grove" }
 grove-foundation = { module = "org.grovealliance:foundation", version.ref = "grove" }
 grove-health = { module = "org.grovealliance:health", version.ref = "grove" }
+grove-license = { module = "org.grovealliance:license", version.ref = "grove" }
 grove-markdown = { module = "org.grovealliance:markdown", version.ref = "grove" }
 grove-onboarding = { module = "org.grovealliance:onboarding", version.ref = "grove" }
 grove-questionnaire = { module = "org.grovealliance:questionnaire", version.ref = "grove" }
@@ -124,6 +126,7 @@ zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni" }
 
 # Please keep [plugins] block sorted. Select all items and in Android Studio `Edit > Sort Lines`
 [plugins]
+aboutlibraries-android = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

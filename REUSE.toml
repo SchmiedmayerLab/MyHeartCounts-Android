@@ -44,6 +44,7 @@ SPDX-License-Identifier = "MIT"
 [[annotations]]
 path = [
     "myheartcounts/google-services.json",
+    "myheartcounts/aboutlibraries/**/*.json",
 ]
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"
@@ -52,6 +53,7 @@ SPDX-License-Identifier = "MIT"
 [[annotations]]
 path = [
     "myheartcounts/src/main/res/mipmap-*/*.png",
+    "myheartcounts/src/main/res/drawable-*dpi/ic_notification.png",
 ]
 SPDX-FileCopyrightText = "2026 Stanford University and the project authors (see CONTRIBUTORS.md)"
 SPDX-License-Identifier = "MIT"

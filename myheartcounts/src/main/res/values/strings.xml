@@ -222,11 +222,6 @@ SPDX-License-Identifier: MIT
         <item quantity="one">%1$d missed task in the past 2 weeks</item>
         <item quantity="other">%1$d missed tasks in the past 2 weeks</item>
     </plurals>
-    <string name="home_prompted_actions_title">Finish setting up</string>
-    <plurals name="home_prompted_actions_subtitle">
-        <item quantity="one">%1$d step remaining</item>
-        <item quantity="other">%1$d steps remaining</item>
-    </plurals>
     <string name="home_learn_more">About the My Heart Counts Study</string>
     <string name="home_error_title">Unable to load your tasks</string>
     <string name="home_error_message">Something went wrong while loading the study. Please try again.</string>
@@ -310,6 +305,8 @@ SPDX-License-Identifier: MIT
     <string name="nudge_notification_channel_id" translatable="false">nudges</string>
     <string name="nudge_notification_channel_name">Activity Nudges</string>
     <string name="nudge_notification_channel_description">Suggestions from the My Heart Counts study to help you stay active.</string>
+    <string name="reminder_notification_channel_name">Task Reminders</string>
+    <string name="reminder_notification_channel_description">Reminders for your upcoming My Heart Counts tasks.</string>
 
     <!-- Account overview -->
     <string name="account_withdraw_button">Withdraw from Study</string>
@@ -323,9 +320,14 @@ SPDX-License-Identifier: MIT
     <string name="account_post_trial_nudges_title">Post-Trial Activity Nudges</string>
     <string name="account_post_trial_nudges_subtitle">Enable to continue receiving periodic activity nudges after the initial trial period.</string>
     <string name="account_post_trial_nudges_error">Your post-trial activity nudges choice could not be saved. Please check your connection and try again.</string>
+    <string name="account_change_language">Change Language</string>
     <string name="account_send_feedback">Send Feedback</string>
+    <string name="account_enrolled_since">Enrolled since: %1$s</string>
+    <string name="account_study_website">Learn more about the study</string>
     <string name="account_view_participation_stats">View Participation Stats</string>
+    <string name="account_processing_health_data">Processing Health Data…</string>
     <string name="account_update_comorbidities">Update Health Conditions</string>
+    <string name="account_review_consent_forms">Review Consent Forms</string>
     <string name="account_workout_preference">Workout Preference</string>
     <string name="account_feedback_title">Feedback</string>
     <string name="account_feedback_send">Send</string>
@@ -416,6 +418,12 @@ SPDX-License-Identifier: MIT
     <string name="heart_entry_bmi_mode">BMI</string>
     <string name="heart_entry_feet_value">%1$d ft</string>
     <string name="heart_entry_inches_value">%1$d in</string>
+    <string name="heart_entry_placeholder" translatable="false">0</string>
+    <string name="heart_entry_unit_mmhg">mmHg</string>
+    <string name="heart_entry_unit_mgdl">mg/dL</string>
+    <string name="heart_entry_unit_kg">kg</string>
+    <string name="heart_entry_unit_lb">lb</string>
+    <string name="heart_entry_unit_cm">cm</string>
 
     <!-- Debug sheet (debug builds only) -->
     <string name="debug_title" translatable="false">Debug</string>
@@ -424,6 +432,7 @@ SPDX-License-Identifier: MIT
     <string name="debug_info_build" translatable="false">Build</string>
     <string name="debug_info_project_id" translatable="false">Project ID</string>
     <string name="debug_info_account_id" translatable="false">Account ID</string>
+    <string name="debug_info_email_verified" translatable="false">Email Verified</string>
     <string name="debug_info_enrolled_revision" translatable="false">Study Revision (enrolled)</string>
     <string name="debug_info_bundled_revision" translatable="false">Study Revision (bundled)</string>
     <string name="debug_info_consent_version" translatable="false">lastSignedConsentVersion</string>
@@ -446,7 +455,7 @@ SPDX-License-Identifier: MIT
     <string name="feature_flags_restart" translatable="false">Restart</string>
     <string name="feature_flags_restart_note" translatable="false">Changes apply once the app restarts.</string>
     <string name="feature_flag_simplify_onboarding_title" translatable="false">Simplify Onboarding</string>
-    <string name="feature_flag_simplify_onboarding_description" translatable="false">Shortens onboarding to login, Health Connect access, the workout preference and enrollment.</string>
+    <string name="feature_flag_simplify_onboarding_description" translatable="false">Shortens onboarding to login, Health Connect access and enrollment.</string>
     <string name="feature_flag_uk_study_testing_title" translatable="false">UK Study Testing</string>
     <string name="feature_flag_uk_study_testing_description" translatable="false">Lets participants in the United Kingdom join the Imperial study on the US backend instead of the launch waitlist.</string>
 
@@ -688,10 +697,18 @@ SPDX-License-Identifier: MIT
     <string name="demographics_height_sheet_title">Enter Height</string>
     <string name="demographics_weight_sheet_title">Enter Weight</string>
     <string name="demographics_measurement_value">Value</string>
+    <string name="demographics_measurement_feet">Feet</string>
+    <string name="demographics_measurement_inches">Inches</string>
+    <string name="demographics_measurement_placeholder" translatable="false">0</string>
+    <string name="demographics_measurement_feet_placeholder" translatable="false">5</string>
+    <string name="demographics_measurement_inches_placeholder" translatable="false">4</string>
     <string name="demographics_unit_cm">cm</string>
     <string name="demographics_unit_kg">kg</string>
+    <string name="demographics_unit_lb">lb</string>
     <string name="demographics_value_cm">%1$s cm</string>
+    <string name="demographics_value_feet_inches">%1$d′ %2$d″</string>
     <string name="demographics_value_kg">%1$s kg</string>
+    <string name="demographics_value_lb">%1$s lb</string>
     <string name="demographics_value_selected_count">%1$d selected</string>
     <string name="demographics_race_footer">You can select multiple options.</string>
     <string name="demographics_us_region_sheet_title">Select your State or Territory</string>
@@ -730,4 +747,53 @@ SPDX-License-Identifier: MIT
     <string name="workout_preference_continue">Continue</string>
     <string name="workout_preference_save">Save</string>
     <string name="workout_preference_save_failed">Your workout preference couldn\'t be saved. Please check your connection and try again.</string>
+    <string name="license_information_title">License Information</string>
+    <string name="license_information_footer">Please refer to the individual repository links for packages without license labels.</string>
+    <string name="license_information_error_title">Licenses Unavailable</string>
+    <string name="license_information_error_message">The license information couldn\'t be loaded. Please try again.</string>
+    <string name="consent_forms_title">Consent Documents</string>
+    <string name="consent_forms_empty">You haven\'t signed any consent forms yet.</string>
+    <string name="consent_forms_untitled">Consent Form</string>
+    <string name="consent_forms_share">Share</string>
+    <string name="consent_forms_error_title">Consent Forms Unavailable</string>
+    <string name="consent_forms_error_message">Your consent forms couldn\'t be loaded. Please check your connection and try again.</string>
+    <string name="consent_forms_retry">Try Again</string>
+    <string name="consent_forms_refresh_failed">Your consent forms couldn\'t be refreshed. Please try again.</string>
+    <string name="consent_forms_open_failed">The consent form couldn\'t be opened. Please try again.</string>
+    <string name="verify_email_title">Verify Email</string>
+    <string name="verify_email_explanation">A verified email lets us confirm it\'s really you, protects your account from unauthorized changes, and ensures you can reset your password or recover your account if needed.</string>
+    <string name="verify_email_no_account">Unable to connect to account. Make sure you have a working network connection.</string>
+    <string name="verify_email_verified">Your email address is verified</string>
+    <string name="verify_email_not_verified">Your email currently is not verified</string>
+    <string name="verify_email_how_to">How to verify</string>
+    <string name="verify_email_request_step">1. Request a verification link</string>
+    <string name="verify_email_request_explanation">We\'ll email a link to %1$s</string>
+    <string name="verify_email_send_link">Send Verification Link</string>
+    <string name="verify_email_open_step">2. Open the link in the email</string>
+    <string name="verify_email_open_explanation">Tap the link in the email to complete the verification, then return here.</string>
+    <string name="verify_email_open_mail">Open Email App</string>
+    <string name="verify_email_done">Done</string>
+    <string name="verify_email_link_sent">Verification link sent to your email.</string>
+    <string name="verify_email_link_failed">The verification link couldn\'t be sent. Please try again.</string>
+    <string name="prompted_actions_card_title">Complete Your Study Setup</string>
+    <plurals name="prompted_actions_card_subtitle">
+        <item quantity="one">%1$d recommended step to get the most out of the study</item>
+        <item quantity="other">%1$d recommended steps to get the most out of the study</item>
+    </plurals>
+    <string name="prompted_actions_all_set">You\'re All Set</string>
+    <string name="prompted_actions_all_completed">You\'ve completed all recommended setup steps.</string>
+    <string name="prompted_actions_title">Suggested for You</string>
+    <string name="prompted_actions_completed">Completed</string>
+    <string name="prompted_actions_footer_pending">These optional steps help My Heart Counts gather richer data for cardiovascular research. Suggestions you decline won\'t be shown again on the Home tab, but will remain accessible via the app\'s settings.</string>
+    <string name="prompted_actions_footer_all">These optional steps help My Heart Counts gather richer data for cardiovascular research.</string>
+    <string name="prompted_actions_stop_suggesting_title">Stop Suggesting This?</string>
+    <string name="prompted_actions_stop_suggesting_message">This action remains available through the app\'s settings.</string>
+    <string name="prompted_actions_stop_suggesting_confirm">Stop Suggesting This</string>
+    <string name="prompted_actions_stop_suggesting_cancel">Cancel</string>
+    <string name="prompted_action_demographics_title">Complete Demographics</string>
+    <string name="prompted_action_demographics_message">Providing demographic information such as age, sex, and background helps researchers understand how heart health varies across different groups.</string>
+    <string name="prompted_action_demographics_button">Complete</string>
+    <string name="prompted_action_verify_email_title">Verify Account Email</string>
+    <string name="prompted_action_verify_email_message">Email verification is required to secure your account.</string>
+    <string name="prompted_action_verify_email_button">Verify Email</string>
 </resources>

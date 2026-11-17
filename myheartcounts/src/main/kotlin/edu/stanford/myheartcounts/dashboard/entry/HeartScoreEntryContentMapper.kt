@@ -169,13 +169,13 @@ class HeartScoreEntryContentMapperImpl(
                     field(
                         input = input,
                         label = MHCStrings.heart_entry_systolic,
-                        unit = "mmHg",
+                        unit = MHCStrings.heart_entry_unit_mmhg,
                         field = HeartScoreEntryAction.Field.Value,
                     ),
                     field(
                         input = input,
                         label = MHCStrings.heart_entry_diastolic,
-                        unit = "mmHg",
+                        unit = MHCStrings.heart_entry_unit_mmhg,
                         field = HeartScoreEntryAction.Field.Diastolic,
                     ),
                 )
@@ -199,7 +199,7 @@ class HeartScoreEntryContentMapperImpl(
                     field(
                         input = input,
                         label = form.component.title,
-                        unit = "mg/dL",
+                        unit = MHCStrings.heart_entry_unit_mgdl,
                         field = HeartScoreEntryAction.Field.Value,
                     ),
                 )
@@ -219,7 +219,7 @@ class HeartScoreEntryContentMapperImpl(
                 field(
                     input = input,
                     label = MHCStrings.heart_entry_weight,
-                    unit = if (form.weightInPounds) "lb" else "kg",
+                    unit = if (form.weightInPounds) MHCStrings.heart_entry_unit_lb else MHCStrings.heart_entry_unit_kg,
                     field = HeartScoreEntryAction.Field.Weight,
                 ),
                 if (form.heightInFeet) {
@@ -228,7 +228,7 @@ class HeartScoreEntryContentMapperImpl(
                     field(
                         input = input,
                         label = MHCStrings.heart_entry_height,
-                        unit = "cm",
+                        unit = MHCStrings.heart_entry_unit_cm,
                         field = HeartScoreEntryAction.Field.Height,
                     )
                 },
@@ -280,7 +280,7 @@ class HeartScoreEntryContentMapperImpl(
     private fun field(
         input: HeartScoreEntryContentInput,
         label: Int,
-        unit: String?,
+        unit: Int?,
         field: HeartScoreEntryAction.Field,
     ): EntryFieldRow {
         val form = input.state.value.form
@@ -288,7 +288,7 @@ class HeartScoreEntryContentMapperImpl(
         return EntryFieldRow(
             label = StringResource(label),
             value = input.display { it.form.text(field = field) },
-            placeholder = StringResource("0"),
+            placeholder = StringResource(MHCStrings.heart_entry_placeholder),
             unit = unit?.let { StringResource(it) },
             keyboardType = if (form.acceptsWholeNumbersOnly(field = field)) KeyboardType.Number else KeyboardType.Decimal,
             validationMessage = input.display { state ->

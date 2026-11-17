@@ -12,6 +12,8 @@ import com.google.common.truth.Truth.assertThat
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.model.demographics.BloodType
 import edu.stanford.myheartcounts.model.demographics.MHCGenderIdentity
+import edu.stanford.myheartcounts.standard.FakeMeasurementUnitsProvider
+import edu.stanford.myheartcounts.standard.MeasurementUnits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -32,8 +34,11 @@ class DemographicsPickerMapperTest {
     private val response = MutableStateFlow(DemographicsResponse.empty)
     private val scope = TestScope(UnconfinedTestDispatcher())
     private val timeProvider = FakeTimeProvider()
+    private val unitsProvider = FakeMeasurementUnitsProvider()
     private val mapper = DemographicsPickerMapperImpl(
         answerMapper = DemographicsAnswerMapperImpl(optionIdMapper = DemographicsOptionIdMapperImpl()),
+        measurementMapper = DemographicsMeasurementMapperImpl(unitsProvider = unitsProvider),
+        unitsProvider = unitsProvider,
         timeProvider = timeProvider,
     )
 
@@ -127,14 +132,69 @@ class DemographicsPickerMapperTest {
     }
 
     @Test
-    fun `measurement sheets ask for a decimal in their unit`() {
+    fun `measurement sheets ask for a decimal in their metric unit`() {
         // when
-        val sheet = entrySheet(entry = DemographicsEntry.Height)
+        val height = entrySheet(entry = DemographicsEntry.Height)
+        val weight = entrySheet(entry = DemographicsEntry.Weight)
 
         // then
-        assertThat(sheet.unit).isEqualTo(StringResource(MHCStrings.demographics_unit_cm))
-        assertThat(sheet.keyboardType).isEqualTo(KeyboardType.Decimal)
-        assertThat(sheet.help).isNull()
+        assertThat(height.fields.single().unit).isEqualTo(StringResource(MHCStrings.demographics_unit_cm))
+        assertThat(height.fields.single().keyboardType).isEqualTo(KeyboardType.Decimal)
+        assertThat(height.fields.single().placeholder).isEqualTo(StringResource(MHCStrings.demographics_measurement_placeholder))
+        assertThat(height.help).isNull()
+        assertThat(weight.fields.single().unit).isEqualTo(StringResource(MHCStrings.demographics_unit_kg))
+    }
+
+    @Test
+    fun `in the US system height is typed in feet and inches and weight in pounds`() {
+        // given
+        unitsProvider.setUnits(units = MeasurementUnits.US)
+
+        // when
+        val height = entrySheet(entry = DemographicsEntry.Height)
+        val weight = entrySheet(entry = DemographicsEntry.Weight)
+
+        // then
+        assertThat(height.fields.map { it.label }).containsExactly(
+            StringResource(MHCStrings.demographics_measurement_feet),
+            StringResource(MHCStrings.demographics_measurement_inches),
+        ).inOrder()
+        assertThat(height.fields.map { it.keyboardType }).containsExactly(KeyboardType.Number, KeyboardType.Number)
+        assertThat(height.fields.map { it.placeholder }).containsExactly(
+            StringResource(MHCStrings.demographics_measurement_feet_placeholder),
+            StringResource(MHCStrings.demographics_measurement_inches_placeholder),
+        ).inOrder()
+        assertThat(weight.fields.single().unit).isEqualTo(StringResource(MHCStrings.demographics_unit_lb))
+    }
+
+    @Test
+    fun `in the UK system height stays in centimetres and weight is typed in pounds`() {
+        // given
+        unitsProvider.setUnits(units = MeasurementUnits.UK)
+
+        // when
+        val height = entrySheet(entry = DemographicsEntry.Height)
+        val weight = entrySheet(entry = DemographicsEntry.Weight)
+
+        // then
+        assertThat(height.fields.single().unit).isEqualTo(StringResource(MHCStrings.demographics_unit_cm))
+        assertThat(weight.fields.single().unit).isEqualTo(StringResource(MHCStrings.demographics_unit_lb))
+    }
+
+    @Test
+    fun `a height sheet in the US system starts from the answer in feet and inches`() {
+        // given
+        unitsProvider.setUnits(units = MeasurementUnits.US)
+        response.value = DemographicsResponse.empty.copy(heightInCm = 172.72)
+
+        // when
+        val text = mapper.mapEntryText(
+            entry = DemographicsEntry.Height,
+            input = input(),
+        )
+
+        // then
+        assertThat(text).containsExactly("5", "8").inOrder()
     }
 
     @Test
@@ -144,15 +204,19 @@ class DemographicsPickerMapperTest {
 
         // when
         sheet.help?.onClick?.invoke()
-        sheet.onEntryChange("943")
+        sheet.onEntryChange(0, "943")
 
         // then
-        assertThat(sheet.unit).isNull()
-        assertThat(sheet.keyboardType).isEqualTo(KeyboardType.Number)
+        assertThat(sheet.fields.single().unit).isNull()
+        assertThat(sheet.fields.single().placeholder).isNull()
+        assertThat(sheet.fields.single().keyboardType).isEqualTo(KeyboardType.Number)
         assertThat(sheet.help?.title).isEqualTo(StringResource(MHCStrings.demographics_nhs_number_help))
         assertThat(pushedActions).containsExactly(
             DemographicsAction.NHSNumberHelpSelected,
-            DemographicsAction.EntryChanged(entry = "943"),
+            DemographicsAction.EntryChanged(
+                index = 0,
+                text = "943",
+            ),
         ).inOrder()
     }
 
@@ -185,7 +249,7 @@ class DemographicsPickerMapperTest {
 
     private fun entrySheet(entry: DemographicsEntry) = mapper.mapEntrySheet(
         entry = entry,
-        text = MutableStateFlow(""),
+        text = MutableStateFlow(emptyList()),
         appBar = MutableStateFlow(GroveAppBar.Empty),
         input = input(),
     )

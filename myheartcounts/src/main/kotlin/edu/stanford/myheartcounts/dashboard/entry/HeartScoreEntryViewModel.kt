@@ -11,18 +11,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import edu.stanford.myheartcounts.MHCStrings
-import edu.stanford.myheartcounts.account.preferredMeasurementSystem
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
-import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
-import edu.stanford.myheartcounts.standard.MHCEnvironmentTracker
+import edu.stanford.myheartcounts.standard.MeasurementUnits
+import edu.stanford.myheartcounts.standard.MeasurementUnitsProvider
 import edu.stanford.myheartcounts.standard.health.HealthAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.grovealliance.account.Account
 import org.grovealliance.core.coroutines.runCatchingAsync
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.ui.ActionSource
@@ -41,7 +39,7 @@ class HeartScoreEntryViewModel(
     private val navigator: Navigator,
     private val writer: HeartScoreEntryWriter,
     private val healthAccess: HealthAccess,
-    private val account: Account,
+    private val unitsProvider: MeasurementUnitsProvider,
     private val timeProvider: TimeProvider,
     mapper: HeartScoreEntryContentMapper,
 ) : ViewModel() {
@@ -66,15 +64,14 @@ class HeartScoreEntryViewModel(
 
     private fun restoredForm(): HeartScoreEntryForm {
         val locale = Locale.getDefault()
-        val system = measurementSystem(locale = locale)
-        // Weight is entered in pounds in both the US and UK systems, height in feet and inches only in the US system.
-        val heightInFeet = system == FirebaseSchema.MeasurementSystem.US
+        val units = unitsProvider.currentUnits
+        val heightInFeet = units.height == MeasurementUnits.Height.FeetAndInches
         val id = savedStateHandle.get<String>("entryId") ?: UUID.randomUUID().toString().also { savedStateHandle["entryId"] = it }
         return HeartScoreEntryForm(
             component = component,
             date = savedStateHandle.get<String>("entryDate")?.let { LocalDateTime.parse(it) }
                 ?: timeProvider.nowInstant().atZone(timeProvider.currentZone()).toLocalDateTime(),
-            weightInPounds = system == FirebaseSchema.MeasurementSystem.US || system == FirebaseSchema.MeasurementSystem.UK,
+            weightInPounds = units.weight == MeasurementUnits.Weight.Pounds,
             heightInFeet = heightInFeet,
             locale = locale,
             zone = timeProvider.currentZone(),
@@ -87,9 +84,6 @@ class HeartScoreEntryViewModel(
             directBmi = savedStateHandle["directBmi"] ?: false,
         ).also { savedStateHandle["entryDate"] = it.date.toString() }
     }
-
-    private fun measurementSystem(locale: Locale): String =
-        account.details.value?.preferredMeasurementSystem ?: MHCEnvironmentTracker.measurementSystem(locale = locale)
 
     private fun needsNativeWrite(entry: HeartScoreEntry): Boolean = when (entry) {
         is HeartScoreEntry.Quantity -> entry.component == HeartScoreComponent.BloodGlucose

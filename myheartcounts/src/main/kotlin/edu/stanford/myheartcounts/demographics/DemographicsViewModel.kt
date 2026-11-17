@@ -47,6 +47,7 @@ class DemographicsViewModel(
     layoutMapper: DemographicsLayoutMapper,
     private val pickerMapper: DemographicsPickerMapper,
     private val choiceSheetMapper: DemographicsChoiceSheetMapper,
+    private val measurementMapper: DemographicsMeasurementMapper,
     private val editor: DemographicsEditor,
     private val autofill: DemographicsAutofill,
     private val navigator: Navigator,
@@ -59,7 +60,7 @@ class DemographicsViewModel(
     private val monthYearPicker = MutableStateFlow<MonthYearPicker?>(null)
     private val scaffoldState = mutableScaffoldState()
     private var entry: DemographicsEntry? = null
-    private val entryText = MutableStateFlow("")
+    private val entryText = MutableStateFlow(emptyList<String>())
     private val entryAppBar = MutableStateFlow(GroveAppBar.Empty)
     private val input = DemographicsLayoutInput(
         region = editor.state.value.region,
@@ -113,7 +114,10 @@ class DemographicsViewModel(
             is DemographicsAction.QuestionSelected -> openQuestion(field = action.field)
             DemographicsAction.MenuDismissed -> menu.value = null
             DemographicsAction.DatePickerDismissed -> datePicker.value = null
-            is DemographicsAction.EntryChanged -> changeEntry(text = action.entry)
+            is DemographicsAction.EntryChanged -> changeEntry(
+                index = action.index,
+                text = action.text,
+            )
             DemographicsAction.EntrySaved -> saveEntry()
             DemographicsAction.NHSNumberHelpSelected -> navigator.push(
                 event = NavigationEvent.OpenUrl(url = NHS_NUMBER_HELP_URL),
@@ -216,22 +220,24 @@ class DemographicsViewModel(
         )
     }
 
-    private fun changeEntry(text: String) {
+    private fun changeEntry(index: Int, text: String) {
         val entry = entry ?: return
+        val texts = entryText.value.toMutableList().apply { set(index, text) }
         val couldSave = canSave(entry = entry, text = entryText.value)
-        val canSave = canSave(entry = entry, text = text)
-        entryText.value = text
+        val canSave = canSave(entry = entry, text = texts)
+        entryText.value = texts
         if (couldSave != canSave) entryAppBar.value = savableAppBar(canSave = canSave)
     }
 
     private fun saveEntry() {
-        val text = entryText.value
+        val texts = entryText.value
+        val text = texts.firstOrNull().orEmpty()
         when (entry) {
-            DemographicsEntry.Height -> parsedMeasurement(text = text)?.let {
-                onAction(action = DemographicsAction.HeightChanged(value = it))
+            DemographicsEntry.Height -> measurementMapper.mapHeightInCm(entry = texts)?.let {
+                onAction(action = DemographicsAction.HeightChanged(heightInCm = it))
             }
-            DemographicsEntry.Weight -> parsedMeasurement(text = text)?.let {
-                onAction(action = DemographicsAction.WeightChanged(value = it))
+            DemographicsEntry.Weight -> measurementMapper.mapWeightInKg(entry = texts)?.let {
+                onAction(action = DemographicsAction.WeightChanged(weightInKg = it))
             }
             DemographicsEntry.NHSNumber -> if (text.isBlank()) {
                 onAction(action = DemographicsAction.NHSNumberChanged(value = null))
@@ -245,9 +251,12 @@ class DemographicsViewModel(
         scaffoldState.dismissBottomSheet()
     }
 
-    private fun canSave(entry: DemographicsEntry, text: String) = when (entry) {
-        DemographicsEntry.Height, DemographicsEntry.Weight -> parsedMeasurement(text = text) != null
-        DemographicsEntry.NHSNumber -> text.isBlank() || NHSNumber.validating(input = text) != null
+    private fun canSave(entry: DemographicsEntry, text: List<String>) = when (entry) {
+        DemographicsEntry.Height -> measurementMapper.mapHeightInCm(entry = text) != null
+        DemographicsEntry.Weight -> measurementMapper.mapWeightInKg(entry = text) != null
+        DemographicsEntry.NHSNumber -> text.firstOrNull().orEmpty().let {
+            it.isBlank() || NHSNumber.validating(input = it) != null
+        }
     }
 
     private fun savableAppBar(canSave: Boolean) = entry
@@ -260,19 +269,14 @@ class DemographicsViewModel(
         }
         ?: GroveAppBar.Empty
 
-    private fun parsedMeasurement(text: String) = text
-        .replace(oldChar = ',', newChar = '.')
-        .toDoubleOrNull()
-        ?.takeIf { it > 0 }
-
     @Suppress("detekt:CyclomaticComplexMethod")
     private fun DemographicsResponse.updated(change: DemographicsAction.ResponseChanged) = when (change) {
         is DemographicsAction.DateOfBirthChanged -> copy(dateOfBirth = change.value)
         is DemographicsAction.GenderIdentityChanged -> copy(genderIdentity = change.value)
         is DemographicsAction.BiologicalSexAtBirthChanged -> copy(biologicalSexAtBirth = change.value)
         is DemographicsAction.BloodTypeChanged -> copy(bloodType = change.value)
-        is DemographicsAction.HeightChanged -> copy(heightInCm = change.value)
-        is DemographicsAction.WeightChanged -> copy(weightInKg = change.value)
+        is DemographicsAction.HeightChanged -> copy(heightInCm = change.heightInCm)
+        is DemographicsAction.WeightChanged -> copy(weightInKg = change.weightInKg)
         is DemographicsAction.RaceEthnicityChanged -> copy(raceEthnicity = change.value)
         is DemographicsAction.LatinoStatusChanged -> copy(latinoStatus = change.value)
         is DemographicsAction.ComorbiditiesChanged -> copy(comorbidities = change.value)

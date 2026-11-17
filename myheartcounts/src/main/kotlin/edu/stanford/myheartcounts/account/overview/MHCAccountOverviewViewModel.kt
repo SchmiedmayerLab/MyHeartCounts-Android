@@ -17,11 +17,21 @@ import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.Withd
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsSource
+import edu.stanford.myheartcounts.standard.health.HealthUploadCategory
+import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
+import edu.stanford.myheartcounts.study.EnrolledStudy
+import edu.stanford.myheartcounts.study.EnrolledStudySource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.grovealliance.core.logging.groveLogger
 import org.grovealliance.ui.ActionSink
@@ -35,11 +45,16 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Coordinates the account overview: builds it once and carries out what it offers.
  */
+// The overview gathers one section per area of the account sheet, each with its own source.
+@Suppress("detekt:LongParameterList")
 class MHCAccountOverviewViewModel(
     private val navigator: Navigator,
     private val studyWithdrawal: StudyWithdrawal,
     private val postTrialNudges: PostTrialNudges,
     private val feedback: MHCFeedback,
+    enrolledStudySource: EnrolledStudySource,
+    promptedActionsSource: PromptedActionsSource,
+    fileUpload: ManagedFileUpload,
     private val mapper: MHCAccountOverviewMapper,
 ) : ViewModel() {
 
@@ -62,6 +77,12 @@ class MHCAccountOverviewViewModel(
             scaffoldState = scaffoldState.asScaffoldState(),
             withdrawalState = withdrawalState.asStateFlow(),
             postTrialNudgesOptIn = postTrialNudgesOptIn.asStateFlow(),
+            enrolledStudy = enrolledStudySource.enrolledStudy(),
+            promptedActions = promptedActionsSource.actions,
+            isProcessingHealthData = fileUpload.activeCategories.map { categories ->
+                categories.any { it in HEALTH_DATA_CATEGORIES }
+            },
+            scope = viewModelScope,
             actionSink = actionSource.sink(),
         ),
     )
@@ -74,6 +95,7 @@ class MHCAccountOverviewViewModel(
 
     private fun onAction(action: MHCAccountOverviewAction) {
         when (action) {
+            is MHCAccountOverviewAction.PageSelected -> navigator.push(event = NavigationEvent.NavigateTo(route = action.route))
             MHCAccountOverviewAction.WithdrawSelected -> withdrawalState.value = WithdrawalState.Confirming
             MHCAccountOverviewAction.WithdrawConfirmed -> withdraw()
             MHCAccountOverviewAction.WithdrawDialogDismissed -> withdrawalState.value = WithdrawalState.Idle
@@ -81,18 +103,8 @@ class MHCAccountOverviewViewModel(
             MHCAccountOverviewAction.PrivacyPolicySelected ->
                 navigator.push(event = NavigationEvent.OpenPrivacyPolicy)
             MHCAccountOverviewAction.SendFeedbackSelected -> showFeedback()
-            MHCAccountOverviewAction.DemographicsSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.Demographics),
-            )
-            MHCAccountOverviewAction.ParticipationStatsSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.ParticipationStats),
-            )
-            MHCAccountOverviewAction.UpdateComorbiditiesSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.Comorbidities),
-            )
-            MHCAccountOverviewAction.WorkoutPreferenceSelected -> navigator.push(
-                event = NavigationEvent.NavigateTo(route = MHCRoute.WorkoutPreference),
-            )
+            MHCAccountOverviewAction.ChangeLanguageSelected -> navigator.push(event = NavigationEvent.OpenAppLanguageSettings)
+            MHCAccountOverviewAction.StudyHomepageSelected -> navigator.push(event = NavigationEvent.OpenStudyHomepage)
             MHCAccountOverviewAction.Dismissed -> navigator.push(event = NavigationEvent.Close(route = MHCRoute.AccountOverview))
         }
     }
@@ -174,6 +186,11 @@ class MHCAccountOverviewViewModel(
 
     private companion object {
         val POST_TRIAL_NUDGES_DEBOUNCE = 250.milliseconds
+
+        /**
+         * The upload categories that count as processing the participant's health data.
+         */
+        val HEALTH_DATA_CATEGORIES = setOf(HealthUploadCategory.LIVE, HealthUploadCategory.HISTORICAL)
     }
 }
 
@@ -184,6 +201,10 @@ data class MHCAccountOverviewInput(
     val scaffoldState: GroveScaffoldState,
     val withdrawalState: StateFlow<WithdrawalState>,
     val postTrialNudgesOptIn: StateFlow<Boolean>,
+    val enrolledStudy: Flow<EnrolledStudy?>,
+    val promptedActions: Flow<List<PromptedAction>>,
+    val isProcessingHealthData: Flow<Boolean>,
+    val scope: CoroutineScope,
     val actionSink: ActionSink<MHCAccountOverviewAction>,
 )
 
@@ -192,22 +213,70 @@ data class MHCAccountOverviewInput(
  */
 sealed interface MHCAccountOverviewAction {
 
-    data object DemographicsSelected : MHCAccountOverviewAction
+    /**
+     * The participant opened another screen, the one at [route].
+     */
+    sealed interface PageSelected : MHCAccountOverviewAction {
+
+        /**
+         * The route of the screen opened.
+         */
+        val route: MHCRoute
+    }
+
+    /**
+     * The participant asked to update their demographic information.
+     */
+    data object DemographicsSelected : PageSelected {
+        override val route = MHCRoute.Demographics
+    }
+
+    /**
+     * The participant asked to visit the enrolled study's homepage.
+     */
+    data object StudyHomepageSelected : MHCAccountOverviewAction
 
     /**
      * The participant opened their participation stats and achievements.
      */
-    data object ParticipationStatsSelected : MHCAccountOverviewAction
+    data object ParticipationStatsSelected : PageSelected {
+        override val route = MHCRoute.ParticipationStats
+    }
+
+    /**
+     * The participant opened every action they are prompted to take, completed ones included.
+     */
+    data object PromptedActionsSelected : PageSelected {
+        override val route = MHCRoute.PromptedActions(mode = PromptedActionsMode.All)
+    }
 
     /**
      * The participant asked to update their health conditions.
      */
-    data object UpdateComorbiditiesSelected : MHCAccountOverviewAction
+    data object UpdateComorbiditiesSelected : PageSelected {
+        override val route = MHCRoute.Comorbidities
+    }
+
+    /**
+     * The participant asked to review the consent forms they have signed.
+     */
+    data object SignedConsentFormsSelected : PageSelected {
+        override val route = MHCRoute.SignedConsentForms
+    }
 
     /**
      * The participant asked to change their workout preference.
      */
-    data object WorkoutPreferenceSelected : MHCAccountOverviewAction
+    data object WorkoutPreferenceSelected : PageSelected {
+        override val route = MHCRoute.WorkoutPreference
+    }
+
+    /**
+     * The participant asked which third-party software the app uses, and under which licenses.
+     */
+    data object LicenseInformationSelected : PageSelected {
+        override val route = MHCRoute.LicenseInformation
+    }
 
     /**
      * The participant asked to withdraw from the study.
@@ -233,6 +302,11 @@ sealed interface MHCAccountOverviewAction {
      * The participant asked to read the privacy policy.
      */
     data object PrivacyPolicySelected : MHCAccountOverviewAction
+
+    /**
+     * The participant asked to choose the app's language.
+     */
+    data object ChangeLanguageSelected : MHCAccountOverviewAction
 
     /**
      * The participant asked to send feedback.

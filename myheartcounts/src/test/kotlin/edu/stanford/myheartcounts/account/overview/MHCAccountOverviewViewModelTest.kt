@@ -7,7 +7,9 @@
 
 package edu.stanford.myheartcounts.account.overview
 
+import androidx.lifecycle.viewModelScope
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.BuildInfoFixtures
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.account.FakePostTrialNudges
 import edu.stanford.myheartcounts.account.FakeStudyWithdrawal
@@ -16,17 +18,26 @@ import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.Withd
 import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
+import edu.stanford.myheartcounts.promptedactions.FakePromptedActionsSource
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapperImpl
 import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
+import edu.stanford.myheartcounts.standard.health.FakeManagedFileUpload
+import edu.stanford.myheartcounts.standard.health.HealthUploadCategory
+import edu.stanford.myheartcounts.study.EnrolledStudyFixtures
+import edu.stanford.myheartcounts.study.FakeEnrolledStudySource
+import edu.stanford.myheartcounts.ui.ExternalLink
 import edu.stanford.myheartcounts.ui.ToggleRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.grovealliance.core.time.FakeTimeProvider
 import org.grovealliance.ui.GroveAppBar
 import org.grovealliance.ui.ItemDisplayRow
 import org.grovealliance.ui.StringResource
@@ -42,6 +53,9 @@ class MHCAccountOverviewViewModelTest {
     private val studyWithdrawal = FakeStudyWithdrawal()
     private val postTrialNudges = FakePostTrialNudges()
     private val feedback = FakeFeedback()
+    private val enrolledStudySource = FakeEnrolledStudySource()
+    private val promptedActionsSource = FakePromptedActionsSource()
+    private val fileUpload = FakeManagedFileUpload()
     private val mapper = RecordingMapper()
 
     @Before
@@ -60,7 +74,7 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.supportSection().row<ItemDisplayRow>(key = "demographics").onClick?.invoke()
+        viewModel.studyParticipationSection().row<ItemDisplayRow>(key = "demographics").onClick?.invoke()
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.Demographics))
@@ -79,6 +93,72 @@ class MHCAccountOverviewViewModelTest {
     }
 
     @Test
+    fun `opens the study homepage from the enrolled study`() {
+        // given
+        val viewModel = viewModel()
+        enrolledStudySource.setEnrolledStudy(enrolledStudy = EnrolledStudyFixtures.create(title = "My Heart Counts"))
+
+        // when
+        viewModel.enrolledStudyRow()?.website?.onClicked?.invoke()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.OpenStudyHomepage)
+    }
+
+    @Test
+    fun `hides the enrolled study until it is loaded`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        val row = viewModel.enrolledStudyRow()
+
+        // then
+        assertThat(row).isNull()
+    }
+
+    @Test
+    fun `shows the enrolled study once enrolled`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        enrolledStudySource.setEnrolledStudy(enrolledStudy = EnrolledStudyFixtures.create(title = "My Heart Counts"))
+
+        // then
+        assertThat(viewModel.enrolledStudyRow()?.title).isEqualTo("My Heart Counts")
+    }
+
+    @Test
+    fun `says that health data is processing while a health upload is in flight`() {
+        // given
+        enrolledStudySource.setEnrolledStudy(enrolledStudy = EnrolledStudyFixtures.create(title = "My Heart Counts"))
+        val viewModel = viewModel()
+
+        // when
+        fileUpload.setActiveCategories(categories = setOf(HealthUploadCategory.LIVE))
+        val whileUploading = viewModel.dataProcessingRow()
+        fileUpload.setActiveCategories(categories = emptySet())
+
+        // then
+        assertThat(whileUploading).isNotNull()
+        assertThat(viewModel.dataProcessingRow()).isNull()
+    }
+
+    @Test
+    fun `does not count uploading deletions as processing health data`() {
+        // given
+        enrolledStudySource.setEnrolledStudy(enrolledStudy = EnrolledStudyFixtures.create(title = "My Heart Counts"))
+        val viewModel = viewModel()
+
+        // when
+        fileUpload.setActiveCategories(categories = setOf(HealthUploadCategory.DELETIONS))
+
+        // then
+        assertThat(viewModel.dataProcessingRow()).isNull()
+    }
+
+    @Test
     fun `opens the comorbidities from the account overview`() {
         // given
         val viewModel = viewModel()
@@ -88,6 +168,18 @@ class MHCAccountOverviewViewModelTest {
 
         // then
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.Comorbidities))
+    }
+
+    @Test
+    fun `opens the signed consent forms from the account overview`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        viewModel.studyParticipationSection().row<ItemDisplayRow>(key = "signed-consent-forms").onClick?.invoke()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.SignedConsentForms))
     }
 
     @Test
@@ -136,7 +228,7 @@ class MHCAccountOverviewViewModelTest {
         viewModel.withdrawSection().onWithdrawSelected()
 
         // when
-        viewModel.withdrawSection().confirmation.confirmButton.action()
+        viewModel.withdrawSection().confirm()
 
         // then
         assertThat(studyWithdrawal.withdrawCount).isEqualTo(1)
@@ -151,7 +243,7 @@ class MHCAccountOverviewViewModelTest {
         viewModel.withdrawSection().onWithdrawSelected()
 
         // when
-        viewModel.withdrawSection().confirmation.confirmButton.action()
+        viewModel.withdrawSection().confirm()
 
         // then
         assertThat(viewModel.withdrawSection().state.value).isEqualTo(WithdrawalState.Failed)
@@ -268,11 +360,23 @@ class MHCAccountOverviewViewModelTest {
         val viewModel = viewModel()
 
         // when
-        viewModel.appInfoSection().row<ItemDisplayRow>(key = "privacy-policy").onClick?.invoke()
+        viewModel.appInfoSection().row<ExternalLink>(key = "privacy-policy").onClicked()
 
         // then
         assertThat(navigator.pushedEvents)
             .containsExactly(NavigationEvent.OpenPrivacyPolicy)
+    }
+
+    @Test
+    fun `opens the app language settings when asked to change the language`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        viewModel.supportSection().rowOrNull<ItemDisplayRow>(key = "change-language")?.onClick?.invoke()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.OpenAppLanguageSettings)
     }
 
     @Test
@@ -389,28 +493,55 @@ class MHCAccountOverviewViewModelTest {
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.Close(route = MHCRoute.AccountOverview))
     }
 
+    @Test
+    fun `opens license information from the account overview`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        viewModel.appInfoSection().row<ItemDisplayRow>(key = "license-information").onClick?.invoke()
+
+        // then
+        assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.NavigateTo(route = MHCRoute.LicenseInformation))
+    }
+
     private fun viewModel() = MHCAccountOverviewViewModel(
         navigator = navigator,
         studyWithdrawal = studyWithdrawal,
         postTrialNudges = postTrialNudges,
         feedback = feedback,
+        enrolledStudySource = enrolledStudySource,
+        promptedActionsSource = promptedActionsSource,
+        fileUpload = fileUpload,
         mapper = mapper,
     )
 
-    private fun MHCAccountOverviewViewModel.withdrawSection() = screen.customSections
-        .section(key = "withdraw-from-study")
-        .content<WithdrawFromStudyButton>(key = "withdraw-from-study")
+    private fun MHCAccountOverviewViewModel.withdrawSection() =
+        screen.customSections.section(key = "withdraw-from-study").content<WithdrawFromStudyButton>(key = "withdraw-from-study")
 
-    private fun MHCAccountOverviewViewModel.postTrialNudgesSection() = screen.customSections
-        .section(key = "post-trial-nudges")
-        .row<ToggleRow>(key = "post-trial-nudges")
+    private fun MHCAccountOverviewViewModel.postTrialNudgesSection() =
+        studyParticipationSection().row<ToggleRow>(key = "post-trial-nudges")
 
-    private fun MHCAccountOverviewViewModel.supportSection() = screen.customSections.section(key = "support")
+    private fun MHCAccountOverviewViewModel.supportSection() =
+        screen.customSections.section(key = "support")
 
     private fun MHCAccountOverviewViewModel.studyParticipationSection() =
         screen.customSections.section(key = "study-participation")
 
-    private fun MHCAccountOverviewViewModel.appInfoSection() = screen.customSections.section(key = "app-info")
+    private fun MHCAccountOverviewViewModel.enrolledStudyRow(): EnrolledStudyRow? {
+        val section = screen.customSections.dynamicSection(key = "study-participation")
+        viewModelScope.launch { section.collect {} }
+        return section.value.rowOrNull<EnrolledStudyRow>(key = "enrolled-study")
+    }
+
+    private fun MHCAccountOverviewViewModel.dataProcessingRow(): DataProcessingRow? {
+        val section = screen.customSections.dynamicSection(key = "data-processing")
+        viewModelScope.launch { section.collect {} }
+        return section.value.rowOrNull<DataProcessingRow>(key = "data-processing")
+    }
+
+    private fun MHCAccountOverviewViewModel.appInfoSection() =
+        screen.customSections.section(key = "app-info")
 
     /**
      * The real mapper, recording the latest feedback sheet and the actions of its app bar.
@@ -418,6 +549,9 @@ class MHCAccountOverviewViewModelTest {
     private class RecordingMapper(
         private val delegate: MHCAccountOverviewMapper = MHCAccountOverviewMapperImpl(
             appRevision = MHCAppRevisionFixtures.create(version = APP_VERSION),
+            timeProvider = FakeTimeProvider(),
+            buildInfo = BuildInfoFixtures.create(),
+            promptedActionsMapper = PromptedActionsMapperImpl(),
         ),
     ) : MHCAccountOverviewMapper by delegate {
         var feedbackSheet: FeedbackSheet? = null
@@ -456,5 +590,10 @@ class MHCAccountOverviewViewModelTest {
     private companion object {
         const val DEBOUNCE_ELAPSED_MILLIS = 300L
         const val APP_VERSION = "1.2.0"
+    }
+
+    private fun WithdrawFromStudyButton.confirm() {
+        confirmation.onDismiss()
+        confirmation.confirmButton.action()
     }
 }

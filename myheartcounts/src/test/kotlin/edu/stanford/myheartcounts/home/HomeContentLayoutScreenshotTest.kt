@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.task.ui.TaskListLayout
 import edu.stanford.myheartcounts.ui.ExternalLink
 import org.grovealliance.testing.screenshot.ScreenshotTest
 import org.grovealliance.ui.AsyncTextButton
@@ -27,13 +29,13 @@ import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.StaticGroveScaffold
 import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.groveAppBar
+import org.grovealliance.ui.groveSection
+import org.grovealliance.ui.groveSections
 import org.grovealliance.ui.scheduler.MissedTasksRow
 import org.grovealliance.ui.scheduler.NoTasksContent
 import org.grovealliance.ui.scheduler.NudgeBanner
 import org.grovealliance.ui.scheduler.PromptedActionsCard
 import org.grovealliance.ui.scheduler.TaskListHeader
-import org.grovealliance.ui.scheduler.TaskListLayout
-import org.grovealliance.ui.scheduler.TaskSection
 import org.grovealliance.ui.scheduler.TaskTile
 import org.grovealliance.ui.scheduler.TaskTileHeader
 import org.junit.Test
@@ -49,12 +51,13 @@ class HomeContentLayoutScreenshotTest : ScreenshotTest() {
                     promptedActions = null,
                     tasks = TaskListLayout(
                         header = TaskListHeader(title = StringResource(MHCStrings.home_todays_tasks)),
-                        sections = listOf(
-                            TaskSection(
-                                title = null,
-                                tiles = listOf(questionnaireTile, articleTile, completedTile),
-                            )
-                        ),
+                        sections = groveSections {
+                            section(key = "today") {
+                                content(key = "questionnaire", content = questionnaireTile)
+                                content(key = "article", content = articleTile)
+                                content(key = "completed", content = completedTile)
+                            }
+                        },
                     ),
                     missedTasks = missedTasksRow,
                     learnMore = learnMore,
@@ -73,19 +76,18 @@ class HomeContentLayoutScreenshotTest : ScreenshotTest() {
                         message = StringResource("You are close to your step goal for today."),
                     ),
                     promptedActions = PromptedActionsCard(
-                        icons = listOf(ImageResource(image = Icons.Default.CheckCircle)),
-                        title = StringResource(MHCStrings.home_prompted_actions_title),
-                        subtitle = StringResource("1 step remaining"),
+                        icons = listOf(ImageResource(image = Icons.Default.Badge)),
+                        title = StringResource(MHCStrings.prompted_actions_card_title),
+                        subtitle = StringResource("1 recommended step to get the most out of the study"),
                         onClick = {},
                     ),
                     tasks = TaskListLayout(
                         header = TaskListHeader(title = StringResource(MHCStrings.home_todays_tasks)),
-                        sections = listOf(
-                            TaskSection(
-                                title = null,
-                                tiles = listOf(questionnaireTile),
-                            )
-                        ),
+                        sections = groveSections {
+                            section(key = "today") {
+                                content(key = "questionnaire", content = questionnaireTile)
+                            }
+                        },
                     ),
                     missedTasks = missedTasksRow,
                     learnMore = learnMore,
@@ -169,30 +171,37 @@ class HomeContentLayoutScreenshotTest : ScreenshotTest() {
     /**
      * The tasks offered when nothing is scheduled for today.
      */
-    private val alwaysAvailableSection = TaskSection(
-        title = StringResource(MHCStrings.home_other_tasks_title),
-        subtitle = StringResource(MHCStrings.home_other_tasks_subtitle),
-        tiles = listOf(
-            alwaysAvailableTile(
+    private val alwaysAvailableSection = groveSection(key = "always-available") {
+        title(resId = MHCStrings.home_other_tasks_title)
+        subtitle(resId = MHCStrings.home_other_tasks_subtitle)
+        content(
+            key = "ecg",
+            content = alwaysAvailableTile(
                 icon = ImageResource(image = Icons.Default.MonitorHeart),
                 title = StringResource(MHCStrings.always_available_ecg_title),
                 categoryLabel = StringResource(MHCStrings.always_available_ecg_subtitle),
                 actionTitle = StringResource(MHCStrings.task_action_take_ecg),
             ),
-            alwaysAvailableTile(
+        )
+        content(
+            key = "six-minute-walk",
+            content = alwaysAvailableTile(
                 icon = ImageResource(image = Icons.Default.DirectionsWalk),
                 title = StringResource(MHCStrings.always_available_six_minute_walk_title),
                 categoryLabel = null,
                 actionTitle = StringResource(MHCStrings.task_action_take_test),
             ),
-            alwaysAvailableTile(
+        )
+        content(
+            key = "twelve-minute-run",
+            content = alwaysAvailableTile(
                 icon = ImageResource(image = Icons.Default.DirectionsRun),
                 title = StringResource(MHCStrings.always_available_twelve_minute_run_title),
                 categoryLabel = null,
                 actionTitle = StringResource(MHCStrings.task_action_take_test),
             ),
-        ),
-    )
+        )
+    }
 
     private fun alwaysAvailableTile(
         icon: ImageResource,

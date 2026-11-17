@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.study
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -39,6 +40,8 @@ import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.ActionSink
 import org.grovealliance.ui.ActionSource
 import org.grovealliance.ui.ComposableContent
+import org.grovealliance.ui.horizontalSlideBackward
+import org.grovealliance.ui.horizontalSlideForward
 
 /**
  * Holds the selected [StudyTab] for the study content and builds its [StudyScreenContent].
@@ -123,10 +126,18 @@ data class StudyScreenContent(
                     .padding(bottom = bottomBarHeight)
                     .consumeWindowInsets(PaddingValues(bottom = bottomBarHeight)),
             ) {
-                when (tab) {
-                    StudyTab.Home -> HomeScreen()
-                    StudyTab.Upcoming -> UpcomingTasksScreen()
-                    StudyTab.HeartHealth -> HeartHealthScreen()
+                AnimatedContent(
+                    targetState = tab,
+                    transitionSpec = {
+                        if (targetState.ordinal > initialState.ordinal) horizontalSlideForward else horizontalSlideBackward
+                    },
+                    label = "StudyTab",
+                ) { shown ->
+                    when (shown) {
+                        StudyTab.Home -> HomeScreen()
+                        StudyTab.Upcoming -> UpcomingTasksScreen()
+                        StudyTab.HeartHealth -> HeartHealthScreen()
+                    }
                 }
             }
         }

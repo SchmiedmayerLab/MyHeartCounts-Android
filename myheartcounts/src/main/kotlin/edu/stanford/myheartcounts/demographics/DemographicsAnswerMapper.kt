@@ -58,21 +58,6 @@ interface DemographicsAnswerMapper {
      * The number of conditions chosen in [value], or that there are none.
      */
     fun mapText(value: Comorbidities): StringResource
-
-    /**
-     * The length [value] in centimetres.
-     */
-    fun mapCentimetresText(value: Double): StringResource
-
-    /**
-     * The weight [value] in kilograms.
-     */
-    fun mapKilogramsText(value: Double): StringResource
-
-    /**
-     * The measurement [value] as it is entered: without trailing zeros or exponent.
-     */
-    fun mapEntryText(value: Double): String
 }
 
 /**
@@ -133,12 +118,4 @@ class DemographicsAnswerMapperImpl(
     } else {
         StringResource(MHCStrings.demographics_value_selected_count, value.entries.size)
     }
-
-    override fun mapCentimetresText(value: Double): StringResource =
-        StringResource(MHCStrings.demographics_value_cm, mapEntryText(value = value))
-
-    override fun mapKilogramsText(value: Double): StringResource =
-        StringResource(MHCStrings.demographics_value_kg, mapEntryText(value = value))
-
-    override fun mapEntryText(value: Double): String = value.toBigDecimal().stripTrailingZeros().toPlainString()
 }

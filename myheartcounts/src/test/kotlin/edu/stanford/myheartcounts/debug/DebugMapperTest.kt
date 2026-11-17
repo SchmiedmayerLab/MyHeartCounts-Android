@@ -28,6 +28,7 @@ class DebugMapperTest {
             build = "1",
             firebaseProjectId = null,
             accountId = null,
+            isEmailVerified = null,
             enrolledStudyRevision = null,
             bundledStudyRevision = null,
             lastSignedConsentVersion = null,
@@ -57,6 +58,7 @@ class DebugMapperTest {
             build = "42",
             firebaseProjectId = "project",
             accountId = null,
+            isEmailVerified = null,
             enrolledStudyRevision = "44",
             bundledStudyRevision = "45",
             lastSignedConsentVersion = "1.0.0",
@@ -72,6 +74,7 @@ class DebugMapperTest {
                 listOf(
                     StringResource(MHCStrings.debug_info_project_id) to StringResource("project"),
                     StringResource(MHCStrings.debug_info_account_id) to StringResource(MHCStrings.debug_info_unavailable),
+                    StringResource(MHCStrings.debug_info_email_verified) to StringResource(MHCStrings.debug_info_unavailable),
                 ),
                 listOf(
                     StringResource(MHCStrings.debug_info_enrolled_revision) to StringResource("44"),
@@ -80,6 +83,19 @@ class DebugMapperTest {
                 ),
             )
             .inOrder()
+    }
+
+    @Test
+    fun `shows whether the email is verified`() = runTest {
+        // given
+        val sheet = mapper.map(input = input(isEnabled = false, scope = backgroundScope))
+
+        // when
+        appInfo.value = appInfo.value.copy(isEmailVerified = false)
+
+        // then
+        val section = sheet.loadedSection(key = "app-info")
+        assertThat(section.infoCards()[1].last().value).isEqualTo(StringResource(MHCStrings.answer_no))
     }
 
     @Test

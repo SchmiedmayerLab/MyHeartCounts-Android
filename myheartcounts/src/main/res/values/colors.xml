@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+This source file is part of the My Heart Counts Android open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+-->
+
+<resources>
+    <!-- The accent of the app's notifications: the theme's primary colour. -->
+    <color name="notification_accent">@color/cardinal_red_primary</color>
+</resources>

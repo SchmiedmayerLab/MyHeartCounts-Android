@@ -16,6 +16,14 @@ SPDX-License-Identifier: MIT
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Lets the app tell whether an email app is installed before offering to open one. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_EMAIL" />
+        </intent>
+    </queries>
+
     <application
         android:name=".MyHeartCountsApplication"
         android:icon="@mipmap/ic_launcher"
@@ -61,12 +69,18 @@ SPDX-License-Identifier: MIT
         </provider>
 
         <!--
-        Remote nudges displayed while the app is in the background use the same channel the app posts
-        foreground nudges on.
+        Remote nudges displayed while the app is in the background use the same channel, icon and
+        accent the app posts foreground nudges with.
         -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="@string/nudge_notification_channel_id" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
 
         <!--
         Receives the study's remote nudges. The scheduler's own reminders are local notifications

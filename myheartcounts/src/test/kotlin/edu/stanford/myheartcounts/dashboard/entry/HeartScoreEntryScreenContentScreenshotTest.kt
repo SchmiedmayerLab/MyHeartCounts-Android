@@ -28,8 +28,8 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
             title = StringResource(MHCStrings.heart_entry_enter_component, StringResource(MHCStrings.heart_score_blood_pressure)),
             panels = listOf(
                 panel(
-                    row(label = MHCStrings.heart_entry_systolic, value = "120", unit = "mmHg"),
-                    row(label = MHCStrings.heart_entry_diastolic, value = "80", unit = "mmHg"),
+                    row(label = MHCStrings.heart_entry_systolic, value = "120", unit = MHCStrings.heart_entry_unit_mmhg),
+                    row(label = MHCStrings.heart_entry_diastolic, value = "80", unit = MHCStrings.heart_entry_unit_mmhg),
                 ),
             ),
         )
@@ -44,7 +44,7 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
         val screen = screen(
             title = StringResource(MHCStrings.heart_entry_enter_component, StringResource(MHCStrings.heart_score_blood_lipids)),
             panels = listOf(
-                panel(row(label = MHCStrings.heart_score_blood_lipids, value = "", unit = "mg/dL")),
+                panel(row(label = MHCStrings.heart_score_blood_lipids, value = "", unit = MHCStrings.heart_entry_unit_mgdl)),
             ),
             canSave = false,
         )
@@ -59,7 +59,15 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
         val screen = screen(
             title = StringResource(MHCStrings.heart_entry_bmi_title),
             picker = bmiPicker(selectedIndex = 0),
-            panels = bmiPanels(physical = panel(row(label = MHCStrings.heart_entry_weight, value = "", unit = "kg"))),
+            panels = bmiPanels(
+                physical = panel(
+                    row(
+                        label = MHCStrings.heart_entry_weight,
+                        value = "",
+                        unit = MHCStrings.heart_entry_unit_kg,
+                    ),
+                ),
+            ),
             selectedPanel = 0,
         )
 
@@ -75,8 +83,8 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
             picker = bmiPicker(selectedIndex = 1),
             panels = bmiPanels(
                 physical = panel(
-                    row(label = MHCStrings.heart_entry_weight, value = "81", unit = "kg"),
-                    row(label = MHCStrings.heart_entry_height, value = "180", unit = "cm"),
+                    row(label = MHCStrings.heart_entry_weight, value = "81", unit = MHCStrings.heart_entry_unit_kg),
+                    row(label = MHCStrings.heart_entry_height, value = "180", unit = MHCStrings.heart_entry_unit_cm),
                 ),
             ),
             selectedPanel = 1,
@@ -95,7 +103,7 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
             picker = bmiPicker(selectedIndex = 1),
             panels = bmiPanels(
                 physical = panel(
-                    row(label = MHCStrings.heart_entry_weight, value = "180", unit = "lb"),
+                    row(label = MHCStrings.heart_entry_weight, value = "180", unit = MHCStrings.heart_entry_unit_lb),
                     options = EntryOptionsRow(
                         label = StringResource(MHCStrings.heart_entry_height),
                         pickers = listOf(
@@ -129,10 +137,10 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
                     row(
                         label = MHCStrings.heart_entry_systolic,
                         value = "300",
-                        unit = "mmHg",
+                        unit = MHCStrings.heart_entry_unit_mmhg,
                         validationMessage = StringResource(MHCStrings.heart_entry_out_of_range, "60", "250"),
                     ),
-                    row(label = MHCStrings.heart_entry_diastolic, value = "80", unit = "mmHg"),
+                    row(label = MHCStrings.heart_entry_diastolic, value = "80", unit = MHCStrings.heart_entry_unit_mmhg),
                 ),
             ),
             canSave = false,
@@ -148,7 +156,7 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
         val screen = screen(
             title = StringResource(MHCStrings.heart_entry_enter_component, StringResource(MHCStrings.heart_score_blood_glucose)),
             panels = listOf(
-                panel(row(label = MHCStrings.heart_score_blood_glucose, value = "90", unit = "mg/dL")),
+                panel(row(label = MHCStrings.heart_score_blood_glucose, value = "90", unit = MHCStrings.heart_entry_unit_mgdl)),
             ),
             canSave = false,
             saving = true,
@@ -164,7 +172,7 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
         val screen = screen(
             title = StringResource(MHCStrings.heart_entry_enter_component, StringResource(MHCStrings.heart_score_blood_glucose)),
             panels = listOf(
-                panel(row(label = MHCStrings.heart_score_blood_glucose, value = "90", unit = "mg/dL")),
+                panel(row(label = MHCStrings.heart_score_blood_glucose, value = "90", unit = MHCStrings.heart_entry_unit_mgdl)),
             ),
             error = StringResource(MHCStrings.heart_entry_permission_error),
         )
@@ -180,8 +188,8 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
             title = StringResource(MHCStrings.heart_entry_enter_component, StringResource(MHCStrings.heart_score_blood_pressure)),
             panels = listOf(
                 panel(
-                    row(label = MHCStrings.heart_entry_systolic, value = "120", unit = "mmHg"),
-                    row(label = MHCStrings.heart_entry_diastolic, value = "80", unit = "mmHg"),
+                    row(label = MHCStrings.heart_entry_systolic, value = "120", unit = MHCStrings.heart_entry_unit_mmhg),
+                    row(label = MHCStrings.heart_entry_diastolic, value = "80", unit = MHCStrings.heart_entry_unit_mmhg),
                 ),
             ),
             canSave = false,
@@ -275,12 +283,12 @@ class HeartScoreEntryScreenContentScreenshotTest : ScreenshotTest() {
     private fun row(
         label: Int,
         value: String,
-        unit: String?,
+        unit: Int?,
         validationMessage: StringResource? = null,
     ) = EntryFieldRow(
         label = StringResource(label),
         value = MutableStateFlow(value),
-        placeholder = StringResource("0"),
+        placeholder = StringResource(MHCStrings.heart_entry_placeholder),
         unit = unit?.let { StringResource(it) },
         keyboardType = KeyboardType.Number,
         validationMessage = MutableStateFlow(validationMessage),

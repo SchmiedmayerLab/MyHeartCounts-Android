@@ -17,8 +17,12 @@ import com.github.luben.zstd.Zstd
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.storage.FirebaseStorage
 import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
+import edu.stanford.myheartcounts.standard.health.HealthUploadCategory
 import edu.stanford.myheartcounts.standard.health.HealthUploadSchedule
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
+import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.grovealliance.core.requireDependency
@@ -30,6 +34,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Exercises the health pipeline against Cloud Storage, driven by synthetic records rather than by
@@ -45,6 +50,7 @@ class HealthUploadTest {
 
     private val handler: MHCHealthDataHandler get() = requireDependency()
     private val staging: HealthStagingDatabase get() = requireDependency()
+    private val fileUpload: ManagedFileUpload get() = requireDependency()
 
     @Before
     fun signIn() = runTest {
@@ -102,6 +108,22 @@ class HealthUploadTest {
         assertThat(json).contains("\"41950-7\"")
         // Provenance the study needs to separate Health Connect data from HealthKit data.
         assertThat(json).contains("source-platform")
+    }
+
+    @Test
+    fun reportsACategoryAsActiveOnlyWhileItsUploadIsInFlight() = runTest {
+        val seen = CopyOnWriteArrayList<Set<HealthUploadCategory>>()
+        backgroundScope.launch(Dispatchers.Unconfined) { fileUpload.activeCategories.collect { seen += it } }
+
+        fileUpload.upload(
+            accountId = FirebaseTestSession.firestore.accountId(),
+            category = HealthUploadCategory.LIVE,
+            fileName = "activity-test.json.zstd",
+            bytes = byteArrayOf(1, 2, 3),
+        ).getOrThrow()
+
+        assertThat(seen).contains(setOf(HealthUploadCategory.LIVE))
+        assertThat(fileUpload.currentActiveCategories).isEmpty()
     }
 
     @Test

@@ -7,10 +7,10 @@
 
 package edu.stanford.myheartcounts.task
 
+import edu.stanford.myheartcounts.task.ui.TaskListLayout
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveErrorLayout
 import org.grovealliance.ui.LoadingLayout
-import org.grovealliance.ui.scheduler.TaskListLayout
 
 /**
  * The loading, failed, or ready state of a screen listing the participant's tasks.

@@ -20,6 +20,8 @@ import org.grovealliance.scheduler.fixtures.OccurrenceFixtures
 import org.grovealliance.scheduler.fixtures.TaskFixtures
 import org.grovealliance.study.StudyTaskCategories
 import org.grovealliance.ui.ActionSource
+import org.grovealliance.ui.GroveSection
+import org.grovealliance.ui.scheduler.TaskTile
 import org.junit.Test
 import java.time.Instant
 import java.time.ZoneId
@@ -117,6 +119,9 @@ class MissedTasksMapperTest {
         events = events,
         actionSink = actionSink,
     )
+
+    private val GroveSection.tiles: List<TaskTile>
+        get() = elements.map { (it as GroveSection.Element.Content).content as TaskTile }
 
     private companion object {
         const val SECONDS_PER_DAY = 86_400L

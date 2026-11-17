@@ -9,7 +9,6 @@ package edu.stanford.myheartcounts.standard.consent
 
 import android.content.Context
 import androidx.core.content.FileProvider
-import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storageMetadata
 import edu.stanford.myheartcounts.account.DidOptInToTrialKey
 import edu.stanford.myheartcounts.account.FutureStudiesKey
@@ -85,7 +84,7 @@ class MHCConsentHandlerImpl(
     private val logger by mhcFirebaseLogger()
 
     override suspend fun upload(responses: ConsentResponses): Result<Unit> = runCatchingAsync {
-        val accountId = firestore.accountId()
+        val consentForms = firestore.consentForms()
         val document = documentProvider.document()
         val form = formRenderer.render(
             document = document,
@@ -103,8 +102,8 @@ class MHCConsentHandlerImpl(
         }
         // The file name is the signing time in whole seconds, which is what the read-back listing
         // sorts on.
-        FirebaseStorage.getInstance().reference
-            .child("${FirebaseSchema.Storage.USERS}/$accountId/${FirebaseSchema.Storage.CONSENT}/${signedAt.epochSecond}.pdf")
+        consentForms
+            .child("${signedAt.epochSecond}.pdf")
             .putBytes(form.pdf, metadata)
             .await()
 
@@ -160,10 +159,12 @@ class MHCConsentHandlerImpl(
     }
 
     /**
-     * The document's frontmatter.
+     * The document's frontmatter, as one JSON object of its keys and values.
      */
-    private fun encode(metadata: MarkdownMetadata): String =
-        JsonSerializer.encode(value = metadata, strategy = MarkdownMetadata.serializer())
+    private fun encode(metadata: MarkdownMetadata): String = JsonSerializer.encode(
+        value = metadata.values,
+        strategy = MapSerializer(String.serializer(), String.serializer()),
+    )
 
     /**
      * The participant's answers, flattened to one string per element.

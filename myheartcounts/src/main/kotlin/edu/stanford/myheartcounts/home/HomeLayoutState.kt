@@ -7,15 +7,14 @@
 
 package edu.stanford.myheartcounts.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import edu.stanford.myheartcounts.task.ui.TaskListLayout
 import edu.stanford.myheartcounts.ui.ExternalLink
 import org.grovealliance.ui.ComposableContent
 import org.grovealliance.ui.GroveCard
@@ -24,7 +23,6 @@ import org.grovealliance.ui.LoadingLayout
 import org.grovealliance.ui.scheduler.MissedTasksRow
 import org.grovealliance.ui.scheduler.NudgeBanner
 import org.grovealliance.ui.scheduler.PromptedActionsCard
-import org.grovealliance.ui.scheduler.TaskListLayout
 import org.grovealliance.ui.theme.Spacings
 
 /**
@@ -69,19 +67,35 @@ data class HomeContentLayout(
 ) : ComposableContent {
     @Composable
     override fun Content(modifier: Modifier) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(Spacings.medium),
-            verticalArrangement = Arrangement.spacedBy(Spacings.medium),
+        val taskItems = tasks.items()
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(Spacings.medium),
         ) {
-            nudge?.Content(modifier = Modifier.fillMaxWidth())
-            promptedActions?.Content()
-            tasks.Content()
-            missedTasks?.Content()
-            GroveCard {
-                learnMore.Content(modifier = Modifier.padding(Spacings.medium))
+            nudge?.let { nudge ->
+                item(key = "nudge") {
+                    nudge.Content(
+                        modifier = Modifier
+                            .padding(bottom = Spacings.medium)
+                            .fillMaxWidth(),
+                    )
+                }
+            }
+            promptedActions?.let { promptedActions ->
+                item(key = "prompted-actions") {
+                    promptedActions.Content(modifier = Modifier.padding(bottom = Spacings.medium))
+                }
+            }
+            taskItems()
+            missedTasks?.let { missedTasks ->
+                item(key = "missed-tasks") {
+                    missedTasks.Content(modifier = Modifier.padding(top = Spacings.medium))
+                }
+            }
+            item(key = "learn-more") {
+                GroveCard(modifier = Modifier.padding(top = Spacings.medium)) {
+                    learnMore.Content(modifier = Modifier.padding(Spacings.medium))
+                }
             }
         }
     }

@@ -54,9 +54,12 @@ sealed interface DemographicsAction {
     data object DatePickerDismissed : DemographicsAction
 
     /**
-     * The participant edited the entry of the open [DemographicsEntrySheet].
+     * The participant changed the field at [index] of the open [DemographicsEntrySheet] to [text].
      */
-    data class EntryChanged(val entry: String) : DemographicsAction
+    data class EntryChanged(
+        val index: Int,
+        val text: String,
+    ) : DemographicsAction
 
     /**
      * The participant saved the entry of the open [DemographicsEntrySheet].
@@ -101,9 +104,15 @@ sealed interface DemographicsAction {
 
     data class BloodTypeChanged(val value: BloodType?) : ResponseChanged
 
-    data class HeightChanged(val value: Double?) : ResponseChanged
+    /**
+     * The height changed to [heightInCm], in centimetres whatever units it was entered in.
+     */
+    data class HeightChanged(val heightInCm: Double?) : ResponseChanged
 
-    data class WeightChanged(val value: Double?) : ResponseChanged
+    /**
+     * The weight changed to [weightInKg], in kilograms whatever units it was entered in.
+     */
+    data class WeightChanged(val weightInKg: Double?) : ResponseChanged
 
     data class RaceEthnicityChanged(val value: RaceEthnicity?) : ResponseChanged
 

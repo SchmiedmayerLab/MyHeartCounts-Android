@@ -35,6 +35,10 @@ import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryWriterImpl
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreRecordMapper
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreRecordStore
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreRecordStoreImpl
+import edu.stanford.myheartcounts.dashboard.entry.QuestionnaireMeasurementMapper
+import edu.stanford.myheartcounts.dashboard.entry.QuestionnaireMeasurementMapperImpl
+import edu.stanford.myheartcounts.dashboard.entry.QuestionnaireMeasurementWriter
+import edu.stanford.myheartcounts.dashboard.entry.QuestionnaireMeasurementWriterImpl
 import org.grovealliance.core.ConfigurationBuilder
 import org.grovealliance.core.coroutines.Concurrency
 
@@ -111,6 +115,13 @@ private fun ConfigurationBuilder.heartScoreEntryConfigurations() {
         HeartScoreEntryWriterImpl(
             records = dependency(), custom = dependency(), bmiStore = dependency(),
             statsSync = dependency(), scores = dependency(),
+        )
+    }
+    factory<QuestionnaireMeasurementMapper> { QuestionnaireMeasurementMapperImpl(timeProvider = dependency()) }
+    factory<QuestionnaireMeasurementWriter> {
+        QuestionnaireMeasurementWriterImpl(
+            mapper = dependency(),
+            entryWriter = dependency(),
         )
     }
 }

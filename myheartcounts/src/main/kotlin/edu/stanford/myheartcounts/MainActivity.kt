@@ -8,9 +8,7 @@
 package edu.stanford.myheartcounts
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
@@ -24,7 +22,9 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewScreen
+import edu.stanford.myheartcounts.account.verifyemail.ui.VerifyEmailScreen
 import edu.stanford.myheartcounts.comorbidities.ui.ComorbiditiesScreen
+import edu.stanford.myheartcounts.consentforms.ui.SignedConsentFormsScreen
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailScreen
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryScreen
 import edu.stanford.myheartcounts.dashboard.pastdata.PastTimedWalkTestResultsScreen
@@ -33,15 +33,16 @@ import edu.stanford.myheartcounts.demographics.ui.DemographicsScreen
 import edu.stanford.myheartcounts.demographics.ui.DemographicsScreenMode
 import edu.stanford.myheartcounts.missed.MissedTasksScreen
 import edu.stanford.myheartcounts.navigation.BottomSheetSceneStrategy
+import edu.stanford.myheartcounts.navigation.ExternalAppIntentMapper
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.notification.MHCNudgeNotifications.Companion.FCM_MESSAGE_ID_EXTRA
 import edu.stanford.myheartcounts.onboarding.OnboardingScreen
+import edu.stanford.myheartcounts.promptedactions.ui.PromptedActionsScreen
 import edu.stanford.myheartcounts.stats.ParticipationStatsScreen
 import edu.stanford.myheartcounts.study.StudyScreen
-import edu.stanford.myheartcounts.study.StudyVariantProvider
 import edu.stanford.myheartcounts.task.PerformTaskScreen
 import edu.stanford.myheartcounts.ui.MHCAppTheme
 import edu.stanford.myheartcounts.workoutpreference.ui.WorkoutPreferenceScreen
@@ -50,6 +51,8 @@ import kotlinx.coroutines.launch
 import org.grovealliance.core.coroutines.Concurrency
 import org.grovealliance.core.dependency
 import org.grovealliance.core.viewmodel.groveViewModel
+import org.grovealliance.license.LicenseInformationScreen
+import org.grovealliance.scheduler.SchedulerNotifications
 import org.grovealliance.ui.ConsumeEvents
 import org.grovealliance.ui.crossFade
 import org.grovealliance.ui.horizontalSlideBackward
@@ -65,8 +68,9 @@ class MainActivity : AppCompatActivity() {
     private val navigator by dependency<Navigator>()
     private val sceneStrategies = listOf(BottomSheetSceneStrategy<NavKey>())
     private val notificationTracking by dependency<MHCNotificationTracking>()
+    private val schedulerNotifications by dependency<SchedulerNotifications>()
     private val concurrency by dependency<Concurrency>()
-    private val studyVariants by dependency<StudyVariantProvider>()
+    private val externalAppIntents by dependency<ExternalAppIntentMapper>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,13 +94,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Records that the participant opened a remote nudge or a task reminder, when this launch came
+     * from one.
+     */
+    private fun trackNotificationOpen(intent: Intent?) {
+        if (intent == null) return
+        trackNudgeOpen(intent = intent)
+        trackReminderOpen(intent = intent)
+    }
+
+    /**
+     * Records that the participant opened the task reminder this launch came from, if any.
+     */
+    private fun trackReminderOpen(intent: Intent) {
+        val reminder = schedulerNotifications.openedNotification(intent = intent) ?: return
+        // Consumed, so that nothing handed this intent again can count the same open twice. A
+        // reminder's launch intent carries nothing but the reminder.
+        intent.replaceExtras(Bundle())
+
+        concurrency.ioCoroutineScope().launch {
+            notificationTracking.trackDidOpen(reminder = reminder)
+        }
+    }
+
+    /**
      * Records that the participant opened a remote nudge, when this launch came from one.
      *
      * Firebase Cloud Messaging puts its own extras on the launch intent of a notification it
      * displayed, so their presence is what distinguishes a tap on a nudge from an ordinary launch.
      */
-    private fun trackNotificationOpen(intent: Intent?) {
-        val notificationId = intent?.extras?.getString(FCM_MESSAGE_ID_EXTRA) ?: return
+    private fun trackNudgeOpen(intent: Intent) {
+        val notificationId = intent.extras?.getString(FCM_MESSAGE_ID_EXTRA) ?: return
         val payload = intent.extras
             ?.keySet()
             .orEmpty()
@@ -152,6 +180,20 @@ class MainActivity : AppCompatActivity() {
                 entry<MHCRoute.AccountOverview> {
                     MHCAccountOverviewScreen()
                 }
+                entry<MHCRoute.PromptedActions>(metadata = BottomSheetSceneStrategy.sheet()) { route ->
+                    PromptedActionsScreen(mode = route.mode)
+                }
+                entry<MHCRoute.VerifyEmail>(metadata = BottomSheetSceneStrategy.sheet()) {
+                    VerifyEmailScreen()
+                }
+                entry<MHCRoute.SignedConsentForms> {
+                    SignedConsentFormsScreen()
+                }
+                entry<MHCRoute.LicenseInformation> {
+                    LicenseInformationScreen(
+                        onDismiss = { navigator.push(event = NavigationEvent.Close(route = MHCRoute.LicenseInformation)) },
+                    )
+                }
                 entry<MHCRoute.Demographics> {
                     DemographicsScreen(mode = DemographicsScreenMode.Complete)
                 }
@@ -199,40 +241,13 @@ class MainActivity : AppCompatActivity() {
                     backStack.add(event.root)
                 }
 
-                is NavigationEvent.LaunchAppSettings -> {
-                    val intent = Intent(event.action).apply {
-                        putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                }
-
-                is NavigationEvent.OpenUrl -> openUrl(url = event.url)
-                NavigationEvent.OpenStudyHomepage -> openUrl(url = studyVariants.currentVariant.homepage)
-                NavigationEvent.OpenPrivacyPolicy -> openUrl(url = studyVariants.currentVariant.privacyPolicy)
-
-                is NavigationEvent.ShareFile -> {
-                    val share = Intent(Intent.ACTION_SEND).apply {
-                        type = event.mimeType
-                        putExtra(Intent.EXTRA_STREAM, Uri.parse(event.uri))
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    startActivity(Intent.createChooser(share, null))
-                }
-
+                is NavigationEvent.ExternalApp -> startActivity(externalAppIntents.mapIntent(app = event))
                 NavigationEvent.RestartApp -> restartApp()
 
                 is NavigationEvent.NavigateTo -> backStack.add(event.route)
                 is NavigationEvent.Close -> backStack.remove(event.route)
             }
         }
-    }
-
-    private fun openUrl(url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        startActivity(intent)
     }
 }
 
