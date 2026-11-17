@@ -20,6 +20,7 @@ class FakeDebugAppInfoSource : DebugAppInfoSource {
             build = "1",
             firebaseProjectId = null,
             accountId = null,
+            isEmailVerified = null,
             enrolledStudyRevision = null,
             bundledStudyRevision = null,
             lastSignedConsentVersion = null,

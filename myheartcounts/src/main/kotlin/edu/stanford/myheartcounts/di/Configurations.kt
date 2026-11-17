@@ -19,6 +19,8 @@ import edu.stanford.myheartcounts.account.feedback.MHCFeedback
 import edu.stanford.myheartcounts.account.feedback.MHCFeedbackImpl
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapper
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewMapperImpl
+import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailMapper
+import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailMapperImpl
 import edu.stanford.myheartcounts.customsamples.CustomSampleDecoder
 import edu.stanford.myheartcounts.customsamples.CustomSampleDecoderImpl
 import edu.stanford.myheartcounts.customsamples.CustomSampleSource
@@ -87,8 +89,6 @@ import edu.stanford.myheartcounts.home.HomeTasksSource
 import edu.stanford.myheartcounts.home.HomeTasksSourceImpl
 import edu.stanford.myheartcounts.missed.MissedTasksMapper
 import edu.stanford.myheartcounts.missed.MissedTasksMapperImpl
-import edu.stanford.myheartcounts.navigation.Navigator
-import edu.stanford.myheartcounts.navigation.NavigatorImpl
 import edu.stanford.myheartcounts.notification.MHCNotificationTracking
 import edu.stanford.myheartcounts.notification.MHCNudgeNotifications
 import edu.stanford.myheartcounts.notification.MHCPushTokenSynchronizer
@@ -161,7 +161,7 @@ fun ConfigurationBuilder.appConfigurations() {
     comorbiditiesConfigurations()
     workoutPreferenceConfigurations()
     participationStatsConfigurations()
-    singleton<Navigator> { NavigatorImpl() }
+    navigationConfigurations()
     homeConfigurations()
     taskConfigurations()
     singleton<StudyAppBarProvider> {
@@ -292,6 +292,7 @@ private fun ConfigurationBuilder.accountOverviewConfigurations() {
             timeProvider = dependency(),
         )
     }
+    singleton<VerifyEmailMapper> { VerifyEmailMapperImpl() }
 }
 
 /**

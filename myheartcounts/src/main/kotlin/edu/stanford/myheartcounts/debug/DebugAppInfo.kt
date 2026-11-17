@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import org.grovealliance.account.Account
 import org.grovealliance.account.accountId
+import org.grovealliance.account.isVerified
 import org.grovealliance.firebase.FirebaseAppConfiguration
 import org.grovealliance.study.StudyManager
 
@@ -28,6 +29,7 @@ data class DebugAppInfo(
     val build: String,
     val firebaseProjectId: String?,
     val accountId: String?,
+    val isEmailVerified: Boolean?,
     val enrolledStudyRevision: String?,
     val bundledStudyRevision: String?,
     val lastSignedConsentVersion: String?,
@@ -67,6 +69,7 @@ class DebugAppInfoSourceImpl(
             build = appRevision.build.toString(),
             firebaseProjectId = if (isFirebaseConfigured) firebaseProjectId() else null,
             accountId = details?.accountId,
+            isEmailVerified = details?.isVerified,
             enrolledStudyRevision = enrollments.firstOrNull()?.studyRevision?.toString(),
             bundledStudyRevision = bundledStudyRevision,
             lastSignedConsentVersion = details?.lastSignedConsentVersion,

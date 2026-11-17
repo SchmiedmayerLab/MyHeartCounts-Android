@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.di
 
 import edu.stanford.myheartcounts.MainActivityViewModel
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
+import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailViewModel
 import edu.stanford.myheartcounts.comorbidities.ComorbiditiesViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailViewModel
@@ -94,6 +95,15 @@ private fun ConfigurationBuilder.participantDataViewModels() {
             editor = dependency(),
             autofill = dependency(),
             navigator = dependency(),
+        )
+    }
+    viewModel {
+        VerifyEmailViewModel(
+            account = dependency(),
+            accountService = dependency(),
+            navigator = dependency(),
+            externalApps = dependency(),
+            mapper = dependency(),
         )
     }
     viewModel {
