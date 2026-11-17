@@ -40,17 +40,17 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 44 | 66 | 67% |
+| App tickets (`T`) | 45 | 66 | 68% |
 | Grove tickets (`G`) | 14 | 16 | 88% |
-| **All tickets** | **58** | **82** | **71%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 80 ✅ · 17 🟡 · 22 ❌ | 119 | 67% (74% counting 🟡 as half) |
+| **All tickets** | **59** | **82** | **72%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 81 ✅ · 16 🟡 · 22 ❌ | 119 | 68% (75% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
 | 1. Correctness bugs | 9 / 9 | – |
 | 2. Data-collection foundations | 3 / 7 | T08, T09, T11, T12 |
 | 3. Onboarding parity | 12 / 12 | – |
-| 4. Questionnaires and tasks | 6 / 9 | T27, T54, T55 |
+| 4. Questionnaires and tasks | 7 / 9 | T27, T55 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
 | 6. Account sheet and prompted actions | 8 / 10 | T40, T58 |
 | 7. Heart Health dashboard | 5 / 6 | T44 |
@@ -250,7 +250,7 @@ logic, and the consent PDF.
 | Unscheduled completion reporting (completes the matching open event in the next 2 weeks) | `PerformTask.reportCompletion` | ❌ Missing | |
 | Task state after reinstall | SpeziScheduler (local store), SpeziStudy `StudyManager.enroll` | ✅ Done | T59: as on iOS, completions live only on the device and aren't restored, re-enrolling reuses `dateOfEnrollment` for repeated schedules, and tasks start from the re-enrollment, so earlier occurrences and their missed state don't return. Deliberate difference: Android dates the `activation` event at the original enrollment, so a reinstall doesn't replay the first week's content as iOS does |
 | Local task reminders at the scheduled time (e.g. 09:00) | Spezi Scheduler notifications | ✅ Done | `scheduler(notifications = DEFAULT)`. Grove schedules reminders from the study's `notifications` config (thread and time), with exact alarms and reschedule on boot |
-| Tapping a notification opens the app (iOS also tracks it and logs task-bound taps) | `MyHeartCountsStandard+Notifications.swift` | 🟡 Partial | FCM nudge taps are tracked (`MainActivity.trackNotificationOpen`). Grove task reminders open the app since G06, but MHC doesn't route to the task yet, track the open, or set its own icon and channel texts (T54) |
+| Tapping a notification opens the app (iOS also tracks it and logs task-bound taps) | `MyHeartCountsStandard+Notifications.swift` | ✅ Done | T54: nudge and task reminder taps are tracked (`MainActivity.trackNotificationOpen`); as on iOS, a tap opens the app without routing to the task. Reminders and nudges carry the app's monochrome heart icon and accent |
 
 ### 2.8 Questionnaires
 
@@ -377,7 +377,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | 1 | T01–T07 ✅, **T10** ✅, T57 ✅ | G01 ✅ (for T10) |
 | 2 | T08, T09, T11, T12 🟡, T13 ✅, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
 | 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 ✅ | G09 ✅ (for T08/T16 locale correctness) |
-| 4 | T23 ✅, T24 ✅, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 ✅ | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
+| 4 | T23 ✅, T24 ✅, T25–T26 ✅, T27, T28 ✅, T54 ✅, T55, T59 ✅ | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
 | 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
 | 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
@@ -615,10 +615,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Follow-up:** Fallback branding follows the study variant since T63: an article without `headerImage` shows the Stanford photograph for Stanford only. Shipped articles carry no date or tags today, so those optional fields are covered by unit and screenshot fixtures. Remote image fetching and the updated sheet have not been checked on a device.
 
 
-#### T54: Open the task when a reminder is tapped
+#### T54: Open the task when a reminder is tapped ✅ Done (as on iOS: tracked, not routed)
 **Tags:** `notifications`, `tasks`, `feature`
 **Description:** G06 ✅ makes a reminder tap open the launch activity (`MainActivity`) with the task event attached. In `MainActivity`, read it with `SchedulerNotifications.openedNotification(intent)` (task ID and occurrence start) in `onCreate` and `onNewIntent`, route to the Home or Tasks tab and highlight or open the task. Track the open in `notificationTracking`, as FCM nudges already do. Set the MHC notification icon (a monochrome drawable is needed; nudges use the launcher icon today), color and channel name/description through `SchedulerNotificationsConfiguration.DEFAULT.copy(…)`. iOS handles task-bound notification taps in `MyHeartCountsStandard+Notifications.swift`. Depends on G06.
 **Acceptance:** Tapping a survey reminder opens the app on that survey.
+**As built:** scoped by decision to what iOS does (`MyHeartCountsStandard+Notifications.swift`): a reminder tap opens the app where it was and is recorded in `notificationTracking`; it isn't routed to the task, since iOS only logs the task. `MainActivity.trackNotificationOpen` handles both kinds of tap in `onCreate` (fresh launches only) and `onNewIntent`: FCM nudges as before, and task reminders through `SchedulerNotifications.openedNotification`, consuming the intent's extras so a redelivered intent isn't counted twice. `MHCNotificationTracking.trackDidOpen(reminder)` records `<app id>.scheduler.notification.event.<task>.<occurrence start>`, the start in seconds since 2001-01-01 UTC, with the task id under `<app id>.scheduler.notification.taskId`. That is Grove's identifier scheme (app id, no framework name). Today's iOS build still writes the same structure under the `edu.stanford.spezi` prefix, so analysis should match on everything after the app id. Branding: a monochrome heart-and-runner icon (`drawable-*dpi/ic_notification.png`, cut from the adaptive icon's monochrome layer) and the theme's primary colour (`notification_accent`) for reminders, foreground nudges and Firebase's background nudges (manifest defaults), and app-owned reminder channel texts ("Task Reminders"). Covered by `CloudFunctionsTest` on the emulators (`recordsThatATaskReminderWasOpened`, `recordsAReminderOccurrenceWithItsFractionOfASecond`).
 
 #### T55: Fix survey content for standard FHIR renderers
 **Tags:** `questionnaires`, `study-definition`, `bug`
@@ -1038,7 +1039,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | Account and settings | 11 | 2 | 3 | 1 ➖ |
 | Demographics | 7 | – | – | – |
 | Home | 7 | 2 | 0 | – |
-| Tasks tab | 3 | 3 | 1 | – |
+| Tasks tab | 4 | 2 | 1 | – |
 | Questionnaires | 3 | – | – | – |
 | Active tasks | – | – | 5 | 3 ➖ |
 | Heart Health dashboard | 10 | 1 | 1 | – |

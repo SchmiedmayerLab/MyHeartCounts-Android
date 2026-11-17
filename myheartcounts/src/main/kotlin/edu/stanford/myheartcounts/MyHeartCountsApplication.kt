@@ -54,7 +54,14 @@ class MyHeartCountsApplication : Application(), GroveApplication, WorkConfigurat
             appViewModels()
             mhcHealth()
 
-            scheduler(notifications = SchedulerNotificationsConfiguration.DEFAULT)
+            scheduler(
+                notifications = SchedulerNotificationsConfiguration.DEFAULT.copy(
+                    smallIcon = MHCDrawables.ic_notification,
+                    color = MHCColors.notification_accent,
+                    channelName = MHCStrings.reminder_notification_channel_name,
+                    channelDescription = MHCStrings.reminder_notification_channel_description,
+                ),
+            )
             studyManager(
                 preferredLocale = { dependency<StudyVariantProvider>().contentLocale() },
                 health = StudyHealthConfiguration.DEFAULT,

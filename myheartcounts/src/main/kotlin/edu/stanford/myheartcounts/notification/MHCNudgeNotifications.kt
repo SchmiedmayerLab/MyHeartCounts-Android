@@ -13,7 +13,10 @@ import android.app.PendingIntent
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.RemoteMessage
+import edu.stanford.myheartcounts.MHCColors
+import edu.stanford.myheartcounts.MHCDrawables
 import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
 import org.grovealliance.core.Module
@@ -60,7 +63,8 @@ class MHCNudgeNotifications(
         }
         val notificationId = (message.messageId ?: message.sentTime.toString()).hashCode()
         val notification = NotificationCompat.Builder(context, context.getString(MHCStrings.nudge_notification_channel_id))
-            .setSmallIcon(context.applicationInfo.icon)
+            .setSmallIcon(MHCDrawables.ic_notification)
+            .setColor(ContextCompat.getColor(context, MHCColors.notification_accent))
             .setContentTitle(content.title)
             .setContentText(content.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))

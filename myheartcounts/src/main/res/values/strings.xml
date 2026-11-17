@@ -305,6 +305,8 @@ SPDX-License-Identifier: MIT
     <string name="nudge_notification_channel_id" translatable="false">nudges</string>
     <string name="nudge_notification_channel_name">Activity Nudges</string>
     <string name="nudge_notification_channel_description">Suggestions from the My Heart Counts study to help you stay active.</string>
+    <string name="reminder_notification_channel_name">Task Reminders</string>
+    <string name="reminder_notification_channel_description">Reminders for your upcoming My Heart Counts tasks.</string>
 
     <!-- Account overview -->
     <string name="account_withdraw_button">Withdraw from Study</string>
