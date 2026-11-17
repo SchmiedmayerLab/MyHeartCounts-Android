@@ -24,6 +24,7 @@ import androidx.navigation3.ui.NavDisplay
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewScreen
 import edu.stanford.myheartcounts.account.verifyemail.ui.VerifyEmailScreen
 import edu.stanford.myheartcounts.comorbidities.ui.ComorbiditiesScreen
+import edu.stanford.myheartcounts.consentforms.ui.SignedConsentFormsScreen
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailScreen
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryScreen
 import edu.stanford.myheartcounts.dashboard.pastdata.PastTimedWalkTestResultsScreen
@@ -154,6 +155,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 entry<MHCRoute.VerifyEmail>(metadata = BottomSheetSceneStrategy.sheet()) {
                     VerifyEmailScreen()
+                }
+                entry<MHCRoute.SignedConsentForms> {
+                    SignedConsentFormsScreen()
                 }
                 entry<MHCRoute.LicenseInformation> {
                     LicenseInformationScreen(

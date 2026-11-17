@@ -159,6 +159,12 @@ sealed interface MHCRoute : NavKey {
     data object LicenseInformation : MHCRoute
 
     /**
+     * The consent forms the participant has signed.
+     */
+    @Serializable
+    data object SignedConsentForms : MHCRoute
+
+    /**
      * Verifying the participant's email address.
      */
     @Serializable

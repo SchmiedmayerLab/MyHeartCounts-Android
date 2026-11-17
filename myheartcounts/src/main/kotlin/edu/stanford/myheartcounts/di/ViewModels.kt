@@ -11,6 +11,7 @@ import edu.stanford.myheartcounts.MainActivityViewModel
 import edu.stanford.myheartcounts.account.overview.MHCAccountOverviewViewModel
 import edu.stanford.myheartcounts.account.verifyemail.VerifyEmailViewModel
 import edu.stanford.myheartcounts.comorbidities.ComorbiditiesViewModel
+import edu.stanford.myheartcounts.consentforms.SignedConsentFormsViewModel
 import edu.stanford.myheartcounts.dashboard.HeartHealthViewModel
 import edu.stanford.myheartcounts.dashboard.detail.HeartScoreDetailViewModel
 import edu.stanford.myheartcounts.dashboard.entry.HeartScoreEntryViewModel
@@ -104,6 +105,14 @@ private fun ConfigurationBuilder.participantDataViewModels() {
             accountService = dependency(),
             navigator = dependency(),
             externalApps = dependency(),
+            mapper = dependency(),
+        )
+    }
+    viewModel {
+        SignedConsentFormsViewModel(
+            source = dependency(),
+            renderer = dependency(),
+            navigator = dependency(),
             mapper = dependency(),
         )
     }

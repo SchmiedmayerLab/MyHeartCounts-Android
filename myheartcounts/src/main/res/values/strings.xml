@@ -329,6 +329,7 @@ SPDX-License-Identifier: MIT
     <string name="account_study_website">Learn more about the study</string>
     <string name="account_view_participation_stats">View Participation Stats</string>
     <string name="account_update_comorbidities">Update Health Conditions</string>
+    <string name="account_review_consent_forms">Review Consent Forms</string>
     <string name="account_workout_preference">Workout Preference</string>
     <string name="account_feedback_title">Feedback</string>
     <string name="account_feedback_send">Send</string>
@@ -738,6 +739,15 @@ SPDX-License-Identifier: MIT
     <string name="license_information_footer">Please refer to the individual repository links for packages without license labels.</string>
     <string name="license_information_error_title">Licenses Unavailable</string>
     <string name="license_information_error_message">The license information couldn\'t be loaded. Please try again.</string>
+    <string name="consent_forms_title">Consent Documents</string>
+    <string name="consent_forms_empty">You haven\'t signed any consent forms yet.</string>
+    <string name="consent_forms_untitled">Consent Form</string>
+    <string name="consent_forms_share">Share</string>
+    <string name="consent_forms_error_title">Consent Forms Unavailable</string>
+    <string name="consent_forms_error_message">Your consent forms couldn\'t be loaded. Please check your connection and try again.</string>
+    <string name="consent_forms_retry">Try Again</string>
+    <string name="consent_forms_refresh_failed">Your consent forms couldn\'t be refreshed. Please try again.</string>
+    <string name="consent_forms_open_failed">The consent form couldn\'t be opened. Please try again.</string>
     <string name="verify_email_title">Verify Email</string>
     <string name="verify_email_explanation">A verified email lets us confirm it\'s really you, protects your account from unauthorized changes, and ensures you can reset your password or recover your account if needed.</string>
     <string name="verify_email_no_account">Unable to connect to account. Make sure you have a working network connection.</string>

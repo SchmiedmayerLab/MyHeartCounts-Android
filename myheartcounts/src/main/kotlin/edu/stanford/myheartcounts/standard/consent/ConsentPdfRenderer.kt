@@ -188,8 +188,10 @@ class ConsentPdfRenderer(private val context: Context) {
         /**
          * Draws each signature's strokes above a rule with the signer's name below it.
          *
-         * The strokes come in the signature canvas' own coordinate space, so they are scaled to the
-         * box drawn for them — by one factor on both axes, so the signature is not distorted.
+         * The strokes come in the signature canvas' own coordinate space, so the canvas is scaled
+         * into the box drawn for them by one factor on both axes, which keeps the signature's size
+         * and position on the canvas. A signature without a canvas size is scaled to fill the box
+         * instead.
          */
         fun writeSignatures(signatures: List<SignatureMetadata>) {
             if (signatures.isEmpty()) return
@@ -296,11 +298,12 @@ class ConsentPdfRenderer(private val context: Context) {
             val points = signature.strokes.flatMap { it.points }
             if (points.isEmpty()) return
 
-            val minX = points.minOf { it.x }
-            val minY = points.minOf { it.y }
+            val canvasSize = signature.canvasSize?.takeIf { it.width > 0f && it.height > 0f }
+            val minX = if (canvasSize == null) points.minOf { it.x } else 0f
+            val minY = if (canvasSize == null) points.minOf { it.y } else 0f
             val scale = min(
-                width / max(points.maxOf { it.x } - minX, MIN_EXTENT),
-                height / max(points.maxOf { it.y } - minY, MIN_EXTENT),
+                width / (canvasSize?.width ?: max(points.maxOf { it.x } - minX, MIN_EXTENT)),
+                height / (canvasSize?.height ?: max(points.maxOf { it.y } - minY, MIN_EXTENT)),
             )
             signature.strokes.forEach { stroke ->
                 val path = Path()

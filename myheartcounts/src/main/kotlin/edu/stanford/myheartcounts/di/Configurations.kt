@@ -43,6 +43,7 @@ import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctionsImpl
 import edu.stanford.myheartcounts.firebase.MHCFirestore
+import edu.stanford.myheartcounts.firebase.MHCFirestoreImpl
 import edu.stanford.myheartcounts.healthstats.HealthStatsCheckpointStore
 import edu.stanford.myheartcounts.healthstats.HealthStatsCheckpointStoreImpl
 import edu.stanford.myheartcounts.healthstats.HealthStatsDocumentDecoder
@@ -214,6 +215,7 @@ fun ConfigurationBuilder.appConfigurations() {
     featureFlagConfigurations()
     debugConfigurations()
     licenseConfigurations()
+    signedConsentFormsConfigurations()
     studyConfigurations()
     firebaseConfigurations()
     healthConfigurations()
@@ -226,8 +228,8 @@ fun ConfigurationBuilder.appConfigurations() {
  */
 private fun ConfigurationBuilder.firebaseConfigurations() {
     module { AppLifecycle() }
-    module {
-        MHCFirestore(
+    singleton<MHCFirestore> {
+        MHCFirestoreImpl(
             account = dependency(),
             firebaseAppConfiguration = dependency(),
         )

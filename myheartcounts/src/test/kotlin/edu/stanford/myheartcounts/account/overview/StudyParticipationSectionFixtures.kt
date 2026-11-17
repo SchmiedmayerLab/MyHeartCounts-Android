@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.account.overview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.MedicalInformation
 import androidx.compose.material.icons.outlined.Person
 import edu.stanford.myheartcounts.MHCStrings
@@ -60,6 +61,11 @@ object StudyParticipationSectionFixtures {
                         key = "comorbidities",
                         icon = ImageResource(image = Icons.Outlined.MedicalInformation),
                         label = MHCStrings.account_update_comorbidities,
+                    ),
+                    row(
+                        key = "signed-consent-forms",
+                        icon = ImageResource(image = Icons.Outlined.Description),
+                        label = MHCStrings.account_review_consent_forms,
                     ),
                     row(
                         key = "workout-preference",

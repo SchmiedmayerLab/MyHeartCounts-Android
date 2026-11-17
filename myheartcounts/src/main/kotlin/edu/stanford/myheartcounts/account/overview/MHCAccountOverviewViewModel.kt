@@ -230,6 +230,13 @@ sealed interface MHCAccountOverviewAction {
     }
 
     /**
+     * The participant asked to review the consent forms they have signed.
+     */
+    data object SignedConsentFormsSelected : PageSelected {
+        override val route = MHCRoute.SignedConsentForms
+    }
+
+    /**
      * The participant asked to change their workout preference.
      */
     data object WorkoutPreferenceSelected : PageSelected {
