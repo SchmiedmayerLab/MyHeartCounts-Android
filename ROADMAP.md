@@ -15,12 +15,12 @@ tickets to close the gap.
 
 | | |
 |---|---|
-| iOS baseline | `MyHeartCounts-iOS` @ `0c56672` (whole app, Watch app, `MyHeartCountsShared`, study definitions); the dashboard's data sources, participation stats and achievements re-checked against `5bd8ee3` |
+| iOS baseline | `MyHeartCounts-iOS` @ `0c56672` (whole app, Watch app, `MyHeartCountsShared`, study definitions); the dashboard's data sources, participation stats and achievements re-checked against `5bd8ee3`; every later change re-audited against `09bd7f3` (2026-11-16) |
 | Android baseline | `MyHeartCounts-Android` @ `ec8168b` (audit); statuses updated against `19cab4d` ([#45](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/45): the Heart Health dashboard, demographics and study variants, on top of #44, #42 and #40) and the work on branch `feature/parity-iteration-3` |
 | Grove baseline | `grove-kotlin` @ `695fad1` (audit); the app's pin is now `4cecfe8` (Grove #15, the section system with the license module from #16, on top of #13 and #10), a descendant that contains every G ticket marked done except G07, which was moved into the app (`dashboard/ui`) |
 | Study definition | revision 44 (`MyHeartCounts-StudyDefinitions`) |
 | Compiled | 2026-09-28 |
-| Last updated | 2026-11-07 |
+| Last updated | 2026-11-17 |
 
 **Method.** Every Swift file of the iOS app target, the watchOS app and the shared package was read,
 along with the study definition. It was compared against `myheartcounts/src/main` and the public API of
@@ -31,35 +31,37 @@ that Grove doesn't provide yet (the `G` tickets in section 5).
 The Grove pin couldn't be read during the audit, so the audit assumed `695fad1`. The pin has since been
 verified as `cc5937f`, which contains `695fad1`, and has since moved to `5f932aa`, `cb77df6`, `0d302ed` and then `4cecfe8`.
 
+On 2026-11-17 all 40 iOS commits between `0c56672` and `09bd7f3` were re-audited: each PR description and its app-target diff was read and compared with this roadmap and the Android code. Rows and tickets that changed are marked with the iOS PR that changed them; T70–T81 and G17 came out of it. Most of the new work is the Imperial (UK) variant, a new health upload format and changes to the Heart Health score.
+
 The rows and tickets touched by Phase 1 work, demographics, and the G tickets were re-verified after the audit. Re-check any other row
 against the code before acting on it.
 
 ## Progress
 
-As of 2026-11-16. A ticket counts as done once it is ✅ here.
+As of 2026-11-17. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 46 | 69 | 67% |
-| Grove tickets (`G`) | 14 | 16 | 88% |
-| **All tickets** | **60** | **85** | **71%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 83 ✅ · 15 🟡 · 21 ❌ | 119 | 70% (76% counting 🟡 as half) |
+| App tickets (`T`) | 46 | 81 | 57% |
+| Grove tickets (`G`) | 14 | 17 | 82% |
+| **All tickets** | **60** | **98** | **61%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 80 ✅ · 18 🟡 · 31 ❌ | 129 | 62% (69% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
-| 1. Correctness bugs | 9 / 9 | – |
-| 2. Data-collection foundations | 3 / 7 | T08, T09, T11, T12 |
-| 3. Onboarding parity | 12 / 12 | – |
+| 1. Correctness bugs | 9 / 10 | T73 |
+| 2. Data-collection foundations | 3 / 10 | T08, T09, T11, T12, T78–T80 |
+| 3. Onboarding parity | 12 / 15 | T74–T76 |
 | 4. Questionnaires and tasks | 7 / 9 | T27, T55 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
-| 6. Account sheet and prompted actions | 9 / 12 | T58, T68, T69 |
-| 7. Heart Health dashboard | 5 / 6 | T44 |
+| 6. Account sheet and prompted actions | 9 / 15 | T58, T68, T69, T70–T72 |
+| 7. Heart Health dashboard | 5 / 7 | T44, T77 |
 | 8. Consent renewal | 0 / 1 | T47 |
 | 9. Localization | 0 / 1 | T48 |
-| 10. Tooling and optional platform work | 1 / 8 | T49–T53, T65, T67 |
-| Grove | 14 / 16 | G03, G05 (only if D4 is yes) |
+| 10. Tooling and optional platform work | 1 / 9 | T49–T53, T65, T67, T81 |
+| Grove | 14 / 17 | G03, G05 (only if D4 is yes), G17 |
 
-Per feature group, see section 6. G03 (for the historical backfill) still blocks app work; G07's components live in the app's `dashboard/ui` package, so the dashboard UI (T43–T45, T58) needs no Grove change.
+Per feature group, see section 6. G03 (for the historical backfill) and G17 (for the new upload format) still block app work; G07's components live in the app's `dashboard/ui` package, so the dashboard UI (T43–T45, T58) needs no Grove change.
 
 **Status legend**
 
@@ -147,11 +149,12 @@ logic, and the consent PDF.
 | Per-region Firebase project (US/UK), chosen at eligibility and persisted | `Modules/DeferredConfigLoading.swift` | ✅ Done | `firebase/MHCFirebaseLoader.kt`, `MHCFirebaseRegionInitializer.kt` |
 | Firebase emulator support | `FeatureFlags.useFirebaseEmulator` | ✅ Done | `firebase/MHCFirebaseEmulator.kt` |
 | Firestore cache size limit and clear-after-logout | `DeferredConfigLoading.firestore`, `FirestoreCacheCleanup.swift` | ✅ Done | `firebase/MHCFirestoreSetup.kt` |
-| Region-specific website and privacy-policy URLs | `MyHeartCounts+Website.swift` | ✅ Done | `model/StudyVariant` carries each variant's homepage and privacy policy (the Imperial privacy policy is still the Stanford placeholder, as on iOS); Home and the account sheet send `NavigationEvent.OpenStudyHomepage` / `OpenPrivacyPolicy`, which `MainActivity` resolves against the current variant; onboarding's in-app sheets pick the variant themselves (T63) |
+| Region-specific website and privacy-policy URLs | `MyHeartCounts+Website.swift` | ✅ Done | `model/StudyVariant` carries each variant's homepage and privacy policy (the Imperial privacy policy is still the Stanford placeholder; iOS has since dropped Imperial's website and shows the bundle's privacy notice instead, T72); Home and the account sheet send `NavigationEvent.OpenStudyHomepage` / `OpenPrivacyPolicy`, which `MainActivity` resolves against the current variant; onboarding's in-app sheets pick the variant themselves (T63) |
 | Background app refresh every 12 h to update the study definition | `Modules/AppRefresh.swift` | ❌ Missing | Depends on remote study bundle (T08) |
 | Background task infrastructure | `Modules/MHCBackgroundTasks.swift` | ✅ Done | WorkManager (`HealthUploadWorker`) |
 | Feature flags / launch options (disable Firebase, override config, study-bundle selector, unit overrides, prompted-action filter, force debug) | `SharedContext/FeatureFlags.swift`, `MyHeartCountsShared/Launch Options/*` | ❌ Missing | Tooling (T49/T50) |
 | Localization: English, Spanish, en-GB | `Resources/Localizable.xcstrings` | 🟡 Partial | `res/values-en-rGB` overrides the 11 strings whose British spelling differs (landed with T63); Spanish is missing (T48) |
+| Full-screen error naming the cause when the Firebase configuration can't be loaded at launch; onboarding stays hidden behind it | `MyHeartCountsDelegate.launchState`, `Root View/RootView.swift` (#238) | ❌ Missing | T80 |
 | Check for app update (App Store / TestFlight) | `Utils/CheckForUpdatesButton.swift` | ❌ Missing | Android equivalent: Play Store link / in-app updates |
 
 ### 2.2 Onboarding
@@ -170,6 +173,8 @@ logic, and the consent PDF.
 | Skip consent flow when current consent version is already signed (minor-version compare) | `ConsentManager.shouldSign` | ✅ Done | `standard/consent/MHCConsentSigning` (T14) |
 | 4 disclaimer pages with Learn More sheets | `Onboarding/ConsentDisclaimers.swift` | ✅ Done | StudyOverview / TrialComponent / DataCollection / RisksAndBenefits. Copy differs from iOS; align strings. |
 | Comprehension check (3 true/false, all must be true) | `Onboarding/ComprehensionScreening.swift` | ✅ Done | `onboarding/comprehension/*` |
+| Participant Information Sheet before the consent (Imperial): a page with the bundle's sheet followed by its privacy notice, then Continue to the consent; also shown in consent renewal; tracked as onboarding step `participantInformation` | `Onboarding/ParticipantInformationSheet.swift`, `ComprehensionScreening.swift` (#231) | ❌ Missing | T74 |
+| Variant-specific wording (Imperial): Welcome's first area, disclaimers 1, 3 and 4 (text and Learn More), "Health Conditions" for comorbidities, stage-of-change option titles | `SharedContext/StudyVariant.swift` (`localized(stanford:imperial:)`), `Welcome.swift`, `ConsentDisclaimers.swift` (#231) | ❌ Missing | T75 |
 | Consent signing (markdown with toggles, selects, signature; name prefill) | `Onboarding/Consent.swift` | ✅ Done | Grove `ConsentStep` + `MHCConsentDocumentProvider` |
 | Consent PDF export/share button in consent view | `Consent.swift` (`ConsentShareButton`) | ✅ Done | Share icon in the consent step's app bar, enabled once the form is complete (T22) |
 | Consent PDF (paper size by region) uploaded with metadata; account keys updated | `MyHeartCountsStandard+Consent.swift`, `Onboarding/Consent.swift` | ✅ Done | `MHCConsentHandler.kt`. B1 fixed (T01). Untouched elements are seeded with their initial values, as iOS does, so `futureStudies` and `didOptInToTrial` are always written |
@@ -195,7 +200,8 @@ logic, and the consent PDF.
 | Feature (iOS) | iOS reference | Android | Evidence / notes |
 |---|---|---|---|
 | Account overview (name, email, password etc.) | `Account/AccountSheet.swift` | 🟡 Partial | Grove `AccountOverviewScreen` wrapped by `account/overview/MHCAccountOverviewScreen`; add MHC items as entries of `MHCAccountOverviewSections` via the mapper. Editing the name, email and password comes from Grove's overview and `account-firebase` but hasn't been checked end to end (T69) |
-| Withdraw from Study (confirm, `markAccountForStudyWithdrawal`, logout) replacing delete | `AccountSheet.withdrawFromStudy` | ✅ Done | T04: `account/overview/WithdrawFromStudySection.kt`, `account/StudyWithdrawal.kt`. Divergence: always visible above Logout; iOS shows it only in edit mode, in place of deletion (Grove has no edit-mode hook) |
+| Withdraw from Study (confirm, `markAccountForStudyWithdrawal`, logout) replacing delete | `AccountSheet.withdrawFromStudy` | ✅ Done | T04: `account/overview/WithdrawFromStudySection.kt`, `account/StudyWithdrawal.kt`. Since #231 iOS always shows it below Log Out for Imperial, as Android does; for Stanford it still appears only in edit mode, in place of deletion (Grove has no edit-mode hook) |
+| Signed withdrawal form: when the study bundle has one (Imperial does), withdrawing first asks the participant to sign it; the signed PDF is uploaded next to the consent forms, and cancelling the form cancels the withdrawal | `Account/WithdrawalForm.swift`, `AccountSheet.withdrawFromStudy`, `ConsentManager.loadWithdrawalForm` | ❌ Missing | Added on iOS in `4f466d3` (2026-11-09), after the audit baseline. T71 |
 | Study participation section (study title, short explanation, "Enrolled since", website link) | `AccountSheet.studyParticipationSection` | ✅ Done | T33: `account/overview/EnrolledStudyRow` heads `StudyParticipationSection`, with a "Learn more about the study" link to the variant's homepage. The section is always shown, since the account sheet is only reachable once enrolled |
 | Participation stats: enrollment date; engagement (tasks done, current and longest streak, surveys, articles, ECGs, walk/run tests); health totals (steps, heartbeats, distance, active energy, exercise time, sleep, workouts, flights); highlights (best step day, longest workout, max and resting HR); fun facts | `Account/ParticipationStatsView.swift` (`AccountSheet.studyParticipationSection`) | ❌ Missing | Not in the original audit. Health totals and highlights come from the stats documents (T61, T62), as on iOS (`ParticipationStatsProvider`); ECG count depends on D2 (T58). UI built with sample data behind a DUMMY DATA badge, see T58 |
 | Post-trial activity nudges toggle (`extendedActivityNudgesOptIn`, debounced) | `AccountSheet.PostTrialNudgesToggle` | ✅ Done | `ui/ToggleRow` in the account overview's Study Participation section, below View Participation Stats (T34, moved there in T33) |
@@ -208,8 +214,10 @@ logic, and the consent PDF.
 | Send feedback (`feedback/{uuid}` with version, account, message, date, time zone, app version/build, device info) | `Feedback/FeedbackForm.swift`, `FeedbackManager.swift` | ✅ Done | `account/feedback/MHCFeedback`, `account/overview/FeedbackSheet` (T36) |
 | About row (version); 5 taps show extended info (build, Firebase project, account ID, enrolled/fetched study revision, `lastSignedConsentVersion`) | `AccountSheet.AboutRow` | ✅ Done | `account/overview/AppInfoSection` (T33). Divergence: the extended info isn't behind five taps on the version but in the debug sheet, which the testing environment opens on a shake (every build runs as testing until T65); the fetched revision is the bundled one until T08 |
 | Privacy policy link | `AccountSheet` | ✅ Done | `AppInfoSection` (T33); both study variants use the same URL |
+| Privacy notice from the study bundle: when the bundle has one (Imperial does), the privacy policy link opens it as an in-app sheet instead of a website; Imperial has no privacy website | `Account/PrivacyPolicyLink.swift` (`PrivacyNotice`), `ConsentManager.loadPrivacyNotice` | ❌ Missing | Added on iOS in `4f466d3` (2026-11-09), after the audit baseline. Applies to every privacy policy link (account sheet, login step). T72 |
 | License information (open-source acknowledgements) | `AccountSheet` (`ContributionsList`) | ✅ Done | T33, G16: Grove's `license` module — the app and its dependencies with license labels and versions; a row opens its bundled license text, or its website when none is bundled |
 | Debug menu (only if debug mode) | `Utils/Debug Stuff/DebugForm.swift` | ❌ Missing | See 2.13 |
+| Footer "Made with ❤️ in Stanford, Hamburg, and Munich"; tapping it sends a kitten, red panda or penguin across the screen | `AccountSheet.Footer`, `Account/Kitten Mode/*` (#235) | ❌ Missing | Optional, T81 |
 | Prompted-actions "view all" digest in the account sheet | `AccountSheet` → `PromptedActionsDigest(.viewAll)` | ✅ Done | T39: `account/overview/PromptedActionsSection`, first in the overview; opens the checklist with completed actions |
 | Verify email sheet (status, send link, open mail app, polling refresh) | `Account/VerifyEmailSheet.swift` | ✅ Done | T38: `account/verifyemail/` on `MHCRoute.VerifyEmail`; opened by the Verify Account Email prompted action (T39) |
 | Debug-mode feature flag (`enableAppDebugMode` account key, launch option, last-seen preference) | `Modules/AccountFeatureFlags.swift` | 🟡 Partial | Key defined, not used |
@@ -221,8 +229,9 @@ logic, and the consent PDF.
 | All demographics account keys, stored in Firestore | `Account/Demographics/DemographicsAccountKeys.swift` | ✅ Done | `account/MHCDemographicsAccountKeys.kt` (identifiers match) |
 | Value models: gender, sex, race, Latino, education US/UK, income US/UK, US region, UK region/county, NHS number, stage of change, referral source, comorbidities, blood type | `Account/Demographics/*` | ✅ Done | `model/demographics/*` |
 | Demographics form UI: DOB, gender (inferred from sex and vice versa), sex at birth, blood type, height and weight entry, race multi-select, Latino (US only), comorbidities, state/territory, education, income, UK region → county, NHS number (checksum + help link), stage of change A–I, referral source | `DemographicsForm.swift`, `DemographicsLayout.swift`, pickers | ✅ Done | `demographics/ui/DemographicsLayout` with its mappers, shared by onboarding and the account sheet (T18–T19) |
-| Height and weight shown and entered in the participant's measurement system (ft/in, lb), stored as cm and kg | `DemographicsLayout.swift` (`BodyMeasurementRow`, `SaveQuantitySampleView`) | ✅ Done | `DemographicsMeasurementMapper` with `standard/MeasurementUnitsProvider` (T64): feet and inches for the US system, pounds for the US and UK systems, as iOS's display units; stored values stay cm and kg |
+| Height and weight shown and entered in the participant's measurement system (ft/in, lb), stored as cm and kg | `DemographicsLayout.swift` (`BodyMeasurementRow`, `SaveQuantitySampleView`) | 🟡 Partial | `DemographicsMeasurementMapper` with `standard/MeasurementUnitsProvider` (T64): feet and inches for the US system, pounds for the US and UK systems. Since #231 iOS shows kilograms for the UK system (T76); stored values stay cm and kg |
 | Region- and trial-dependent required fields; completion colouring (red required / orange optional) | `DemographicsLayout.swift` | ✅ Done | `DemographicsRules`; the US or UK form follows the study variant (T63). Deliberate difference: optional questions are labelled "Optional" in italics below their title and every answer, given or missing, uses one secondary colour, instead of iOS's red (required) / orange (optional) values |
+| Imperial (UK) demographics: GOV.UK ethnic groups (`ethnicityUK`) instead of race and Latino; CHI number (`chiNumber`, checksum) instead of the NHS number for Scottish regions; optional validated full postcode (`ukPostcode`); revised UK education levels; complete county lists per nation (Scotland's was empty); Physical Activity Habits with short option titles; number-pad keyboard dismissal | `EthnicityUK.swift`, `CHINumber.swift`, `UKPostcodeTextField.swift`, `EducationStatus.swift`, `UKRegion.swift`, `DemographicsLayout.swift` (#231) | ❌ Missing | T76 |
 | Debounced autosave with diffing, including key removals | `DemographicsData.swift` | ✅ Done | `DemographicsEditor`; one-second diff saves, key removals, flush when the screen goes away and on Continue, unsaved edits kept across account refreshes and dropped on an account change |
 | "Read from Health App" autofill (DOB, blood type, sex, height, weight) | `DemographicsForm.ReadFromHealthKitButton` | ✅ Done | `DemographicsAutofill`; latest height and weight only; DOB, sex and blood type aren't available in Health Connect |
 
@@ -277,7 +286,7 @@ logic, and the consent PDF.
 
 | Feature (iOS) | iOS reference | Android | Evidence / notes |
 |---|---|---|---|
-| Overall CVH score gauge (0–100; mean of ≥ 5 of 8 components) with explanatory header | `Heart Health Dashboard/CVHScore.swift`, `HeartHealthDashboard.swift` | ✅ Done | T41/T44: live `HeartHealthScoreSourceImpl` feeds `GaugeCard` and its header; the mean requires five of eight eligible factors, excluding mental wellbeing |
+| Overall CVH score gauge (0–100; mean of ≥ 5 of 8 components) with explanatory header | `Heart Health Dashboard/CVHScore.swift`, `HeartHealthDashboard.swift` | 🟡 Partial | T41/T44: live `HeartHealthScoreSourceImpl` feeds `GaugeCard` and its header; the mean requires five of eight eligible factors, excluding mental wellbeing. Since #240 iOS shows the score from 3 components, with "More data needed" below 5, and counts mental wellbeing (all 9 tiles) (T77) |
 | Score definitions and bands: diet (MEPA), exercise minutes (weekly) *or* daily steps, nicotine, sleep, BMI (standard/Asian bands), LDL, fasting glucose, BP (custom), mental wellbeing (WHO5 × 4; shown but not in the composite) | `CVHScore.swift`, `Score.swift` | ✅ Done | T41 numerical bands, selection, and composite implemented in `HeartHealthScoreCalculatorImpl`; band explainers belong to T45. WHO-5 normalization corrects the signed-distance issue in the current reference. |
 | Score component grid (9 tiles, gauge, last date or "Tap to learn more") | `HeartHealthDashboard.makeGridComponent` | ✅ Done | T44 live scores (shown as whole numbers with the fraction dropped, not rounded) and exercise-or-steps selection now feed `GaugeTileGrid`, with time/"Yesterday"/date captions; detail route remains T45 |
 | Component detail: most recent value, gauge, recent-values chart with time range (7d/14d/1m/3m/6m/12m), band explainer highlighting the matched band, "About X" markdown from `hhdExplainer` with links | `DetailedHealthStatsView*.swift`, `Score+ExplainerUI.swift` | ✅ Done | T45: header, history, bands, explanations and debug samples; T46 supplies Add Data |
@@ -285,10 +294,11 @@ logic, and the consent PDF.
 | Sleep sessions (merge overnight samples; iOS only counts Apple Health system sleep) | `SleepSessionsQuery.swift` | 🟡 Partial | T61 merges Health Connect sessions that overlap or lie less than 60 minutes apart, uses native sleep aggregation, assigns the midpoint month and writes stats read by T62/T41. Native 8-hour sleep → Firestore → score 100 verified locally. Data-origin filtering is configurable; D6 policy review remains open. |
 | BMI derived from weight and height when no BMI sample (weight < 6 months old) | `CVHScore.bodyMassIndexScore` | ✅ Done | T41 selects measured BMI versus BMI derived from the latest stats weight and height, with the reference age rule and standard/Asian bands. T61 supplies derived BMI from Health Connect weight and height; D3 records the policy. |
 | Custom samples from Firestore (diet, WHO5, nicotine, LDL) with live listener and FHIR decoding | `MHCFirestoreQuery.swift`, `QuantitySample+FHIR.swift` | ✅ Done | T42: live account-scoped listeners, FHIR decoding and time-range filtering for diet, WHO-5, nicotine and LDL. |
-| Data entry: BP, fasting glucose, BMI (BMI directly or weight + height; ft/in picker), LDL (to Firestore), diet/WHO5/nicotine via questionnaire; input limits; permission-denied errors | `Data Entry/*`, `HeartHealthDashboard.addSampleSheet` | ✅ Done | T46: native BP/glucose/height/weight saves, Firestore LDL/direct BMI, questionnaires, units, input limits and save errors. |
+| Data entry: BP, fasting glucose, BMI (BMI directly or weight + height; ft/in picker), LDL (to Firestore), diet/WHO5/nicotine via questionnaire; input limits; permission-denied errors | `Data Entry/*`, `HeartHealthDashboard.addSampleSheet` | ✅ Done | T46: native BP/glucose/height/weight saves, Firestore LDL/direct BMI, questionnaires, units, input limits and save errors. Entries are marked as manual entries (`Metadata.manualEntry`), as iOS does since #252. |
+| Score explainer sheet: tapping the score card explains the calculation and offers shortcuts for filling in missing components, easiest first; accessibility values on the score card, gauge and tiles | `HeartHealthScoreSheet.swift` (#240) | ❌ Missing | T77 |
 | "Understanding your score" learn-more section | `HeartHealthDashboard.learnMoreSection` | ✅ Done | `dashboard/HeartHealthExplainerSource` reads `hhdExplainer/LearnMore` (localized) from the study bundle; `ui/MarkdownCard` in a `DashboardSection`; left out when absent |
 | Debug: browse Firestore custom samples | `DetailedHealthStatsView.BrowseFirestoreSamplesView` | ✅ Done | T45: expandable stored samples gated by account debug mode. |
-| Achievements / goals | `Achievements/Achievement.swift`, `AchievementsView.swift` | ❌ Missing | Live on iOS since `67ae08b` (2026-09-12), not iOS-inactive; no ticket yet. UI components built (G07, `dashboard/ui`: `ProgressRingCard`, `TextBadge`, `CounterCard`); UI built with sample data as a page of the participation stats sheet, see T58 |
+| Achievements / goals | `Achievements/Achievement.swift`, `AchievementsView.swift` | ❌ Missing | Live on iOS since `67ae08b` (2026-09-12), not iOS-inactive; T70. UI components built (G07, `dashboard/ui`: `ProgressRingCard`, `TextBadge`, `CounterCard`); UI built with sample data as a page of the participation stats sheet, see T58 |
 
 ### 2.11 Health data collection and upload
 
@@ -297,12 +307,13 @@ logic, and the consent PDF.
 | Live collection of study sample types while signed in and enrolled | `MyHeartCountsStandard+HealthKit.swift` | 🟡 Partial | `MHCStandard`, `MHCHealthDataHandler.kt`; 25 Health Connect record types polled every 15 min. Permissions are requested during onboarding (T10). The types are hard-coded in MHC: Grove's study-driven collection (G04) is pinned and enabled (`StudyHealthConfiguration.DEFAULT`), so the list duplicates it until T52 removes it |
 | Coverage of the study's sample types | `Study.swift` (`healthDataCollection`) | 🟡 Partial | Health Connect lacks many HealthKit types (walking metrics, AFib burden, menstrual types, ECG, state of mind, …). Review whether Health Connect types such as menstruation, nutrition, hydration, cycling cadence and power should be added. |
 | Local staging DB (dedup, elide samples deleted before upload), 3-day retention, 6 h upload | `Modules/HealthUploadStaging*.swift` | ✅ Done | `HealthStagingDatabase.kt`, `HealthUploadWorker.kt` |
-| Batched zstd JSON upload to `liveHealthSamples`; deletions as zstd CSV to `healthDeletions` | `HealthUploadStagingUploader.swift` | ✅ Done | |
+| Batched zstd JSON upload to `liveHealthSamples`; deletions as zstd CSV to `healthDeletions` | `HealthUploadStagingUploader.swift` | 🟡 Partial | Android uploads the per-sample format iOS used before #204. Since #239 iOS uploads one record-centric FHIR Bundle per batch (wire format v0, built by Grove's FHIR exchange to the grove-fhir IG, content-derived identities), retractions instead of deletion CSVs, and, when the Firebase config names one, to a separate data-collection bucket (#249) (T78, G17) |
 | Managed file upload with resume of orphaned files | `Modules/ManagedFileUpload.swift` | ✅ Done | `standard/health/ManagedFileUpload.kt` |
 | Direct-Firestore upload for custom samples and timed-walk results (`HealthObservations_{type}/{id}`, batches of 100) | `uploadHealthObservations(.directFirestore)` | ❌ Missing | Needed by the dashboard, data entry and the timed walk test |
 | FHIR extensions: upload time zone, study enrollment (ID + revision), app revision | `MyHeartCountsStandard+HealthKit.swift`, `Utils/FHIR/MHCAppRevision.swift` | ✅ Done | `standard/MHCAppRevision.kt` (T05), on health samples and questionnaire responses. Android also adds a `source-platform` extension |
 | Monthly stats documents: per-metric summaries (hourly sums and min/max/avg, sleep sessions, individual readings, workouts, ECGs) kept current from enrollment, with at least 12 months of history, at `/users/{uid}/stats/{metric}/months/YYYY-MM`, one contribution per source; read back with source selection and merging by the dashboard, participation stats and achievements | `Modules/HealthKitStatsCalculator*.swift`, `Modules/StatsStore*.swift`, `Health Dashboard/StatsDocument*.swift`, `docs/MHCDataSpec.md` (User Data Statistics) | ✅ Done | T61 writes all 13 supported metrics; T62 reads and processes monthly documents with source selection, merging and live account-scoped updates. |
-| Historical backfill (10 years), resumable, to `historicalHealthSamples` | `Health Import/HistoricalHealthSamplesExportManager.swift` | ❌ Missing | `HealthUploadCategory.HISTORICAL` defined but unused; needs the Health Connect history permission |
+| Historical backfill (10 years), resumable, to `historicalHealthSamples` | `Health Import/HistoricalHealthSamplesExportManager.swift` | ❌ Missing | `HealthUploadCategory.HISTORICAL` defined but unused; needs the Health Connect history permission. Since #223 iOS records completion as the `historicalHealthUploadCompletedDate` account key (T11) |
+| Battery-, memory- and disk-aware background processing: heavy work deferred on battery, in Low Power Mode or too often; bounded batches; pause below 64 MiB free memory or on low disk space (historical export); at most two concurrent file uploads; pending data never crosses sign-ins | `Utils/DeviceBattery.swift`, `MHCBackgroundTasks.swift`, `ManagedFileUpload.swift` (#181, #222) | ❌ Missing | Android's upload worker only requires a network (T79) |
 | ECG voltage and symptoms FHIR | `Health Import/HealthObservation.swift` | ➖ N/A | |
 | Clinical records upload | `ClinicalRecordPermissions.swift`, `HealthKitSamplesFHIRUploader.swift` | ➖ N/A | Optional analog: Health Connect medical records (D4) |
 | Health Connect change-token expiry resync | — | ✅ Android-only | `MHCHealthDataHandler.onFullyResyncRequired` |
@@ -312,7 +323,8 @@ logic, and the consent PDF.
 
 | Feature (iOS) | iOS reference | Android | Evidence / notes |
 |---|---|---|---|
-| Study bundle downloaded from the region's Storage bucket (`public/mhcStudyBundle.*`), cached, fallback to bundled on decode error; `informAboutStudies` on change | `Modules/StudyBundleLoader.swift`, `MyHeartCountsStandard.handleStudyBundleUpdates` | 🟡 Partial | `MHCStudyBundleProviderImpl.kt` loads the bundled asset only |
+| Study bundle downloaded from the region's Storage bucket (`public/mhcStudyBundle.*`), cached, fallback to bundled on decode error; `informAboutStudies` on change | `Modules/StudyBundleLoader.swift`, `MyHeartCountsStandard.handleStudyBundleUpdates` | 🟡 Partial | `MHCStudyBundleProviderImpl.kt` loads the bundled asset only. The exporter now writes one bundle per variant (`mhcStudyBundle`, `mhcStudyBundle-imperial`); see the row below and T08 |
+| Variant-specific study bundle: Imperial participants get the Imperial bundle (consent, participant information, privacy notice, withdrawal form, Welcome article, Heart Risk and PAR-Q+ questionnaires, NHS-linked dashboard explainers, mmol/L lab units) | `Modules/StudyBundleLoader.swift`, `StudyBundleSelector.swift` (#216, #231) | ❌ Missing | The build exports only the Stanford bundle, so Imperial participants get Stanford content (T73) |
 | Push token (FCM) sync to the account; removed before logout | `Modules/NotificationsManager.swift` | ✅ Done | `MHCPushTokenSynchronizer.kt`, `MHCAccountService` |
 | Notification open tracking (`notificationTracking`) | `Modules/NotificationTracking.swift` | ✅ Done | `MHCNotificationTracking.kt` |
 | Present notifications while the app is in the foreground | `MyHeartCountsStandard+Notifications.swift` | ✅ Done | T07: `notification/MHCNudgeNotifications.kt`, channel `nudges`, shared with background nudges. The small icon is the app icon; no monochrome notification icon exists yet |
@@ -332,7 +344,6 @@ logic, and the consent PDF.
 ### 2.14 iOS-inactive code (do not port)
 
 - **News tab** (`News Tab/NewsTab.swift`, `Modules/NewsManager.swift`): not registered as a module and not in the tab bar.
-- **Achievements / goals** (`Heart Health Dashboard/Achievements/Achievement.swift`).
 - **Health Records onboarding step** (`HealthRecordPermissions.includeInOnboarding = false`).
 - **Per-sample FHIR SensorKit upload strategy** (`SensorKitDataFetcher+Uploading+FHIR.swift`).
 
@@ -368,22 +379,22 @@ blocks.
 9. **Localization.**
 10. **Tooling and optional platform work.**
 
-Grove tickets (`G01`–`G16`) are placed in the phase whose MHC tickets need them, ahead of those
+Grove tickets (`G01`–`G17`) are placed in the phase whose MHC tickets need them, ahead of those
 tickets. Because a Grove change reaches the app through the submodule pin (see README), each `G`
 ticket is: merge in Grove, bump the pin, then use it in MHC.
 
 | Phase | MHC tickets | Grove tickets needed first |
 |---|---|---|
-| 1 | T01–T07 ✅, **T10** ✅, T57 ✅ | G01 ✅ (for T10) |
-| 2 | T08, T09, T11, T12 🟡, T13 ✅, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
-| 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 ✅ | G09 ✅ (for T08/T16 locale correctness) |
+| 1 | T01–T07 ✅, **T10** ✅, T57 ✅, T73 | G01 ✅ (for T10) |
+| 2 | T08, T09, T11, T12 🟡, T13 ✅, T61 ✅, T62 ✅, T78–T80 | G04 ✅, G03 (for T11), G02 ✅ (for T61), G17 (for T78) |
+| 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 ✅, T74–T76 | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24 ✅, T25–T26 ✅, T27, T28 ✅, T54 ✅, T55, T59 ✅ | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
-| 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40 ✅, T58 🟡, T66 ✅, T68, T69 | G08 ✅ (for T38) |
-| 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
+| 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40 ✅, T58 🟡, T66 ✅, T68, T69, T70–T72 | G08 ✅ (for T38) |
+| 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅, T77 | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
 | 8 | T47 | — |
 | 9 | T48 🟡 | G10 ✅ (Grove side) |
-| 10 | T49–T53, **T60** ✅, T65, T67 | G05 (for T53, only if D4 is yes) |
+| 10 | T49–T53, **T60** ✅, T65, T67, T81 | G05 (for T53, only if D4 is yes) |
 
 G14 ✅ (shared form and section components) blocked no ticket; it removes duplicated UI in Grove and the app. Neither does G15 (app-defined sections in a lazy account overview), nor G16 (a Grove `license` module taking over T33's License Information screen).
 G12 (an encrypted-storage bug) blocked no ticket; it is done ✅.
@@ -454,11 +465,16 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Acceptance:** Every Android participant who signed consent has both fields set, or the gap is documented for analysis.
 **Resolution:** no Android build reached participants before T01 and the seeding of untouched consent elements, so every Android consent carries both fields and there is nothing to backfill. Both are written exactly as iOS writes them (`Onboarding/Consent.swift`): from the `future-studies` toggle and the `short-term-physical-activity-trial` select, with untouched elements taking the document's initial values. `ConsentUploadTest` (emulator) covers explicit answers and untouched ones (Stanford: `futureStudies` true, `didOptInToTrial` false).
 
+#### T73: Ship the Imperial study bundle and select it by variant
+**Tags:** `study`, `bug`
+**Description:** The study-definitions exporter writes one bundle per variant: Stanford (`mhcStudyBundle`, the default) and Imperial (`mhcStudyBundle-imperial`, `export --variant imperial`). It keeps only the selected variant's `~variant` resources and strips the tag (`Consent~imperial+en-GB.md` becomes `Consent+en-GB.md`). `mhc.studybundle` exports only the default, so every Android participant gets the Stanford bundle. An Imperial participant therefore signs the Stanford English consent, answers the Stanford Heart Risk and PAR-Q+ questionnaires, and never gets the Imperial Welcome article, NHS-linked dashboard explainers or mmol/L lab units, nor the files T71, T72 and T74 need. Export both bundles into the assets, and have `MHCStudyBundleProvider` load the one for `StudyVariantProvider.currentVariant`. Re-resolve consumers when the variant changes, since it is chosen during onboarding. Bump the `MyHeartCounts-StudyDefinitions` pin past `8a862f9` to get the Imperial content of #59 (consent v1.2.0, participant information, privacy notice, withdrawal form, lab units) and #61 (fasting glucose converted to mg/dL inside the Heart Risk questionnaire through a hidden calculated item, which the questionnaire renderer must evaluate). Imperial content exists only in `en-GB`, and iOS screens Imperial participants for English and loads the English consent even when the app runs in Spanish (iOS #225); `contentLocale()` must do the same. T08 later downloads the matching variant's bundle. Optional: an Imperial-locked test build that skips the region choice, like iOS's `MHCForcedStudyVariant` deployment (#224). iOS: `Modules/StudyBundleLoader.swift`, `MyHeartCountsShared/Launch Options/StudyBundleSelector.swift`, `SharedContext/StudyVariant.swift` (#216, #225, #231).
+**Acceptance:** An Imperial participant on Android signs the Imperial consent and sees the Imperial questionnaires, article and explainers, in English whatever the app language; Stanford participants see no change.
+
 ### Phase 2: data-collection foundations
 
 #### T08: Download the study bundle from Firebase with a bundled fallback
 **Tags:** `backend`, `feature`
-**Description:** Port `StudyBundleLoader`. Download `public/mhcStudyBundle.<ext>` from the region's Storage bucket. Unpack it into a cache and keep only the newest copy. Fall back to the bundled asset on a decode failure. Keep the last good bundle on network errors. Expose a typed error: `unableToFetchFromServer` / `unableToDecode` / `noRegion`. Call `studyManager.informAboutStudies` whenever the bundle changes (revision migration). Add a periodic WorkManager refresh every 12 h (iOS `AppRefresh`). Grove `study-definition` already provides `StudyBundle.unpack/open`, and `StudyManager.informAboutStudies` handles revision migration. The download, caching and refresh are MHC work.
+**Description:** Port `StudyBundleLoader`. Download `public/mhcStudyBundle.<ext>` (`mhcStudyBundle-imperial` for Imperial, see T73) from the region's Storage bucket. Unpack it into a cache and keep only the newest copy. Fall back to the bundled asset on a decode failure. Keep the last good bundle on network errors. Expose a typed error: `unableToFetchFromServer` / `unableToDecode` / `noRegion`. Call `studyManager.informAboutStudies` whenever the bundle changes (revision migration). Add a periodic WorkManager refresh every 12 h (iOS `AppRefresh`). Grove `study-definition` already provides `StudyBundle.unpack/open`, and `StudyManager.informAboutStudies` handles revision migration. The download, caching and refresh are MHC work.
 **Acceptance:** Publishing a new bundle revision is picked up without an app update. The enrolled study revision updates. Offline launches keep working.
 
 #### T09: "Unable to load study" onboarding step
@@ -468,7 +484,7 @@ No Android build reached participants before this fix, so nobody onboarded witho
 
 #### T11: Historical health data backfill
 **Tags:** `health-data`, `feature`
-**Description:** Port `HistoricalHealthSamplesExportManager` on top of Grove's bulk export (G03). After enrollment (and on launch if it isn't finished), export every collected type from `historicalDataCollection` (10 years) in resumable time batches. Map each batch to FHIR (the same mapper as live data). Upload zstd JSON to `historicalHealthSamples` via `ManagedFileUpload` (the `HISTORICAL` category exists). Reset the session on sign-out by adding the reset to `MHCStandard.clearLocalStudyState` (T13). While the export session runs or is paused, the account sheet's data processing indicator (T40) shows, as on iOS. Depends on T10 (history permission) and G03.
+**Description:** Port `HistoricalHealthSamplesExportManager` on top of Grove's bulk export (G03). After enrollment (and on launch if it isn't finished), export every collected type from `historicalDataCollection` (10 years) in resumable time batches. Map each batch to FHIR (the same mapper as live data). Upload zstd JSON to `historicalHealthSamples` via `ManagedFileUpload` (the `HISTORICAL` category exists). Reset the session on sign-out by adding the reset to `MHCStandard.clearLocalStudyState` (T13). While the export session runs (not while paused, since iOS #207), the account sheet's data processing indicator (T40) shows, as on iOS. Once everything is uploaded, write the `historicalHealthUploadCompletedDate` account key (iOS #223). Depends on T10 (history permission) and G03.
 **Acceptance:** A new participant with years of Health Connect data has it uploaded, and the backfill survives process death.
 
 #### T12: Direct-Firestore upload for custom observations 🟡 Partial
@@ -497,6 +513,21 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Description:** The read side of the stats documents for the dashboard, charts, participation stats and achievements: one-shot and live (snapshot listener) queries per metric over a time range, selecting the month documents by ID; decoding that tolerates malformed entries; source policies `automatic` / `only` / `preferred` with the iOS merge rules (cumulative sums prefer one source per overlapping bucket and fill gaps from others, heart-rate min/max merge, averages pool only with compatible weights, overlapping sleep sessions prefer one source); re-aggregation into day or custom intervals with diagnostics such as an unaligned interval; restart on account change. iOS: `Modules/StatsStore*.swift`, `Health Dashboard/StatsDocument*.swift`, `StatsDocumentsQuery.swift`, `docs/StatsQueries.md`, `docs/StatsAggregation.md`.
 **Acceptance:** Unit tests on the iOS document fixtures reproduce iOS query results, including source selection; a document written on another device shows up live.
 **As built:** package `healthstats/`, each part an interface with an `…Impl` registered in `healthStatsConfigurations()`; failures are returned as `Result`s, never thrown. `HealthStatsEntryDecoder` / `HealthStatsDocumentDecoder` read the stored maps (entry kind from its fields, mixed shapes rejected, unknown fields ignored, fractional seconds kept, legacy `provenance.observationID` event identity; a bad entry is counted, not fatal). `HealthStatsSourceSelector` does validation, unit conversion and per-bucket source selection with the four policies (default order: `com.apple.HealthKit`, then lexical; heart-rate min/max/weighted-average merge only). `HealthStatsIntervalReducer` groups into calendar intervals in the `TimeProvider`'s zone with the three alignment policies. `HealthStatsProcessor` maps requests (`HealthStatsRequest.Quantity` / `SleepSessions` / `BloodPressure` / `Workouts` / `Electrocardiograms`) to results with diagnostics. `HealthStatsMonths` picks the month documents (one month either side, capped at the month after now). `HealthStatsStore` offers `fetch(request, readPolicy)` and a live `updates(request)` flow that follows the signed-in account (restarts on change, silent while signed out) and reuses the last result when only cache/pending-write metadata changed; `MHCFirestore.healthStatsMonths(metricId)`. Divergences: units come from a fixed table (count, count/min, count/s, ms/s/min/hr/d, mm/cm/m/km/in/ft/yd/mi, g/kg/lb/st, kcal/Cal/kJ, mmHg) rather than a full unit system, so an entry in any other unit counts as malformed; workout activity types are kept as their numeric code without checking it is a known type; the live flow has no explicit "not signed in" error and no suspension during an explicit logout. T41 consumes these streams directly.
+
+#### T78: Upload health data as record-centric FHIR Bundles
+**Tags:** `health-data`, `backend`, `feature`
+**Description:** Since #239, iOS uploads each batch as one FHIR Bundle of many records: shared Patient and Device entries are stored once, identities derive from content (HealthKit UUIDs are kept), and a record version selects between rewrites. Deletions travel as retractions (#226), unclassified sources keep their bundle identifier (#228), and manual entries carry the `manual-entry` recording method (#252). The format is wire format v0 of the grove-fhir Implementation Guide, produced by Grove's FHIR exchange (#204, #221). Files are one per batch instead of one per record (#222), staged durably with bounded memory (#241), and written to the bucket named by `DATA_COLLECTION_BUCKET` in the Firebase config when it is set, else the default bucket (#249). Android still uploads the per-sample JSON and deletion CSVs iOS used before. Confirm with the backend team how long that format stays accepted, then produce v0 from Health Connect records through G17 and adopt the batch, retraction and bucket rules. iOS: `Modules/HealthUploadStagingUploader*.swift`, `Utils/FHIR/*`, `Modules/ManagedFileUpload.swift`, `Modules/DeferredConfigLoading.swift`. Depends on G17.
+**Acceptance:** Android uploads pass the same backend ingestion as iOS v0 files, deletions arrive as retractions, and a config with `DATA_COLLECTION_BUCKET` routes health data to that bucket.
+
+#### T79: Battery-, memory- and disk-aware health processing
+**Tags:** `health-data`, `feature`
+**Description:** iOS #181 and #222 make background health work resource-aware: heavy work is deferred on battery, in Low Power Mode or when it ran recently; batches are bounded and adaptive; work pauses below 64 MiB of available memory; the historical export pauses when disk space runs low; at most two files upload at once; and pending data never crosses a sign-in. Android's `HealthUploadWorker` and `HealthStatsSyncWorker` only require a network. Add the matching WorkManager constraints (battery not low, storage not low, charging or idle for the heavy work), bounded batches in the staging drain and the stats sync, a two-upload limit in `ManagedFileUpload`, and the disk-space pause once T11 exists. iOS: `Utils/DeviceBattery.swift`, `Modules/MHCBackgroundTasks.swift`, `Modules/ManagedFileUpload.swift`.
+**Acceptance:** On battery saver or low storage, heavy health work waits and resumes later without losing data; memory stays bounded for large backlogs.
+
+#### T80: Full-screen error when Firebase can't be configured at launch
+**Tags:** `app-shell`, `feature`
+**Description:** Since #238, when the Firebase configuration fails to load at launch, iOS shows a full-screen error that names the cause instead of an empty screen, and hides onboarding behind it (`MyHeartCountsDelegate.launchState`: ready, setting up the test environment, failed). The FCM token request also waits for Firebase (#246). On Android a region without its own configuration source (see T63's follow-up) or an emulator misconfiguration would surface the same way. iOS: `MyHeartCountsDelegate.swift`, `Root View/RootView.swift`, `Modules/NotificationsManager.swift`.
+**Acceptance:** A launch whose Firebase configuration can't be loaded shows the error screen; nothing else starts that needs Firebase.
 
 ### Phase 3: onboarding parity
 
@@ -556,7 +587,7 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Tags:** `demographics`, `feature`
 **Description:** Show and enter height in feet and inches and weight in pounds for participants whose measurement system is US or imperial, in the demographics rows and entry sheets. Values stay stored as `heightInCM` / `weightInKG`, so switching units never changes what is stored. The measurement system follows the device locale (the same value `MHCEnvironmentTracker` writes as `preferredMeasurementSystem`). iOS: `DemographicsLayout.swift` (`BodyMeasurementRow`, which enters values through SpeziHealthKit's `SaveQuantitySampleView` in the sample type's display unit). Depends on T18.
 **Acceptance:** A participant with a US locale enters 5 ft 8 in and 150 lb; the account stores 172.72 cm and 68.04 kg, and the rows show the imperial values again.
-**As built:** `standard/MeasurementUnitsProvider` (+Impl) picks the units from the device locale's measurement system, as iOS does (the account's `preferredMeasurementSystem` is only recorded, never read back): feet and inches for the US system, pounds for the US and UK systems, cm and kg otherwise. These are iOS's display units, so a UK participant enters height in cm and weight in lb. The dashboard's manual entry (T46) reads the same provider. `DemographicsMeasurementMapper` (+Impl) converts between the stored cm/kg and those units for the rows (`5′ 8″`, `150 lb`) and the entry sheets, which now take one field or feet and inches. Converted values are stored unrounded, as iOS stores them, and every value is shown with at most two decimals; heights in feet and inches round to the nearest whole inch for display. Entries are accepted only within iOS's input limits (90–250 cm, 25–450 kg, 55–1000 lb, 3–8 ft and 0–11 in), which now apply to metric entry too. Blank inches count as 0. Empty fields hint at `0`, as iOS's quantity fields do, and at `5` and `4` for feet and inches. Deliberate difference: Android takes feet and inches as two number fields, while iOS uses a wheel picker that starts at 5′ 4″. Covered by `DemographicsMeasurementMapperTest`, `MeasurementUnitsProviderTest`, `DemographicsPickerMapperTest` and `DemographicsLayoutMapperTest`, plus a feet-and-inches `DemographicsEntrySheetScreenshotTest` baseline.
+**As built:** `standard/MeasurementUnitsProvider` (+Impl) picks the units from the device locale's measurement system, as iOS does (the account's `preferredMeasurementSystem` is only recorded, never read back): feet and inches for the US system, pounds for the US and UK systems, cm and kg otherwise. These were iOS's display units at the audit, so a UK participant enters height in cm and weight in lb; since #231 iOS uses kg for the UK system (T76). The dashboard's manual entry (T46) reads the same provider. `DemographicsMeasurementMapper` (+Impl) converts between the stored cm/kg and those units for the rows (`5′ 8″`, `150 lb`) and the entry sheets, which now take one field or feet and inches. Converted values are stored unrounded, as iOS stores them, and every value is shown with at most two decimals; heights in feet and inches round to the nearest whole inch for display. Entries are accepted only within iOS's input limits (90–250 cm, 25–450 kg, 55–1000 lb, 3–8 ft and 0–11 in), which now apply to metric entry too. Blank inches count as 0. Empty fields hint at `0`, as iOS's quantity fields do, and at `5` and `4` for feet and inches. Deliberate difference: Android takes feet and inches as two number fields, while iOS uses a wheel picker that starts at 5′ 4″. Covered by `DemographicsMeasurementMapperTest`, `MeasurementUnitsProviderTest`, `DemographicsPickerMapperTest` and `DemographicsLayoutMapperTest`, plus a feet-and-inches `DemographicsEntrySheetScreenshotTest` baseline.
 
 #### T22: Onboarding polish parity ✅ Done
 **Tags:** `onboarding`, `consent`, `feature`
@@ -576,7 +607,32 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Description:** The study runs as two variants, Stanford (US) and Imperial College London (UK), independent of the Firebase backend that hosts them. The variant sets the study locale (the device language with the variant's region), which decides how consent and other study-bundle resources resolve; the homepage link (Imperial: `https://www.imperial.ac.uk/nhli/research/my-heart-counts/`; its privacy policy is still the Stanford placeholder); the demographics layout (US or UK fields, T18); and the article fallback header image (Stanford's image for Stanford only). It also selects the news feed (`public/news/` or `public/news-UK/`), which matters only if the iOS-inactive News tab is ever ported. Selection: eligibility sets the variant from the chosen country and keeps it in memory until final enrollment, which persists it locally (`enrolledStudyVariant`) next to the backend choice; an install that has a backend but no variant defaults to Stanford. After account creation or login, a missing `studyVariant` account key is filled from the selected variant, and an existing value wins. When complete account details arrive, the account's value becomes the active variant and refreshes the local cache for enrolled sessions; this never changes the backend. Testing path: in debug and internal builds, entering `pls let me in anyway` in the UK "Coming Soon" email field enrolls the participant as Imperial against the US backend, without sending it to the waitlist; Android currently treats GB only as a "Coming Soon" country (`model/Country.kt`). UK consent needs an `en-GB` consent resource, which the bundle does not contain yet. iOS: `SharedContext/StudyVariant.swift`, `Modules/DeferredConfigLoading.swift`, `MyHeartCountsStandard.synchronizeStudyVariant`, `Onboarding/EligibilityScreening.swift`, `Onboarding/AccountOnboarding.swift`, `Screening/RegionComingSoon.swift`, `MyHeartCounts+Website.swift`, `Account/MHCAccountKeys.swift`, README "Temporary UK testing". Relates to T18 and to the region website row in 2.1.
 **Acceptance:** Through the testing path, a participant who selects the UK is enrolled as Imperial: `studyVariant = imperial` is written to the account, study resources resolve with the `en-GB` locale, and the homepage link points to Imperial. The variant survives relaunch and, through the account, reinstall; selecting the US enrolls as Stanford exactly as today.
 **As built:** `model/StudyVariant` (`Stanford` / `Imperial`, serialized as `stanford` / `imperial`) carries each variant's region, homepage and privacy policy. `study/StudyVariantProvider` (a DI singleton) holds the variant as a `StateFlow` (`variant`) and as a plain read (`currentVariant`), persists it in its own storage file, defaults to Stanford, and derives `contentLocale()`: the device language when the study offers content in it (English, Spanish) and English otherwise, combined with the variant's region. The study manager's preferred locale, consent (text and PDF paper size), articles, questionnaires, both explainer sources, the demographics form, the website links and the article fallback image all read it, replacing the backend region (`MHCFirebaseLoader.persistedRegionLocale` is gone, and Firebase no longer touches the study locale). Leaving eligibility for the study selects the variant of the participant's country. The UK testing path is the `UKStudyTesting` feature flag (off by default, toggled in the debug sheet) instead of iOS's unlock phrase: while it is on, an otherwise eligible participant in the United Kingdom is admitted to the study as Imperial on the US backend rather than sent to the waitlist. The "Coming Soon" page's study-website link points to Imperial for GB. `study/StudyVariantSynchronizer`, a Grove module that starts on `configure()`, keeps the study locale in step with the variant, restores the `studyVariant` account key whenever complete, non-anonymous account details or the device's variant change (so re-running eligibility after a login cannot override it), and writes the device's variant to an account without one. The demographics form switches region as soon as the variant changes. Sign-out without an enrollment after onboarding clears the variant with the backend region; a sign-out during onboarding (declining reactivation) keeps both. `res/values-en-rGB` carries the British spellings. Deliberate differences: the variant is persisted when selected rather than at final enrollment, as the Android backend region already is; and a missing account value is filled on any complete sign-in rather than only during onboarding, which also backfills accounts created before T63. Covered by `StudyVariantProviderTest`, `StudyVariantSynchronizerTest` and new `ArticleMapperTest` cases; JDK 21 unit tests, detekt and debug assembly pass. Not checked on a device.
-**Follow-up:** The bundle has no `en-GB` consent, so an Imperial participant's consent resolves to the English (US) document until one ships. A UK Firebase project still needs its own configuration source before `MHCFirebaseLoader.optionsFor` can tell regions apart. The news feed path is not modelled (no News tab).
+**Follow-up:** The build exports only the Stanford bundle, which drops every `~imperial` resource, so an Imperial participant's consent resolves to the English (US) Stanford document; T73 ships the Imperial bundle. A UK Firebase project still needs its own configuration source before `MHCFirebaseLoader.optionsFor` can tell regions apart. The news feed path is not modelled (no News tab).
+
+#### T74: Participant Information Sheet step
+**Tags:** `onboarding`, `consent`, `feature`
+**Description:** When the study bundle has a participant information sheet (`consent/ParticipantInformation.md`, in the consent's locale; Imperial has one), show it after the comprehension check and before the consent. The page has a document icon and the title "Participant Information Sheet". It shows the sheet's markdown followed by the privacy notice (T72) when the bundle has one, and Continue leads to the consent. The step is tracked as `participantInformation` in `mostRecentOnboardingStep` (T16), and consent renewal (T47) shows the sheet too. iOS: `Onboarding/ParticipantInformationSheet.swift`, `ComprehensionScreening.swift`, `ConsentRenewal/ConsentRenewalFlow.swift`, `ConsentManager.loadParticipantInformation` (#231). Depends on T73.
+**Acceptance:** Imperial participants read the sheet and notice before signing; Stanford onboarding is unchanged.
+
+#### T75: Variant-specific wording
+**Tags:** `onboarding`, `localization`, `feature`
+**Description:** Since #231, text that differs between Stanford and Imperial is a localization axis of its own, independent of the language: a UK participant may run the app in US English. On iOS each such string has one catalog key per variant, selected by `StudyVariant.localized(stanford:imperial:)`. The Imperial versions cover Welcome's first area, disclaimers 1 and 3 (text and Learn More), disclaimer 4's Learn More, "Health Conditions" instead of "Comorbidities", and stage-of-change options labelled by title instead of letter. Add the Imperial strings (`…_imperial` resources), selected through the study variant rather than the device locale, and translate them like the others (T48). iOS: `SharedContext/StudyVariant.swift`, `Onboarding/Welcome.swift`, `ConsentDisclaimers.swift`, `Account/Demographics/StageOfChange.swift`, `DemographicsLayout.swift`.
+**Acceptance:** An Imperial participant sees the Imperial wording in every listed place, in any app language; Stanford wording is unchanged.
+
+#### T76: Imperial demographics and UK units
+**Tags:** `demographics`, `feature`
+**Description:** Bring the UK demographics in line with iOS #231. The changes:
+- **Ethnicity:** the five GOV.UK ethnic groups plus "Prefer not to say", as the new `ethnicityUK` key, replacing race and Latino for Imperial.
+- **CHI number:** for Scottish regions, a `chiNumber` (with checksum) replaces the NHS number; NHS and CHI share one health-service number field.
+- **Postcode:** an optional, validated full `ukPostcode`. Android stores only a prefix under that identifier, so align the stored value with iOS's.
+- **Education:** the revised UK education levels.
+- **Counties:** complete county lists per nation, sorted into their nations.
+- **Wording:** Physical Activity Habits with short option titles.
+- **Keyboard:** a way to dismiss the number pad.
+- **Units:** weight in kilograms for the UK measurement system (T64 shows pounds).
+
+iOS: `Account/Demographics/*` (`EthnicityUK.swift`, `CHINumber.swift`, `UKPostcodeTextField.swift`, `HealthServiceNumberTextField.swift`, `EducationStatus.swift`, `UKRegion.swift`, `DemographicsLayout.swift`), `DemographicsAccountKeys.swift`.
+**Acceptance:** An Imperial participant's demographics form shows and stores the same fields and values as iOS, and a UK participant enters weight in kg.
 
 ### Phase 4: questionnaires and tasks
 
@@ -709,14 +765,14 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Tags:** `account`, `health-data`, `feature`
 **Description:** Show "Processing Health data…" in the account sheet while live or historical uploads run. In debug mode, link it to a progress view. iOS: `AccountSheet.dataProcessingRow`, `DataProcessingDebugView.swift`.
 **Acceptance:** The indicator reflects `ManagedFileUpload` and historical-export activity.
-**As built:** `standard/health/ManagedFileUpload` is now an interface (+Impl) that also exposes `activeCategories`, the `HealthUploadCategory`s with uploads in flight, counted around every upload, including the retries `recoverOrphans` makes at launch, so a category is active from the start of an upload until it succeeds or fails, as iOS's `progressByCategory` is from enqueue to completion or abort. `MHCAccountOverviewViewModel` passes whether a live or historical upload is active, and `MHCAccountOverviewMapper` adds a "data-processing" section after Study Participation holding `DataProcessingRow` ("Processing Health Data…" beside a spinner) while the participant is enrolled and processing, as iOS's `dataProcessingRow` sits in its own section after Study Participation. Deletion uploads don't count, as on iOS, which counts only `liveHealthUpload` and `historicalHealthUpload`. The SensorKit variants don't apply. Open by dependency: the debug-mode link to a progress view (`DataProcessingDebugView`) belongs to T49, and the historical export session (running or paused) counts once T11 builds it. Covered by `HealthUploadTest.reportsACategoryAsActiveOnlyWhileItsUploadIsInFlight` (emulator), `MHCAccountOverviewMapperTest`, `MHCAccountOverviewViewModelTest` (through `FakeManagedFileUpload`) and the `DataProcessingRowScreenshotTest` baseline.
+**As built:** `standard/health/ManagedFileUpload` is now an interface (+Impl) that also exposes `activeCategories`, the `HealthUploadCategory`s with uploads in flight, counted around every upload, including the retries `recoverOrphans` makes at launch, so a category is active from the start of an upload until it succeeds or fails, as iOS's `progressByCategory` is from enqueue to completion or abort. `MHCAccountOverviewViewModel` passes whether a live or historical upload is active, and `MHCAccountOverviewMapper` adds a "data-processing" section after Study Participation holding `DataProcessingRow` ("Processing Health Data…" beside a spinner) while the participant is enrolled and processing, as iOS's `dataProcessingRow` sits in its own section after Study Participation. Deletion uploads don't count, as on iOS, which counts only `liveHealthUpload` and `historicalHealthUpload`. The SensorKit variants don't apply. Open by dependency: the debug-mode link to a progress view (`DataProcessingDebugView`) belongs to T49, and the historical export session counts while it runs, not while paused (iOS #207), once T11 builds it. Covered by `HealthUploadTest.reportsACategoryAsActiveOnlyWhileItsUploadIsInFlight` (emulator), `MHCAccountOverviewMapperTest`, `MHCAccountOverviewViewModelTest` (through `FakeManagedFileUpload`) and the `DataProcessingRowScreenshotTest` baseline.
 
 #### T58: Participation stats 🟡 Partial
 **Tags:** `account`, `health-data`, `feature`
 **Description:** A "View Participation Stats" entry in the study participation section (T33) opening a stats screen: an explainer with the enrollment date; engagement (tasks done, current and longest streak, surveys answered, articles read, ECGs recorded, walk/run tests); health totals since enrollment (steps, heartbeats estimate, distance, active energy, exercise time, sleep, workouts, flights climbed); highlights (best step day, longest workout, max heart rate, average resting heart rate); and fun facts. Engagement counts come from local scheduler records; health totals, highlights and the ECG count come from the stats documents (T62), as on iOS. Exercise time follows D3, and the ECG tile follows D2. iOS: `Account/ParticipationStatsView.swift`, `ParticipationStatsProvider*.swift`, `docs/ParticipationStats.md`. Depends on T62.
 **Acceptance:** The screen shows the same sections as iOS, with values computed from scheduler outcomes and the stats documents.
 **Progress:** UI only, with sample data. `MHCRoute.ParticipationStats` opens a bottom sheet from all three iOS entry points: the medal action that `StudyAppBarProvider` adds to the Home and Heart Health tabs, and the "View Participation Stats" row of the account overview's Study Participation section (T33). The sheet has three pages that slide like onboarding steps: the stats (enrollment card with achievements unlocked and upcoming, engagement, health totals, health highlights, fun facts), the explainer (from the info action), and the full achievements list (from the enrollment card). Built from the `dashboard/ui` components (G07: `CounterCard`, `StatTileGrid`, `IconTextCard`, `ProgressRingCard`, laid out by `DashboardSectionList`); `stats/ParticipationStatsContentMapper` builds the whole sheet, and every value comes from `SampleParticipationStatsContentMapper` and `achievements/SampleAchievementsSource`. Screenshot tests cover each page.
-**TODO (cleanup when wiring real data):** remove the hardcoded `DUMMY DATA` badge in `stats/ParticipationStatsScreenContent`, and replace `SampleParticipationStatsContentMapper` and `SampleAchievementsSource` with implementations reading scheduler outcomes and the stats documents (T62/T63). Achievements still need a ticket of their own for unlock tracking (iOS `AchievementsManager`, `achievementTracking` in Firestore).
+**TODO (cleanup when wiring real data):** remove the hardcoded `DUMMY DATA` badge in `stats/ParticipationStatsScreenContent`, and replace `SampleParticipationStatsContentMapper` and `SampleAchievementsSource` with implementations reading scheduler outcomes and the stats documents (T62/T63). Achievement unlock tracking is T70.
 
 #### T68: "Logging out…" state while signing out
 **Tags:** `app-shell`, `account`, `feature`
@@ -727,6 +783,21 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Tags:** `account`, `verify`
 **Description:** The account overview's own sections (name, email, password, through Grove's `AccountOverviewScreen` and `account-firebase`'s `updateAccountDetails`) have never been checked against the backend. Check editing the name, changing the email and changing the password on the Firebase emulator, including the error shown when Firebase requires a recent sign-in, and compare with iOS `Account/AccountSheet.swift` (SpeziAccount `AccountOverview`). File Grove tickets for anything missing.
 **Acceptance:** Each edit persists (Firebase Auth and `users/{uid}`) or fails with a clear message; differences from iOS are recorded or fixed, and the row in 2.4 is ✅.
+
+#### T70: Achievements
+**Tags:** `account`, `health-data`, `feature`
+**Description:** Track and show achievements. Achievements come in categories (general, study participation, health). Some unlock once on a trigger: completing enrollment, a questionnaire, a 6-minute walk test or a 12-minute run test. Others form ladders over a metric: enrollment duration in days, weeks, months and years, with anniversary names; daily step count; recorded ECGs, which follow D2. Unlock events and observed metric values are kept in a versioned state document at `users/{uid}/achievementTracking/{studyId}`. The local state is merged with the server copy in a single sync loop, so two syncs never interleave. The system turns itself off, without overwriting anything, when the server state uses a newer schema than the app understands, when nobody is signed in, or when the participant is not enrolled. Unlocked and upcoming achievements appear on the participation stats enrollment card; the full list is a page of the participation stats sheet. iOS: `Achievements/Achievement.swift`, `AchievementsManager.swift`, `MHCAchievements.swift`, `AchievementsView.swift`, `AchievementIcon.swift`. Depends on T58 (the sheet and its sample-data UI, `achievements/SampleAchievementsSource`) and T62 (the step and ECG metrics).
+**Acceptance:** Completing a task or reaching a metric threshold unlocks the same achievement as on iOS; the unlock survives a reinstall and appears on both platforms for the same account; a newer server schema disables achievements instead of overwriting them.
+
+#### T71: Signed withdrawal form
+**Tags:** `account`, `consent`, `feature`
+**Description:** When the study bundle contains a withdrawal form (`consent/Withdrawal.md`, in the consent's locale), Withdraw from Study (T04) first presents it as a full-screen sheet, "Withdraw from Study". The sheet uses the consent document UI, with the participant's name pre-filled and today's signature date. Its destructive "Withdraw from Study" button is enabled once the form is complete. Signing exports the PDF in the locale's paper size and uploads it next to the consent forms, then the withdrawal continues (`markAccountForStudyWithdrawal`, then logout). Cancelling or dismissing the form cancels the whole withdrawal. Without a form in the bundle, withdrawal works as today. The Imperial bundle has the form; Stanford has none. iOS: `Account/WithdrawalForm.swift`, `AccountSheet.withdrawFromStudy`, `ConsentManager.loadWithdrawalForm`. Needs a `MyHeartCounts-StudyDefinitions` pin that contains the file (added there in #59, after the current pin `8a862f9`), reuses Grove `consent` and `MHCConsentHandler`'s PDF upload, and fits the signed form into T35's list.
+**Acceptance:** An Imperial participant cannot withdraw without signing; the signed form appears with their consent forms (T35); cancelling leaves the account enrolled and signed in; Stanford participants see no change.
+
+#### T72: Privacy notice from the study bundle
+**Tags:** `account`, `onboarding`, `feature`
+**Description:** When the study bundle contains a privacy notice (`consent/PrivacyNotice.md`, in the consent's locale), every privacy policy link opens it as a sheet titled "Privacy Policy", rendering the markdown with a close button, instead of opening a website. Otherwise the link opens the variant's website when it has one. Imperial has no privacy website (its `StudyVariant.privacyPolicy` is a Stanford placeholder today), so with a bundle that has no notice the link is hidden. This applies to the account sheet's App Info section (T33) and the login step's footer (T22). iOS: `Account/PrivacyPolicyLink.swift` (`PrivacyNotice`, `PrivacyPolicyLink`), `ConsentManager.loadPrivacyNotice`. Needs the same `MyHeartCounts-StudyDefinitions` pin bump as T71; Grove `markdown` renders the notice, as `ui/MarkdownSheet` does for articles.
+**Acceptance:** Imperial participants read the notice in the app from both entry points; Stanford participants still open the Stanford privacy page.
 
 ### Phase 7: Heart Health dashboard
 
@@ -766,11 +837,16 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Acceptance:** Entered values update the matching score immediately.
 **As built:** `dashboard/entry/` provides dated BP, fasting glucose, LDL and BMI forms, exclusive upper input limits, localized numeric parsing, weight in pounds for the US and UK measurement systems and kilograms otherwise, height in feet/inches only for the US system and centimetres otherwise, with BMI calculation, retained form state and save errors. BP, glucose, height and weight save atomically to Health Connect with manual-entry metadata and stable retry identifiers; the app requests their write permissions and explains them in its privacy copy. LDL uses `CustomSampleUploader` to write a FHIR observation directly to Firestore. Direct BMI is preserved in monthly BMI stats (local-offset timestamp in whole seconds, like the other stats entries) because Health Connect has no BMI record type; weight/height entry uses native records and the existing derived-BMI pipeline. A successful save refreshes the score inputs and requests a background stats refresh, so saving never waits for the server. Diet, WHO-5 and nicotine open their study questionnaires through the existing renderer and response uploader without completing a scheduled event. Detail and entry screens pass route arguments through Grove’s `groveViewModel` args receiver. Native measurements cannot be future-dated, as required by Health Connect. Entry opens as a nested bottom sheet with grouped date/time and measurement rows, a BMI versus weight/height selector, and Grove’s async Save text action in the top bar. A dedicated mapper builds display-ready content with click callbacks and field-level state flows. Numeric inputs use compact widths beside their units, with date/time controls aligned to the trailing side. A value outside its limits shows "Only values from X to Y are allowed" below its row. Blood pressure, glucose and LDL take whole numbers only, with a number keyboard that ignores other characters. The imperial height picker offers 3–8 ft and 0–11 in, starting at 5 ft 4 in, and is not range-checked in metres. The form defines its limits per field, and both validation and the picker options read them from there.
 
+#### T77: Relaxed score requirements and score explainer sheet
+**Tags:** `dashboard`, `feature`
+**Description:** Since #240 the overall Heart Health score appears once 3 components have data, and below 5 the score card says "More data needed". Mental wellbeing now counts toward the score, so all 9 tiles feed it; this matches the Learn More text. Tapping the score card opens a sheet that explains the calculation and offers shortcuts for filling in missing components, easiest first. The score card, the sheet's gauge and the tiles have accessibility values. The overall score has no bands yet. iOS: `Heart Health Dashboard/CVHScore.swift`, `HeartHealthScoreSheet.swift`, `HeartHealthDashboard.swift`. Changes T41's composite and T44's card.
+**Acceptance:** With 3 or 4 components the score shows with "More data needed"; mental wellbeing changes the composite; the sheet's shortcuts open the matching data entry or questionnaire.
+
 ### Phase 8: consent renewal
 
 #### T47: Consent renewal flow
 **Tags:** `consent`, `feature`
-**Description:** After onboarding, when a (re)loaded study bundle carries a consent version newer (minor or above) than `lastSignedConsentVersion`, show a non-dismissible flow: an explainer with the last-signed date, then the consent form, then upload and account update. "Never signed" triggers the flow by default, with a switch to disable it for tests. iOS: `ConsentManager.swift`, `ConsentRenewalFlow.swift`. Depends on T08 and T14.
+**Description:** After onboarding, when a (re)loaded study bundle carries a consent version newer (minor or above) than `lastSignedConsentVersion`, show a non-dismissible flow: an explainer with the last-signed date, the Participant Information Sheet when the bundle has one (T74), then the consent form, then upload and account update. "Never signed" triggers the flow by default, with a switch to disable it for tests. iOS: `ConsentManager.swift`, `ConsentRenewalFlow.swift`. Depends on T08 and T14.
 **Acceptance:** Publishing consent `0.2.0` prompts every enrolled Android participant once.
 
 ### Phase 9: localization
@@ -890,7 +966,7 @@ No Android build reached participants before this fix, so nobody onboarded witho
 
 #### T49: Debug mode and debug menu
 **Tags:** `dev-tooling`, `tooling`
-**Description:** Enable debug mode from the `enableAppDebugMode` account key (plus a debug-build override and a remembered last value). Add a debug screen with: upload queue and staging DB stats, upload worker log, notification status and FCM token (copyable), a trigger for a test remote nudge (`notificationBacklog`), historical export control and reset, scheduler stats, reset of rejected prompted actions, "answer questionnaire" shortcuts, optional "will/did upload" notifications, and the 30-second walk test. iOS: `Utils/Debug Stuff/*`.
+**Description:** Enable debug mode from the `enableAppDebugMode` account key (plus a debug-build override and a remembered last value). Add a debug screen with: upload queue and staging DB stats, upload worker log, notification status and FCM token (copyable), a trigger for a test remote nudge (`notificationBacklog`), historical export control and reset, scheduler stats, reset of rejected prompted actions, "answer questionnaire" shortcuts, optional "will/did upload" notifications, and the 30-second walk test. Since the re-audit iOS also exports its background task log (#232), shows the study variant and backend in the extended app info (#231), and, in debug and test builds, replaces the app with an error screen when the build, the local enrollment and the account disagree on the study variant (`StudyVariantConsistencyCheck`). iOS: `Utils/Debug Stuff/*`.
 **Acceptance:** Debug features are hidden unless debug mode is on.
 
 #### T50: Test-environment setup for instrumented UI tests
@@ -930,6 +1006,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Acceptance:** Leaving the app on the Heart Health tab and relaunching it opens the Heart Health tab; after signing out and in, Home.
 
 ---
+
+#### T81: Account sheet footer (optional)
+**Tags:** `account`, `feature`
+**Description:** iOS ends the account sheet with "Made with ❤️ in Stanford🎸, Hamburg⚓️, and Munich🥨". Tapping it sends a random kitten, red panda or penguin across the screen in a window that ignores touches. iOS: `AccountSheet.Footer`, `Account/Kitten Mode/*`, `Assets.xcassets/Kittens`.
+**Acceptance:** The footer shows at the end of the account overview, and tapping it plays the animation without blocking the sheet.
 
 ### 5.1 Grove Kotlin tickets
 
@@ -1045,27 +1126,32 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 **Acceptance:** Grove's sample app shows its licenses through the module. MHC then replaces its `license/` package with the module (the plugin, its `aboutlibraries/` overrides, the `license { }` block and the route stay in the app) and looks as before.
 **As built:** The Grove side is built. `license` exposes `ConfigurationBuilder.license { project { LicenseProject(name, version, licenseIdentifier, url) } }`, with an optional `dependencies { }` that replaces the generated list, and `LicenseInformationScreen(onDismiss, onOpenUrl = null)`. Everything else is internal: the source (reading the AboutLibraries list by name through `Libs.Builder().withContext`, so the module needs no access to the app's `R`), mapper, view model and the list, row and license-text content, as in T33. The project row opens the project's URL and names the project in the "Dependencies used by …" header. Links follow the markdown module's approach: by default the screen opens them with Compose's platform handler (`LocalUriHandler`) and ignores a link no installed app can open; a host passing `onOpenUrl` receives every link instead. The view model reports leaving and opening links as events, so it needs no navigator. The strings are in Grove's `resources`; `res/raw/grove_license_keep.xml` keeps the generated list when the host app's resources are shrunk. Grove's catalog pins AboutLibraries 15.3.0, the same as the app. The sample app applies the plugin, configures the module (143 libraries) and opens the screen from a "License" card on its home screen. Covered by mapper and view-model tests and screenshots of the list and the license text. The configuration lambdas (`project { }`, `dependencies { }`) are `suspend DependenciesGraph.() -> …`, like `accountConfiguration(service = …)`, so they resolve dependencies through their receiver. `license/README.md` documents the API and the app setup, including keeping the plugin at Grove's `aboutLibraries` version. Checked on the emulator in the sample app. MHC now uses the module: its `license/` package and tests are gone; the plugin, `aboutlibraries/`, `di/LicenseConfigurations`, the route (`LicenseInformationScreen(onDismiss)`), the account row and the en-GB string overrides stay. The keep rule is verified in MHC's shrunk release APK: with it, `raw/aboutlibraries` stays (286 libraries, Grove included); without it, resource shrinking removes the list. Release lint (`ExtraTranslation`) requires a default for every `values-en-rGB` override, so the app keeps its own US-English copies of the overridden strings. Checked on a device after the switch.
 
+#### G17: FHIR exchange for Health Connect records
+**Tags:** `health-data`, `grove`
+**Description:** The Kotlin counterpart of the Swift Grove FHIR exchange that iOS uses since #204, #221 and #239 (grove-fhir IG, wire format v0). It turns Health Connect records into record-centric FHIR Bundles: shared Patient and Device entries stored once, content-derived identities, record versions, provenance with the source package and the recording method, and retractions for deletions. It also validates the exchange graph before upload. MHC keeps collection, staging, account fencing and transport (T78).
+**Acceptance:** Bundles produced from Health Connect records validate against the IG and match iOS output for equivalent samples.
+
 ## 6. Summary by feature group
 
 | Group | ✅ | 🟡 | ❌ | ➖ / 💤 |
 |---|---|---|---|---|
-| App shell and lifecycle | 9 | 3 | 4 | – |
-| Onboarding | 20 | 2 | 1 | 1 💤 |
+| App shell and lifecycle | 9 | 3 | 5 | – |
+| Onboarding | 20 | 2 | 3 | 1 💤 |
 | Consent lifecycle | 1 | – | 1 | – |
-| Account and settings | 12 | 2 | 2 | 1 ➖ |
-| Demographics | 7 | – | – | – |
+| Account and settings | 12 | 2 | 5 | 1 ➖ |
+| Demographics | 6 | 1 | 1 | – |
 | Home | 7 | 2 | 0 | – |
 | Tasks tab | 4 | 2 | 1 | – |
 | Questionnaires | 3 | – | – | – |
 | Active tasks | – | – | 5 | 3 ➖ |
-| Heart Health dashboard | 10 | 1 | 1 | – |
-| Health data | 5 | 2 | 2 | 3 ➖ |
-| Backend, notifications, environment | 5 | 1 | – | – |
+| Heart Health dashboard | 9 | 2 | 2 | – |
+| Health data | 4 | 3 | 3 | 3 ➖ |
+| Backend, notifications, environment | 5 | 1 | 1 | – |
 | Tooling | – | – | 4 | 1 ➖ |
 
 Counts are feature rows from sections 2.1–2.13, excluding the Android-only rows. The foundations are solid: Firebase per region, account, eligibility and waitlist, consent
 upload, launch routing, withdrawal, the Home and Tasks tabs with missed tasks, questionnaires, push tokens
 and foreground nudges, and the Health Connect permission request with the collection and upload pipeline, most of it built on
 Grove. Demographics is at parity, and the Heart Health dashboard apart from sleep-source filtering and
-achievements. The largest gaps are active tasks, the account sheet extras, the remote study bundle and consent lifecycle,
+achievements. The largest gaps are the Imperial variant's content and screens, the new health upload format, active tasks, the account sheet extras, the remote study bundle and consent lifecycle,
 and the debug tooling.
