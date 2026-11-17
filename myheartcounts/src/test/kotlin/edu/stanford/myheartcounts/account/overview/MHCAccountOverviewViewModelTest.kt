@@ -18,6 +18,8 @@ import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.Withd
 import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
+import edu.stanford.myheartcounts.promptedactions.FakePromptedActionsSource
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapperImpl
 import edu.stanford.myheartcounts.standard.MHCAppRevisionFixtures
 import edu.stanford.myheartcounts.study.EnrolledStudyFixtures
 import edu.stanford.myheartcounts.study.FakeEnrolledStudySource
@@ -50,6 +52,7 @@ class MHCAccountOverviewViewModelTest {
     private val postTrialNudges = FakePostTrialNudges()
     private val feedback = FakeFeedback()
     private val enrolledStudySource = FakeEnrolledStudySource()
+    private val promptedActionsSource = FakePromptedActionsSource()
     private val mapper = RecordingMapper()
 
     @Before
@@ -476,6 +479,7 @@ class MHCAccountOverviewViewModelTest {
         postTrialNudges = postTrialNudges,
         feedback = feedback,
         enrolledStudySource = enrolledStudySource,
+        promptedActionsSource = promptedActionsSource,
         mapper = mapper,
     )
 
@@ -508,6 +512,7 @@ class MHCAccountOverviewViewModelTest {
             appRevision = MHCAppRevisionFixtures.create(version = APP_VERSION),
             timeProvider = FakeTimeProvider(),
             buildInfo = BuildInfoFixtures.create(),
+            promptedActionsMapper = PromptedActionsMapperImpl(),
         ),
     ) : MHCAccountOverviewMapper by delegate {
         var feedbackSheet: FeedbackSheet? = null

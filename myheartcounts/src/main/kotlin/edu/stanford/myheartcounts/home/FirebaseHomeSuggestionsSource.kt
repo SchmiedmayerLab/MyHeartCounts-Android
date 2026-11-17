@@ -13,16 +13,18 @@ import com.google.firebase.firestore.Query
 import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsSource
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOf
 import org.grovealliance.core.time.TimeProvider
 import org.grovealliance.ui.StringResource
 import java.time.Duration
 
 /**
- * Surfaces the most recent nudge the backend sent the participant.
+ * Surfaces the most recent nudge the backend sent the participant, along with the prompted actions
+ * of the [promptedActionsSource].
  *
  * The backend writes every nudge it sends into `users/{uid}/notificationHistory`, and the Home tab
  * shows the newest one back so a participant who dismissed or missed the notification still sees it.
@@ -30,7 +32,10 @@ import java.time.Duration
 class FirebaseHomeSuggestionsSource(
     private val firestore: MHCFirestore,
     private val timeProvider: TimeProvider,
+    promptedActionsSource: PromptedActionsSource,
 ) : HomeSuggestionsSource {
+
+    override val promptedActions: Flow<List<PromptedAction>> = promptedActionsSource.actions
 
     private val logger by mhcFirebaseLogger()
 
@@ -55,7 +60,6 @@ class FirebaseHomeSuggestionsSource(
      *
      * Prompted actions are not modelled.
      */
-    override val pendingActions: Flow<List<PromptedAction>> = flowOf(emptyList())
 
     /**
      * The nudge [document] describes, or `null` when it is too old to still be worth showing.

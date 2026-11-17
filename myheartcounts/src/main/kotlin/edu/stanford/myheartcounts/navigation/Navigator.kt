@@ -9,6 +9,7 @@ package edu.stanford.myheartcounts.navigation
 
 import androidx.navigation3.runtime.NavKey
 import edu.stanford.myheartcounts.dashboard.HeartScoreComponent
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
 import kotlinx.serialization.Serializable
 import org.grovealliance.ui.EventSink
 import org.grovealliance.ui.EventSourceFlow
@@ -169,6 +170,12 @@ sealed interface MHCRoute : NavKey {
      */
     @Serializable
     data object VerifyEmail : MHCRoute
+
+    /**
+     * The actions the participant is prompted to take, those of [mode].
+     */
+    @Serializable
+    data class PromptedActions(val mode: PromptedActionsMode) : MHCRoute
 
     /**
      * The participant's editable demographic information.

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
@@ -73,9 +74,9 @@ class HomeContentLayoutScreenshotTest : ScreenshotTest() {
                         message = StringResource("You are close to your step goal for today."),
                     ),
                     promptedActions = PromptedActionsCard(
-                        icons = listOf(ImageResource(image = Icons.Default.CheckCircle)),
-                        title = StringResource(MHCStrings.home_prompted_actions_title),
-                        subtitle = StringResource("1 step remaining"),
+                        icons = listOf(ImageResource(image = Icons.Default.Badge)),
+                        title = StringResource(MHCStrings.prompted_actions_card_title),
+                        subtitle = StringResource("1 recommended step to get the most out of the study"),
                         onClick = {},
                     ),
                     tasks = TaskListLayout(

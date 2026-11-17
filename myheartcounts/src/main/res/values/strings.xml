@@ -222,11 +222,6 @@ SPDX-License-Identifier: MIT
         <item quantity="one">%1$d missed task in the past 2 weeks</item>
         <item quantity="other">%1$d missed tasks in the past 2 weeks</item>
     </plurals>
-    <string name="home_prompted_actions_title">Finish setting up</string>
-    <plurals name="home_prompted_actions_subtitle">
-        <item quantity="one">%1$d step remaining</item>
-        <item quantity="other">%1$d steps remaining</item>
-    </plurals>
     <string name="home_learn_more">About the My Heart Counts Study</string>
     <string name="home_error_title">Unable to load your tasks</string>
     <string name="home_error_message">Something went wrong while loading the study. Please try again.</string>
@@ -763,4 +758,25 @@ SPDX-License-Identifier: MIT
     <string name="verify_email_done">Done</string>
     <string name="verify_email_link_sent">Verification link sent to your email.</string>
     <string name="verify_email_link_failed">The verification link couldn\'t be sent. Please try again.</string>
+    <string name="prompted_actions_card_title">Complete Your Study Setup</string>
+    <plurals name="prompted_actions_card_subtitle">
+        <item quantity="one">%1$d recommended step to get the most out of the study</item>
+        <item quantity="other">%1$d recommended steps to get the most out of the study</item>
+    </plurals>
+    <string name="prompted_actions_all_set">You\'re All Set</string>
+    <string name="prompted_actions_all_completed">You\'ve completed all recommended setup steps.</string>
+    <string name="prompted_actions_title">Suggested for You</string>
+    <string name="prompted_actions_completed">Completed</string>
+    <string name="prompted_actions_footer_pending">These optional steps help My Heart Counts gather richer data for cardiovascular research. Suggestions you decline won\'t be shown again on the Home tab, but will remain accessible via the app\'s settings.</string>
+    <string name="prompted_actions_footer_all">These optional steps help My Heart Counts gather richer data for cardiovascular research.</string>
+    <string name="prompted_actions_stop_suggesting_title">Stop Suggesting This?</string>
+    <string name="prompted_actions_stop_suggesting_message">This action remains available through the app\'s settings.</string>
+    <string name="prompted_actions_stop_suggesting_confirm">Stop Suggesting This</string>
+    <string name="prompted_actions_stop_suggesting_cancel">Cancel</string>
+    <string name="prompted_action_demographics_title">Complete Demographics</string>
+    <string name="prompted_action_demographics_message">Providing demographic information such as age, sex, and background helps researchers understand how heart health varies across different groups.</string>
+    <string name="prompted_action_demographics_button">Complete</string>
+    <string name="prompted_action_verify_email_title">Verify Account Email</string>
+    <string name="prompted_action_verify_email_message">Email verification is required to secure your account.</string>
+    <string name="prompted_action_verify_email_button">Verify Email</string>
 </resources>

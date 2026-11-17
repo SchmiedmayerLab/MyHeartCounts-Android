@@ -8,6 +8,9 @@
 package edu.stanford.myheartcounts.home
 
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
+import edu.stanford.myheartcounts.promptedactions.PromptedActionFixtures
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapperImpl
 import edu.stanford.myheartcounts.task.AlwaysAvailableTask
 import edu.stanford.myheartcounts.task.EventTileMapperImpl
 import kotlinx.coroutines.test.runTest
@@ -40,6 +43,7 @@ class HomeContentMapperTest {
         setNow(now)
     }
     private val mapper = HomeContentMapperImpl(
+        promptedActionsMapper = PromptedActionsMapperImpl(),
         tileMapper = EventTileMapperImpl(
             scheduleCalculator = calculator,
             timeProvider = timeProvider,
@@ -260,6 +264,19 @@ class HomeContentMapperTest {
         assertThat(layout.promptedActions).isNull()
     }
 
+    @Test
+    fun `summarises the pending prompted actions and opens them`() {
+        // given
+        val layout = mapper.map(input(events = emptyList(), promptedActions = listOf(PromptedActionFixtures.create())))
+
+        // when
+        layout.promptedActions?.onClick?.invoke()
+
+        // then
+        assertThat(layout.promptedActions?.icons).hasSize(1)
+        assertThat(pushedActions).containsExactly(HomeAction.PromptedActionsSelected)
+    }
+
     private fun eventAt(
         start: Instant,
         category: TaskCategory,
@@ -287,11 +304,12 @@ class HomeContentMapperTest {
     private fun input(
         events: List<Event>,
         missedEventCount: Int = 0,
+        promptedActions: List<PromptedAction> = emptyList(),
     ) = HomeContentInput(
         events = events,
         missedEventCount = missedEventCount,
         nudge = null,
-        promptedActions = emptyList(),
+        promptedActions = promptedActions,
         actionSink = actionSink,
     )
 

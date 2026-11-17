@@ -23,6 +23,8 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 import edu.stanford.myheartcounts.BuildInfo
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMapper
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
 import edu.stanford.myheartcounts.standard.MHCAppRevision
 import edu.stanford.myheartcounts.study.EnrolledStudy
 import edu.stanford.myheartcounts.ui.DynamicSection
@@ -43,6 +45,7 @@ import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.account.CustomAccountSections
 import org.grovealliance.ui.groveAppBar
 import org.grovealliance.ui.groveSection
+import org.grovealliance.ui.scheduler.PromptedActionsCard
 import org.grovealliance.ui.theme.Colors
 import org.grovealliance.ui.theme.Spacings
 import java.time.format.DateTimeFormatter
@@ -88,11 +91,13 @@ class MHCAccountOverviewMapperImpl(
     private val appRevision: MHCAppRevision,
     private val timeProvider: TimeProvider,
     private val buildInfo: BuildInfo,
+    private val promptedActionsMapper: PromptedActionsMapper,
 ) : MHCAccountOverviewMapper {
 
     override fun map(input: MHCAccountOverviewInput) = MHCAccountOverview(
         customSections = CustomAccountSections(
             sections = listOf(
+                promptedActions(input = input),
                 studyParticipation(input = input),
                 support(input = input),
                 appInfo(input = input),
@@ -131,6 +136,26 @@ class MHCAccountOverviewMapperImpl(
                 action = onSend,
             ),
         )
+    }
+
+    private fun promptedActions(input: MHCAccountOverviewInput) = DynamicSection(
+        section = input.promptedActions.map { actions ->
+            promptedActionsSection(
+                card = promptedActionsMapper.mapCard(
+                    actions = actions,
+                    mode = PromptedActionsMode.All,
+                    onClick = { input.actionSink.push(MHCAccountOverviewAction.PromptedActionsSelected) },
+                ),
+            )
+        }.stateIn(
+            scope = input.scope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = promptedActionsSection(card = null),
+        ),
+    )
+
+    private fun promptedActionsSection(card: PromptedActionsCard?) = groveSection(key = PROMPTED_ACTIONS_KEY) {
+        card?.let { content(key = PROMPTED_ACTIONS_KEY, content = it) }
     }
 
     private fun studyParticipation(input: MHCAccountOverviewInput) = DynamicSection(
@@ -338,6 +363,7 @@ class MHCAccountOverviewMapperImpl(
     )
 
     private companion object {
+        const val PROMPTED_ACTIONS_KEY = "prompted-actions"
         const val STUDY_PARTICIPATION_KEY = "study-participation"
         const val SUPPORT_KEY = "support"
         const val APP_INFO_KEY = "app-info"

@@ -17,6 +17,9 @@ import edu.stanford.myheartcounts.account.overview.WithdrawFromStudyButton.Withd
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
+import edu.stanford.myheartcounts.promptedactions.PromptedAction
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsMode
+import edu.stanford.myheartcounts.promptedactions.PromptedActionsSource
 import edu.stanford.myheartcounts.study.EnrolledStudy
 import edu.stanford.myheartcounts.study.EnrolledStudySource
 import kotlinx.coroutines.CoroutineScope
@@ -39,12 +42,15 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Coordinates the account overview: builds it once and carries out what it offers.
  */
+// The overview gathers one section per area of the account sheet, each with its own source.
+@Suppress("detekt:LongParameterList")
 class MHCAccountOverviewViewModel(
     private val navigator: Navigator,
     private val studyWithdrawal: StudyWithdrawal,
     private val postTrialNudges: PostTrialNudges,
     private val feedback: MHCFeedback,
     enrolledStudySource: EnrolledStudySource,
+    promptedActionsSource: PromptedActionsSource,
     private val mapper: MHCAccountOverviewMapper,
 ) : ViewModel() {
 
@@ -68,6 +74,7 @@ class MHCAccountOverviewViewModel(
             withdrawalState = withdrawalState.asStateFlow(),
             postTrialNudgesOptIn = postTrialNudgesOptIn.asStateFlow(),
             enrolledStudy = enrolledStudySource.enrolledStudy(),
+            promptedActions = promptedActionsSource.actions,
             scope = viewModelScope,
             actionSink = actionSource.sink(),
         ),
@@ -183,6 +190,7 @@ data class MHCAccountOverviewInput(
     val withdrawalState: StateFlow<WithdrawalState>,
     val postTrialNudgesOptIn: StateFlow<Boolean>,
     val enrolledStudy: Flow<EnrolledStudy?>,
+    val promptedActions: Flow<List<PromptedAction>>,
     val scope: CoroutineScope,
     val actionSink: ActionSink<MHCAccountOverviewAction>,
 )
@@ -220,6 +228,13 @@ sealed interface MHCAccountOverviewAction {
      */
     data object ParticipationStatsSelected : PageSelected {
         override val route = MHCRoute.ParticipationStats
+    }
+
+    /**
+     * The participant opened every action they are prompted to take, completed ones included.
+     */
+    data object PromptedActionsSelected : PageSelected {
+        override val route = MHCRoute.PromptedActions(mode = PromptedActionsMode.All)
     }
 
     /**
