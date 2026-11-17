@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.demographics.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,25 +51,21 @@ import org.grovealliance.ui.theme.TextStyles
 import org.grovealliance.ui.theme.ThemePreviews
 
 /**
- * A full-height bottom sheet for typing in one answer, beneath [appBar], which carries closing and
- * saving.
+ * A full-height bottom sheet for typing in one answer across one or more [fields], beneath [appBar],
+ * which carries closing and saving.
  *
  * @param appBar the sheet's app bar
- * @param label the label of the entry
- * @param unit the unit the answer is entered in, if any
- * @param keyboardType the keyboard offered for the entry
- * @param entry the answer as entered so far
+ * @param fields the fields the answer is typed into, in order
+ * @param entry the text typed into each of [fields] so far, in the same order
  * @param help a link below the entry explaining where to find the answer, if any
- * @param onEntryChange called with every edit of the entry
+ * @param onEntryChange called with every edit of a field, with the field's index and its new text
  */
 data class DemographicsEntrySheet(
     val appBar: StateFlow<GroveAppBar>,
-    val label: StringResource,
-    val unit: StringResource?,
-    val keyboardType: KeyboardType,
-    val entry: StateFlow<String>,
+    val fields: List<Field>,
+    val entry: StateFlow<List<String>>,
     val help: Help?,
-    val onEntryChange: (String) -> Unit,
+    val onEntryChange: (index: Int, text: String) -> Unit,
 ) : BottomSheetComposableContent {
 
     override val skipPartiallyExpanded: Boolean = true
@@ -87,40 +85,15 @@ data class DemographicsEntrySheet(
                 verticalArrangement = Arrangement.spacedBy(Spacings.small),
             ) {
                 GroveCard(shape = GroveShapes.large) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(Spacings.medium),
-                        horizontalArrangement = Arrangement.spacedBy(Spacings.small),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = label.text(),
-                            style = TextStyles.bodyLarge,
-                            color = Colors.onSurface,
-                        )
-                        BasicTextField(
-                            modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(focusRequester),
-                            value = entry,
-                            onValueChange = onEntryChange,
-                            singleLine = true,
-                            textStyle = TextStyles.bodyLarge.copy(
-                                color = Colors.onSurface,
-                                textAlign = TextAlign.End,
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = keyboardType,
-                                imeAction = ImeAction.Done,
-                            ),
-                            cursorBrush = SolidColor(Colors.primary),
-                        )
-                        unit?.let {
-                            Text(
-                                text = it.text(),
-                                style = TextStyles.bodyLarge,
-                                color = Colors.onSurfaceVariant,
+                    Column {
+                        fields.forEachIndexed { index, field ->
+                            if (index > 0) HorizontalDivider(modifier = Modifier.padding(start = Spacings.medium))
+                            FieldRow(
+                                field = field,
+                                text = entry.getOrNull(index).orEmpty(),
+                                isLast = index == fields.lastIndex,
+                                modifier = if (index == 0) Modifier.focusRequester(focusRequester) else Modifier,
+                                onTextChange = { onEntryChange(index, it) },
                             )
                         }
                     }
@@ -143,6 +116,76 @@ data class DemographicsEntrySheet(
         }
     }
 
+    @Composable
+    private fun FieldRow(
+        field: Field,
+        text: String,
+        isLast: Boolean,
+        modifier: Modifier,
+        onTextChange: (String) -> Unit,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacings.medium),
+            horizontalArrangement = Arrangement.spacedBy(Spacings.small),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = field.label.text(),
+                style = TextStyles.bodyLarge,
+                color = Colors.onSurface,
+            )
+            BasicTextField(
+                modifier = modifier.weight(1f),
+                value = text,
+                onValueChange = onTextChange,
+                singleLine = true,
+                textStyle = TextStyles.bodyLarge.copy(
+                    color = Colors.onSurface,
+                    textAlign = TextAlign.End,
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = field.keyboardType,
+                    imeAction = if (isLast) ImeAction.Done else ImeAction.Next,
+                ),
+                cursorBrush = SolidColor(Colors.primary),
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.CenterEnd) {
+                        if (text.isEmpty()) {
+                            field.placeholder?.let {
+                                Text(
+                                    text = it.text(),
+                                    style = TextStyles.bodyLarge,
+                                    color = Colors.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+            field.unit?.let {
+                Text(
+                    text = it.text(),
+                    style = TextStyles.bodyLarge,
+                    color = Colors.onSurfaceVariant,
+                )
+            }
+        }
+    }
+
+    /**
+     * A field labelled [label], typed in with [keyboardType] and in [unit], if any, hinting at
+     * [placeholder] while it is empty.
+     */
+    data class Field(
+        val label: StringResource,
+        val unit: StringResource?,
+        val placeholder: StringResource?,
+        val keyboardType: KeyboardType,
+    )
+
     /**
      * A link titled [title], opened by [onClick].
      */
@@ -160,23 +203,51 @@ private class DemographicsEntrySheetPreviewProvider : PreviewParameterProvider<D
                 close {}
             },
         ),
-        label = StringResource("NHS Number"),
-        unit = null,
-        keyboardType = KeyboardType.Number,
-        entry = MutableStateFlow("943 476 5919"),
+        fields = listOf(
+            DemographicsEntrySheet.Field(
+                label = StringResource("NHS Number"),
+                unit = null,
+                placeholder = null,
+                keyboardType = KeyboardType.Number,
+            ),
+        ),
+        entry = MutableStateFlow(listOf("943 476 5919")),
         help = DemographicsEntrySheet.Help(
             title = StringResource("Find your NHS Number"),
             onClick = {},
         ),
-        onEntryChange = {},
+        onEntryChange = { _, _ -> },
     )
     override val values = sequenceOf(
         base,
         base.copy(
-            label = StringResource("Height"),
-            unit = StringResource("cm"),
-            keyboardType = KeyboardType.Decimal,
-            entry = MutableStateFlow("172.5"),
+            fields = listOf(
+                DemographicsEntrySheet.Field(
+                    label = StringResource("Value"),
+                    unit = StringResource("cm"),
+                    placeholder = StringResource("0"),
+                    keyboardType = KeyboardType.Decimal,
+                ),
+            ),
+            entry = MutableStateFlow(listOf("172.5")),
+            help = null,
+        ),
+        base.copy(
+            fields = listOf(
+                DemographicsEntrySheet.Field(
+                    label = StringResource("Feet"),
+                    unit = null,
+                    placeholder = StringResource("5"),
+                    keyboardType = KeyboardType.Number,
+                ),
+                DemographicsEntrySheet.Field(
+                    label = StringResource("Inches"),
+                    unit = null,
+                    placeholder = StringResource("4"),
+                    keyboardType = KeyboardType.Number,
+                ),
+            ),
+            entry = MutableStateFlow(listOf("", "")),
             help = null,
         ),
     )

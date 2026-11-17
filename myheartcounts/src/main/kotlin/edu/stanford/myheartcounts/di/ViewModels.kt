@@ -96,6 +96,7 @@ private fun ConfigurationBuilder.participantDataViewModels() {
             layoutMapper = dependency(),
             pickerMapper = dependency(),
             choiceSheetMapper = dependency(),
+            measurementMapper = dependency(),
             editor = dependency(),
             autofill = dependency(),
             navigator = dependency(),
@@ -219,7 +220,7 @@ private fun ConfigurationBuilder.dashboardViewModels() {
             navigator = dependency(),
             writer = dependency(),
             healthAccess = dependency(),
-            account = dependency(),
+            unitsProvider = dependency(),
             timeProvider = dependency(),
             mapper = dependency(),
         )

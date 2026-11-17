@@ -109,6 +109,8 @@ import edu.stanford.myheartcounts.onboarding.eligibility.EligibilityLayoutMapper
 import edu.stanford.myheartcounts.standard.MHCAppRevision
 import edu.stanford.myheartcounts.standard.MHCEnvironmentTracker
 import edu.stanford.myheartcounts.standard.MHCQuestionnaireUploader
+import edu.stanford.myheartcounts.standard.MeasurementUnitsProvider
+import edu.stanford.myheartcounts.standard.MeasurementUnitsProviderImpl
 import edu.stanford.myheartcounts.standard.QuestionnaireResponseUploader
 import edu.stanford.myheartcounts.standard.SignOutCleanup
 import edu.stanford.myheartcounts.standard.SignOutCleanupImpl
@@ -264,6 +266,7 @@ private fun ConfigurationBuilder.firebaseConfigurations() {
             timeProvider = dependency(),
         )
     }
+    singleton<MeasurementUnitsProvider> { MeasurementUnitsProviderImpl() }
     singleton<SignOutCleanup> {
         SignOutCleanupImpl(
             healthData = dependency(),

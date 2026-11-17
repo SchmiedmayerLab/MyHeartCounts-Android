@@ -40,16 +40,16 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 41 | 66 | 62% |
+| App tickets (`T`) | 42 | 66 | 64% |
 | Grove tickets (`G`) | 14 | 16 | 88% |
-| **All tickets** | **55** | **82** | **67%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 77 ✅ · 18 🟡 · 24 ❌ | 119 | 65% (72% counting 🟡 as half) |
+| **All tickets** | **56** | **82** | **68%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 78 ✅ · 18 🟡 · 23 ❌ | 119 | 66% (73% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
 | 1. Correctness bugs | 9 / 9 | – |
 | 2. Data-collection foundations | 3 / 7 | T08, T09, T11, T12 |
-| 3. Onboarding parity | 11 / 12 | T64 |
+| 3. Onboarding parity | 12 / 12 | – |
 | 4. Questionnaires and tasks | 4 / 9 | T24, T27, T54, T55, T59 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
 | 6. Account sheet and prompted actions | 8 / 10 | T40, T58 |
@@ -221,7 +221,7 @@ logic, and the consent PDF.
 | All demographics account keys, stored in Firestore | `Account/Demographics/DemographicsAccountKeys.swift` | ✅ Done | `account/MHCDemographicsAccountKeys.kt` (identifiers match) |
 | Value models: gender, sex, race, Latino, education US/UK, income US/UK, US region, UK region/county, NHS number, stage of change, referral source, comorbidities, blood type | `Account/Demographics/*` | ✅ Done | `model/demographics/*` |
 | Demographics form UI: DOB, gender (inferred from sex and vice versa), sex at birth, blood type, height and weight entry, race multi-select, Latino (US only), comorbidities, state/territory, education, income, UK region → county, NHS number (checksum + help link), stage of change A–I, referral source | `DemographicsForm.swift`, `DemographicsLayout.swift`, pickers | ✅ Done | `demographics/ui/DemographicsLayout` with its mappers, shared by onboarding and the account sheet (T18–T19) |
-| Height and weight shown and entered in the participant's measurement system (ft/in, lb), stored as cm and kg | `DemographicsLayout.swift` (`BodyMeasurementRow`, `SaveQuantitySampleView`) | ❌ Missing | Entered and shown in cm and kg only (T64) |
+| Height and weight shown and entered in the participant's measurement system (ft/in, lb), stored as cm and kg | `DemographicsLayout.swift` (`BodyMeasurementRow`, `SaveQuantitySampleView`) | ✅ Done | `DemographicsMeasurementMapper` with `standard/MeasurementUnitsProvider` (T64): feet and inches for the US system, pounds for the US and UK systems, as iOS's display units; stored values stay cm and kg |
 | Region- and trial-dependent required fields; completion colouring (red required / orange optional) | `DemographicsLayout.swift` | ✅ Done | `DemographicsRules`; the US or UK form follows the study variant (T63). Deliberate difference: optional questions are labelled "Optional" in italics below their title and every answer, given or missing, uses one secondary colour, instead of iOS's red (required) / orange (optional) values |
 | Debounced autosave with diffing, including key removals | `DemographicsData.swift` | ✅ Done | `DemographicsEditor`; one-second diff saves, key removals, flush when the screen goes away and on Continue, unsaved edits kept across account refreshes and dropped on an account change |
 | "Read from Health App" autofill (DOB, blood type, sex, height, weight) | `DemographicsForm.ReadFromHealthKitButton` | ✅ Done | `DemographicsAutofill`; latest height and weight only; DOB, sex and blood type aren't available in Health Connect |
@@ -376,7 +376,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 |---|---|---|
 | 1 | T01–T07 ✅, **T10** ✅, T57 ✅ | G01 ✅ (for T10) |
 | 2 | T08, T09, T11, T12 🟡, T13 ✅, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
-| 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 | G09 ✅ (for T08/T16 locale correctness) |
+| 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 ✅ | G09 ✅ (for T08/T16 locale correctness) |
 | 4 | T23 ✅, T24, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
 | 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
@@ -529,7 +529,7 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Description:** Build the form with the region- and trial-dependent layout: DOB, gender identity and sex at birth (each inferred from the other), blood type, height and weight, race/ethnicity multi-select ("prefer not to state" is exclusive), Latino (US only), education, income, referral source. Required vs. optional follows iOS `DemographicsLayout.swift`: comorbidities, education and stage of change are required only if the participant opted into the trial. Show red for missing required fields and orange for missing optional ones. Autosave after 1 s of inactivity, writing only changed keys and removing cleared keys. Flush when leaving the screen. iOS: `DemographicsForm.swift`, `DemographicsData.swift`.
 **Acceptance:** Filling the form on Android shows identical values on iOS, and vice versa.
 
-**As built:** `demographics/`: `DemographicsLayout` (one card per section; optional questions say "Optional" in italics below their title, and answers, given or missing, share one secondary colour), built by `DemographicsLayoutMapper` from the `DemographicsRules` field set of the form's region; menus for gender, sex at birth and blood type, a date picker for the date of birth, entry sheets for height and weight, and choice sheets for the rest. `DemographicsEditor` (a shared module) holds the signed-in participant's `DemographicsResponse`, read and written through `DemographicsCodec` (one typed binding per account key; the date of birth is stored as noon in the device's zone). It saves the changed keys one second after the last edit and removes cleared ones, keeps unsaved edits when the account's details refresh, drops them when somebody else signs in, and flushes when the screen goes away; a failed background save shows a toast; a failed flush is returned to the caller to report. Either is retried with the next edit or flush. Gender and sex at birth each fill the other only when it is unanswered (male/trans female → male, female/trans male → female). Opening comorbidities counts as answering "none" until a condition is chosen. The account sheet's Demographics row opens the same form as a screen titled Demographics, closed with its back button. The US or UK form follows the study variant (T63). Height and weight are entered in cm and kg; other units moved to T64. Covered by `DemographicsCodecTest`, `DemographicsRulesTest`, `DemographicsEditorTest`, `DemographicsLayoutMapperTest`, `DemographicsPickerMapperTest` and `DemographicsViewModelTest`, and the `DemographicsLayoutScreenshotTest` baselines.
+**As built:** `demographics/`: `DemographicsLayout` (one card per section; optional questions say "Optional" in italics below their title, and answers, given or missing, share one secondary colour), built by `DemographicsLayoutMapper` from the `DemographicsRules` field set of the form's region; menus for gender, sex at birth and blood type, a date picker for the date of birth, entry sheets for height and weight, and choice sheets for the rest. `DemographicsEditor` (a shared module) holds the signed-in participant's `DemographicsResponse`, read and written through `DemographicsCodec` (one typed binding per account key; the date of birth is stored as noon in the device's zone). It saves the changed keys one second after the last edit and removes cleared ones, keeps unsaved edits when the account's details refresh, drops them when somebody else signs in, and flushes when the screen goes away; a failed background save shows a toast; a failed flush is returned to the caller to report. Either is retried with the next edit or flush. Gender and sex at birth each fill the other only when it is unanswered (male/trans female → male, female/trans male → female). Opening comorbidities counts as answering "none" until a condition is chosen. The account sheet's Demographics row opens the same form as a screen titled Demographics, closed with its back button. That row is Android-only: iOS reaches the form after onboarding only through the Complete Demographics prompted action (T39) and its debug form. The US or UK form follows the study variant (T63). Height and weight are shown and entered in the participant's units (T64). Covered by `DemographicsCodecTest`, `DemographicsRulesTest`, `DemographicsEditorTest`, `DemographicsLayoutMapperTest`, `DemographicsPickerMapperTest` and `DemographicsViewModelTest`, and the `DemographicsLayoutScreenshotTest` baselines.
 
 #### T19: Demographics specialized pickers ✅ Done
 **Tags:** `demographics`, `feature`
@@ -552,10 +552,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 
 **As built:** The step, titled Demographics, enters after Notifications (or straight after WorkoutPreference when notifications are already granted) and before FinalEnrollment; Back from FinalEnrollment returns to it. Continue is enabled once every required answer is given and advances only after the pending answers are stored; if storing fails, an error toast is shown and the participant stays on the step. That second condition is a deliberate difference: iOS advances right away and flushes when the form disappears. Progress tracking records `demographics`. The SimplifyOnboarding debug flow keeps its short path. Covered by `OnboardingStepProviderTest`, `OnboardingStepLayoutMapperTest` and `OnboardingProgressTrackerTest`.
 
-#### T64: Height and weight in the participant's measurement system
+#### T64: Height and weight in the participant's measurement system ✅ Done
 **Tags:** `demographics`, `feature`
 **Description:** Show and enter height in feet and inches and weight in pounds for participants whose measurement system is US or imperial, in the demographics rows and entry sheets. Values stay stored as `heightInCM` / `weightInKG`, so switching units never changes what is stored. The measurement system follows the device locale (the same value `MHCEnvironmentTracker` writes as `preferredMeasurementSystem`). iOS: `DemographicsLayout.swift` (`BodyMeasurementRow`, which enters values through SpeziHealthKit's `SaveQuantitySampleView` in the sample type's display unit). Depends on T18.
 **Acceptance:** A participant with a US locale enters 5 ft 8 in and 150 lb; the account stores 172.72 cm and 68.04 kg, and the rows show the imperial values again.
+**As built:** `standard/MeasurementUnitsProvider` (+Impl) picks the units from the device locale's measurement system, as iOS does (the account's `preferredMeasurementSystem` is only recorded, never read back): feet and inches for the US system, pounds for the US and UK systems, cm and kg otherwise. These are iOS's display units, so a UK participant enters height in cm and weight in lb. The dashboard's manual entry (T46) reads the same provider. `DemographicsMeasurementMapper` (+Impl) converts between the stored cm/kg and those units for the rows (`5′ 8″`, `150 lb`) and the entry sheets, which now take one field or feet and inches. Converted values are stored unrounded, as iOS stores them, and every value is shown with at most two decimals; heights in feet and inches round to the nearest whole inch for display. Entries are accepted only within iOS's input limits (90–250 cm, 25–450 kg, 55–1000 lb, 3–8 ft and 0–11 in), which now apply to metric entry too. Blank inches count as 0. Empty fields hint at `0`, as iOS's quantity fields do, and at `5` and `4` for feet and inches. Deliberate difference: Android takes feet and inches as two number fields, while iOS uses a wheel picker that starts at 5′ 4″. Covered by `DemographicsMeasurementMapperTest`, `MeasurementUnitsProviderTest`, `DemographicsPickerMapperTest` and `DemographicsLayoutMapperTest`, plus a feet-and-inches `DemographicsEntrySheetScreenshotTest` baseline.
 
 #### T22: Onboarding polish parity ✅ Done
 **Tags:** `onboarding`, `consent`, `feature`
@@ -1033,7 +1034,7 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | Onboarding | 20 | 2 | 1 | 1 💤 |
 | Consent lifecycle | 1 | – | 1 | – |
 | Account and settings | 11 | 2 | 3 | 1 ➖ |
-| Demographics | 6 | – | 1 | – |
+| Demographics | 7 | – | – | – |
 | Home | 7 | 2 | 0 | – |
 | Tasks tab | 2 | 4 | 1 | – |
 | Questionnaires | 2 | – | 1 | – |
@@ -1047,6 +1048,6 @@ Counts are feature rows from sections 2.1–2.13, excluding the Android-only row
 counts as 🟡. The foundations are solid: Firebase per region, account, eligibility and waitlist, consent
 upload, launch routing, withdrawal, the Home and Tasks tabs with missed tasks, questionnaires, push tokens
 and foreground nudges, and the Health Connect permission request with the collection and upload pipeline, most of it built on
-Grove. The Heart Health dashboard is at parity apart from sleep-source filtering and achievements, and
-demographics apart from imperial units (T64). The largest gaps are active tasks, the account sheet extras, the remote study bundle and consent lifecycle,
+Grove. Demographics is at parity, and the Heart Health dashboard apart from sleep-source filtering and
+achievements. The largest gaps are active tasks, the account sheet extras, the remote study bundle and consent lifecycle,
 and the debug tooling.

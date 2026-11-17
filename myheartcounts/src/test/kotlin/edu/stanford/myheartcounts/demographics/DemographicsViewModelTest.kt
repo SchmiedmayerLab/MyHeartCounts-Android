@@ -13,18 +13,23 @@ import edu.stanford.myheartcounts.MHCStrings
 import edu.stanford.myheartcounts.comorbidities.ComorbiditiesConditionsProviderImpl
 import edu.stanford.myheartcounts.comorbidities.ComorbiditiesRules
 import edu.stanford.myheartcounts.comorbidities.DiagnosisDateMapperImpl
+import edu.stanford.myheartcounts.demographics.ui.DemographicsEntrySheet
 import edu.stanford.myheartcounts.demographics.ui.DemographicsLayout
 import edu.stanford.myheartcounts.demographics.ui.DemographicsScreenMode
 import edu.stanford.myheartcounts.model.demographics.BiologicalSex
 import edu.stanford.myheartcounts.model.demographics.Comorbidities
 import edu.stanford.myheartcounts.model.demographics.MHCGenderIdentity
 import edu.stanford.myheartcounts.navigation.FakeNavigator
+import edu.stanford.myheartcounts.standard.FakeMeasurementUnitsProvider
+import edu.stanford.myheartcounts.standard.MeasurementUnits
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.grovealliance.core.time.FakeTimeProvider
+import org.grovealliance.ui.GroveAppBar
 import org.grovealliance.ui.StringResource
 import org.junit.After
 import org.junit.Before
@@ -42,6 +47,15 @@ class DemographicsViewModelTest {
     private val catalog = DemographicsCatalogFixtures.create()
     private val optionIdMapper = DemographicsOptionIdMapperImpl()
     private val answerMapper = DemographicsAnswerMapperImpl(optionIdMapper = optionIdMapper)
+    private val unitsProvider = FakeMeasurementUnitsProvider()
+    private val measurementMapper = DemographicsMeasurementMapperImpl(unitsProvider = unitsProvider)
+    private val entryPickerMapper = DemographicsPickerMapperImpl(
+        answerMapper = answerMapper,
+        measurementMapper = measurementMapper,
+        unitsProvider = unitsProvider,
+        timeProvider = timeProvider,
+    )
+    private val pickerMapper = CapturingPickerMapper()
 
     @Before
     fun setup() {
@@ -123,6 +137,68 @@ class DemographicsViewModelTest {
 
         // then
         assertThat(viewModel.screen.layout.scaffoldState.widgets.value.bottomSheet).isNotNull()
+    }
+
+    @Test
+    fun `a metric height and weight are stored as typed`() {
+        // given
+        val viewModel = viewModel()
+
+        // when
+        enter(
+            viewModel = viewModel,
+            field = DemographicsField.Height,
+            texts = listOf("180.5"),
+        )
+        enter(
+            viewModel = viewModel,
+            field = DemographicsField.Weight,
+            texts = listOf("81"),
+        )
+
+        // then
+        assertThat(editor.state.value.response.heightInCm).isEqualTo(180.5)
+        assertThat(editor.state.value.response.weightInKg).isEqualTo(81.0)
+    }
+
+    @Test
+    fun `a height in feet and inches and a weight in pounds are stored in centimetres and kilograms`() {
+        // given
+        unitsProvider.setUnits(units = MeasurementUnits.US)
+        val viewModel = viewModel()
+
+        // when
+        enter(
+            viewModel = viewModel,
+            field = DemographicsField.Height,
+            texts = listOf("5", "8"),
+        )
+        enter(
+            viewModel = viewModel,
+            field = DemographicsField.Weight,
+            texts = listOf("150"),
+        )
+
+        // then
+        assertThat(editor.state.value.response.heightInCm).isWithin(TOLERANCE).of(172.72)
+        assertThat(editor.state.value.response.weightInKg).isWithin(TOLERANCE).of(68.0388555)
+    }
+
+    @Test
+    fun `an entry outside the accepted range is not saved`() {
+        // given
+        unitsProvider.setUnits(units = MeasurementUnits.UK)
+        val viewModel = viewModel()
+
+        // when
+        enter(
+            viewModel = viewModel,
+            field = DemographicsField.Weight,
+            texts = listOf("50"),
+        )
+
+        // then
+        assertThat(editor.state.value.response.weightInKg).isNull()
     }
 
     @Test
@@ -244,12 +320,10 @@ class DemographicsViewModelTest {
             catalog = catalog,
             optionIdMapper = optionIdMapper,
             answerMapper = answerMapper,
+            measurementMapper = measurementMapper,
             rules = DemographicsRules(),
         ),
-        pickerMapper = DemographicsPickerMapperImpl(
-            answerMapper = answerMapper,
-            timeProvider = timeProvider,
-        ),
+        pickerMapper = pickerMapper,
         choiceSheetMapper = DemographicsChoiceSheetMapperImpl(
             catalog = catalog,
             optionIdMapper = optionIdMapper,
@@ -261,12 +335,48 @@ class DemographicsViewModelTest {
                 timeProvider = timeProvider,
             ),
         ),
+        measurementMapper = measurementMapper,
         editor = editor,
         autofill = autofill,
         navigator = navigator,
     )
 
+    private fun enter(viewModel: DemographicsViewModel, field: DemographicsField, texts: List<String>) {
+        viewModel.screen.layout.row(field = field).onClick()
+        val sheet = requireNotNull(pickerMapper.lastEntrySheet)
+        texts.forEachIndexed { index, text -> sheet.onEntryChange(index, text) }
+        requireNotNull(pickerMapper.lastInput).actionSink.push(DemographicsAction.EntrySaved)
+    }
+
     private fun DemographicsLayout.fields() = questionSections().flatten().map { it.field }
 
     private fun DemographicsLayout.row(field: DemographicsField) = questionSections().flatten().single { it.field == field }
+
+    private inner class CapturingPickerMapper : DemographicsPickerMapper by entryPickerMapper {
+        var lastEntrySheet: DemographicsEntrySheet? = null
+            private set
+        var lastInput: DemographicsLayoutInput? = null
+            private set
+
+        override fun mapEntrySheet(
+            entry: DemographicsEntry,
+            text: StateFlow<List<String>>,
+            appBar: StateFlow<GroveAppBar>,
+            input: DemographicsLayoutInput,
+        ): DemographicsEntrySheet {
+            val sheet = entryPickerMapper.mapEntrySheet(
+                entry = entry,
+                text = text,
+                appBar = appBar,
+                input = input,
+            )
+            lastEntrySheet = sheet
+            lastInput = input
+            return sheet
+        }
+    }
+
+    private companion object {
+        const val TOLERANCE = 0.000001
+    }
 }

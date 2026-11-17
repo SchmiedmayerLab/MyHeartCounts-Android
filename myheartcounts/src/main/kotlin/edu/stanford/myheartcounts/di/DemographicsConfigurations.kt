@@ -23,6 +23,8 @@ import edu.stanford.myheartcounts.demographics.DemographicsEditor
 import edu.stanford.myheartcounts.demographics.DemographicsEditorImpl
 import edu.stanford.myheartcounts.demographics.DemographicsLayoutMapper
 import edu.stanford.myheartcounts.demographics.DemographicsLayoutMapperImpl
+import edu.stanford.myheartcounts.demographics.DemographicsMeasurementMapper
+import edu.stanford.myheartcounts.demographics.DemographicsMeasurementMapperImpl
 import edu.stanford.myheartcounts.demographics.DemographicsOptionIdMapper
 import edu.stanford.myheartcounts.demographics.DemographicsOptionIdMapperImpl
 import edu.stanford.myheartcounts.demographics.DemographicsOptionsProvider
@@ -52,6 +54,7 @@ fun ConfigurationBuilder.demographicsConfigurations() {
     }
     singleton<DemographicsOptionIdMapper> { DemographicsOptionIdMapperImpl() }
     singleton<DemographicsAnswerMapper> { DemographicsAnswerMapperImpl(optionIdMapper = dependency()) }
+    singleton<DemographicsMeasurementMapper> { DemographicsMeasurementMapperImpl(unitsProvider = dependency()) }
     singleton<DemographicsCodec> { DemographicsCodecImpl(timeProvider = dependency()) }
     singleton { DemographicsRules() }
     demographicsMapperConfigurations()
@@ -82,12 +85,15 @@ private fun ConfigurationBuilder.demographicsMapperConfigurations() {
             catalog = dependency(),
             optionIdMapper = dependency(),
             answerMapper = dependency(),
+            measurementMapper = dependency(),
             rules = dependency(),
         )
     }
     singleton<DemographicsPickerMapper> {
         DemographicsPickerMapperImpl(
             answerMapper = dependency(),
+            measurementMapper = dependency(),
+            unitsProvider = dependency(),
             timeProvider = dependency(),
         )
     }
