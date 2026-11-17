@@ -40,17 +40,17 @@ As of 2026-11-16. A ticket counts as done once it is ✅ here.
 
 | | Done | Total | |
 |---|---|---|---|
-| App tickets (`T`) | 42 | 66 | 64% |
+| App tickets (`T`) | 44 | 66 | 67% |
 | Grove tickets (`G`) | 14 | 16 | 88% |
-| **All tickets** | **56** | **82** | **68%** |
-| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 78 ✅ · 18 🟡 · 23 ❌ | 119 | 66% (73% counting 🟡 as half) |
+| **All tickets** | **58** | **82** | **71%** |
+| Feature parity (rows of 2.1–2.13, without ➖, 💤 and the Android-only rows) | 80 ✅ · 17 🟡 · 22 ❌ | 119 | 67% (74% counting 🟡 as half) |
 
 | Phase | Done | Open |
 |---|---|---|
 | 1. Correctness bugs | 9 / 9 | – |
 | 2. Data-collection foundations | 3 / 7 | T08, T09, T11, T12 |
 | 3. Onboarding parity | 12 / 12 | – |
-| 4. Questionnaires and tasks | 4 / 9 | T24, T27, T54, T55, T59 |
+| 4. Questionnaires and tasks | 6 / 9 | T27, T54, T55 |
 | 5. Active tasks | 0 / 4 | T29–T32 |
 | 6. Account sheet and prompted actions | 8 / 10 | T40, T58 |
 | 7. Heart Health dashboard | 5 / 6 | T44 |
@@ -248,7 +248,7 @@ logic, and the consent PDF.
 | "Other Tasks – Always Available" section (ECG, 6MWT, 12-min run) | `TasksList.fallbackSections`, `AlwaysAvailableTaskActions.swift` | 🟡 Partial | Shown, excluding activities already scheduled; tapping only logs (needs T27, T29, T31) |
 | Toolbar menu "Perform always-available task" (plus a 30-second walk test in debug) | `AlwaysAvailableTaskActionsMenu.swift` | 🟡 Partial | Menu with ECG, 6MWT and 12-min run; selections only log. No debug walk test (T49) |
 | Unscheduled completion reporting (completes the matching open event in the next 2 weeks) | `PerformTask.reportCompletion` | ❌ Missing | |
-| Task state after reinstall | SpeziScheduler (local store) | 🟡 Verify | Completions live only in the local scheduler store, so after a reinstall completed surveys show as open again. Re-enrolling recreates tasks effective from "now", so earlier occurrences (and their missed state) disappear, although `dateOfEnrollment` is reused. Check what iOS does before treating this as a gap (T59) |
+| Task state after reinstall | SpeziScheduler (local store), SpeziStudy `StudyManager.enroll` | ✅ Done | T59: as on iOS, completions live only on the device and aren't restored, re-enrolling reuses `dateOfEnrollment` for repeated schedules, and tasks start from the re-enrollment, so earlier occurrences and their missed state don't return. Deliberate difference: Android dates the `activation` event at the original enrollment, so a reinstall doesn't replay the first week's content as iOS does |
 | Local task reminders at the scheduled time (e.g. 09:00) | Spezi Scheduler notifications | ✅ Done | `scheduler(notifications = DEFAULT)`. Grove schedules reminders from the study's `notifications` config (thread and time), with exact alarms and reschedule on boot |
 | Tapping a notification opens the app (iOS also tracks it and logs task-bound taps) | `MyHeartCountsStandard+Notifications.swift` | 🟡 Partial | FCM nudge taps are tracked (`MainActivity.trackNotificationOpen`). Grove task reminders open the app since G06, but MHC doesn't route to the task yet, track the open, or set its own icon and channel texts (T54) |
 
@@ -258,7 +258,7 @@ logic, and the consent PDF.
 |---|---|---|---|
 | Render FHIR questionnaires from the study bundle in the preferred locale (14 surveys: Diet, WHO5, DiseaseQOL, Chronotype, ActivityFitness, GAD7, ExerciseAdequacy, ExerciseMindset, SUS, HeartRisk, ParQ, Fatigue, plus Nicotine and Info without schedules) | `PerformTaskAnchor` → `QuestionnaireView` | ✅ Done | T23: full-screen `task/PerformTaskScreen` with Grove `QuestionnaireComposable`. Content is adapted before rendering (`study/StudyQuestionnaire.prepare`, B10). Resolved in the study variant's content locale, the same locale task titles and instructions use (T63). Dark-mode renderer theme not checked |
 | Upload `QuestionnaireResponse` to `users/{id}/questionnaireResponses/{id}` with canonical URL and app revision | `MyHeartCountsStandard+QuestionnaireResponse.swift` | ✅ Done | `QuestionnaireResponseUploader.kt` (status `completed`, quantity answers as `valueQuantity`, app revision from T05). Divergence: the screen closes and the task completes without waiting for the server acknowledgement; iOS awaits the write |
-| HeartRisk extraction (systolic/diastolic BP and glucose written to the health store) | `QuestionnaireParsing/QuestionnaireDataExtractor.swift` | ❌ Missing | Depends on decision D1 |
+| HeartRisk extraction (systolic/diastolic BP and glucose written to the health store) | `MyHeartCountsStandard+QuestionnaireResponse.parseIfApplicable` (Grove questionnaire extraction) | ✅ Done | T24: `dashboard/entry/QuestionnaireMeasurementWriter` saves the measurements a questionnaire marks for SDC observation extraction (today HeartRisk's blood pressure panel and fasting glucose) as Health Connect records (D1) |
 
 ### 2.9 Active tasks
 
@@ -377,7 +377,7 @@ ticket is: merge in Grove, bump the pin, then use it in MHC.
 | 1 | T01–T07 ✅, **T10** ✅, T57 ✅ | G01 ✅ (for T10) |
 | 2 | T08, T09, T11, T12 🟡, T13 ✅, T61 ✅, T62 ✅ | G04 ✅, G03 (for T11), G02 ✅ (for T61) |
 | 3 | T14–T17 ✅, T18–T22 ✅, T56 ✅, T63 ✅, T64 ✅ | G09 ✅ (for T08/T16 locale correctness) |
-| 4 | T23 ✅, T24, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
+| 4 | T23 ✅, T24 ✅, T25–T26 ✅, T27, T28 ✅, T54, T55, T59 ✅ | G06 ✅ (for T54), G11 ✅ (replaces MHC's copied survey palette) |
 | 5 | T29–T31, T32 🟡 | — |
 | 6 | T33 ✅, T34 ✅, T35 ✅, T36 ✅, T37 ✅, T38 ✅, T39 ✅, T40, T58 🟡, T66 ✅ | G08 ✅ (for T38) |
 | 7 | T41–T43 ✅, T44 🟡, T45–T46 ✅ | G07 ✅ (for T43/T44/T45), G13 ✅ (for T45) |
@@ -585,10 +585,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Description:** Resolve the questionnaire from the enrolled study bundle in the preferred locale (with fallback). Render it with Grove's `QuestionnaireComposable` (Android FHIR Data Capture). Confirm that all 14 surveys render, including quantity items with units, `enableWhen`, and any Spezi/ResearchKit-specific extensions they use. Fix content or MHC-side preprocessing where they don't render. On submit, upload through `MHCQuestionnaireUploader` (canonical URL, app revision from T05), then complete the event. Cancelling leaves the event open. iOS: `PerformTaskAnchor.swift`, `MyHeartCountsStandard+QuestionnaireResponse.swift`.
 **Acceptance:** Every scheduled survey can be answered, and each response lands in `questionnaireResponses`.
 
-#### T24: Extract HeartRisk values into health data
+#### T24: Extract HeartRisk values into health data ✅ Done
 **Tags:** `questionnaires`, `health-data`, `feature`
 **Description:** After a HeartRisk response, extract systolic/diastolic BP and glucose by `linkId` (iOS `MyHeartCountsStandard+QuestionnaireResponse.parseIfApplicable`). Persist them according to D1: either Health Connect records or custom samples.
 **Acceptance:** Values entered in HeartRisk show up on the dashboard.
+**As built:** reworked on 2026-11-16 to follow iOS `e88c351`, where extraction moved from hardcoded HeartRisk link ids to the questionnaire's own SDC markings through Grove's questionnaire extraction (iOS #204). After a submitted response is uploaded, `PerformTaskViewModel` hands it, with the questionnaire it answers, to `dashboard/entry/QuestionnaireMeasurementWriter` (+Impl); it runs for every questionnaire and whether or not the upload succeeded. `QuestionnaireMeasurementMapper` (+Impl) walks the questionnaire for items marked `sdc-questionnaire-observationExtract`: an item marked `true` with LOINC 2339-0 is a fasting glucose in `mg/dL`; a group marked `true` with LOINC 85354-9 is a blood pressure panel whose children marked `component` (8480-6 systolic, 8462-4 diastolic) are in `mm[Hg]`, matching Grove's measurement contracts. A marked question left unanswered reports nothing; a contradicting answer (another unit, more than one answer, or a panel answered in part) refuses the whole response, so nothing from it is saved, as Grove's extractor refuses it on iOS; a marked code Health Connect can't record is left out, as iOS's HealthKit projection drops it. Readings are dated at the response's `authored` time, or now when it has none, and saved through the dashboard entry's `HeartScoreEntryWriter` (Health Connect records, statistics and scores refresh); failures are logged without telling the participant. HeartRisk's second most recent systolic value isn't marked, so it is stored on neither platform. Not ported: Grove's exchange record (identities, provenance), which iOS builds and discards. Covered by `QuestionnaireMeasurementMapperTest`, `QuestionnaireMeasurementWriterTest`, `PerformTaskViewModelTest`, and `MHCStudyBundleTest`, which extracts from the shipped HeartRisk in both localizations.
 
 #### T25: Upcoming Tasks tab ✅ Done in [#40](https://github.com/SchmiedmayerLab/MyHeartCounts-Android/pull/40)
 **Tags:** `tasks`, `feature`
@@ -624,10 +625,11 @@ No Android build reached participants before this fix, so nobody onboarded witho
 **Description:** Fixes the content side of B10 in `MyHeartCounts-StudyDefinitions`. Code `itemControl` under the CodeSystem `http://hl7.org/fhir/questionnaire-item-control`, set `repeats: true` on check-box items, declare `questionnaire-unitOption` on quantity items, and use decimal bounds on quantity items. Coordinate with iOS, since ResearchKitOnFHIR has to keep rendering the same files. Once a study revision with the fixes ships, remove the matching rewrites from `study/StudyQuestionnaire.prepare`, keeping its tests as a regression check on the shipped surveys (`MHCStudyBundleTest`).
 **Acceptance:** All 14 surveys render and record answers without app-side preprocessing, on both platforms.
 
-#### T59: Task state after reinstall and re-enrollment
+#### T59: Task state after reinstall and re-enrollment ✅ Done
 **Tags:** `tasks`, `decision`
 **Description:** Scheduler completions are stored only on the device. After a reinstall, completed surveys show as open again, and re-enrolling recreates tasks effective from "now", so occurrences before the reinstall (and their missed state) are gone, although `dateOfEnrollment` is reused. First check what iOS does after a reinstall (SpeziScheduler also stores outcomes locally). If iOS restores state, for example from `questionnaireResponses`, do the same here. Otherwise, record the behavior as shared by both platforms.
 **Acceptance:** Reinstall behavior is documented, and matches iOS.
+**Resolution:** checked against iOS (`MyHeartCountsStandard.enroll`, SpeziStudy `StudyManager.enroll` and `createOrUpdateTask` at the pinned `7fbc89d`) and Grove's `StudyManagerImpl.enroll`. Shared by both platforms: scheduler outcomes live only on the device and neither app reads `questionnaireResponses` back, so completed and missed state is lost on reinstall; re-enrollment passes the account's `dateOfEnrollment`, so repeated schedules keep their original anchor; tasks are created effective from the moment of re-enrollment, so occurrences before it don't return; tasks on the `enrollment` event fire only when the enrollment date is today, so they're skipped. Deliberate difference: iOS fires the `activation` event at re-enrollment, so a reinstall replays the nine first-week components (days 0–7 after activation), while Grove dates it at the enrollment date, so the participant resumes their timeline and doesn't answer the first-week surveys twice. Kept by decision; no code change.
 
 ### Phase 5: active tasks
 
@@ -1036,16 +1038,15 @@ These are capabilities MHC-Android depends on that `grove-kotlin` doesn't provid
 | Account and settings | 11 | 2 | 3 | 1 ➖ |
 | Demographics | 7 | – | – | – |
 | Home | 7 | 2 | 0 | – |
-| Tasks tab | 2 | 4 | 1 | – |
-| Questionnaires | 2 | – | 1 | – |
+| Tasks tab | 3 | 3 | 1 | – |
+| Questionnaires | 3 | – | – | – |
 | Active tasks | – | – | 5 | 3 ➖ |
 | Heart Health dashboard | 10 | 1 | 1 | – |
 | Health data | 5 | 2 | 2 | 3 ➖ |
 | Backend, notifications, environment | 4 | 2 | – | – |
 | Tooling | – | – | 4 | 1 ➖ |
 
-Counts are feature rows from sections 2.1–2.13, excluding the Android-only rows; the "verify" row in 2.7
-counts as 🟡. The foundations are solid: Firebase per region, account, eligibility and waitlist, consent
+Counts are feature rows from sections 2.1–2.13, excluding the Android-only rows. The foundations are solid: Firebase per region, account, eligibility and waitlist, consent
 upload, launch routing, withdrawal, the Home and Tasks tabs with missed tasks, questionnaires, push tokens
 and foreground nudges, and the Health Connect permission request with the collection and upload pipeline, most of it built on
 Grove. Demographics is at parity, and the Heart Health dashboard apart from sleep-source filtering and

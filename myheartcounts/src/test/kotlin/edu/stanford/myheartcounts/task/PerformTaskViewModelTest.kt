@@ -8,6 +8,7 @@
 package edu.stanford.myheartcounts.task
 
 import com.google.common.truth.Truth.assertThat
+import edu.stanford.myheartcounts.dashboard.entry.FakeQuestionnaireMeasurementWriter
 import edu.stanford.myheartcounts.navigation.FakeNavigator
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
@@ -34,6 +35,7 @@ class PerformTaskViewModelTest {
     private val taskPerformer = FakeTaskPerformer()
     private val navigator = FakeNavigator()
     private val uploader = FakeQuestionnaireResponseUploader()
+    private val measurementWriter = FakeQuestionnaireMeasurementWriter()
 
     @Before
     fun setup() {
@@ -92,6 +94,7 @@ class PerformTaskViewModelTest {
 
         // then
         assertThat(uploader.uploads).hasSize(1)
+        assertThat(measurementWriter.saves).containsExactlyElementsIn(uploader.uploads)
         assertThat(taskPerformer.outcomes).containsExactly(true)
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.Close(route = MHCRoute.PerformTask))
     }
@@ -107,6 +110,7 @@ class PerformTaskViewModelTest {
 
         // then
         assertThat(uploader.uploads).isEmpty()
+        assertThat(measurementWriter.saves).isEmpty()
         assertThat(taskPerformer.outcomes).containsExactly(false)
         assertThat(navigator.pushedEvents).containsExactly(NavigationEvent.Close(route = MHCRoute.PerformTask))
     }
@@ -144,6 +148,7 @@ class PerformTaskViewModelTest {
         taskPerformer = taskPerformer,
         navigator = navigator,
         responseUploader = uploader,
+        measurementWriter = measurementWriter,
         uploadScope = TestScope(dispatcher),
     )
 

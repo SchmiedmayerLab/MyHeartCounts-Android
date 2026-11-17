@@ -10,6 +10,7 @@ package edu.stanford.myheartcounts.task
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import edu.stanford.myheartcounts.MHCStrings
+import edu.stanford.myheartcounts.dashboard.entry.QuestionnaireMeasurementWriter
 import edu.stanford.myheartcounts.navigation.MHCRoute
 import edu.stanford.myheartcounts.navigation.NavigationEvent
 import edu.stanford.myheartcounts.navigation.Navigator
@@ -33,13 +34,14 @@ import org.grovealliance.ui.mutableScaffoldState
  * one, as after the process was recreated, it shows an error offering to close it. Leaving the screen
  * any other way ends the task as not completed.
  *
- * @param uploadScope The scope uploads run in, outliving the screen so that closing it does not
+ * @param uploadScope The scope uploads and measurement saves run in, outliving the screen so that closing it does not
  * cancel them.
  */
 class PerformTaskViewModel(
     taskPerformer: TaskPerformer,
     private val navigator: Navigator,
     private val responseUploader: QuestionnaireResponseUploader,
+    private val measurementWriter: QuestionnaireMeasurementWriter,
     private val uploadScope: CoroutineScope,
 ) : ViewModel() {
     private val logger by groveLogger()
@@ -104,7 +106,8 @@ class PerformTaskViewModel(
 
     /**
      * Finishes [activeTask] with [result] and closes the screen. A completed response is uploaded without holding the
-     * screen open, since the write is kept locally until it reaches the server.
+     * screen open, since the write is kept locally until it reaches the server, and the measurements it reports are
+     * saved after it.
      */
     private fun onQuestionnaireResult(
         activeTask: ActiveTask,
@@ -116,6 +119,10 @@ class PerformTaskViewModel(
                 val response = task.questionnaire.responseFor(rendered = result.response)
                 uploadScope.launch {
                     responseUploader.upload(
+                        response = response,
+                        questionnaire = task.questionnaire.questionnaire,
+                    )
+                    measurementWriter.save(
                         response = response,
                         questionnaire = task.questionnaire.questionnaire,
                     )
