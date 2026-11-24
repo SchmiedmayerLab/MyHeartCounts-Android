@@ -99,12 +99,14 @@ class MHCStandard : Standard, HealthConstraint {
     }
 
     override suspend fun <T : Record> handleNewRecords(addedRecords: Set<T>, type: RecordType<out T>) {
+        requireSignedIn()
         if (!isCollecting()) return
         healthStats.requestRefresh()
         healthData.handleNewRecords(records = addedRecords, type = type)
     }
 
     override suspend fun <T : Record> handleDeletedRecords(deletedRecordIds: Set<String>, type: RecordType<out T>) {
+        requireSignedIn()
         if (!isCollecting()) return
         healthStats.requestRefresh()
         healthData.handleDeletedRecords(recordIds = deletedRecordIds, type = type)
@@ -134,6 +136,12 @@ class MHCStandard : Standard, HealthConstraint {
         signOutCleanup.afterSignOut()
         HealthUploadWorker.cancel(context = applicationModule.requireContext())
     }
+
+    /**
+     * Fails while nobody is signed in, which includes the moments after launch before the account has
+     * restored, so the health module keeps the changes and delivers them again on a later poll.
+     */
+    private fun requireSignedIn() = check(account.isSignedIn) { "No participant is signed in to take health data yet." }
 
     /**
      * Whether health data should be collected at all.

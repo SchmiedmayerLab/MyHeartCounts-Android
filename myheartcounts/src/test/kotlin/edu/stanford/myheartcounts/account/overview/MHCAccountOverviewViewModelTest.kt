@@ -517,31 +517,31 @@ class MHCAccountOverviewViewModelTest {
     )
 
     private fun MHCAccountOverviewViewModel.withdrawSection() =
-        screen.customSections.section(key = "withdraw-from-study").content<WithdrawFromStudyButton>(key = "withdraw-from-study")
+        screen.customContent.section(key = "withdraw-from-study").content<WithdrawFromStudyButton>(key = "withdraw-from-study")
 
     private fun MHCAccountOverviewViewModel.postTrialNudgesSection() =
         studyParticipationSection().row<ToggleRow>(key = "post-trial-nudges")
 
     private fun MHCAccountOverviewViewModel.supportSection() =
-        screen.customSections.section(key = "support")
+        screen.customContent.section(key = "support")
 
     private fun MHCAccountOverviewViewModel.studyParticipationSection() =
-        screen.customSections.section(key = "study-participation")
+        screen.customContent.section(key = "study-participation")
 
     private fun MHCAccountOverviewViewModel.enrolledStudyRow(): EnrolledStudyRow? {
-        val section = screen.customSections.dynamicSection(key = "study-participation")
+        val section = screen.customContent.dynamicSection(key = "study-participation")
         viewModelScope.launch { section.collect {} }
         return section.value.rowOrNull<EnrolledStudyRow>(key = "enrolled-study")
     }
 
     private fun MHCAccountOverviewViewModel.dataProcessingRow(): DataProcessingRow? {
-        val section = screen.customSections.dynamicSection(key = "data-processing")
+        val section = screen.customContent.dynamicSection(key = "data-processing")
         viewModelScope.launch { section.collect {} }
         return section.value.rowOrNull<DataProcessingRow>(key = "data-processing")
     }
 
     private fun MHCAccountOverviewViewModel.appInfoSection() =
-        screen.customSections.section(key = "app-info")
+        screen.customContent.section(key = "app-info")
 
     /**
      * The real mapper, recording the latest feedback sheet and the actions of its app bar.

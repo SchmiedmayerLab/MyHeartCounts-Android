@@ -32,4 +32,13 @@ enum class FeatureFlag(
         id = "ukStudyTesting",
         defaultValue = false,
     ),
+
+    /**
+     * Uploads health data as record-centric FHIR exchange Bundles and deletions as retractions,
+     * instead of per-sample observations and deletion lists.
+     */
+    FhirExchangeUpload(
+        id = "fhirExchangeUpload",
+        defaultValue = false,
+    ),
 }

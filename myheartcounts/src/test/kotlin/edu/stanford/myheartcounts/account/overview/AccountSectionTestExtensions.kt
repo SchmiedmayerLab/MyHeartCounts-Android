@@ -10,13 +10,13 @@ package edu.stanford.myheartcounts.account.overview
 import edu.stanford.myheartcounts.ui.DynamicSection
 import kotlinx.coroutines.flow.StateFlow
 import org.grovealliance.ui.GroveSection
-import org.grovealliance.ui.account.CustomAccountSections
+import org.grovealliance.ui.account.CustomAccountContent
 
-internal fun CustomAccountSections.sectionKeys(): List<String> = currentSections().map { it.key }
+internal fun CustomAccountContent.sectionKeys(): List<String> = currentSections().map { it.key }
 
-internal fun CustomAccountSections.section(key: String): GroveSection = currentSections().single { it.key == key }
+internal fun CustomAccountContent.section(key: String): GroveSection = currentSections().single { it.key == key }
 
-private fun CustomAccountSections.currentSections() = sections.map { content ->
+private fun CustomAccountContent.currentSections() = sections.map { content ->
     when (content) {
         is GroveSection -> content
         is DynamicSection -> content.section.value
@@ -24,7 +24,7 @@ private fun CustomAccountSections.currentSections() = sections.map { content ->
     }
 }
 
-internal fun CustomAccountSections.dynamicSection(key: String): StateFlow<GroveSection> = sections
+internal fun CustomAccountContent.dynamicSection(key: String): StateFlow<GroveSection> = sections
     .filterIsInstance<DynamicSection>()
     .single { it.section.value.key == key }
     .section

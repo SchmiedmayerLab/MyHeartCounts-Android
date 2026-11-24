@@ -123,7 +123,7 @@ class DebugViewModelTest {
 
         // then
         val flags = viewModel.sheet.value?.section(key = "feature-flags")?.toggleRows()
-        assertThat(flags?.map { it.isOn.value }).containsExactly(true, false).inOrder()
+        assertThat(flags?.map { it.isOn.value }).containsExactly(true, false, false).inOrder()
     }
 
     @Test
@@ -138,7 +138,7 @@ class DebugViewModelTest {
         // then
         assertThat(featureFlags.isEnabled(flag = FeatureFlag.UKStudyTesting)).isTrue()
         val flags = viewModel.sheet.value?.section(key = "feature-flags")?.toggleRows()
-        assertThat(flags?.map { it.isOn.value }).containsExactly(false, true).inOrder()
+        assertThat(flags?.map { it.isOn.value }).containsExactly(false, true, false).inOrder()
     }
 
     @Test

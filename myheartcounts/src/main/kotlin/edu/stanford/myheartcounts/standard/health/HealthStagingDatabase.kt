@@ -18,6 +18,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import edu.stanford.myheartcounts.standard.health.exchange.StagedExchangeRecord
+import edu.stanford.myheartcounts.standard.health.exchange.StagedExchangeRecordDao
 
 /**
  * The on-device queue of health data waiting to reach the backend.
@@ -27,8 +29,8 @@ import androidx.room.Transaction
  * [HealthUploadSchedule.RETENTION_OFFSET_DAYS] before uploading them.
  */
 @Database(
-    entities = [StagedObservation::class, StagedDeletion::class, SeriesRecordReadings::class],
-    version = 3,
+    entities = [StagedObservation::class, StagedDeletion::class, SeriesRecordReadings::class, StagedExchangeRecord::class],
+    version = 4,
     exportSchema = false,
 )
 abstract class HealthStagingDatabase : RoomDatabase() {
@@ -47,6 +49,11 @@ abstract class HealthStagingDatabase : RoomDatabase() {
      * Access to the readings tracked per series record.
      */
     abstract fun seriesReadings(): SeriesRecordReadingsDao
+
+    /**
+     * Access to the staged exchange records.
+     */
+    abstract fun exchangeRecords(): StagedExchangeRecordDao
 
     companion object {
 

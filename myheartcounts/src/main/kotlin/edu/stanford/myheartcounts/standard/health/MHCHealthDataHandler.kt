@@ -12,6 +12,8 @@ import ca.uhn.fhir.context.FhirContext
 import com.github.luben.zstd.Zstd
 import edu.stanford.myheartcounts.firebase.MHCFirestore
 import edu.stanford.myheartcounts.firebase.mhcFirebaseLogger
+import edu.stanford.myheartcounts.standard.health.exchange.HealthExchangePipeline
+import edu.stanford.myheartcounts.standard.health.exchange.StagedExchangeRecord
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
@@ -32,6 +34,7 @@ import java.util.UUID
  * FHIR (`HealthObservationMapper`), and either stages them for a later bulk upload or sends them
  * straight out.
  */
+@Suppress("detekt:LongParameterList")
 class MHCHealthDataHandler(
     private val staging: HealthStagingDatabase,
     private val mapper: HealthObservationMapper,
@@ -39,6 +42,7 @@ class MHCHealthDataHandler(
     private val firestore: MHCFirestore,
     private val timeProvider: TimeProvider,
     private val provenance: suspend () -> HealthObservationProvenance,
+    private val exchange: HealthExchangePipeline?,
 ) : Module {
 
     private val logger by mhcFirebaseLogger()
@@ -57,6 +61,14 @@ class MHCHealthDataHandler(
     suspend fun <T : Record> handleNewRecords(records: Set<T>, type: RecordType<out T>) {
         if (records.isEmpty()) return
         val sampleType = HealthSampleType.of(recordType = type)
+        if (exchange != null) {
+            exchange.staging.stageRecords(
+                records = records.toList(),
+                sampleTypeIdentifier = sampleType.identifier,
+                accountId = firestore.accountId(),
+            ).getOrThrow()
+            return
+        }
         val issuedAt = timeProvider.nowInstant()
         // Resolved once per batch rather than per observation: it is the same for all of them, and
         // reading it involves a database round trip.
@@ -97,6 +109,15 @@ class MHCHealthDataHandler(
         if (recordIds.isEmpty()) return
         val sampleType = HealthSampleType.of(recordType = type)
         val accountId = firestore.accountId()
+        if (exchange != null) {
+            exchange.staging.stageDeletions(
+                recordIds = recordIds,
+                recordType = type.type,
+                sampleTypeIdentifier = sampleType.identifier,
+                accountId = accountId,
+            ).getOrThrow()
+            return
+        }
         val deletedAt = timeProvider.currentTimeMillis()
         val sampleIds = recordIds.flatMap { recordId -> sampleIdsToReport(recordId = recordId, sampleType = sampleType) }
         if (sampleIds.isEmpty()) return
@@ -120,6 +141,7 @@ class MHCHealthDataHandler(
         val sampleType = HealthSampleType.of(recordType = type)
         logger.i { "Re-syncing '${sampleType.identifier}'; dropping what was staged for it." }
         staging.observations().removeObservationsOfType(sampleTypeIdentifier = sampleType.identifier)
+        staging.exchangeRecords().removeOfType(kind = StagedExchangeRecord.KIND_ACTIVE, sampleTypeIdentifier = sampleType.identifier)
     }
 
     /**
@@ -141,6 +163,11 @@ class MHCHealthDataHandler(
                 uploadStagedType(accountId = accountId, sampleTypeIdentifier = identifier, cutoffMillis = cutoff)
             }
         uploadStagedDeletions(accountId = accountId)
+        exchange?.drain?.drain(
+            accountId = accountId,
+            cutoffMillis = cutoff,
+            maximumArchives = null,
+        )?.getOrThrow()
         staging.seriesReadings().removeOlderThan(
             cutoffMillis = now - HealthUploadSchedule.SERIES_READINGS_RETENTION_DAYS * MILLIS_PER_DAY,
         )
@@ -155,6 +182,7 @@ class MHCHealthDataHandler(
             val accountId = firestore.accountId()
             staging.observations().removeObservationsNotOwnedBy(accountId = accountId)
             staging.deletions().removeDeletionsNotOwnedBy(accountId = accountId)
+            staging.exchangeRecords().removeNotOwnedBy(accountId = accountId)
             managedUpload.recoverOrphans()
         }
     }
@@ -165,6 +193,7 @@ class MHCHealthDataHandler(
     suspend fun clearPendingUploads() {
         staging.observations().clearObservations()
         staging.deletions().clearDeletions()
+        staging.exchangeRecords().clear()
         staging.seriesReadings().clear()
         managedUpload.discardStaged()
     }

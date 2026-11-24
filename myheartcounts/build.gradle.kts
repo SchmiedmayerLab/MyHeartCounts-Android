@@ -146,8 +146,10 @@ dependencies {
     implementation(libs.grove.core.logging)
     implementation(libs.grove.core.time)
     implementation(libs.grove.core.viewmodel)
+    implementation(libs.grove.fhir.contract)
     implementation(libs.grove.firebase)
     implementation(libs.grove.health)
+    implementation(libs.grove.health.fhir)
     implementation(libs.grove.license)
     implementation(libs.grove.markdown)
     implementation(libs.grove.onboarding)
@@ -170,8 +172,19 @@ dependencies {
     androidTestImplementation(libs.bundles.integration.testing)
     androidTestImplementation(libs.compose.ui.test)
     androidTestImplementation(testFixtures(libs.grove.study))
+    androidTestImplementation(libs.androidx.health.connect.testing) {
+        exclude(group = "androidx.health.connect", module = "connect-client")
+        exclude(group = "androidx.health.connect", module = "connect-client-proto")
+        exclude(group = "androidx.health.connect", module = "connect-client-external-protobuf")
+    }
 
     testImplementation(libs.bundles.unit.testing)
+    // connect-testing brings a newer connect-client; the tests run on the release the app ships.
+    testImplementation(libs.androidx.health.connect.testing) {
+        exclude(group = "androidx.health.connect", module = "connect-client")
+        exclude(group = "androidx.health.connect", module = "connect-client-proto")
+        exclude(group = "androidx.health.connect", module = "connect-client-external-protobuf")
+    }
     testImplementation(libs.grove.testing.screenshot)
     // The bundle archive is unpacked in a unit test, which needs the desktop native libraries the
     // plain jar carries rather than the on-device ones in the AAR.
