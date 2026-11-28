@@ -82,7 +82,7 @@ class MHCAccountOverviewMapperTest {
         val overview = mapper.map(input = input())
 
         // then
-        assertThat(overview.customSections.sectionKeys())
+        assertThat(overview.customContent.sectionKeys())
             .containsExactly(
                 "prompted-actions",
                 "study-participation",
@@ -143,7 +143,7 @@ class MHCAccountOverviewMapperTest {
     fun `summarises every prompted action and opens them`() = runTest {
         // given
         promptedActions.value = listOf(PromptedActionFixtures.create())
-        val section = mapper.map(input = input(scope = backgroundScope)).customSections.dynamicSection(key = "prompted-actions")
+        val section = mapper.map(input = input(scope = backgroundScope)).customContent.dynamicSection(key = "prompted-actions")
         backgroundScope.launch { section.collect {} }
         runCurrent()
         val card = section.value.content<PromptedActionsCard>(key = "prompted-actions")
@@ -171,7 +171,7 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports opening the participation stats through the action sink`() {
         // given
-        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
+        val section = mapper.map(input = input()).customContent.section(key = "study-participation")
 
         // when
         section.row<ItemDisplayRow>(key = "participation-stats").onClick?.invoke()
@@ -272,7 +272,7 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to update the comorbidities through the action sink`() {
         // given
-        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
+        val section = mapper.map(input = input()).customContent.section(key = "study-participation")
 
         // when
         section.row<ItemDisplayRow>(key = "comorbidities").onClick?.invoke()
@@ -284,7 +284,7 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to review the signed consent forms through the action sink`() {
         // given
-        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
+        val section = mapper.map(input = input()).customContent.section(key = "study-participation")
 
         // when
         section.row<ItemDisplayRow>(key = "signed-consent-forms").onClick?.invoke()
@@ -296,7 +296,7 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to change the workout preference through the action sink`() {
         // given
-        val section = mapper.map(input = input()).customSections.section(key = "study-participation")
+        val section = mapper.map(input = input()).customContent.section(key = "study-participation")
 
         // when
         section.row<ItemDisplayRow>(key = "workout-preference").onClick?.invoke()
@@ -308,7 +308,7 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to send feedback through the action sink`() {
         // given
-        val section = mapper.map(input = input()).customSections.section(key = "support")
+        val section = mapper.map(input = input()).customContent.section(key = "support")
 
         // when
         section.row<ItemDisplayRow>(key = "send-feedback").onClick?.invoke()
@@ -320,7 +320,7 @@ class MHCAccountOverviewMapperTest {
     @Test
     fun `reports asking to change the language through the action sink`() {
         // given
-        val section = mapper.map(input = input()).customSections.section(key = "support")
+        val section = mapper.map(input = input()).customContent.section(key = "support")
 
         // when
         section.rowOrNull<ItemDisplayRow>(key = "change-language")?.onClick?.invoke()
@@ -335,7 +335,7 @@ class MHCAccountOverviewMapperTest {
         buildInfo = BuildInfoFixtures.create(sdkInt = Build.VERSION_CODES.S_V2)
 
         // when
-        val section = mapper.map(input = input()).customSections.section(key = "support")
+        val section = mapper.map(input = input()).customContent.section(key = "support")
 
         // then
         assertThat(section.rowOrNull<ItemDisplayRow>(key = "change-language")).isNull()
@@ -347,7 +347,7 @@ class MHCAccountOverviewMapperTest {
         val overview = mapper.map(input = input())
 
         // then
-        val section = overview.customSections.section(key = "withdraw-from-study")
+        val section = overview.customContent.section(key = "withdraw-from-study")
         assertThat(section.content<WithdrawFromStudyButton>(key = "withdraw-from-study")).isNotNull()
     }
 
@@ -429,25 +429,25 @@ class MHCAccountOverviewMapperTest {
     )
 
     private fun enrolledStudyRow(scope: CoroutineScope): EnrolledStudyRow? {
-        val section = mapper.map(input = input(scope = scope)).customSections.dynamicSection(key = "study-participation")
+        val section = mapper.map(input = input(scope = scope)).customContent.dynamicSection(key = "study-participation")
         scope.launch { section.collect {} }
         return section.value.rowOrNull<EnrolledStudyRow>(key = "enrolled-study")
     }
 
     private fun dataProcessingRow(scope: CoroutineScope): DataProcessingRow? {
-        val section = mapper.map(input = input(scope = scope)).customSections.dynamicSection(key = "data-processing")
+        val section = mapper.map(input = input(scope = scope)).customContent.dynamicSection(key = "data-processing")
         scope.launch { section.collect {} }
         return section.value.rowOrNull<DataProcessingRow>(key = "data-processing")
     }
 
     private fun MHCAccountOverview.withdrawSection() =
-        customSections.section(key = "withdraw-from-study").content<WithdrawFromStudyButton>(key = "withdraw-from-study")
+        customContent.section(key = "withdraw-from-study").content<WithdrawFromStudyButton>(key = "withdraw-from-study")
 
     private fun MHCAccountOverview.postTrialNudgesSection() =
-        customSections.section(key = "study-participation").row<ToggleRow>(key = "post-trial-nudges")
+        customContent.section(key = "study-participation").row<ToggleRow>(key = "post-trial-nudges")
 
     private fun MHCAccountOverview.appInfoSection() =
-        customSections.section(key = "app-info")
+        customContent.section(key = "app-info")
 
     private companion object {
         const val APP_VERSION = "1.2.0"

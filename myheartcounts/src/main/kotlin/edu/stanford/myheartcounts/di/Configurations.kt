@@ -39,6 +39,8 @@ import edu.stanford.myheartcounts.dashboard.HeartHealthScoreSourceImpl
 import edu.stanford.myheartcounts.dashboard.HeartScoreDateFormatter
 import edu.stanford.myheartcounts.dashboard.HeartScoreDateFormatterImpl
 import edu.stanford.myheartcounts.featureflag.AppEnvironment
+import edu.stanford.myheartcounts.featureflag.FeatureFlag
+import edu.stanford.myheartcounts.featureflag.FeatureFlags
 import edu.stanford.myheartcounts.firebase.FirebaseSchema
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctions
 import edu.stanford.myheartcounts.firebase.MHCCloudFunctionsImpl
@@ -122,6 +124,7 @@ import edu.stanford.myheartcounts.standard.health.HealthStagingDatabase
 import edu.stanford.myheartcounts.standard.health.MHCHealthDataHandler
 import edu.stanford.myheartcounts.standard.health.ManagedFileUpload
 import edu.stanford.myheartcounts.standard.health.ManagedFileUploadImpl
+import edu.stanford.myheartcounts.standard.health.exchange.HealthExchangePipeline
 import edu.stanford.myheartcounts.study.EnrolledStudySource
 import edu.stanford.myheartcounts.study.EnrolledStudySourceImpl
 import edu.stanford.myheartcounts.study.MHCStudyBundleProvider
@@ -357,6 +360,7 @@ private fun ConfigurationBuilder.healthConfigurations() {
             concurrency = dependency(),
         )
     }
+    healthExchangeConfigurations()
     module {
         MHCHealthDataHandler(
             staging = dependency(),
@@ -374,6 +378,8 @@ private fun ConfigurationBuilder.healthConfigurations() {
                     studyRevision = enrollment?.studyRevision?.toInt(),
                 )
             },
+            exchange = dependency<HealthExchangePipeline>()
+                .takeIf { dependency<FeatureFlags>().isEnabled(flag = FeatureFlag.FhirExchangeUpload) },
         )
     }
 }

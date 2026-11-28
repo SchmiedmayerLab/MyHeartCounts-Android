@@ -20,7 +20,7 @@ import org.grovealliance.ui.StringResource
 import org.grovealliance.ui.account.AccountOverviewItem
 import org.grovealliance.ui.account.AccountOverviewLayout
 import org.grovealliance.ui.account.AccountProfileHeader
-import org.grovealliance.ui.account.CustomAccountSections
+import org.grovealliance.ui.account.CustomAccountContent
 import org.grovealliance.ui.account.StringDataDisplay
 import org.grovealliance.ui.groveAppBar
 import org.grovealliance.ui.groveSection
@@ -75,13 +75,14 @@ class MHCAccountOverviewScreenshotTest : ScreenshotTest() {
                 }
             }
         },
-        customSections = CustomAccountSections(
+        customContent = CustomAccountContent(
             sections = listOf(
                 studyParticipation,
                 SupportSectionFixtures.create(),
                 AppInfoSectionFixtures.create(),
                 withdrawFromStudy(state = state),
             ),
+            footer = null,
         ),
         logout = AsyncTextButton(
             title = StringResource("Logout"),

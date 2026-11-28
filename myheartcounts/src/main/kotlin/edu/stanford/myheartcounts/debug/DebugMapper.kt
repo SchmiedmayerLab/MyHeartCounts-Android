@@ -313,11 +313,13 @@ class DebugMapperImpl : DebugMapper {
     private fun mapFlagTitle(flag: FeatureFlag): Int = when (flag) {
         FeatureFlag.SimplifyOnboarding -> MHCStrings.feature_flag_simplify_onboarding_title
         FeatureFlag.UKStudyTesting -> MHCStrings.feature_flag_uk_study_testing_title
+        FeatureFlag.FhirExchangeUpload -> MHCStrings.feature_flag_fhir_exchange_upload_title
     }
 
     @StringRes
     private fun mapFlagDescription(flag: FeatureFlag): Int = when (flag) {
         FeatureFlag.SimplifyOnboarding -> MHCStrings.feature_flag_simplify_onboarding_description
         FeatureFlag.UKStudyTesting -> MHCStrings.feature_flag_uk_study_testing_description
+        FeatureFlag.FhirExchangeUpload -> MHCStrings.feature_flag_fhir_exchange_upload_description
     }
 }

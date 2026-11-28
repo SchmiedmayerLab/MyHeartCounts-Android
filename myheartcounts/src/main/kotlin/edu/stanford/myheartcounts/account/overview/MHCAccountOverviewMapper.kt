@@ -43,7 +43,7 @@ import org.grovealliance.ui.GroveAppBar
 import org.grovealliance.ui.ImageResource
 import org.grovealliance.ui.ItemDisplayRow
 import org.grovealliance.ui.StringResource
-import org.grovealliance.ui.account.CustomAccountSections
+import org.grovealliance.ui.account.CustomAccountContent
 import org.grovealliance.ui.groveAppBar
 import org.grovealliance.ui.groveSection
 import org.grovealliance.ui.scheduler.PromptedActionsCard
@@ -96,7 +96,7 @@ class MHCAccountOverviewMapperImpl(
 ) : MHCAccountOverviewMapper {
 
     override fun map(input: MHCAccountOverviewInput) = MHCAccountOverview(
-        customSections = CustomAccountSections(
+        customContent = CustomAccountContent(
             sections = listOf(
                 promptedActions(input = input),
                 studyParticipation(input = input),
@@ -105,6 +105,7 @@ class MHCAccountOverviewMapperImpl(
                 appInfo(input = input),
                 withdrawFromStudy(input = input),
             ),
+            footer = null,
         ),
         scaffoldState = input.scaffoldState,
         onDismiss = { input.actionSink.push(MHCAccountOverviewAction.Dismissed) },
